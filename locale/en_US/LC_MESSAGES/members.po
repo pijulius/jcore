@@ -1,0 +1,109 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: jCore 0.7.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-01-05 19:45+0200\n"
+"PO-Revision-Date: 2011-01-05 19:45+0200\n"
+"Last-Translator: Istvan Petres <me@pijulius.com>\n"
+"Language-Team: jCore.net <support@jcore.net>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: _\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-Language: English\n"
+"X-Poedit-SearchPath-0: /home/julius/workspace/jcore/lib/modules\n"
+
+#: Member Dynamic Forms
+msgid "Password"
+msgstr ""
+
+msgid "Verification code"
+msgstr ""
+
+msgid "Please note that you will need to enter a valid e-mail address before your account is activated. You will receive an e-mail at the address you provided that contains an account activation link."
+msgstr ""
+
+msgid "Username"
+msgstr ""
+
+msgid "Email address"
+msgstr ""
+
+msgid "Website"
+msgstr ""
+
+msgid "Show Avatar"
+msgstr ""
+
+msgid "Stay Logged In"
+msgstr ""
+
+msgid "Disable Notification Emails"
+msgstr ""
+
+msgid "Change password"
+msgstr ""
+
+msgid "New password"
+msgstr ""
+
+msgid "Retype password"
+msgstr ""
+
+msgid "(<a href='http://gravatar.com' target='_blank'>Change Avatar</a>)"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/members.class.php:14
+msgid "Site Members"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/members.class.php:15
+msgid "Forms for My Account, Register and Login pages"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/members.class.php:22
+msgid "Member Account"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/members.class.php:52
+msgid "Your account has been successfully updated."
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/members.class.php:64
+msgid "Member Registration"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/members.class.php:88
+msgid "<b>Thank you for your registration.</b><br /> Your account has been created. However we require account activation, an activation key has been sent to the e-mail address you provided. Please check your e-mail for further information."
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/members.class.php:96
+msgid "<b>Thank you for your registration.</b><br /> An email has been sent to you with the necessary information to login to your account."
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/members.class.php:243
+msgid "Form Settings"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/members.class.php:337
+msgid "Member Forms Administration"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/members.class.php:363
+msgid "No member forms found."
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/members.class.php:378
+msgid "Member Registration Form"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/members.class.php:383
+msgid "Member Login / Account Form"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/members.class.php:389
+msgid "New account registration has been temporarily suspended. Please try again later."
+msgstr ""
+

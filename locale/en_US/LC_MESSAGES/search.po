@@ -1,0 +1,70 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: jCore 0.7.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-01-05 20:22+0200\n"
+"PO-Revision-Date: 2011-01-05 20:22+0200\n"
+"Last-Translator: Istvan Petres <me@pijulius.com>\n"
+"Language-Team: jCore.net <support@jcore.net>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: _\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-Language: English\n"
+"X-Poedit-SearchPath-0: /home/julius/workspace/jcore/lib/modules\n"
+
+#: /home/julius/workspace/jcore/lib/modules/search.class.php:14
+msgid "Search Engine"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/search.class.php:15
+msgid "Have your own search engine"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/search.class.php:170
+msgid "Items have been successfully updated."
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/search.class.php:202
+msgid "Title / Description"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/search.class.php:210
+msgid "Blog like content for menu items."
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/search.class.php:254
+msgid "Update"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/search.class.php:305
+msgid "Search Engine Administration"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/search.class.php:312
+msgid "Check modules that should be searchable by the Local Search Engine and you can also define custom limits for them. By default if none checked all modules will be searchable and if no limit defined (0) the one set for the menu under which the search module is will be used."
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/search.class.php:349
+msgid "No modules found."
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/search.class.php:492
+msgid "Search for"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/search.class.php:499
+msgid "search..."
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/search.class.php:505
+#: /home/julius/workspace/jcore/lib/modules/search.class.php:516
+msgid "in"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/search.class.php:699
+msgid "Invalid target selected for your search! Please select a new target (search in) or don't select any if you want to search for posts."
+msgstr ""
+

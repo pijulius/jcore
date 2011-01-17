@@ -1,0 +1,150 @@
+Welcome to jCore,
+
+Thank you for your interest, please see below step by step 
+instructions to install jCore server on your server.
+
+The following instructions are mostly for users who have a 
+server set up with directories for each user/client and have
+full access to that server but with some modifications you should
+be able to install jcore even without full access.
+
+As I use cpanel for my hosting (btw I use Hostgator) the settings
+best apply to those situations.
+
+There are two ways to install jCore server, one is to install it
+as a standalone system meaning you will run a website on it and not
+use it as a core for the jCore clients, and the other way is to 
+install it as a core system where you still will be able to run 
+a website on the top of it but usually not recommended.
+
+
+INSTALL jCore Server
+--------------------
+1: Download the installer (install.php) from 
+   http://jcore.net/downloads/installer
+   
+2: Put install.php in a public html folder and load it using
+   your browser and that's it.
+
+
+MANUAL INSTALL jCore Server as Core System
+------------------------------------------
+1: Copy the content of this directory to a global place. Usually
+   I use /var/www/jcore/ directory.
+   
+2: Create a subdomain for your main domain where you would like 
+   to access the jCore server, for e.g. it could be
+   jcore.yourdomain.com which will create a directory in your home
+   /home/yourdomain.com/public_html/jcore/
+   
+3: Now delete the jcore directory just got created in your home folder
+   (/home/yourdomain.com/public_html/jcore/) and create a symlink
+   to /var/www/jcore/
+   
+4: That's it, just make sure to configure the jCore clients with the
+   right url/path defined above and everything should work just fine.
+   
+   
+MANUAL INSTALL jCore Server as Stand Alone website
+--------------------------------------------------
+1: Copy the content of this directory to a home folder, for e.g.
+   /home/yourdomain/public_html/
+
+2: Once content is copied and IF NO PHPChmod is activated
+   give write access to the following directories to everyone:
+   
+   rss/
+   sitefiles/banner/
+   sitefiles/design/
+   sitefiles/file/
+   sitefiles/flash/
+   sitefiles/image/
+   sitefiles/media/
+
+
+SETTING UP MySQL
+----------------
+1: Now we have everything set up we just need to configure it 
+   but before that we need to setup the MySQL db for the site.
+   To do that please go to your cpanel, usually
+   http://yourclient.com:2082 and click "MySQL Databases".
+   
+   Here you should create a db, enter the name for your db
+   New Database: [yourdb]
+   
+   Please note: your db will be prenamed with your clients'
+   username, for e.g. it will look like this:
+   yourclient_yourdb
+   
+   I usually enter only DB when creating a new database for
+   my clients and then I have a db called myclient_DB
+   
+2: After you have set up the db you have two options, or you
+   create a user for this new db or you just use the one
+   you used to login to cpanel as that one will work too.
+   
+   For safety I recommend to use a new user/password for 
+   the db connection, just scroll down and where it says 
+   "Add New User" enter the username and the passwords, click
+   Create user and that's it.
+   
+   Now below "Add User to Database", select the new user you
+   created and for the Database select the DB you created and 
+   click Add and check all privileges for the user and that should be.
+   
+3: After we have the DB set up, it's time to import the SQL file.
+   First in your cpanel go back to home and click the "phpMyAdmin"
+   icon and select your new db just created.
+   
+   NOTE: You should define a Collation for your db click on the 
+   "Operations" in phpMyAdmin as this charset will be used for your
+   whole db and if you want characters like Hungarian you should set this
+   to latin2_hungarian_ci for example.
+   
+4: Click "Import" in phpMyAdmin and browse to the jCore-client-0.1.sql
+   file you downloaded and click "Go"
+   This will import the tables and set up some example entries for you.
+   
+
+CONFIGURING jCORE Server
+------------------------
+1: Now we should have both jCore and MySQL set up, it's time to configure
+   it to use the right core and database.
+   
+   Go to your jCore servers directory and edit config.inc.php as following:
+   
+   SQL_HOST (you should leave it as it is, change it only if needed)
+   SQL_DATABASE (the new database you created, for e.g. yourclient_DB)
+   SQL_USER (the new user you created for your database)
+   SQL_PASS (the password for the user)
+   
+   SITE_URL_PATH (the url of your new site, for.e.g http://yourdomain.com/)
+      NOTE: please always add a slash to the end of the url!
+
+   SITE_ABSOLUTE_PATH (this should be the home directory of your user, for
+      e.g. /home/yourdomain/public_html/)
+      NOTE: please always add a slash to the end of the path!
+      
+   SEO_FRIENDLY_LINKS (this will allow you to see the urls like 
+      http://yourdomain.com/about instead of http://yourdomain.com?menuid=1)
+
+2: That should be all, now test out your site, just enter the servers url
+   into your browser (http://yourdomain.com) and you should see the site.
+   
+
+IMPORTANT: if you see a message saying that "Site Temporary Unavailable"
+it means that something is wrong and php can't access the db with the 
+user/password you have provided above, in that case please make sure
+that all (sql_user, sql_pass, sql_database) are spelled right and try again.
+
+
+REQUIREMENTS
+------------
+PHP >= 5.0, MySQL >= 4.1
+
+
+Hope everyhting will be fine, if there is anything please don't hesitate
+to to write at support@jcore.net
+
+Regards,
+jCore

@@ -1,0 +1,58 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: jCore 0.7.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-01-05 19:22+0200\n"
+"PO-Revision-Date: 2011-01-05 19:22+0200\n"
+"Last-Translator: Istvan Petres <me@pijulius.com>\n"
+"Language-Team: jCore.net <support@jcore.net>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: _\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-Language: English\n"
+"X-Poedit-SearchPath-0: /home/julius/workspace/jcore/lib/modules\n"
+
+#: Contact Dynamic Form
+msgid "Your name"
+msgstr ""
+
+msgid "Email address"
+msgstr ""
+
+msgid "Phone number"
+msgstr ""
+
+msgid "Questions / Comments"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/contact.class.php:14
+msgid "Contact Form"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/contact.class.php:15
+msgid "Let people contact you by completing a form"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/contact.class.php:22
+msgid "Contact"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/contact.class.php:101
+msgid "Form Settings"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/contact.class.php:194
+msgid "Contact Form Administration"
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/contact.class.php:220
+msgid "No contact form found."
+msgstr ""
+
+#: /home/julius/workspace/jcore/lib/modules/contact.class.php:253
+msgid "<b>Thank you for contacting us.</b><br /> Your message has been successfully sent."
+msgstr ""
+

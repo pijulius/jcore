@@ -1,0 +1,298 @@
+.admin-content {
+	margin-top: 20px;
+}
+
+.admin-content td {
+	vertical-align: top;
+}
+
+.admin-content-preview {
+	padding: 20px;
+	word-wrap: break-word;
+}
+
+.admin-content-preview .page-break {
+	height: 16px;
+	overflow: hidden;
+	background: url("http://icons.jcore.net/custom/readmore.png") 100% 0 no-repeat;
+}
+
+.admin-content-preview .template-preview img {
+	border: 0;
+}
+
+.admin-location {
+	font-weight: normal;
+}
+
+.admin-link,
+.admin-link.attachments,
+.admin-link.comments,
+.admin-link.posts,
+.admin-link.pictures,
+.admin-link.videos
+{
+	width: 32px;
+	height: 32px;
+	overflow: hidden;
+	display: block;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	text-decoration: none;
+	text-align: left;
+}
+
+.admin-link .counter {
+	margin: 16px 0 0 16px;
+}
+
+.admin-link.edit {
+	background-image: url("http://icons.jcore.net/32/edit.png");
+}
+
+.admin-link.delete {
+	background-image: url("http://icons.jcore.net/32/window-close.png");
+}
+
+.admin-link.posts {
+	background-image: url("http://icons.jcore.net/32/posts.png");
+}
+
+.admin-link.pictures {
+	background-image: url("http://icons.jcore.net/32/emblem-photos.png");
+}
+
+.admin-link.videos {
+	background-image: url("http://icons.jcore.net/32/emblem-videos.png");
+}
+
+.admin-link.files {
+	background-image: url("http://icons.jcore.net/32/system-file-manager.png");
+}
+
+.admin-link.attachments {
+	background-image: url("http://icons.jcore.net/32/mail-attachment.png");
+}
+
+.admin-link.comments {
+	background-image: url("http://icons.jcore.net/32/internet-group-chat.png");
+}
+
+.admin-link.icons {
+	background-image: url("http://icons.jcore.net/32/mail-send.png");
+}
+
+.admin-link.apply {
+	background-image: url("http://icons.jcore.net/32/dialog-apply.png");
+}
+
+.admin-link.important {
+	background-image: url("http://icons.jcore.net/32/emblem-important.png");
+}
+
+.admin-link.db {
+	background-image: url("http://icons.jcore.net/32/Database.png");
+}
+
+.admin-link.fields {
+	background-image: url("http://icons.jcore.net/32/dynamic-form-fields.png");
+}
+
+.admin-link.values {
+	background-image: url("http://icons.jcore.net/32/dynamic-form-values.png");
+}
+
+.admin-link.permissions {
+	background-image: url("http://icons.jcore.net/32/Burn.png");
+}
+
+.admin-link.email-new {
+	background-image: url("http://icons.jcore.net/32/mail-message-new.png");
+}
+
+.admin-favorite-links {
+	float: right;
+	position: relative;
+}
+
+.admin-favorite-links .button {
+	position: absolute;
+	z-index: 1;
+	right: 0px;
+	margin-right: 0;
+}
+
+.ie7 .admin-favorite-links .button {
+	width: 170px;
+}
+
+.admin-section-item {
+	width: 60px;
+	float:left;
+	height: 85px;
+	margin: 5px;
+	text-align: center;
+	overflow: visible;
+}
+
+.admin-section-item .counter {
+	margin: 32px 0 0 44px;
+	float: left;
+}
+
+.admin-section-item a {
+	font-size: 12px;
+	display: block;
+	padding-top: 50px;
+	background: url("http://icons.jcore.net/48/applications-development.png") no-repeat 50% 0px;
+	text-decoration: none;
+}
+
+.as-content-menuitems {
+	width: 80px;
+}
+
+.as-content-menuitems a {
+	background-image: url("http://icons.jcore.net/48/accessories-text-editor.png");
+}
+
+.as-content-ads a {
+	background-image: url("http://icons.jcore.net/48/foobillard.png");
+}
+
+.as-content-dynamicforms a {
+	background-image: url("http://icons.jcore.net/48/dynamic-forms.png");
+}
+
+.as-content-postshandling a {
+	background-image: url("http://icons.jcore.net/48/copy-posts.png");
+}
+
+.as-content-contentfiles a {
+	background-image: url("http://icons.jcore.net/48/drive-harddisk.png");
+}
+
+.as-site-settings a {
+	background-image: url("http://icons.jcore.net/48/preferences-system.png");
+}
+
+.as-site-blocks a {
+	background-image: url("http://icons.jcore.net/48/screenlets.png");
+}
+
+.as-site-menus a {
+	background-image: url("http://icons.jcore.net/48/menus.png");
+}
+
+.as-site-template a {
+	background-image: url("http://icons.jcore.net/48/emblem-art.png");
+}
+
+.as-site-template-manager a {
+	background-image: url("http://icons.jcore.net/48/preferences-desktop-theme.png");
+}
+
+.as-site-template-css-editor a {
+	background-image: url("http://icons.jcore.net/48/application-x-theme.png");
+}
+
+.as-site-template-js-editor a {
+	background-image: url("http://icons.jcore.net/48/text-x-source.png");
+}
+
+.as-site-template-files a {
+	background-image: url("http://icons.jcore.net/48/gftp.png");
+}
+
+.as-site-template-download a {
+	background-image: url("http://icons.jcore.net/48/download-templates.png");
+}
+
+.as-site-rss a {
+	background-image: url("http://icons.jcore.net/48/application-rss+xml.png");
+}
+
+.as-site-notes a {
+	background-image: url("http://icons.jcore.net/48/tomboy.png");
+}
+
+.as-site-favoritelinks a {
+	background-image: url("http://icons.jcore.net/48/favorite-links.png");
+}
+
+.as-site-notificationemails {
+	width: 70px;
+}
+
+.as-site-notificationemails a {
+	background-image: url("http://icons.jcore.net/48/notification-emails.png");
+}
+
+.as-site-languages {
+	width: 70px;
+}
+
+.as-site-languages a {
+	background-image: url("http://icons.jcore.net/48/preferences-desktop-locale.png");
+}
+
+.as-site-security a {
+	background-image: url("http://icons.jcore.net/48/system-config-rootpassword.png");
+}
+
+.as-site-sitemap a {
+	background-image: url("http://icons.jcore.net/48/text-x-opml+xml.png");
+}
+
+.as-members-users a {
+	background-image: url("http://icons.jcore.net/48/emesene.png");
+}
+
+.as-members-massemail a {
+	background-image: url("http://icons.jcore.net/48/user-mail.png");
+}
+
+.as-members-logout a {
+	background-image: url("http://icons.jcore.net/48/locked.png");
+}
+
+.mime-type-directory {
+	background-image: url("http://icons.jcore.net/32/folder.png");
+}
+
+.mass-email-users-search span {
+	display: block;
+	white-space: nowrap;
+	float: left;
+	margin-right: 10px;
+}
+
+.mass-email-add-user {
+	display: block;
+	width: 16px;
+	height: 16px;
+	background: url("http://icons.jcore.net/16/add.png") no-repeat;
+}
+
+#newemailform .mass-email-active-users {
+	display: block;
+	float: left;
+	padding: 0 10px 5px 20px;
+	background: url("http://icons.jcore.net/16/user_business.png") no-repeat;
+}
+
+#newemailform .mass-email-all-users {
+	display: block;
+	float: left;
+	padding: 0 10px 5px 20px;
+	background: url("http://icons.jcore.net/16/group.png") no-repeat;
+}
+
+#newemailform .mass-email-select-users {
+	display: block;
+	float: left;
+	padding: 0 10px 5px 20px;
+	background: url("http://icons.jcore.net/16/user.png") no-repeat;
+}

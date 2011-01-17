@@ -1,0 +1,30 @@
+All jCore (Julius' Core) code is Copyright 2009 by Istvan Petres 
+(aka P.I.Julius) <me@pijulius.com>
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program as the file LICENSE; if not, please see
+http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+
+jCore includes works under other copyright notices and distributed
+according to the terms of the GNU General Public License or a compatible
+license, including:
+
+  FCKeditor        - Copyright (C) 2003-2009 Frederico Caldeira Knabben
+  jQuery           - Copyright (c) 2008 John Resig (and all jQuery Plugins
+                     Extensions by their respective Owners!
+  Led Icon Set     - by Marcis Gasuns http://led24.de/iconset/
+  GNOME-Colors     - by Victor C. <perfectska04@gmail.com>
+  PHPUnsharp Mask  - by Torstein Hønsi 2003-07  thoensi_at_netcom_dot_no
+  PhpPatcher class - by legolas558
+  Snoopy class     - by Monte Ohrt <monte@ispi.net>
+  lastRSS          - by Vojtech Semecky, webmaster @ oslab . net
+  
