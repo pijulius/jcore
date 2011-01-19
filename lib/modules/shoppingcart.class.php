@@ -4538,7 +4538,7 @@ class shoppingCart extends modules {
 			if (!$item['MaxQuantityAtOnce'])
 				$item['MaxQuantityAtOnce'] = 30;
 			
-			for($i = 1; $i < $item['MaxQuantityAtOnce']; $i++) {	
+			for($i = 1; $i <= $item['MaxQuantityAtOnce']; $i++) {	
 				echo
 						"<option ".
 							($i == $row['Quantity']?
