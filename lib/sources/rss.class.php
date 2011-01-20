@@ -45,9 +45,6 @@ class _rss {
 				'?path='.admin::path().'#adminform');
 		
 		favoriteLinks::add(
-			__('Available Feeds'), 
-			SITE_URL.'rss');
-		favoriteLinks::add(
 			__('Pages / Posts'), 
 			'?path=admin/content/menuitems');
 	}
@@ -67,18 +64,17 @@ class _rss {
 			true);
 		$form->setStyle('width: 300px;');
 		
-		if (JCORE_VERSION >= '0.6') {
-			$form->setTooltipText(__("e.g. http://jcore.net/rss/posts.xml"));	
-			$form->addAdditionalTitle(
-				"<br /><span class='comment'>(<a href='".SITE_URL."rss/' target='_blank'>".
-					__("available feeds")."</a>)</span>");
-		} else {
-			$form->addAdditionalText(
-				" (".__("e.g. http://jcore.net/rss/posts.xml").")" .
-				" (<a href='".SITE_URL."rss/' target='_blank'>".
-					__("available feeds")."</a>)");
-		}	
-			
+		$form->addAdditionalText(
+			"<a href='".url::site().
+				"index.php?request=admin/site/rss&amp;feeds=1' " .
+				"class='select-link ajax-content-link' " .
+				"title='".htmlspecialchars(__("Select Feed"), ENT_QUOTES)."'>" .
+				__("Select Feed") .
+			"</a>" .
+			"<br /><span class='comment'>(" .
+				__("e.g. http://jcore.net/rss/posts.xml") .
+			")</span>");
+		
 		$form->add(
 			__('Additional Options'),
 			null,
@@ -196,6 +192,94 @@ class _rss {
 			
 		$form->reset();
 		return true;
+	}
+	
+	function displayAdminAvailableFeeds() {
+		if (!isset($_GET['limit']))
+			echo
+				"<div class='rss-feeds-available-feeds'>";
+		
+		echo
+				"<div class='form-title'>".__('Available Feeds')."</div>" .
+				"<table cellpadding='0' cellspacing='0' class='form-content list'>" .
+					"<thead>" .
+					"<tr>" .
+						"<th>" .
+							"<span class='nowrap'>".
+							__("Select") .
+							"</span>" .
+						"</th>" .
+						"<th>" .
+							"<span class='nowrap'>".
+							__("RSS Feeds") .
+							"</span>" .
+						"</th>" .
+					"</tr>" .
+					"</thead>" .
+					"<tbody>";
+		
+		$files = array();
+		
+		if ($dh = opendir(SITE_PATH.'rss/')) {
+			while (($file = readdir($dh)) !== false) {
+				if (!is_file(SITE_PATH.'rss/'.$file) || $file == 'index.html')
+					continue;
+				
+				$files[$file] = ucwords(str_replace('-', ' / ', 
+					preg_replace('/\..*?$/', '', $file)));
+			}
+		}
+		
+		$paging = new paging(10,
+			"&amp;request=admin/site/rss" .
+			"&amp;feeds=1");
+		
+		$paging->ajax = true;
+		$paging->setTotalItems(count($files));
+		
+		asort($files);
+		$files = array_slice($files, $paging->getStart(), 10);
+		
+		if (!is_array($files))
+			$files = array();
+		
+		$i = 1;	
+		foreach($files as $file => $title) {
+			echo
+				"<tr".($i%2?" class='pair'":NULL).">" .
+					"<td align='center'>" .
+						"<a href='javascript://' " .
+							"onclick=\"" .
+								"jQuery('#neweditrssfeedform #entryFeedURL').val('" .
+									htmlspecialchars(SITE_URL.'rss/'.$file, ENT_QUOTES)."');" .
+								(JCORE_VERSION >= '0.7'?
+									"jQuery(this).closest('.tipsy').hide();":
+									"jQuery(this).closest('.qtip').qtip('hide');") .
+								"\" " .
+							"class='user-permissions-select-path select-link'>" .
+						"</a>" .
+					"</td>" .
+					"<td class='auto-width'>" .
+						"<b>".$title."</b> " .
+						"(".files::humanSize(filesize(SITE_PATH.'rss/'.$file)).")<br />" .
+						"<div class='comment' style='padding-left: 10px;'>" .
+							calendar::datetime(filemtime(SITE_PATH.'rss/'.$file)) .
+						"</div>" .
+					"</td>" .
+				"</tr>";
+			
+			$i++;
+		}
+		
+		echo
+					"</tbody>" .
+				"</table>";
+		
+		$paging->display();
+		
+		if (!isset($_GET['limit']))
+			echo
+				"</div>";
 	}
 	
 	function displayAdminListHeader() {
@@ -703,6 +787,42 @@ class _rss {
 	
 	function clear() {
 		$this->items = array();
+	}
+	
+	function ajaxRequest() {
+		if (!$GLOBALS['USER']->loginok || 
+			!$GLOBALS['USER']->data['Admin']) 
+		{
+			tooltip::display(
+				__("Request can only be accessed by administrators!"),
+				TOOLTIP_ERROR);
+			return true;
+		}
+		
+		$feeds = null;
+		
+		if (isset($_GET['feeds']))
+			$feeds = $_GET['feeds'];
+		
+		if ($feeds) {
+			$permission = userPermissions::check(
+				$GLOBALS['USER']->data['ID'],
+				$this->adminPath);
+			
+			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
+				$permission['PermissionIDs'])
+			{
+				tooltip::display(
+					__("You do not have permission to access this path!"),
+					TOOLTIP_ERROR);
+				return true;
+			}
+			
+			$this->displayAdminAvailableFeeds();
+			return true;
+		}
+		
+		return false;
 	}
 	
 	static function displayFeeds() {

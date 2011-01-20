@@ -308,7 +308,7 @@ class shoppingCartDiscounts {
 					"<tr>" .
 						"<th>" .
 							"<span class='nowrap'>".
-							_("Add").
+							_("Select").
 							"</span>" .
 						"</th>" .
 						"<th>" .
