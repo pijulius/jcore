@@ -128,7 +128,7 @@ class _postsHandling {
 	function displayAdminListHeader($isownermainmenu = false, $menuroute = null) {
 		echo
 			"<th>" .
-				"<input type='checkbox' class='checkbox-all' " .
+				"<input type='checkbox' class='checkbox-all' alt='.list' " .
 				($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
 					"disabled='disabled' ":
 					null) .
@@ -234,16 +234,57 @@ class _postsHandling {
 	}
 	
 	function displayAdminListSearch() {
+		$menuid = null;
 		$search = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
 		
-		echo
+		if (isset($_GET['searchmenuid']))
+			$menuid = (int)$_GET['searchmenuid'];
+		
+		echo 
 			"<input type='hidden' name='path' value='".admin::path()."' />" .
 			"<input type='search' name='search' value='".
 				htmlspecialchars($search, ENT_QUOTES).
 				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
+			"<select style='width: 100px;' name='searchmenuid'>" .
+				"<option value=''></option>";
+		
+		$optgroup = false;
+		
+		foreach(menuItems::getTree() as $row) {
+			if ($row['ID'] === 0) {
+				if ($optgroup)
+					echo "</optgroup>";
+				
+				echo "<optgroup label='" .
+					htmlspecialchars($row['Title'], ENT_QUOTES)."'>";
+				
+				$optgroup = true;
+				continue;
+			}
+			
+			echo
+				"<option value='".$row['ID']."'" .
+					($menuid == $row['ID']?
+						" selected='selected'":
+						null) .
+					">" . 
+				($row['SubMenuOfID']?
+					str_replace(' ', '&nbsp;', 
+						str_pad('', $row['PathDeepnes']*4, ' ')).
+					"|- ":
+					null) .
+				$row['Title'] .
+				"</option>";
+		}
+	
+		if ($optgroup)
+			echo "</optgroup>";
+		
+		echo
+			"</select> " .
 			"<input type='submit' value='" .
 				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
 	}
@@ -418,10 +459,14 @@ class _postsHandling {
 	}
 	
 	function displayAdmin() {
+		$menuid = null;
 		$search = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
+		
+		if (isset($_GET['searchmenuid']))
+			$menuid = (int)$_GET['searchmenuid'];
 		
 		echo
 			"<div style='float: right;'>" .
@@ -449,6 +494,9 @@ class _postsHandling {
 			" WHERE 1" .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
+				null) .
+			($menuid?
+				" AND `MenuItemID` = '".$menuid."'":
 				null) .
 			($search?
 				" AND (`Title` LIKE '%".sql::escape($search)."%' " .
