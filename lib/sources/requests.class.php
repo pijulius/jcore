@@ -152,6 +152,14 @@ class _requests {
 		{
 			unset($GLOBALS['_'.strtoupper($this->method)][$this->variable]);
 			url::setURI(url::uri($this->variable));
+			
+			if ($ajax) {
+				tooltip::display(
+					__("Invalid or not enough permission to access this request!"),
+					TOOLTIP_ERROR);
+				exit();
+			}
+			
 			return;
 		}
 		

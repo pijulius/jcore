@@ -15,7 +15,7 @@
  *  Do Not touch these unless you know what to do
  */
  
-@define('JCORE_VERSION', '0.7.1');
+@define('JCORE_VERSION', '0.8');
 
 if (!defined('ROOT_DIR')) 
 	define('ROOT_DIR', '');
