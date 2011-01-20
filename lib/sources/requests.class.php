@@ -157,6 +157,8 @@ class _requests {
 				tooltip::display(
 					__("Invalid or not enough permission to access this request!"),
 					TOOLTIP_ERROR);
+				
+				sql::logout();
 				exit();
 			}
 			
@@ -184,7 +186,7 @@ class _requests {
 		
 		unset($class);
 		
-		if ($requestsuccess && $ajax) {
+		if ($ajax) {
 			requests::displayResult();
 			sql::logout();
 			exit();
