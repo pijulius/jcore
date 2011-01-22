@@ -583,6 +583,8 @@ class search extends modules {
 					FORM_INPUT_TYPE_HIDDEN,
 					false,
 					strip_tags($matches[2]));
+				
+				$form->setValue(strip_tags($matches[2]));
 			}
 		}
 	}
