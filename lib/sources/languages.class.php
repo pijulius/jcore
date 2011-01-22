@@ -678,7 +678,17 @@ class _languages {
 			return false;
 		
 		putenv('LC_ALL='.$locale);
-		setlocale(LC_ALL, $locale);
+		
+		# there is a problem with Turkish locales in PHP 5 but fixed in PHP 6
+		if (substr($locale, 0, 2) == 'tr' && phpversion() < '6.0') {
+			setlocale(LC_COLLATE, $locale);
+			setlocale(LC_MONETARY, $locale);
+			setlocale(LC_TIME, $locale);
+			setlocale(LC_MESSAGES, $locale);
+			
+		} else {
+			setlocale(LC_ALL, $locale);
+		}
 		
 		return languages::loadMessages();
 	}
