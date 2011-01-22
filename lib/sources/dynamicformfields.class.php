@@ -1210,12 +1210,12 @@ class _dynamicFormFields {
 			while($row = sql::fetch($rows))
 				$dynamicformfieldvalues->delete($row['ID']);
 			
-			sql::run(
-				" DELETE FROM `{dynamicformfields}` " .
-				" WHERE `ID` = '".$id."'");
-			
 			unset($dynamicformfieldvalues);
 		}
+		
+		sql::run(
+			" DELETE FROM `{dynamicformfields}` " .
+			" WHERE `ID` = '".$id."'");
 		
 		return true;
 	}
