@@ -1077,12 +1077,11 @@ class _menuItems {
 		}
 		
 		if (!$values['Deactivated'] && $values['ViewableBy'] < 2) {
-			if (SEO_FRIENDLY_LINKS)
-				$url = SITE_URL.
-					$values['Path'];
-			else
-				$url = SITE_URL.'index.php' .
-					'?menuid='.$newid;
+			$newmenu = sql::fetch(sql::run(
+				" SELECT * FROM `{menuitems}`" .
+				" WHERE `ID` = '".$newid."'"));
+			
+			$url = str_replace('&amp;', '&', $this->generateLink($newmenu));
 			
 			$sitemap = new siteMap();
 			$sitemap->load();
@@ -1119,13 +1118,8 @@ class _menuItems {
 			" SELECT * FROM `{menuitems}`" .
 			" WHERE `ID` = '".$id."'"));
 			
-		if (SEO_FRIENDLY_LINKS)
-			$menuitemurl = SITE_URL.
-				$menuitem['Path'];
-		else
-			$menuitemurl = SITE_URL.'index.php' .
-				'?menuid='.$id;
-			
+		$menuitemurl = str_replace('&amp;', '&', $this->generateLink($menuitem));
+		
 		if ((int)$values['SubMenuOfID'] && 
 			(int)$values['SubMenuOfID'] != $menuitem['SubMenuOfID']) 
 		{
@@ -1224,13 +1218,7 @@ class _menuItems {
 			
 		foreach(menuItems::getTree((int)$id) as $row) {
 			$updatesql = null;
-			
-			if (SEO_FRIENDLY_LINKS)
-				$url = SITE_URL.
-					$row['Path'];
-			else
-				$url = SITE_URL.'index.php' .
-					'?menuid='.$row['ID'];
+			$url = str_replace('&amp;', '&', $this->generateLink($row));
 			
 			if (($menuitem['Hidden'] && !$values['Hidden']) ||
 				(!$menuitem['Hidden'] && $values['Hidden'])) 
@@ -1285,14 +1273,8 @@ class _menuItems {
 		
 		foreach(menuItems::getBackTraceTree((int)$id) as $row) {
 			$updatesql = null;
+			$url = str_replace('&amp;', '&', $this->generateLink($row));
 			
-			if (SEO_FRIENDLY_LINKS)
-				$url = SITE_URL.
-					$row['Path'];
-			else
-				$url = SITE_URL.'index.php' .
-					'?menuid='.$row['ID'];
-		
 			if ($row['Hidden'] && !$values['Hidden'])
 				$updatesql[] = " `Hidden` = 0";
 			if ($row['Deactivated'] && !$values['Deactivated'])
@@ -1349,19 +1331,13 @@ class _menuItems {
 			
 			sql::run(
 				" DELETE FROM `{menuitemmodules}` " .
-				" WHERE `MenuItemID` = '".(int)$id."'");
+				" WHERE `MenuItemID` = '".$menuid."'");
 			
 			sql::run(
 				" DELETE FROM `{menuitems}` " .
-				" WHERE `ID` = '".(int)$id."'");
+				" WHERE `ID` = '".$menuid."'");
 			
-			if (SEO_FRIENDLY_LINKS)
-				$url = SITE_URL.
-					$menu['Path'];
-			else
-				$url = SITE_URL.'index.php' .
-					'?menuid='.$menuid;
-			
+			$url = str_replace('&amp;', '&', $this->generateLink($menu));
 			$sitemap->delete($url);
 		}
 		
@@ -1417,13 +1393,7 @@ class _menuItems {
 			if ($lastpost['TimeStamp'])
 				$lastmodified = $lastpost['TimeStamp'];
 			
-			if (SEO_FRIENDLY_LINKS)
-				$url = SITE_URL.
-					$row['Path'];
-			else
-				$url = SITE_URL.'index.php' .
-					'?menuid='.$row['ID'];
-			
+			$url = str_replace('&amp;', '&', $this->generateLink($row));
 			$sitemap->add(array(
 				'Link' => $url,
 				'LastModified' => $lastmodified));
@@ -1588,7 +1558,7 @@ class _menuItems {
 	function generateLink(&$row) {
 		$language = languages::$selected;
 		
-		if (!$language && $row['LanguageID'])
+		if ($row['LanguageID'] && (!$language || $language['ID'] != $row['LanguageID']))
 			$language = sql::fetch(sql::run(
 				" SELECT `ID`, `Path` FROM `{languages}`" .
 				" WHERE `ID` = '".$row['LanguageID']."'"));
