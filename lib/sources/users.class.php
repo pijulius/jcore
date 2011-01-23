@@ -1859,8 +1859,8 @@ class _users {
 						url::uri('ALL') .
 						"?path=admin/members/users" .
 						"&amp;search=".urlencode($row['Email']) .
-						"&amp;id=".$row['ID'] .
-						"'>".
+						"&amp;id=".$row['ID'] ."' " .
+						"target='_blank'>".
 							$username .
 						"</a>") .
 				"</span>";

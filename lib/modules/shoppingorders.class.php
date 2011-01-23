@@ -1542,7 +1542,9 @@ class shoppingOrderComments extends comments {
 	var $sqlRow = 'ShoppingOrderID';
 	var $sqlOwnerTable = 'shoppingorders';
 	var $sqlOwnerField = 'OrderID';
-	var $adminPath = 'admin/modules/shoppingorders/shoppingordercomments';
+	var $adminPath = array(
+		'admin/modules/shoppingorders/shoppingneworders/shoppingordercomments',
+		'admin/modules/shoppingorders/shoppingprocessedorders/shoppingordercomments');
 	
 	function __construct() {
 		languages::load('shopping');
@@ -1647,6 +1649,40 @@ class shoppingOrderItems {
 			" WHERE `ID` = '".$id."'");
 			
 		return true;
+	}
+}
+
+class shoppingNewOrders extends shoppingOrders {
+	var $adminPath = 'admin/modules/shoppingorders/shoppingneworders';
+	
+	function displayAdminTitle($ownertitle = null) {
+		admin::displayTitle(
+			_('Shopping Orders'),
+			_('New and Processing Orders'));
+	}
+	
+	function displayAdmin() {
+		$this->displayAdminOrders(array(
+			SHOPPING_ORDER_STATUS_NEW,
+			SHOPPING_ORDER_STATUS_PROCESSING));
+	}
+}
+
+class shoppingProcessedOrders extends shoppingOrders {
+	var $adminPath = 'admin/modules/shoppingorders/shoppingprocessedorders';
+	
+	function displayAdminTitle($ownertitle = null) {
+		admin::displayTitle(
+			_('Shopping Orders'),
+			_('Processed Orders'));
+	}
+	
+	function displayAdmin() {
+		$this->displayAdminOrders(array(
+			SHOPPING_ORDER_STATUS_ACCEPTED,
+			SHOPPING_ORDER_STATUS_CANCELLED,
+			SHOPPING_ORDER_STATUS_DELIVERED,
+			SHOPPING_ORDER_STATUS_REJECTED));
 	}
 }
 
@@ -2078,6 +2114,10 @@ class shoppingOrders extends modules {
 			"\n" .
 			".as-modules-shoppingorders a {\n" .
 			"	background-image: url(\"".$iconspath."48/shopping-orders.png\");\n" .
+			"}\n" .
+			"\n" .
+			".as-shopping-new-orders a {\n" .
+			"	background-image: url(\"".$iconspath."48/shopping-orders-new.png\");\n" .
 			"}\n";
 		
 		if (!files::save(SITE_PATH.'template/modules/css/shoppingorders.css', $css, true)) {
@@ -2093,13 +2133,16 @@ class shoppingOrders extends modules {
 	}
 	
 	// ************************************************   Admin Part
-	function countAdminItems() {
+	function countAdminItems($ordertypes = null) {
 		if (!parent::installed($this))
 			return 0;
 		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{shoppingorders}`" .
+			($ordertypes && is_array($ordertypes)?
+				" WHERE `OrderStatus` IN (".implode(',', $ordertypes).")":
+				null) .
 			" LIMIT 1"));
 		return $row['Rows'];
 	}
@@ -2108,7 +2151,7 @@ class shoppingOrders extends modules {
 		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				_('New Order'), 
-				'?path='.admin::path().'#adminform');
+				'?path=admin/modules/shoppingorders/shoppingneworders#adminform');
 		
 		favoriteLinks::add(
 			_('Items'), 
@@ -3519,15 +3562,6 @@ class shoppingOrders extends modules {
 		$form->display();
 	}
 
-	function displayAdminTitle($ownertitle = null) {
-		admin::displayTitle(
-			_('Shopping Orders Administration'),
-			$ownertitle);
-	}
-	
-	function displayAdminDescription() {
-	}
-	
 	function displayAdminListSearch() {
 		$search = null;
 		
@@ -3543,10 +3577,7 @@ class shoppingOrders extends modules {
 				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
 	}
 	
-	function displayAdmin() {
-		if (modules::displayAdmin())
-			return;
-			
+	function displayAdminOrders($ordertypes = null) {
 		$search = null;
 		$edit = null;
 		$id = null;
@@ -3612,44 +3643,16 @@ class shoppingOrders extends modules {
 		
 		$paging = new paging(20);
 		
-		$newrows = sql::run(
-			" SELECT * FROM `{shoppingorders}`" .
-			" WHERE `OrderStatus` IN (".
-				SHOPPING_ORDER_STATUS_NEW.", ".
-				SHOPPING_ORDER_STATUS_PROCESSING.") " .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
-			($search?
-				" AND (`OrderID` LIKE '%".sql::escape($search)."%' " .
-				" 	OR `OrderMethodDetails` LIKE '%".sql::escape($search)."%') ":
-				null) .
-			" ORDER BY `ID` DESC");
-			
-		if (sql::rows($newrows) && !$paging->getStart()) {
-			echo 
-				"<p>" .
-					"<b class='site-color'>".
-						_("New and Processing Orders").
-					"</b>" .
-				"</p>";
-			
-			$this->displayAdminList($newrows);
-			
-			echo 
-				"<div class='separator'></div>" .
-				"<p>" .
-					"<b>".
-						_("Processed Orders").
-					"</b>" .
-				"</p>";
-		}
-		
 		$rows = sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
-			" WHERE `OrderStatus` NOT IN (".
-				SHOPPING_ORDER_STATUS_NEW.", ".
-				SHOPPING_ORDER_STATUS_PROCESSING.") " .
+			" WHERE 1" .
+			($ordertypes && is_array($ordertypes)?
+				" AND (`OrderStatus` IN (".implode(',', $ordertypes).") " .
+				($id?
+					" OR `ID` = '".(int)$ordertypes."'":
+					null) .
+				") ":
+				null) .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				null) .
@@ -3689,7 +3692,9 @@ class shoppingOrders extends modules {
 			echo
 				"<a name='adminform'></a>";
 			
-			$this->displayAdminForm($form);
+			if (!$ordertypes || !is_array($ordertypes) || $edit ||
+				in_array(SHOPPING_ORDER_STATUS_NEW, $ordertypes))
+				$this->displayAdminForm($form);
 			
 			if (JCORE_VERSION < '0.7') {
 				echo
@@ -3741,6 +3746,708 @@ class shoppingOrders extends modules {
 		
 		echo
 			"</div>"; //admin-content
+	}
+	
+	function displayAdminTitle($ownertitle = null) {
+		echo
+			_('Shopping Orders Administration');
+	}
+	
+	function displayAdminDescription() {
+	}
+	
+	function displayAdminSections() {
+		$new = 0;
+		$processed = 0;
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED) {
+			$new = $this->countAdminItems(array(
+				SHOPPING_ORDER_STATUS_NEW,
+				SHOPPING_ORDER_STATUS_PROCESSING));
+			$processed = $this->countAdminItems(array(
+				SHOPPING_ORDER_STATUS_ACCEPTED,
+				SHOPPING_ORDER_STATUS_CANCELLED,
+				SHOPPING_ORDER_STATUS_DELIVERED,
+				SHOPPING_ORDER_STATUS_REJECTED));
+		}
+			
+		echo
+			"<div class='admin-section-item as-modules-shoppingorders as-shopping-new-orders'>" .
+				($new?
+					"<span class='counter'>" .
+						"<span>" .
+							"<span>" .
+							(int)$new .
+							"</span>" .
+						"</span>" .
+					"</span>":
+					null) .
+				"<a href='".url::uri('ALL') .
+					"?path=".admin::path()."/shoppingneworders' " .
+					"title='".htmlspecialchars(_("Handle pending and processing orders"), ENT_QUOTES).
+					"'>" .
+					"<span>" .
+					_("New Orders")."" .
+					"</span>" .
+				"</a>" .
+			"</div>" .
+			"<div class='admin-section-item as-modules-shoppingorders as-shopping-processed-orders'>" .
+				($processed?
+					"<span class='counter'>" .
+						"<span>" .
+							"<span>" .
+							(int)$processed .
+							"</span>" .
+						"</span>" .
+					"</span>":
+					null) .
+				"<a href='".url::uri('ALL') .
+					"?path=".admin::path()."/shoppingprocessedorders' " .
+					"title='".htmlspecialchars(_("Lookup and update processed orders"), ENT_QUOTES).
+					"'>" .
+					"<span>" .
+					_("Processed Orders")."" .
+					"</span>" .
+				"</a>" .
+			"</div>";
+	}
+	
+	function displayAdminDashboard() {
+		echo
+			"<div class='admin-content'>";
+		
+		echo 
+			"<div class='fc" .
+				form::fcState('fcshod', true) .
+				"'>" .
+				"<a class='fc-title' name='fcshod'>";
+		
+		$this->displayAdminTitle();
+		
+		echo
+				"</a>" .
+				"<div class='fc-content'>";
+		
+		$this->displayAdminDashboardSales();
+		$this->displayAdminSections();
+		
+		echo
+					"<div class='clear-both'></div>" .
+				"</div>" .
+			"</div>";
+		
+		$this->displayAdminDashboardOrders();
+		$this->displayAdminDashboardBestsellers();
+		$this->displayAdminDashboardMostViewedProducts();
+		
+		echo
+				"<div class='clear-both'></div>" .
+			"</div>"; //admin-content
+	}
+	
+	function displayAdminDashboardSales() {
+		$startdate = date("Y-m-01");
+		$enddate = date("Y-m-d");
+		
+		if (isset($_GET['startdate']))
+			$startdate = $_GET['startdate'];
+		
+		if (isset($_GET['enddate']))
+			$enddate = $_GET['enddate'];
+		
+		$sales = sql::fetch(sql::run(
+			" SELECT COUNT(*) AS `Rows`, " .
+			" SUM(`Subtotal`" .
+				(JCORE_VERSION >= '0.7'?
+					"+`Tax`":
+					null) .
+				"-`Discount`+`Fee`) AS `Total`" .
+			" FROM `{shoppingorders}`" .
+			" WHERE DATE(`TimeStamp`) >= " .
+				($startdate?
+					"'".sql::escape($startdate)."'":
+					"DATE_FORMAT(NOW(), '%Y-%m-01')") .
+			($enddate?
+				" AND DATE(`TimeStamp`) <= " .
+					"'".sql::escape($enddate)."'":
+				null) .
+			" AND `PaymentStatus` = '".SHOPPING_ORDER_PAYMENT_STATUS_PAID."'" .
+			" LIMIT 1"));
+		
+		echo
+			"<div class='shopping-orders-sales align-right'>" .
+				"<form action='?' method='get'>" .
+				"<input type='hidden' name='path' value='".admin::path()."' />" .
+				"<table>" .
+				"<tr>" .
+					"<td class='shopping-orders-sales-total' style='text-align: right;'>" .
+						"<div class='nowrap'>" .
+							(int)$sales['Rows']." ".strtolower(_("Sales")) .
+						"</div>" .
+						"<h1 class='nowrap' style='margin: 0;'><b>" .
+							$this->constructPrice($sales['Total']) .
+						"</b></h1>" .
+						"<input type='submit' name='refresh' value='" .
+							__("Refresh")."' class='button' style='margin: 0;' />" .
+					"</td>" .
+					"<td>" .
+						"<span class='nowrap'>&nbsp; &nbsp;</span>" .
+					"</td>" .
+					"<td class='shopping-orders-sales-range'>" .
+						"<div class='nowrap'>" .
+							"<div class='shopping-orders-sales-range-title'>" .
+								_("Start / End Date") .
+							"</div>" .
+							"<div class='spacer'></div>" .
+							"<div class='shopping-orders-sales-range-start'>" .
+								"<input type='date' class='calendar-input' style='width: 90px;' " .
+									"title='".__("e.g. 2010-07-21")."' name='startdate' " .
+									"value='".htmlspecialchars($startdate, ENT_QUOTES)."' />" .
+							"</div>" .
+							"<div class='shopping-orders-sales-range-end'>" .
+								"<input type='date' class='calendar-input' style='width: 90px;' " .
+									"title='".__("e.g. 2010-07-21")."' name='enddate' " .
+									"value='".htmlspecialchars($enddate, ENT_QUOTES)."' />" .
+							"</div>" .
+						"</div>" .
+					"</td>" .
+				"</tr>" .
+				"</table>" .
+				"</form>" .
+			"</div>";
+	}
+	
+	function displayAdminDashboardOrders() {
+		$startdate = null;
+		$enddate = null;
+		
+		if (isset($_GET['startdate']))
+			$startdate = $_GET['startdate'];
+		
+		if (isset($_GET['enddate']))
+			$enddate = $_GET['enddate'];
+		
+		$paging = new paging(10,
+			"&amp;request=admin/modules/shoppingorders" .
+			"&amp;orders=1");
+		
+		$paging->ajax = true;
+		
+		$rows = sql::run(
+			" SELECT * FROM `{shoppingorders}`" .
+			" WHERE DATE(`TimeStamp`) >= " .
+				($startdate?
+					"'".sql::escape($startdate)."'":
+					"DATE_FORMAT(NOW(), '%Y-%m-01')") .
+			($enddate?
+				" AND DATE(`TimeStamp`) <= " .
+					"'".sql::escape($enddate)."'":
+				null) .
+			" ORDER BY `ID` DESC" .
+			" LIMIT ".$paging->limit);
+		
+		$paging->setTotalItems(sql::count());
+		
+		if (!isset($this->ajaxRequest) || !$this->ajaxRequest) {
+			echo 
+			"<div class='fc" .
+				form::fcState('fcshos') .
+				"'>" .
+				"<a class='fc-title' name='fcshos'>" .
+					"<div class='align-right'>" .
+						$paging->items." ".strtolower(_("Orders")) .
+					"</div>" .
+					_("Orders") .
+				"</a>" .
+				"<div class='fc-content'>";
+		
+			$totals = sql::fetch(sql::run(
+				" SELECT" .
+				" SUM(`Subtotal`" .
+					(JCORE_VERSION >= '0.7'?
+						"+`Tax`":
+						null) .
+					"-`Discount`+`Fee`) AS `Total`," .
+				(JCORE_VERSION >= '0.7'?
+					" SUM(`Tax`) AS `Tax`,":
+					null) .
+				" SUM(`Fee`) AS `Fee`," .
+				" SUM(`Discount`) AS `Discount`" .
+				" FROM `{shoppingorders}`" .
+				" WHERE DATE(`TimeStamp`) >= " .
+					($startdate?
+						"'".sql::escape($startdate)."'":
+						"DATE_FORMAT(NOW(), '%Y-%m-01')") .
+				($enddate?
+					" AND DATE(`TimeStamp`) <= " .
+						"'".sql::escape($enddate)."'":
+					null) .
+				" LIMIT 1"));
+			
+			echo 
+				"<table width='100%' style='position: relative; top: -7px;'>" .
+				"<tr>" .
+					"<td style='text-align: center;'>" .
+						"<div class='nowrap'>" .
+							_("Grand Total") .
+						"</div>" .
+						"<h3 class='nowrap' style='margin: 0;'><b>" .
+							shoppingOrders::constructPrice($totals['Total']) .
+						"</b></h3>" .
+					"</td>" .
+					(JCORE_VERSION >= '0.7'?
+						"<td style='text-align: center;'>" .
+							"<div class='nowrap'>" .
+								_("Tax") .
+							"</div>" .
+							"<h3 class='nowrap' style='margin: 0;'><b>" .
+								shoppingOrders::constructPrice($totals['Tax']) .
+							"</b></h3>" .
+						"</td>":
+						null) .
+					"<td style='text-align: center;'>" .
+						"<div class='nowrap'>" .
+							_("Shipping & Handling") .
+						"</div>" .
+						"<h3 class='nowrap' style='margin: 0;'><b>" .
+							shoppingOrders::constructPrice($totals['Fee']) .
+						"</b></h3>" .
+					"</td>" .
+					"<td style='text-align: center;'>" .
+						"<div class='nowrap'>" .
+							_("Discount") .
+						"</div>" .
+						"<h3 class='nowrap' style='margin: 0;'><b>" .
+							shoppingOrders::constructPrice($totals['Discount']) .
+						"</b></h3>" .
+					"</td>" .
+				"</tr>" .
+				"</table>" .
+				"<div class='shopping-orders-dashboard-orders'>";
+		}
+		
+		echo
+			"<table cellpadding='0' cellspacing='0' class='list'>" .
+				"<thead>" .
+				"<tr>";
+		
+		$this->displayAdminListHeader();
+		$this->displayAdminListHeaderOptions();
+		
+		echo
+				"</tr>" .
+				"</thead>" .
+				"<tbody>";
+		
+		$i = 0;		
+		while($row = sql::fetch($rows)) {
+			echo 
+				"<tr class='shopping-order-".
+					strtolower($this->paymentStatus2Text($row['PaymentStatus'])) .
+					($i%2?" pair":null)."'>";
+			
+			$user = $GLOBALS['USER']->get($row['UserID']);
+					
+			echo
+				"<td class='auto-width'>" .
+					"<a href='?path=".admin::path()."/" .
+						(in_array($row['OrderStatus'], array(
+							SHOPPING_ORDER_STATUS_NEW,
+							SHOPPING_ORDER_STATUS_PROCESSING))?
+							"shoppingneworders":
+							"shoppingprocessedorders") .
+						"&amp;id=".$row['ID']."" .
+						"&amp;search=".$row['OrderID']."' " .
+					" class='bold' target='_blank'>" .
+					$row['OrderID'] .
+					"</a>" .
+					"<div class='comment' style='padding-left: 10px;'>" .
+					calendar::datetime($row['TimeStamp'])." ";
+			
+			$GLOBALS['USER']->displayUserName($user, __('by %s'));
+			
+			echo
+					"</div>" .
+				"</td>" .
+				"<td style='text-align: right;'>" .
+					"<span class='nowrap'>";
+			
+			shoppingOrders::displayPrice($row['Subtotal']+
+				(isset($row['Tax'])?$row['Tax']:0)-$row['Discount']+$row['Fee']);
+			
+			echo
+					"</span>" .
+				"</td>" .
+				"<td style='text-align: right;'>" .
+					"<div class='shopping-order-status nowrap" .
+					($row['OrderStatus'] == SHOPPING_ORDER_STATUS_NEW?
+						" bold'":
+						null) .
+						"'>" .
+						$this->status2Text($row['OrderStatus']) .
+					"</div>" .
+					"<div class='shopping-order-payment-status nowrap'>";
+			
+			$this->displayOrderMethodStatus($row);
+			
+			echo
+					"</div>" .
+				"</td>" .
+				"<td align='center'>" .
+					"<a class='admin-link comments' " .
+						"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
+							" (".$row['Comments'].")' " .
+						"href='?path=".admin::path()."/" .
+						(in_array($row['OrderStatus'], array(
+							SHOPPING_ORDER_STATUS_NEW,
+							SHOPPING_ORDER_STATUS_PROCESSING))?
+							"shoppingneworders":
+							"shoppingprocessedorders") .
+						"/".$row['ID']."/shoppingordercomments' target='_blank'>" .
+						(ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments']?
+							"<span class='counter'>" .
+								"<span>" .
+									"<span>" .
+									$row['Comments']."" .
+									"</span>" .
+								"</span>" .
+							"</span>":
+							null) .
+					"</a>" .
+				"</td>";
+			
+			echo
+				"</tr>";
+				
+			$i++;
+		}
+		
+		echo 
+				"</tbody>" .
+			"</table>";
+		
+		echo "<br />";
+		
+		$paging->display();
+		
+		if (!isset($this->ajaxRequest) || !$this->ajaxRequest)
+			echo
+					"</div>" .
+					"<div class='clear-both'></div>" .
+				"</div>" .
+			"</div>";
+	}
+	
+	function displayAdminDashboardBestsellers() {
+		$startdate = null;
+		$enddate = null;
+		
+		if (isset($_GET['startdate']))
+			$startdate = $_GET['startdate'];
+		
+		if (isset($_GET['enddate']))
+			$enddate = $_GET['enddate'];
+		
+		$paging = new paging(10,
+			"&amp;request=admin/modules/shoppingorders" .
+			"&amp;orderedproducts=1");
+		
+		$paging->ajax = true;
+		
+		sql::run(
+			" CREATE TEMPORARY TABLE `{TMPMostOrderedItems}`" .
+			" (`ShoppingItemID` mediumint(8) unsigned NOT NULL default '0'," .
+			" `Sales` int(10) unsigned NOT NULL default '0')");
+		
+		sql::run(
+			" INSERT INTO `{TMPMostOrderedItems}`" .
+			" SELECT `ShoppingItemID`," .
+			" COUNT(`ShoppingItemID`) AS `Sales`" .
+			" FROM `{shoppingorders}`" .
+			" LEFT JOIN `{shoppingorderitems}` ON `{shoppingorderitems}`.`ShoppingOrderID` = " .
+				"`{shoppingorders}`.`ID`" .
+			" WHERE DATE(`{shoppingorders}`.`TimeStamp`) >= " .
+				($startdate?
+					"'".sql::escape($startdate)."'":
+					"DATE_FORMAT(NOW(), '%Y-%m-01')") .
+			($enddate?
+				" AND DATE(`{shoppingorders}`.`TimeStamp`) <= " .
+					"'".sql::escape($enddate)."'":
+				null) .
+			" GROUP BY `ShoppingItemID`");
+		
+		$rows = sql::run(
+			" SELECT * FROM `{TMPMostOrderedItems}`" .
+			" LEFT JOIN `{shoppingitems}` ON `{shoppingitems}`.`ID` =" .
+				" `{TMPMostOrderedItems}`.`ShoppingItemID`" .
+			" ORDER BY `Sales` DESC" .
+			" LIMIT ".$paging->limit);
+		
+		$paging->setTotalItems(sql::count());
+		
+		if (!isset($this->ajaxRequest) || !$this->ajaxRequest)
+			echo 
+			"<div class='fc" .
+				form::fcState('fcshob') .
+				"'>" .
+				"<a class='fc-title' name='fcshob'>" .
+					"<div class='align-right'>" .
+						$paging->items." ".strtolower(_("Products")) .
+					"</div>" .
+					_("Bestsellers") .
+				"</a>" .
+				"<div class='fc-content'>";
+		
+		echo 
+			"<table cellpadding='0' cellspacing='0' class='list'>" .
+				"<thead>" .
+				"<tr>" .
+					"<th><span class='nowrap'>".
+						__("Title / Created on")."</span></th>" .
+					"<th><span class='nowrap'>".
+						__("Orders")."</span></th>" .
+					"<th><span class='nowrap'>".
+						__("Comments")."</span></th>" .
+				"</tr>" .
+				"</thead>" .
+				"<tbody>";
+		
+		$i = 0;		
+		while($row = sql::fetch($rows)) {
+			$item = sql::fetch(sql::run(
+				" SELECT * FROM `{shoppingitems}`" .
+				" WHERE `ID` = '".$row['ShoppingItemID']."'"));
+			
+			if (!$item)
+				continue;
+			
+			$row += $item;
+			
+			echo 
+				"<tr".($i%2?" class='pair'":NULL).">";
+			
+			$user = $GLOBALS['USER']->get($row['UserID']);
+			
+			echo
+				"<td class='auto-width' " .
+					($row['Deactivated']?
+						"style='text-decoration: line-through;' ":
+						null).
+					">" .
+					"<a href='?path=admin/modules/shopping/" .
+						$row['ShoppingID']."/shoppingitems" .
+						"&amp;id=".$row['ID']."" .
+						"&amp;search=".htmlspecialchars($row['Title'], ENT_QUOTES)."' " .
+					" class='bold' target='_blank'>" .
+						$row['Title'] .
+					"</a>" .
+					"<div class='comment' style='padding-left: 10px;'>" .
+						calendar::dateTime($row['TimeStamp'])." " .
+						($user?
+							$GLOBALS['USER']->constructUserName($user, __('by %s')):
+							null) .
+						", ".sprintf(__("%s views"), $row['Views']) .
+					"</div>" .
+				"</td>" .
+				"<td style='text-align: right;'>" .
+					"<span class='nowrap'>" .
+						$row['Sales'] .
+					"</span>" .
+				"</td>" .
+				"<td align='center'>" .
+					"<a class='admin-link comments' " .
+						"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
+							" (".$row['Comments'].")' " .
+						"href='?path=admin/modules/shopping/" .
+							$row['ShoppingID']."/shoppingitems/" .
+							$row['ID']."/shoppingitemcomments' " .
+						"target='_blank'>" .
+						(ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments']?
+							"<span class='counter'>" .
+								"<span>" .
+									"<span>" .
+									$row['Comments']."" .
+									"</span>" .
+								"</span>" .
+							"</span>":
+							null) .
+					"</a>" .
+				"</td>";
+			
+			echo
+				"</tr>";
+				
+			$i++;
+		}
+		
+		sql::run("DROP TEMPORARY TABLE `{TMPMostOrderedItems}`");
+		
+		echo 
+				"</tbody>" .
+			"</table>";
+		
+		echo "<br />";
+		
+		$paging->display();
+		
+		if (!isset($this->ajaxRequest) || !$this->ajaxRequest)
+			echo
+					"<div class='clear-both'></div>" .
+				"</div>" .
+			"</div>";
+	}
+	
+	function displayAdminDashboardMostViewedProducts() {
+		$startdate = null;
+		$enddate = null;
+		
+		if (isset($_GET['startdate']))
+			$startdate = $_GET['startdate'];
+		
+		if (isset($_GET['enddate']))
+			$enddate = $_GET['enddate'];
+		
+		$paging = new paging(10,
+			"&amp;request=admin/modules/shoppingorders" .
+			"&amp;viewedproducts=1");
+		
+		$paging->ajax = true;
+		
+		sql::run(
+			" CREATE TEMPORARY TABLE `{TMPMostViewedOrderItems}`" .
+			" (`ShoppingItemID` mediumint(8) unsigned NOT NULL default '0')");
+		
+		sql::run(
+			" INSERT INTO `{TMPMostViewedOrderItems}`" .
+			" SELECT `ShoppingItemID` FROM `{shoppingorders}`" .
+			" LEFT JOIN `{shoppingorderitems}` ON `{shoppingorderitems}`.`ShoppingOrderID` = " .
+				"`{shoppingorders}`.`ID`" .
+			" WHERE DATE(`{shoppingorders}`.`TimeStamp`) >= " .
+				($startdate?
+					"'".sql::escape($startdate)."'":
+					"DATE_FORMAT(NOW(), '%Y-%m-01')") .
+			($enddate?
+				" AND DATE(`{shoppingorders}`.`TimeStamp`) <= " .
+					"'".sql::escape($enddate)."'":
+				null) .
+			" GROUP BY `ShoppingItemID`");
+		
+		$rows = sql::run(
+			" SELECT * FROM `{TMPMostViewedOrderItems}`" .
+			" LEFT JOIN `{shoppingitems}` ON `{shoppingitems}`.`ID` =" .
+				" `{TMPMostViewedOrderItems}`.`ShoppingItemID`" .
+			" ORDER BY `Views` DESC" .
+			" LIMIT ".$paging->limit);
+		
+		$paging->setTotalItems(sql::count());
+		
+		if (!isset($this->ajaxRequest) || !$this->ajaxRequest)
+			echo 
+			"<div class='fc" .
+				form::fcState('fcshom') .
+				"'>" .
+				"<a class='fc-title' name='fcshom'>" .
+					"<div class='align-right'>" .
+						$paging->items." ".strtolower(_("Products")) .
+					"</div>" .
+					_("Most Viewed Products") .
+				"</a>" .
+				"<div class='fc-content'>";
+		
+		echo 
+			"<table cellpadding='0' cellspacing='0' class='list'>" .
+				"<thead>" .
+				"<tr>" .
+					"<th><span class='nowrap'>".
+						__("Title / Created on")."</span></th>" .
+					"<th><span class='nowrap'>".
+						__("Views")."</span></th>" .
+					"<th><span class='nowrap'>".
+						__("Comments")."</span></th>" .
+				"</tr>" .
+				"</thead>" .
+				"<tbody>";
+		
+		$i = 0;		
+		while($row = sql::fetch($rows)) {
+			echo 
+				"<tr".($i%2?" class='pair'":NULL).">";
+			
+			$user = $GLOBALS['USER']->get($row['UserID']);
+			
+			echo
+				"<td class='auto-width' " .
+					($row['Deactivated']?
+						"style='text-decoration: line-through;' ":
+						null).
+					">" .
+					"<a href='?path=admin/modules/shopping/" .
+						$row['ShoppingID']."/shoppingitems" .
+						"&amp;id=".$row['ID']."" .
+						"&amp;search=".htmlspecialchars($row['Title'], ENT_QUOTES)."' " .
+					" class='bold' target='_blank'>" .
+						$row['Title'] .
+					"</a>" .
+					"<div class='comment' style='padding-left: 10px;'>" .
+						calendar::dateTime($row['TimeStamp'])." " .
+						($user?
+							$GLOBALS['USER']->constructUserName($user, __('by %s')):
+							null) .
+					"</div>" .
+				"</td>" .
+				"<td style='text-align: right;'>" .
+					"<span class='nowrap'>" .
+						$row['Views'] .
+					"</span>" .
+				"</td>" .
+				"<td align='center'>" .
+					"<a class='admin-link comments' " .
+						"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
+							" (".$row['Comments'].")' " .
+						"href='?path=admin/modules/shopping/" .
+							$row['ShoppingID']."/shoppingitems/" .
+							$row['ID']."/shoppingitemcomments' " .
+						"target='_blank'>" .
+						(ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments']?
+							"<span class='counter'>" .
+								"<span>" .
+									"<span>" .
+									$row['Comments']."" .
+									"</span>" .
+								"</span>" .
+							"</span>":
+							null) .
+					"</a>" .
+				"</td>";
+			
+			echo
+				"</tr>";
+				
+			$i++;
+		}
+		
+		sql::run("DROP TEMPORARY TABLE `{TMPMostViewedOrderItems}`");
+		
+		echo 
+				"</tbody>" .
+			"</table>";
+		
+		echo "<br />";
+		
+		$paging->display();
+		
+		if (!isset($this->ajaxRequest) || !$this->ajaxRequest)
+			echo
+					"<div class='clear-both'></div>" .
+				"</div>" .
+			"</div>";
+	}
+	
+	function displayAdmin() {
+		if (modules::displayAdmin())
+			return;
+		
+		$this->displayAdminDashboard();
 	}
 	
 	function add($values) {
@@ -4180,6 +4887,9 @@ class shoppingOrders extends modules {
 		$fee = null;
 		$subtotal = null;
 		$totals = null;
+		$orders = null;
+		$orderedproducts = null;
+		$viewedproducts = null;
 		
 		if (isset($_GET['users']))
 			$users = $_GET['users'];
@@ -4199,7 +4909,16 @@ class shoppingOrders extends modules {
 		if (isset($_GET['totals']))
 			$totals = $_GET['totals'];
 		
-		if ($users || $items) {
+		if (isset($_GET['orders']))
+			$orders = $_GET['orders'];
+		
+		if (isset($_GET['orderedproducts']))
+			$orderedproducts = $_GET['orderedproducts'];
+		
+		if (isset($_GET['viewedproducts']))
+			$viewedproducts = $_GET['viewedproducts'];
+		
+		if ($users || $items || $orders || $orderedproducts || $viewedproducts) {
 			if (!$GLOBALS['USER']->loginok || 
 				!$GLOBALS['USER']->data['Admin']) 
 			{
@@ -4231,6 +4950,21 @@ class shoppingOrders extends modules {
 			
 			if ($items) {
 				$this->displayAdminShoppingItems();
+				return true;
+			}
+			
+			if ($orders) {
+				$this->displayAdminDashboardOrders();
+				return true;
+			}
+			
+			if ($orderedproducts) {
+				$this->displayAdminDashboardBestsellers();
+				return true;
+			}
+			
+			if ($viewedproducts) {
+				$this->displayAdminDashboardMostViewedProducts();
 				return true;
 			}
 		}
@@ -4746,7 +5480,7 @@ class shoppingOrders extends modules {
 	function displayListHeader() {
 		echo
 			"<th><span class='nowrap'>".
-				_("Order ID / TimeStamp")."</span></th>" .
+				_("Order ID / Submitted on")."</span></th>" .
 			"<th style='text-align: right;'><span class='nowrap'>".
 				_("Grand Total")."</span></th>" .
 			"<th style='text-align: right;'><span class='nowrap'>".

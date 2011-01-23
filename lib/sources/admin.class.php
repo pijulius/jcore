@@ -285,11 +285,11 @@ class _admin {
 			
 		$curpath = trim(preg_replace('/\/[0-9]+/', '', $this->path()), '/');
 		
-		if ($curpath != $adminpath || 
-			(is_array($adminpath) && !in_array($curpath, $adminpath)))
-			return false;
+		if ((is_array($adminpath) && in_array($curpath, $adminpath)) ||
+			$curpath == $adminpath)
+			return true;
 		
-		return true;
+		return false;
 	}
 	
 	static function displayCSSLinks() {
