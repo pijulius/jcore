@@ -1661,8 +1661,14 @@ class shoppingNewOrders extends shoppingOrders {
 			_('New and Processing Orders'));
 	}
 	
+	function displayAdminListSearch($ordertypes = null) {
+		parent::displayAdminListSearch(array(
+			SHOPPING_ORDER_STATUS_NEW,
+			SHOPPING_ORDER_STATUS_PROCESSING));
+	}
+	
 	function displayAdmin() {
-		$this->displayAdminOrders(array(
+		parent::displayAdminOrders(array(
 			SHOPPING_ORDER_STATUS_NEW,
 			SHOPPING_ORDER_STATUS_PROCESSING));
 	}
@@ -1677,8 +1683,16 @@ class shoppingProcessedOrders extends shoppingOrders {
 			_('Processed Orders'));
 	}
 	
+	function displayAdminListSearch($ordertypes = null) {
+		parent::displayAdminListSearch(array(
+			SHOPPING_ORDER_STATUS_ACCEPTED,
+			SHOPPING_ORDER_STATUS_CANCELLED,
+			SHOPPING_ORDER_STATUS_DELIVERED,
+			SHOPPING_ORDER_STATUS_REJECTED));
+	}
+	
 	function displayAdmin() {
-		$this->displayAdminOrders(array(
+		parent::displayAdminOrders(array(
 			SHOPPING_ORDER_STATUS_ACCEPTED,
 			SHOPPING_ORDER_STATUS_CANCELLED,
 			SHOPPING_ORDER_STATUS_DELIVERED,
@@ -2963,7 +2977,7 @@ class shoppingOrders extends modules {
 			sprintf(_("Order has been successfully created.<br /> " .
 					"The confirmation / tracking number is <b>%s</b>."), $ordernumber) .
 				"<br /><br />".
-				"<a href='".url::uri('id, edit, delete, limit, search') .
+				"<a href='".url::uri('id, edit, delete, limit, search, status') .
 					"&id=".$orderid."'>" .
 					_("View Order") .
 				"</a>" .
@@ -3562,28 +3576,58 @@ class shoppingOrders extends modules {
 		$form->display();
 	}
 
-	function displayAdminListSearch() {
+	function displayAdminListSearch($ordertypes = null) {
 		$search = null;
+		$status = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
+		
+		if (isset($_GET['status']))
+			$status = (int)$_GET['status'];
+		
+		if (!$ordertypes)
+			$ordertypes = array(
+				SHOPPING_ORDER_STATUS_NEW,
+				SHOPPING_ORDER_STATUS_PROCESSING,
+				SHOPPING_ORDER_STATUS_ACCEPTED,
+				SHOPPING_ORDER_STATUS_DELIVERED,
+				SHOPPING_ORDER_STATUS_CANCELLED,
+				SHOPPING_ORDER_STATUS_REJECTED);
 		
 		echo
 			"<input type='hidden' name='path' value='".admin::path()."' />" .
 			"<input type='search' name='search' value='".
 				htmlspecialchars($search, ENT_QUOTES).
 				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
+			"<select name='status' value='".
+				(int)$status .
+				"' style='width: 100px;' onchange='this.form.submit();'>" .
+				"<option value=''>".__("All")."</option>";
+		
+		foreach($ordertypes as $type)
+			echo
+				"<option value='".$type."'" .
+					($status == $type?" selected='selected'":null) .
+					">".$this->status2Text($type)."</option>";
+		
+		echo
+			"</select> " .
 			"<input type='submit' value='" .
 				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
 	}
 	
 	function displayAdminOrders($ordertypes = null) {
 		$search = null;
+		$status = null;
 		$edit = null;
 		$id = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
+		
+		if (isset($_GET['status']))
+			$status = (int)$_GET['status'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -3649,12 +3693,15 @@ class shoppingOrders extends modules {
 			($ordertypes && is_array($ordertypes)?
 				" AND (`OrderStatus` IN (".implode(',', $ordertypes).") " .
 				($id?
-					" OR `ID` = '".(int)$ordertypes."'":
+					" OR `ID` = '".(int)$id."'":
 					null) .
 				") ":
 				null) .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
+				null) .
+			($status?
+				" AND `OrderStatus` = '".(int)$status."'":
 				null) .
 			($search?
 				" AND (`OrderID` LIKE '%".sql::escape($search)."%' " .

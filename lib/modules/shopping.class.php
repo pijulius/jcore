@@ -1891,6 +1891,21 @@ class shoppingItems {
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
 	}
 	
+	function displayAdminListSearch() {
+		$search = null;
+		
+		if (isset($_GET['search']))
+			$search = trim(strip_tags($_GET['search']));
+		
+		echo 
+			"<input type='hidden' name='path' value='".admin::path()."' />" .
+			"<input type='search' name='search' value='".
+				htmlspecialchars($search, ENT_QUOTES).
+				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
+			"<input type='submit' value='" .
+				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
+	}
+	
 	function displayAdminList($rows, $digitalgoods = false) {
 		$id = null;
 		$outofstockitems = false;
@@ -2001,9 +2016,13 @@ class shoppingItems {
 	}
 	
 	function displayAdmin() {
+		$search = null;
 		$edit = null;
 		$id = null;
 		$digitalgoods = false;
+		
+		if (isset($_GET['search']))
+			$search = trim(strip_tags($_GET['search']));
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -2025,6 +2044,16 @@ class shoppingItems {
 			
 		if (isset($selectedowner['DigitalGoods']))
 			$digitalgoods = $selectedowner['DigitalGoods'];
+		
+		echo
+			"<div style='float: right;'>" .
+				"<form action='".url::uri('ALL')."' method='get'>";
+		
+		$this->displayAdminListSearch();
+		
+		echo
+				"</form>" .
+			"</div>";
 		
 		$this->displayAdminTitle($selectedowner['Title']);
 		$this->displayAdminDescription();
@@ -2073,6 +2102,10 @@ class shoppingItems {
 				($this->userPermissionIDs?
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
+				($search?
+					" AND (`Title` LIKE '%".sql::escape($search)."%' " .
+					" 	OR `Keywords` LIKE '%".sql::escape($search)."%') ":
+					null) .
 				" ORDER BY `OrderID`, `ID` DESC");
 				
 		if (sql::rows($outofstockrows) && !$paging->getStart()) {
@@ -2101,6 +2134,10 @@ class shoppingItems {
 					" OR `AvailableQuantity`)" .
 				($this->userPermissionIDs?
 					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null) .
+				($search?
+					" AND (`Title` LIKE '%".sql::escape($search)."%' " .
+					" 	OR `Keywords` LIKE '%".sql::escape($search)."%') ":
 					null) .
 				" ORDER BY `OrderID`, `ID` DESC" .
 				" LIMIT ".$paging->limit);

@@ -248,8 +248,8 @@ class _postsHandling {
 			"<input type='search' name='search' value='".
 				htmlspecialchars($search, ENT_QUOTES).
 				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
-			"<select style='width: 100px;' name='searchmenuid'>" .
-				"<option value=''></option>";
+			"<select style='width: 100px;' name='searchmenuid' onchange='this.form.submit();'>" .
+				"<option value=''>".__("All")."</option>";
 		
 		$optgroup = false;
 		
@@ -500,7 +500,7 @@ class _postsHandling {
 				null) .
 			($search?
 				" AND (`Title` LIKE '%".sql::escape($search)."%' " .
-				" 	OR `Content` LIKE '%".sql::escape($search)."%') ":
+				" 	OR `Keywords` LIKE '%".sql::escape($search)."%') ":
 				null) .
 			" ORDER BY `MenuItemID`, `OrderID`, `ID` DESC" .
 			" LIMIT ".$paging->limit);
