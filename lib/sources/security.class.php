@@ -262,7 +262,7 @@ class _security {
 			"<p class='comment'>" .
 			__("The logged IP adresses in the list below have been banned " .
 				"(because trying to login with different users in a short time) " .
-				"and won't be able to login till expiration date / time. " .
+				"and won't be able to login until expiration date / time. " .
 				"To unban an IP just delete it from the list.") .
 			"</p>";
 	}
@@ -407,7 +407,7 @@ class _security {
 			"<p class='comment'>" .
 			__("The logged Users in the list below have been suspended " .
 				"(because of simultaneously logins from different IPs) " .
-				"and won't be able to login till expiration date / time. " .
+				"and won't be able to login until expiration date / time. " .
 				"To unsuspend a user just delete it from the list.") .
 			"</p>";
 	}
