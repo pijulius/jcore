@@ -13,7 +13,6 @@ define('REQUEST_TYPE_NEW_PASSWORD', 2);
  
 include_once('lib/email.class.php');
 include_once('lib/security.class.php');
-include_once('lib/email.class.php');
 include_once('lib/bfprotection.class.php');
 include_once('lib/ptprotection.class.php');
 
