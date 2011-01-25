@@ -186,7 +186,7 @@ class _requests {
 		
 		unset($class);
 		
-		if ($ajax) {
+		if ($ajax && $requestsuccess) {
 			requests::displayResult();
 			sql::logout();
 			exit();
