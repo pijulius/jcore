@@ -36,7 +36,7 @@ class _email {
 	var $html = false;
 	
 	function __construct() {
-		$this->from = preg_replace('/-.*/i', '', PAGE_TITLE).
+		$this->from = preg_replace('/(-|,|;).*/i', '', strip_tags(PAGE_TITLE)).
 			" <".WEBMASTER_EMAIL.">";
 	}
 	
@@ -138,7 +138,7 @@ class _email {
 	}
 	
 	function reset() {
-		$this->from = preg_replace('/-.*/i', '', PAGE_TITLE).
+		$this->from = preg_replace('/(-|,|;).*/i', '', strip_tags(PAGE_TITLE)).
 			" <".WEBMASTER_EMAIL.">";
 		
 		$this->to = null;
