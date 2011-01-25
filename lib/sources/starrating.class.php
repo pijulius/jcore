@@ -16,6 +16,7 @@ class _starRating {
 	var $selectedOwnerID;
 	var $guestRating = false;
 	var $uriRequest;
+	var $ajaxRequest = null;
 	
 	function __construct() {
 		$this->uriRequest = strtolower(get_class($this));

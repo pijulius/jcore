@@ -28,6 +28,7 @@ class _sitemapFileEditor extends fileEditor {
 class _sitemap {
 	var $file;
 	var $urls = array();
+	var $ajaxRequest = null;
 	var $adminPath = 'admin/site/sitemap';
 	
 	function __construct() {

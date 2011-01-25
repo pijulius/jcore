@@ -12,6 +12,7 @@ include_once('lib/url.class.php');
 
 class _css {
 	static $parseURLs = true;
+	var $ajaxRequest = null;
 	
 	// CSS Browser Selector based on Bastian Allgeier's work
 	// http://bastian-allgeier.de/css_browser_selector

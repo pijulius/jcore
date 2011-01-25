@@ -41,6 +41,7 @@ class _pictures {
 	var $thumbnailHeight = PICTURE_THUMBNAIL_HEIGHT;
 	var $watermarkPosition = PICTURE_WATERMARK_POSITION;
 	var $ajaxPaging = AJAX_PAGING;
+	var $ajaxRequest = null;
 	
 	function __construct() {
 		$this->uriRequest = strtolower(get_class($this));
@@ -1841,7 +1842,7 @@ class _pictures {
 		if (!$paging->items)
 			return false;
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"<div class='".
 					strtolower(preg_replace('/([A-Z])/', '-\\1', get_class($this))).
@@ -1867,7 +1868,7 @@ class _pictures {
 		if (!$this->randomize && $this->showPaging)
 			$paging->display();
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //pictures
 		

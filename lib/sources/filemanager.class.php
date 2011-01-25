@@ -19,6 +19,7 @@ class _fileManager {
 	var $directLinks = false;
 	var $readOnly = false;
 	var $ajaxPaging = AJAX_PAGING;
+	var $ajaxRequest = null;
 	
 	function __construct() {
 		if (isset($_GET['file'])) {
@@ -594,7 +595,7 @@ class _fileManager {
 		
 		$paging->setTotalItems(count($files));
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"<div class='" .
 					strtolower(preg_replace('/([A-Z])/', '-\\1', get_class($this))).
@@ -654,7 +655,7 @@ class _fileManager {
 		unset($folderform);
 		unset($form);
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //file-manager
 		

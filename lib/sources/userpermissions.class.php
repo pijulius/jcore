@@ -12,6 +12,7 @@ define('USER_PERMISSION_TYPE_READ', 1);
 define('USER_PERMISSION_TYPE_WRITE', 2);
  
 class _userPermissions {
+	var $ajaxRequest = null;
 	var $adminPath = 'admin/members/users/userpermissions';
 	
 	// ************************************************   Admin Part

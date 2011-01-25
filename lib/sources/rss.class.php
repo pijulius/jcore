@@ -16,6 +16,7 @@ class _rss {
 	var $channel = array();
 	var $items = array();
 	var $adminPath = 'admin/site/rss';
+	var $ajaxRequest = null;
 	
 	function __construct() {
 		$this->file = SITE_PATH.'rss/rss.xml';

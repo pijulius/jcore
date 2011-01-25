@@ -39,6 +39,7 @@ include_once('lib/modules/shopping.class.php');
 include_once('lib/modules/shoppingorders.class.php');
 
 class shoppingCartDiscounts {
+	var $ajaxRequest = null;
 	var $adminPath = 'admin/modules/shoppingcart/shoppingcartdiscounts';
 	
 	function __construct() {
@@ -876,6 +877,7 @@ class shoppingCartDiscounts {
 }
 
 class shoppingCartFees {
+	var $ajaxRequest = null;
 	var $adminPath = 'admin/modules/shoppingcart/shoppingcartfees';
 	
 	function __construct() {
@@ -1820,6 +1822,7 @@ class shoppingCartFees {
 }
 
 class shoppingCartTaxes {
+	var $ajaxRequest = null;
 	var $adminPath = 'admin/modules/shoppingcart/shoppingcarttaxes';
 	
 	function __construct() {

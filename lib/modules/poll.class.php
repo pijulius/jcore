@@ -433,6 +433,7 @@ class poll extends modules {
 	var $ignorePaging = false;
 	var $showPaging = true;
 	var $ajaxPaging = AJAX_PAGING;
+	var $ajaxRequest = null;
 	var $adminPath = 'admin/modules/poll';
 	
 	function __construct() {
@@ -2280,7 +2281,7 @@ class poll extends modules {
 		
 		$paging->setTotalItems(sql::count());
 			
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo 
 				"<div class='polls'>";
 			
@@ -2312,7 +2313,7 @@ class poll extends modules {
 		if (!$this->selectedID && !$this->randomize && $this->showPaging)
 			$paging->display();
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo 
 				"</div>";
 			

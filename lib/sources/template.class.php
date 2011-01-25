@@ -191,6 +191,7 @@ class _templateImages extends fileManager {
 class _template {
 	var $rootPath = null;
 	var $rootURL = null;
+	var $ajaxRequest = null;
 	var $adminPath = 'admin/site/template';
 	
 	static $selected = null;

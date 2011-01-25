@@ -33,6 +33,7 @@ class _videos {
 	var $videoWidth = 640;
 	var $videoHeight = 385;
 	var $ajaxPaging = AJAX_PAGING;
+	var $ajaxRequest = null;
 	
 	function __construct() {
 		$this->uriRequest = strtolower(get_class($this));
@@ -1335,7 +1336,7 @@ class _videos {
 		
 		echo
 			"<div class='video" .
-				(!isset($this->ajaxRequest)?
+				(!$this->ajaxRequest?
 					" selected":
 					null) .
 				" video".$row['ID'] .
@@ -1389,7 +1390,7 @@ class _videos {
 		
 			$this->displaySelected($row);
 			
-			if (isset($this->ajaxRequest))
+			if ($this->ajaxRequest)
 				return true;
 			
 			$this->selectedID = 0;
@@ -1426,7 +1427,7 @@ class _videos {
 		if (!$paging->items)
 			return false;
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"<div class='".
 					strtolower(preg_replace('/([A-Z])/', '-\\1', get_class($this))).
@@ -1452,7 +1453,7 @@ class _videos {
 		if (!$this->randomize && $this->showPaging)
 			$paging->display();
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //videos
 		

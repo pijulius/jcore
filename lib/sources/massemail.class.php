@@ -12,6 +12,7 @@ include_once('lib/email.class.php');
 
 class _massEmail {
 	var $adminPath = 'admin/members/massemail';
+	var $ajaxRequest = null;
 	
 	// ************************************************   Admin Part
 	static function countAdminItems() {

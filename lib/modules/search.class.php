@@ -24,6 +24,7 @@ class search extends modules {
 	var $searchIn = null;
 	var $adminPath = 'admin/modules/search';
 	var $searchInList = array();
+	var $ajaxRequest = null;
 	
 	function __construct() {
 		languages::load('search');
@@ -702,7 +703,7 @@ class search extends modules {
 			
 		$this->watch();
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			$this->displaySearchForm();
 		
 		if (!$this->search) {
@@ -728,7 +729,7 @@ class search extends modules {
 			return;
 		}
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo "<div class='searches'>";
 		
 		$keywords = array();
@@ -750,7 +751,7 @@ class search extends modules {
 			unset($class);
 		}
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo "</div>"; //searches
 	}
 }

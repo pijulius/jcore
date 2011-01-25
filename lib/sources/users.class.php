@@ -98,6 +98,7 @@ class _users {
 	var $logedInNow = null;
 	var $result = null;
 	var $verifyError = 0;
+	var $ajaxRequest = null;
 	var $adminPath = 'admin/members/users';
 	
 	// ************************************************   Admin Part

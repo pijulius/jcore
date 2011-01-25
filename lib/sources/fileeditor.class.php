@@ -11,6 +11,7 @@
 class _fileEditor {
 	var $file;
 	var $uriRequest;
+	var $ajaxRequest = null;
 	
 	function __construct() {
 		$this->uriRequest = strtolower(get_class($this));
@@ -101,9 +102,9 @@ class _fileEditor {
 		
 		$this->verify($form);
 		
-		if (isset($this->ajaxRequest))
+		if ($this->ajaxRequest)
 			return;
-			
+		
 		$this->displayForm($form);
 		unset($form);
 	}

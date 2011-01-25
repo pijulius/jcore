@@ -108,6 +108,7 @@ class _ckEditorFileManager extends fileManager {
 class _ckEditor {
 	static $loaded = false;
 	var $ckFuncNum = 1;
+	var $ajaxRequest = null;
 	
 	static function compress($buffer, $mode) {
 		// Fix scrollbar on file browser window, see 

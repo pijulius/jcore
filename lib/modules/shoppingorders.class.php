@@ -190,6 +190,7 @@ class shoppingOrderMethodCheck extends form {
 class shoppingOrderMethodPayPal extends form {
 	var $postProcessText = null;
 	var $processResult = null;
+	var $ajaxRequest = null;
 	
 	function __construct() {
 		parent::__construct(
@@ -420,6 +421,7 @@ class shoppingOrderMethodPayPal extends form {
 class shoppingOrderMethodCCBill extends form {
 	var $postProcessText = null;
 	var $processResult = null;
+	var $ajaxRequest = null;
 	 
 	function __construct() {
 		parent::__construct(
@@ -615,6 +617,7 @@ class shoppingOrderMethodCCBill extends form {
 class shoppingOrderMethodAlertPay extends form {
 	var $postProcessText = null;
 	var $processResult = null;
+	var $ajaxRequest = null;
 	 
 	function __construct() {
 		parent::__construct(
@@ -813,6 +816,7 @@ class shoppingOrderMethodAlertPay extends form {
 class shoppingOrderMethodAuthorizeDotNet extends form {
 	var $postProcessText = null;
 	var $processResult = null;
+	var $ajaxRequest = null;
 	
 	function __construct() {
 		parent::__construct(
@@ -1028,6 +1032,7 @@ class shoppingOrderMethodAuthorizeDotNet extends form {
 class shoppingOrderMethod2CheckOut extends form {
 	var $postProcessText = null;
 	var $processResult = null;
+	var $ajaxRequest = null;
 	
 	function __construct() {
 		parent::__construct(
@@ -1266,6 +1271,7 @@ class shoppingOrderMethod2CheckOut extends form {
 class shoppingOrderMethodMoneyBookers extends form {
 	var $postProcessText = null;
 	var $processResult = null;
+	var $ajaxRequest = null;
 	
 	function __construct() {
 		parent::__construct(
@@ -1708,6 +1714,7 @@ class shoppingOrders extends modules {
 	var $ignorePaging = false;
 	var $showPaging = true;
 	var $ajaxPaging = AJAX_PAGING;
+	var $ajaxRequest = null;
 	var $adminPath = 'admin/modules/shoppingorders';
 	
 	function __construct() {
@@ -3995,7 +4002,7 @@ class shoppingOrders extends modules {
 		
 		$paging->setTotalItems(sql::count());
 		
-		if (!isset($this->ajaxRequest) || !$this->ajaxRequest) {
+		if (!$this->ajaxRequest) {
 			echo 
 			"<div class='fc" .
 				form::fcState('fcshos') .
@@ -4177,7 +4184,7 @@ class shoppingOrders extends modules {
 		
 		$paging->display();
 		
-		if (!isset($this->ajaxRequest) || !$this->ajaxRequest)
+		if (!$this->ajaxRequest)
 			echo
 					"</div>" .
 					"<div class='clear-both'></div>" .
@@ -4232,7 +4239,7 @@ class shoppingOrders extends modules {
 		
 		$paging->setTotalItems(sql::count());
 		
-		if (!isset($this->ajaxRequest) || !$this->ajaxRequest)
+		if (!$this->ajaxRequest)
 			echo 
 			"<div class='fc" .
 				form::fcState('fcshob') .
@@ -4337,7 +4344,7 @@ class shoppingOrders extends modules {
 		
 		$paging->display();
 		
-		if (!isset($this->ajaxRequest) || !$this->ajaxRequest)
+		if (!$this->ajaxRequest)
 			echo
 					"<div class='clear-both'></div>" .
 				"</div>" .
@@ -4388,7 +4395,7 @@ class shoppingOrders extends modules {
 		
 		$paging->setTotalItems(sql::count());
 		
-		if (!isset($this->ajaxRequest) || !$this->ajaxRequest)
+		if (!$this->ajaxRequest)
 			echo 
 			"<div class='fc" .
 				form::fcState('fcshom') .
@@ -4483,7 +4490,7 @@ class shoppingOrders extends modules {
 		
 		$paging->display();
 		
-		if (!isset($this->ajaxRequest) || !$this->ajaxRequest)
+		if (!$this->ajaxRequest)
 			echo
 					"<div class='clear-both'></div>" .
 				"</div>" .
@@ -5701,7 +5708,7 @@ class shoppingOrders extends modules {
 			return;
 		}	
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"<div class='shopping-orders'>";
 		
@@ -5738,7 +5745,7 @@ class shoppingOrders extends modules {
 		if (!$this->selectedID && $this->showPaging)
 			$paging->display();
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //shopping-orders
 	}

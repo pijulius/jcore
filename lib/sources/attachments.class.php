@@ -29,6 +29,7 @@ class _attachments {
 	var $rootURL;
 	var $resumableDownloads = true;
 	var $ajaxPaging = AJAX_PAGING;
+	var $ajaxRequest = null;
 	
 	function __construct() {
 		$this->uriRequest = strtolower(get_class($this));
@@ -1048,7 +1049,7 @@ class _attachments {
 		if (!$paging->items)
 			return false;
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"<div class='" .
 					strtolower(preg_replace('/([A-Z])/', '-\\1', get_class($this))).
@@ -1070,7 +1071,7 @@ class _attachments {
 		if ($this->showPaging)
 			$paging->display();
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //attachments
 		

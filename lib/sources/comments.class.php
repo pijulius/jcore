@@ -67,6 +67,7 @@ class _comments {
 	var $defaultRating = 8;
 	var $uriRequest;
 	var $commentURL;
+	var $ajaxRequest = null;
 	
 	function __construct() {
 		$this->commentURL = "http://".$_SERVER['HTTP_HOST'].

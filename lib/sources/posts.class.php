@@ -167,6 +167,7 @@ class _posts {
 	var $showPaging = true;
 	var $search = null;
 	var $ajaxPaging = AJAX_PAGING;
+	var $ajaxRequest = null;
 	var $adminPath = 'admin/content/menuitems/posts';
 	
 	static $selected = null;
@@ -2808,10 +2809,10 @@ class _posts {
 		
 		$paging->setTotalItems(sql::count());
 		
-		if ($this->search && !$this->selectedID && !isset($this->ajaxRequest))
+		if ($this->search && !$this->selectedID && !$this->ajaxRequest)
 			url::displaySearch($this->search, $paging->items);
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"<div class='posts'>";
 		
@@ -2871,7 +2872,7 @@ class _posts {
 		if (!$this->search)
 			$this->displayModules();
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //posts
 		

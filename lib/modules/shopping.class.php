@@ -310,6 +310,7 @@ class shoppingItems {
 	var $fullItems = false;
 	var $subgroupItems = true;
 	var $ajaxPaging = AJAX_PAGING;
+	var $ajaxRequest = null;
 	var $adminPath = 'admin/modules/shopping/shoppingitems';
 	
 	function __construct() {
@@ -3760,10 +3761,10 @@ class shoppingItems {
 		$paging->setTotalItems(sql::count());
 		
 		if ($this->search && !$this->selectedID && 
-			!isset($this->ajaxRequest) && !$this->similar)
+			!$this->ajaxRequest && !$this->similar)
 			url::displaySearch($this->search, $paging->items);
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"<div class='shopping-items'>";
 		
@@ -3796,7 +3797,7 @@ class shoppingItems {
 		echo
 				"<div class='clear-both'></div>";
 				
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //shopping-items
 		

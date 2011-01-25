@@ -25,7 +25,8 @@ class _security {
 		'TimesNewRomanBold.ttf',
 		'VeraSansBold.ttf');
 	
-	var $adminPath = "admin/site/security";
+	var $ajaxRequest = null;
+	var $adminPath = 'admin/site/security';
 	
 	function countAdminItems() {
 		$bfrow = sql::fetch(sql::run(

@@ -12,6 +12,7 @@ include_once('lib/url.class.php');
 
 class _jQuery {
 	var $path;
+	var $ajaxRequest = null;
 	
 	// Deprecated, only used for compatibility reasons with old sites
 	var $plugins = array(

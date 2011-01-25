@@ -17,6 +17,7 @@ class _ads {
 	var $rootPath;
 	var $rootURL;
 	var $adminPath = 'admin/content/ads';
+	var $ajaxRequest = null;
 	
 	function __construct() {
 		$this->subFolder = date('Ym');

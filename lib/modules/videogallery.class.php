@@ -458,7 +458,7 @@ class videoGalleryYouTubeVideos extends videoGalleryVideos {
 			
 			$this->displaySelected($row);
 			
-			if (isset($this->ajaxRequest))
+			if ($this->ajaxRequest)
 				return true;
 			
 			$this->selectedID = 0;
@@ -529,7 +529,7 @@ class videoGalleryYouTubeVideos extends videoGalleryVideos {
 			'<media:title.*?(\/>|>(.*?)<\/media:title>).*?' .
 			'<\/entry>/is', $data, $rows);
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"<div class='".
 					strtolower(preg_replace('/([A-Z])/', '-\\1', get_class($this))).
@@ -581,7 +581,7 @@ class videoGalleryYouTubeVideos extends videoGalleryVideos {
 		if (!$this->randomize && $this->showPaging)
 			$paging->display();
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //videos
 		

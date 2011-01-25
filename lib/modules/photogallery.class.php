@@ -173,6 +173,8 @@ class photoGalleryPictures extends pictures {
 class photoGalleryPicasaPictures extends photoGalleryPictures {
 	function __construct() {	
 		languages::load('photogallery');
+		
+		parent::__construct();
 	}
 	
 	function __destruct() {
@@ -486,7 +488,7 @@ class photoGalleryPicasaPictures extends photoGalleryPictures {
 			'<media:thumbnail.*?url=.([^ \'"]+).*?' .
 			'(<gphoto:albumtitle.*?>(.*?)<|<\/entry>)/is', $data, $rows);
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"<div class='".
 					strtolower(preg_replace('/([A-Z])/', '-\\1', get_class($this))).
@@ -531,7 +533,7 @@ class photoGalleryPicasaPictures extends photoGalleryPictures {
 		if (!$this->randomize && $this->showPaging)
 			$paging->display();
 		
-		if (!isset($this->ajaxRequest))
+		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //pictures
 		
