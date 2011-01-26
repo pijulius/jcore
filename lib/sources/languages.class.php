@@ -677,6 +677,7 @@ class _languages {
 		if (!$locale)
 			return false;
 		
+		$locale = $locale.'.'.PAGE_CHARSET;
 		putenv('LC_ALL='.$locale);
 		
 		# there is a problem with Turkish locales in PHP 5 but fixed in PHP 6
