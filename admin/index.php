@@ -11,7 +11,7 @@
 	$GLOBALS['ADMIN'] = true;
 	
 	if (!ini_get('safe_mode'))
-		set_time_limit(0);
+		@set_time_limit(0);
 	
 	if (!isset($_GET['path']) || !$_GET['path'])
 		$_GET['path'] = 'admin';

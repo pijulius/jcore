@@ -194,7 +194,7 @@ class _lastRSS {
         if ($f = @fopen($rss_url, 'r')) {
         	// Set time limit so we can get videos from all sources
         	if (!ini_get('safe_mode'))
-	        	set_time_limit(30);
+	        	@set_time_limit(30);
         	
             $rss_content = '';
             while (!feof($f)) {

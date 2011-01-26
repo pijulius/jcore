@@ -398,7 +398,7 @@ class _files {
 		
 		while(!feof($fp)) {
 			if (!ini_get('safe_mode'))
-	        	set_time_limit(0);
+	        	@set_time_limit(0);
 	        
     	    print(fread($fp, 1024*8));
         	flush();

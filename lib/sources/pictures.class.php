@@ -1321,7 +1321,7 @@ class _pictures {
 		if (!$src_img) return false;
 		
 		if (!ini_get('safe_mode') && $timeout)
-			set_time_limit($timeout);
+			@set_time_limit($timeout);
 		
 		if ((int)$thumb_width && (int)$thumb_height) {
 		   	$dst_img = ImageCreateTrueColor($thumb_width, $thumb_height);
@@ -1463,7 +1463,7 @@ class _pictures {
 		}
 		
 		if (!ini_get('safe_mode') && $timeout)
-			set_time_limit($timeout);
+			@set_time_limit($timeout);
 		
 		if (strstr($watermarkx, '%'))
 			$watermarkx = round((int)$watermarkx*$imgwidth/100);
