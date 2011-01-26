@@ -6,6 +6,12 @@
 	vertical-align: top;
 }
 
+.admin-content .list .auto-width {
+    max-width: 200px !important;
+    overflow: hidden;
+	word-wrap: break-word;
+}
+
 .admin-content-preview {
 	padding: 20px;
 	word-wrap: break-word;

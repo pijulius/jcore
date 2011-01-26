@@ -1624,9 +1624,7 @@ td.ui-datepicker-other-month {
 	color: #fff; 
 	max-width: 200px; 
 	text-align: center;
-}
-
-.tipsy-outer {
+	word-wrap: break-word;
 	border-radius: 3px;
 	-moz-border-radius: 3px;
 	-webkit-border-radius: 3px;
