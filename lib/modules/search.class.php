@@ -245,7 +245,8 @@ class search extends modules {
 					($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
 						"disabled='disabled' ":
 						null) .
-					"style='width: 30px;' />" .
+					"style='width: 30px;' onchange=\"if(parseInt(this.value) > 0) " .
+						"jQuery(this).closest('tr').find('input:first').attr('checked', true);\"/>" .
 			"</td>";
 	}
 	
