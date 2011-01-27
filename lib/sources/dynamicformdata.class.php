@@ -751,10 +751,17 @@ class _dynamicFormData {
 					",";
 		}
 		
-		if ($query)
-			$newid = sql::run(
-				" INSERT INTO `{" .$this->storageSQLTable. "}`" .
-				" SET ".substr($query, 0, -1));
+		if (!$query) {
+			tooltip::display(
+				__("Nothing to store! Please define some fields for your form and make sure " .
+					"their Value Types are set."),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		$newid = sql::run(
+			" INSERT INTO `{" .$this->storageSQLTable. "}`" .
+			" SET ".substr($query, 0, -1));
 		
 		if (!$newid) {
 			tooltip::display(
@@ -812,6 +819,14 @@ class _dynamicFormData {
 								sql::escape($value)).
 							"'")) .
 					",";
+		}
+		
+		if (!$query) {
+			tooltip::display(
+				__("Nothing to store! Please define some fields for your form and make sure " .
+					"their Value Types are set."),
+				TOOLTIP_ERROR);
+			return false;
 		}
 		
 		sql::run(
