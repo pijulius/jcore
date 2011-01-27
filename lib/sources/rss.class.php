@@ -66,8 +66,9 @@ class _rss {
 		$form->setStyle('width: 300px;');
 		
 		$form->addAdditionalText(
-			"<a href='".url::site().
-				"index.php?request=admin/site/rss&amp;feeds=1' " .
+			"<a href='".url::uri('request, feeds').
+				"&amp;request=".$this->adminPath .
+				"&amp;feeds=1' " .
 				"class='select-link ajax-content-link' " .
 				"title='".htmlspecialchars(__("Select Feed"), ENT_QUOTES)."'>" .
 				__("Select Feed") .
@@ -231,9 +232,7 @@ class _rss {
 			}
 		}
 		
-		$paging = new paging(10,
-			"&amp;request=admin/site/rss" .
-			"&amp;feeds=1");
+		$paging = new paging(10);
 		
 		$paging->ajax = true;
 		$paging->setTotalItems(count($files));

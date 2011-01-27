@@ -61,6 +61,14 @@ define('FORM_ELEMENT_SET', 1);
 define('FORM_ELEMENT_ADD', 2);
 define('FORM_ELEMENT_ARRAY', 3);
 
+define('FORM_ERROR_NONE', 0);
+define('FORM_ERROR_REQUIRED', 1);
+define('FORM_ERROR_NOFILE', 2);
+define('FORM_ERROR_NOMATCH', 3);
+define('FORM_ERROR_VERIFICATION_CODE', 4);
+define('FORM_ERROR_EMAIL', 5);
+define('FORM_ERROR_PASSWORD', 6);
+
 include_once('lib/ckeditor.class.php');
  
 class _form {
@@ -836,6 +844,10 @@ class _form {
 		return $this->setElementKey('AutoFocus', $elementname, $value);
 	}
 	
+	function setError($elementname, $value = null) {
+		return $this->setElementKey('VerifyResult', $elementname, $value);
+	}
+	
 	function addAttributes($elementname, $value = null) {
 		return $this->setElementKey('Attributes', $elementname, $value, FORM_ELEMENT_ADD);
 	}
@@ -1017,32 +1029,32 @@ class _form {
 					FORM_INPUT_TYPE_EMAIL, FORM_INPUT_TYPE_RECIPIENT_SELECT)) &&
 				!email::verify($value))
 			{
-				$this->elements[$elementnum]['VerifyResult'] = 1;
+				$this->elements[$elementnum]['VerifyResult'] = 5;
 				$errors[] = 5;
 				
 			} elseif ($element['Type'] == FORM_INPUT_TYPE_PASSWORD &&
 				$this->verifyPassword &&
 				strlen($value) < MINIMUM_PASSWORD_LENGTH)
 			{
-				$this->elements[$elementnum]['VerifyResult'] = 1;
+				$this->elements[$elementnum]['VerifyResult'] = 6;
 				$errors[] = 6;
 				
 			} elseif ($element['Type'] == FORM_INPUT_TYPE_VERIFICATION_CODE &&
 				!security::verifyImageCode($value))
 			{
-				$this->elements[$elementnum]['VerifyResult'] = 1;
+				$this->elements[$elementnum]['VerifyResult'] = 4;
 				$errors[] = 4;
 				
 			} elseif ($element['Type'] == FORM_INPUT_TYPE_CONFIRM &&
 				isset($this->elements[($elementnum-1)]) && 
 				$this->get($elementnum-1) != $value)
 			{
-				$this->elements[$elementnum]['VerifyResult'] = 1;
+				$this->elements[$elementnum]['VerifyResult'] = 3;
 				$errors[] = 3;
 				
 			} elseif ($element['Type'] == FORM_INPUT_TYPE_FILE && !$value) 
 			{
-				$this->elements[$elementnum]['VerifyResult'] = 1;
+				$this->elements[$elementnum]['VerifyResult'] = 2;
 				$errors[] = 2;
 				
 			} elseif (!in_array($element['Type'], array(

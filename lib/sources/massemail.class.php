@@ -381,133 +381,6 @@ class _massEmail {
 		return true;
 	}
 	
-	function displayAdminUsers() {
-		$search = null;
-		
-		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
-		
-		if (!isset($_GET['search']) && !isset($_GET['limit']))
-			echo 
-				"<div class='mass-email-users'>";
-		
-		echo
-				"<div class='mass-email-users-search'>" .
-					"<form action='".url::uri('ALL')."' method='get' " .
-						"class='ajax-form' " .
-						"target='.mass-email-users'>" .
-					"<input type='hidden' name='request' " .
-						"value='admin/members/massemail' />" .
-					"<input type='hidden' name='users' value='1' />" .
-					"<p>" .
-					"<span>" .
-					__("Search").": " .
-					"<input type='search' " .
-						"name='search' " .
-						"value='".
-							htmlspecialchars($search, ENT_QUOTES).
-						"' results='5' " .
-						"placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' />" .
-					"</span>" .
-					"</p>" .
-					"</form>" .
-					"<div class='clear-both'></div>" .
-				"</div>" .
-				"<table cellpadding='0' cellspacing='0' class='list'>" .
-					"<thead>" .
-					"<tr>" .
-						"<th><span class='nowrap'>".
-							__("Add").
-						"</span></th>" .
-						"<th><span class='nowrap'>".
-							__("Username").
-						"</span></th>" .
-						"<th style='text-align: right;'><span class='nowrap'>".
-							__("Admin").
-						"</span></th>" .
-						"<th style='text-align: right;'><span class='nowrap'>".
-							__("Email").
-						"</span></th>" .
-						"<th style='text-align: right;'><span class='nowrap'>".
-							__("Registered on").
-						"</span></th>" .
-					"</tr>" .
-					"</thead>" .
-					"<tbody>";
-					
-		$paging = new paging(10,
-			"&amp;request=admin/members/massemail" .
-			"&amp;users=1" .
-			"&amp;search=".urlencode($search));
-		
-		$paging->ajax = true;
-		
-		$rows = sql::run(
-			" SELECT * FROM `{users}`" .
-			" WHERE 1" .
-			($search?
-				" AND (`UserName` LIKE '%".sql::escape($search)."%' " .
-				" 	OR `Email` LIKE '%".sql::escape($search)."%') ":
-				null) .
-			" ORDER BY `Admin` DESC, `ID` DESC" .
-			" LIMIT ".$paging->limit);
-		
-		$paging->setTotalItems(sql::count());
-		
-		$i = 1;
-		$total = sql::rows($rows);
-		
-		while ($row = sql::fetch($rows)) {
-			echo
-				"<tr".($i%2?" class='pair'":NULL).">" .
-					"<td align='center'>" .
-						"<a href='javascript://' " .
-							"onclick=\"" .
-								"jQuery('#newemailform #entryTo').val(" .
-									"jQuery('#newemailform #entryTo').val()+" .
-									"(jQuery('#newemailform #entryTo').val()?', ':'')+" .
-									"'".$row['UserName']." <".$row['Email'].">');" .
-								"\" " .
-							"class='mass-email-add-user'>" .
-						"</a>" .
-					"</td>" .
-					"<td class='auto-width'>" .
-						"<b>" .
-						$row['UserName'] .
-						"</b>" .
-					"</td>" .
-					"<td style='text-align: right;'>" .
-						($row['Admin']?
-							__('Yes'):
-							null).
-					"</td>" .
-					"<td style='text-align: right;'>" .
-						"<a href='mailto:".$row['Email']."'>" .
-							$row['Email'] .
-						"</a>" .
-					"</td>" .
-					"<td style='text-align: right;'>" .
-						"<span class='nowrap'>" .
-						calendar::date($row['TimeStamp']) .
-						"</span>" .
-					"</td>" .
-				"</tr>";
-			
-			$i++;
-		}
-		
-		echo
-					"</tbody>" .
-				"</table>" .
-				"<br />";
-				
-		$paging->display();
-		
-		if (!isset($_GET['search']) && !isset($_GET['limit']))
-			echo
-				"</div>";
-	}
-	
 	function displayAdminListHeader() {
 		echo
 			"<th><span class='nowrap'>".
@@ -1018,7 +891,8 @@ class _massEmail {
 				return true;
 			}
 			
-			$this->displayAdminUsers();
+			$GLOBALS['USER']->displayQuickList(
+				'#newemailform #entryTo', true, '%UserName% <%Email%>');
 			return true;
 		}
 		

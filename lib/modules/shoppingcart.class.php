@@ -151,8 +151,9 @@ class shoppingCartDiscounts {
 			$form->setStyle('width: 150px;');
 			
 			$form->addAdditionalText(
-				"<a href='".url::site().
-					"index.php?request=admin/modules/shoppingcart/shoppingcartdiscounts&amp;users=1' " .
+				"<a href='".url::uri('request, users').
+					"&amp;request=".$this->adminPath .
+					"&amp;users=1' " .
 					"class='shopping-cart-discounts-select-user ajax-content-link' " .
 					"title='".htmlspecialchars(_("Define the owner of the discount."), ENT_QUOTES)."'>" .
 					_("Select User") .
@@ -230,13 +231,14 @@ class shoppingCartDiscounts {
 			
 			if (!$user) {
 				tooltip::display(
-					_("Username couldn't be found!")." " .
-					_("Please make sure you have " .
-						"entered / selected the right username or if you wish to " .
-						"add this discount to a new user please first create " .
+					sprintf(__("User \"%s\" couldn't be found!"), 
+						$form->get('UserName'))." " .
+					__("Please make sure you have entered / selected the right " .
+						"username or if it's a new user please first create " .
 						"the user at Member Management -> Users."),
 					TOOLTIP_ERROR);
 				
+				$form->setError('UserName', FORM_ERROR_REQUIRED);
 				return false;
 			}
 		
@@ -270,143 +272,6 @@ class shoppingCartDiscounts {
 		
 		$form->reset();
 		return true;
-	}
-	
-	function displayAdminUsers() {
-		$search = null;
-		
-		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
-		
-		if (!isset($_GET['search']) && !isset($_GET['limit']))
-			echo 
-				"<div class='shopping-cart-discounts-users'>";
-		
-		echo
-				"<div class='shopping-cart-discounts-users-search'>" .
-					"<form action='".url::uri('ALL')."' method='get' " .
-						"class='ajax-form' " .
-						"target='.shopping-cart-discounts-users'>" .
-					"<input type='hidden' name='request' " .
-						"value='admin/modules/shoppingcart/shoppingcartdiscounts' />" .
-					"<input type='hidden' name='users' value='1' />" .
-					"<p>" .
-					"<span>" .
-					__("Search").": " .
-					"<input type='search' " .
-						"name='search' " .
-						"value='".
-							htmlspecialchars($search, ENT_QUOTES).
-						"' results='5' placeholder='".
-							htmlspecialchars(__("search..."), ENT_QUOTES)."' />" .
-					"</span>" .
-					"</p>" .
-					"</form>" .
-					"<div class='clear-both'></div>" .
-				"</div>" .
-				"<table cellpadding='0' cellspacing='0' class='list'>" .
-					"<thead>" .
-					"<tr>" .
-						"<th>" .
-							"<span class='nowrap'>".
-							_("Select").
-							"</span>" .
-						"</th>" .
-						"<th>" .
-							"<span class='nowrap'>".
-							__("Username").
-							"</span>" .
-						"</th>" .
-						"<th style='text-align: right;'>" .
-							"<span class='nowrap'>".
-							__("Admin").
-							"</span>" .
-						"</th>" .
-						"<th style='text-align: right;'>" .
-							"<span class='nowrap'>".
-							__("Email").
-							"</span>" .
-						"</th>" .
-						"<th style='text-align: right;'>" .
-							"<span class='nowrap'>".
-							__("Registered on").
-							"</span>" .
-						"</th>" .
-					"</tr>" .
-					"</thead>" .
-					"<tbody>";
-					
-		$paging = new paging(10,
-			"&amp;request=admin/modules/shoppingcart/shoppingcartdiscounts" .
-			"&amp;users=1" .
-			"&amp;search=".urlencode($search));
-		
-		$paging->ajax = true;
-		
-		$rows = sql::run(
-			" SELECT * FROM `{users}`" .
-			" WHERE 1" .
-			($search?
-				" AND (`UserName` LIKE '%".sql::escape($search)."%' " .
-				" 	OR `Email` LIKE '%".sql::escape($search)."%') ":
-				null) .
-			" ORDER BY `Admin` DESC, `ID` DESC" .
-			" LIMIT ".$paging->limit);
-		
-		$paging->setTotalItems(sql::count());
-		
-		$i = 1;
-		$total = sql::rows($rows);
-		
-		while ($row = sql::fetch($rows)) {
-			echo
-				"<tr".($i%2?" class='pair'":NULL).">" .
-					"<td align='center'>" .
-						"<a href='javascript://' " .
-							"onclick=\"" .
-								"jQuery('#neweditdiscountform #entryUserName').val('".$row['UserName']."');" .
-								(JCORE_VERSION >= '0.7'?
-									"jQuery(this).closest('.tipsy').hide();":
-									"jQuery(this).closest('.qtip').qtip('hide');") .
-								"\" " .
-							"class='shopping-cart-discounts-select-user'>" .
-						"</a>" .
-					"</td>" .
-					"<td class='auto-width'>" .
-						"<b>" .
-						$row['UserName'] .
-						"</b>" .
-					"</td>" .
-					"<td align='center'>" .
-						($row['Admin']?
-							_('Yes'):
-							null).
-					"</td>" .
-					"<td style='text-align: right;'>" .
-						"<a href='mailto:".$row['Email']."'>" .
-							$row['Email'] .
-						"</a>" .
-					"</td>" .
-					"<td style='text-align: right;'>" .
-						"<span class='nowrap'>" .
-						calendar::date($row['TimeStamp']) .
-						"</span>" .
-					"</td style='text-align: right;'>" .
-				"</tr>";
-			
-			$i++;
-		}
-		
-		echo
-					"</tbody>" .
-				"</table>" .
-				"<br />";
-		
-		$paging->display();
-		
-		if (!isset($_GET['search']) && !isset($_GET['limit']))
-			echo
-				"</div>";
 	}
 	
 	function displayAdminListHeader() {
@@ -868,7 +733,7 @@ class shoppingCartDiscounts {
 				return true;
 			}
 			
-			$this->displayAdminUsers();
+			$GLOBALS['USER']->displayQuickList('#neweditdiscountform #entryUserName');
 			return true;
 		}
 		
@@ -1044,8 +909,9 @@ class shoppingCartFees {
 			$form->setStyle('width: 150px;');
 			
 			$form->addAdditionalText(
-				"<a href='".url::site().
-					"index.php?request=admin/modules/shoppingcart/shoppingcartfees&amp;orderformfields=1' " .
+				"<a href='".url::uri('request, orderformfields').
+					"&amp;request=".$this->adminPath .
+					"&amp;orderformfields=1' " .
 					"class='shopping-cart-fees-select-order-form-field ajax-content-link' " .
 					"title='".htmlspecialchars(_("Define the field you would like to compare."), ENT_QUOTES)."'>" .
 					_("Select Field") .
@@ -1146,6 +1012,8 @@ class shoppingCartFees {
 						"add this fee to a new field please first create " .
 						"the field at Content Management -> Dynamic Forms."),
 					TOOLTIP_ERROR);
+				
+				$form->setError('FieldName', FORM_ERROR_REQUIRED);
 				return false;
 			}
 			
@@ -1874,8 +1742,9 @@ class shoppingCartTaxes {
 		$form->setStyle('width: 150px;');
 		
 		$form->addAdditionalText(
-			"<a href='".url::site().
-				"index.php?request=admin/modules/shoppingcart/shoppingcarttaxes&amp;orderformfields=1' " .
+			"<a href='".url::uri('request, orderformfields').
+				"&amp;request=".$this->adminPath .
+				"&amp;orderformfields=1' " .
 				"class='shopping-cart-taxes-select-order-form-field ajax-content-link' " .
 				"title='".htmlspecialchars(_("Define the field you would like to compare."), ENT_QUOTES)."'>" .
 				_("Select Field") .
@@ -1966,6 +1835,8 @@ class shoppingCartTaxes {
 						"add this tax to a new field please first create " .
 						"the field at Content Management -> Dynamic Forms."),
 					TOOLTIP_ERROR);
+				
+				$form->setError('FieldName', FORM_ERROR_REQUIRED);
 				return false;
 			}
 			

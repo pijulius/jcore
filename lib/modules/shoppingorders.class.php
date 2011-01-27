@@ -2085,10 +2085,6 @@ class shoppingOrders extends modules {
 			"	background: url(\"".$iconspath."16/arrow_refresh.png\") no-repeat;\n" .
 			"}\n" .
 			"\n" .
-			".shopping-order-new-order-items .list {\n" .
-			"	margin-top: 10px;\n" .
-			"}\n" .
-			"\n" .
 			".shopping-order-new-order-items .list .auto-width {\n" .
 			"	width: 300px;\n" .
 			"}\n" .
@@ -2103,13 +2099,6 @@ class shoppingOrders extends modules {
 			"	width: 16px;\n" .
 			"	height: 16px;\n" .
 			"	background: url(\"".$iconspath."16/target.png\") no-repeat;\n" .
-			"}\n" .
-			"\n" .
-			".shopping-order-new-order-users-search span {\n" .
-			"	display: block;\n" .
-			"	white-space: nowrap;\n" .
-			"	float: left;\n" .
-			"	margin-right: 10px;\n" .
 			"}\n" .
 			"\n" .
 			".shopping-order-new-order-add-item {\n" .
@@ -2245,8 +2234,9 @@ class shoppingOrders extends modules {
 				true);
 			
 			$form->addAdditionalText(
-				"<a style='zoom: 1;' href='".url::site().
-					"index.php?request=admin/modules/shoppingorders&amp;users=1' " .
+				"<a style='zoom: 1;' href='".url::uri('request, users').
+					"&amp;request=".$this->adminPath .
+					"&amp;users=1' " .
 					"class='shopping-order-new-order-add-user ajax-content-link' " .
 					"title='".htmlspecialchars(_("Define the owner of this order"), ENT_QUOTES)."'>" .
 					_("Select User") .
@@ -2449,7 +2439,7 @@ class shoppingOrders extends modules {
 									(!$customoptions[$key]?
 										"display: none;":
 										null) .
-									" width: 100%;'>" .
+									" width: 90%;'>" .
 									$customoptions[$key] .
 								"</textarea>" .
 							"</td>" .
@@ -2527,8 +2517,9 @@ class shoppingOrders extends modules {
 						null) .
 					"</tbody>" .
 				"</table>" .
-				"<a href='".url::site().
-					"index.php?request=admin/modules/shoppingorders&amp;shoppingitems=1' " .
+				"<a href='".url::uri('request, shoppingitems').
+					"&amp;request=".$this->adminPath .
+					"&amp;shoppingitems=1' " .
 					"class='shopping-orders-cart-add-item ajax-content-link' " .
 					"title='".htmlspecialchars(_("Add items to this order"), ENT_QUOTES)."'>" .
 					_("Add Items") .
@@ -2625,7 +2616,7 @@ class shoppingOrders extends modules {
 													_("Custom Options") .
 												"</a><br />" .
 												"<textarea name='ShoppingItemCustomOption[]' " .
-													"style='display: none; width: 100%;'>" .
+													"style='display: none; width: 90%;'>" .
 												"</textarea>" .
 											"</td>" .
 											"<td style='text-align: right;'>" . 
@@ -2854,13 +2845,14 @@ class shoppingOrders extends modules {
 		
 		if (!$user) {
 			tooltip::display(
-				_("Username couldn't be found!")." " .
-				_("Please make sure you have " .
-					"entered / selected the right username or if you wish to " .
-					"add this order to a new user please first create " .
+				sprintf(__("User \"%s\" couldn't be found!"), 
+					$form->get('UserName'))." " .
+				__("Please make sure you have entered / selected the right " .
+					"username or if it's a new user please first create " .
 					"the user at Member Management -> Users."),
 				TOOLTIP_ERROR);
 			
+			$form->setError('UserName', FORM_ERROR_REQUIRED);
 			return false;
 		}
 		
@@ -3006,143 +2998,6 @@ class shoppingOrders extends modules {
 		return true;
 	}
 	
-	function displayAdminUsers() {
-		$search = null;
-		
-		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
-		
-		if (!isset($_GET['search']) && !isset($_GET['limit']))
-			echo 
-				"<div class='shopping-order-new-order-users'>";
-			
-		echo
-				"<div class='shopping-order-new-order-users-search'>" .
-					"<form action='".url::uri('ALL')."' method='get' " .
-						"class='ajax-form' " .
-						"target='.shopping-order-new-order-users'>" .
-					"<input type='hidden' name='request' " .
-						"value='admin/modules/shoppingorders' />" .
-					"<input type='hidden' name='users' value='1' />" .
-					"<p>" .
-					"<span>" .
-					__("Search").": " .
-					"<input type='search' " .
-						"name='search' " .
-						"value='".
-							htmlspecialchars($search, ENT_QUOTES).
-						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' />" .
-					"</span>" .
-					"</p>" .
-					"</form>" .
-					"<div class='clear-both'></div>" .
-				"</div>" .
-				"<table cellpadding='0' cellspacing='0' class='list'>" .
-					"<thead>" .
-					"<tr>" .
-						"<th>" .
-							"<span class='nowrap'>".
-							_("Select").
-							"</span>" .
-						"</th>" .
-						"<th>" .
-							"<span class='nowrap'>".
-							__("Username").
-							"</span>" .
-						"</th>" .
-						"<th style='text-align: right;'>" .
-							"<span class='nowrap'>".
-							__("Admin").
-							"</span>" .
-						"</th>" .
-						"<th style='text-align: right;'>" .
-							"<span class='nowrap'>".
-							__("Email").
-							"</span>" .
-						"</th>" .
-						"<th style='text-align: right;'>" .
-							"<span class='nowrap'>".
-							__("Registered on").
-							"</span>" .
-						"</th>" .
-					"</tr>" .
-					"</thead>" .
-					"<tbody>";
-					
-		$paging = new paging(10,
-			"&amp;request=admin/modules/shoppingorders" .
-			"&amp;users=1" .
-			"&amp;search=".urlencode($search));
-		
-		$paging->ajax = true;
-		
-		$rows = sql::run(
-			" SELECT * FROM `{users}`" .
-			" WHERE 1" .
-			($search?
-				" AND (`UserName` LIKE '%".sql::escape($search)."%' " .
-				" 	OR `Email` LIKE '%".sql::escape($search)."%') ":
-				null) .
-			" ORDER BY `Admin` DESC, `ID` DESC" .
-			" LIMIT ".$paging->limit);
-		
-		$paging->setTotalItems(sql::count());
-		
-		$i = 1;
-		$total = sql::rows($rows);
-		
-		while ($row = sql::fetch($rows)) {
-			echo
-				"<tr id='shoppingorderneworderuserrow".$row['ID']."' ".
-					($i%2?" class='pair'":NULL).">" .
-					"<td align='center'>" .
-						"<a href='javascript://' " .
-							"onclick='jQuery(\"#neworderform #entryUserName\")" .
-								".val(\"".$row['UserName']."\");" .
-								(JCORE_VERSION >= '0.7'?
-									"jQuery(this).closest(\".tipsy\").hide();":
-									"jQuery(this).closest(\".qtip\").qtip(\"hide\");") .
-								"' " .
-							"class='shopping-order-new-order-select-user'>" .
-						"</a>" .
-					"</td>" .
-					"<td class='auto-width'>" .
-						"<b>" .
-						$row['UserName'] .
-						"</b>" .
-					"</td>" .
-					"<td style='text-align: right;'>" .
-						($row['Admin']?
-							_('Yes'):
-							null).
-					"</td>" .
-					"<td style='text-align: right;'>" .
-						"<a href='mailto:".$row['Email']."'>" .
-							$row['Email'] .
-						"</a>" .
-					"</td>" .
-					"<td style='text-align: right;'>" .
-						"<span class='nowrap'>" .
-						calendar::date($row['TimeStamp']) .
-						"</span>" .
-					"</td>" .
-				"</tr>";
-			
-			$i++;
-		}
-		
-		echo
-					"</tbody>" .
-				"</table>" .
-				"<br />";
-				
-		$paging->display();
-		
-		if (!isset($_GET['search']) && !isset($_GET['limit']))
-			echo
-				"</div>";
-	}
-	
 	function displayAdminShoppingItems() {
 		$shoppingid = null;
 		$search = null;
@@ -3150,26 +3005,28 @@ class shoppingOrders extends modules {
 		$shoppingids = null;
 		$shoppingurl = shopping::getURL();
 		
+		if (isset($_POST['shoppingid']))
+			$shoppingid = (int)$_POST['shoppingid'];
+		
 		if (isset($_GET['shoppingid']))
 			$shoppingid = (int)$_GET['shoppingid'];
+		
+		if (isset($_POST['search']))
+			$search = trim(strip_tags($_POST['search']));
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
 		
-		if (!isset($_GET['search']) && !isset($_GET['limit']))
+		if (!isset($search) && !isset($_GET['limit']))
 			echo 
 				"<div class='shopping-order-new-order-items'>";
 		
 		echo
-				"<div class='shopping-order-new-order-items-search'>" .
-					"<form action='".url::uri('ALL')."' method='get' " .
+				"<div class='shopping-order-new-order-items-search' " .
+					"style='margin-right: 20px;'>" .
+					"<form action='".url::uri('shoppingid, search, limit, ajax')."' method='post' " .
 						"class='ajax-form' " .
 						"target='.shopping-order-new-order-items'>" .
-					"<input type='hidden' name='request' " .
-						"value='admin/modules/shoppingorders' />" .
-					"<input type='hidden' name='shoppingitems' value='1' />" .
-					"<p>" .
-					"<span>" .
 					__("Search").": " .
 					"<select name='shoppingid' " .
 						"onchange=\"jQuery('.shopping-order-new-order-items form').ajaxSubmit();\">" .
@@ -3197,11 +3054,9 @@ class shoppingOrders extends modules {
 						"value='".
 							htmlspecialchars($search, ENT_QUOTES).
 						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' />" .
-					"</span>" .
-					"</p>" .
 					"</form>" .
-					"<div class='clear-both'></div>" .
-				"</div>";
+				"</div>" .
+				"<br />";
 				
 		if ($shoppingid) {
 			$category = sql::fetch(sql::run(
@@ -3256,10 +3111,8 @@ class shoppingOrders extends modules {
 					"<tbody>";
 					
 		$paging = new paging(10,
-			"&amp;request=admin/modules/shoppingorders" .
-			"&amp;shoppingitems=1" .
-			"&amp;shoppingid=".$shoppingid .
-			"&amp;search=".urlencode($search));
+			'&amp;search='.urlencode($search) .
+			'&amp;shoppingid='.$shoppingid);
 		
 		$paging->ajax = true;
 		
@@ -3396,7 +3249,7 @@ class shoppingOrders extends modules {
 				
 		$paging->display();
 		
-		if (!isset($_GET['search']) && !isset($_GET['limit']))
+		if (!isset($search) && !isset($_GET['limit']))
 			echo
 				"</div>";
 	}
@@ -4998,7 +4851,7 @@ class shoppingOrders extends modules {
 			}
 			
 			if ($users) {
-				$this->displayAdminUsers();
+				$GLOBALS['USER']->displayQuickList('#neworderform #entryUserName');
 				return true;
 			}
 			

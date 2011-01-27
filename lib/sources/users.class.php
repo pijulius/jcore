@@ -1992,6 +1992,159 @@ class _users {
 		return true;
 	}
 	
+	function displayQuickList($target = null, $multiple = false, $format = '%UserName%', $separator = ',') {
+		$search = null;
+		
+		if (isset($_POST['search']))
+			$search = trim(strip_tags($_POST['search']));
+		
+		if (isset($_GET['search']))
+			$search = trim(strip_tags($_GET['search']));
+		
+		if (!isset($search) && !isset($_GET['limit']))
+			echo 
+				"<div class='select-users-list'>";
+			
+		echo
+				"<div class='select-users-list-search' " .
+					"style='margin-right: 20px;'>" .
+					"<form action='".url::uri('search, limit, ajax')."' method='post' " .
+						"class='ajax-form' " .
+						"target='.select-users-list'>" .
+					__("Search").": " .
+					"<input type='search' " .
+						"name='search' " .
+						"value='".
+							htmlspecialchars($search, ENT_QUOTES).
+						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' />" .
+					"</form>" .
+				"</div>" .
+				"<br />" .
+				"<table cellpadding='0' cellspacing='0' class='list'>" .
+					"<thead>" .
+					"<tr>" .
+						($target?
+							"<th>" .
+								"<span class='nowrap'>".
+								($multiple?
+									__("Add"):
+									__("Select")).
+								"</span>" .
+							"</th>":
+							null) .
+						"<th>" .
+							"<span class='nowrap'>".
+							__("Username").
+							"</span>" .
+						"</th>" .
+						"<th style='text-align: right;'>" .
+							"<span class='nowrap'>".
+							__("Admin").
+							"</span>" .
+						"</th>" .
+						"<th style='text-align: right;'>" .
+							"<span class='nowrap'>".
+							__("Email").
+							"</span>" .
+						"</th>" .
+						"<th style='text-align: right;'>" .
+							"<span class='nowrap'>".
+							__("Registered on").
+							"</span>" .
+						"</th>" .
+					"</tr>" .
+					"</thead>" .
+					"<tbody>";
+					
+		$paging = new paging(10,
+			'&amp;search='.urlencode($search));
+		
+		$paging->ajax = true;
+		
+		$rows = sql::run(
+			" SELECT * FROM `{users}`" .
+			" WHERE 1" .
+			($search?
+				" AND (`UserName` LIKE '%".sql::escape($search)."%' " .
+				" 	OR `Email` LIKE '%".sql::escape($search)."%') ":
+				null) .
+			" ORDER BY `Admin` DESC, `ID` DESC" .
+			" LIMIT ".$paging->limit);
+		
+		$paging->setTotalItems(sql::count());
+		
+		$i = 1;
+		$total = sql::rows($rows);
+		
+		preg_match_all('/%([a-zA-Z0-9\_\-\.]+)%/', $format, $formatkeys);
+		$formatkeys = $formatkeys[1];
+		
+		while ($row = sql::fetch($rows)) {
+			$formatedvalue = $format;
+			
+			foreach($formatkeys as $formatkey)
+				$formatedvalue = str_replace(
+					"%".$formatkey."%", $row[$formatkey], $formatedvalue);
+			
+			echo
+				"<tr".($i%2?" class='pair'":NULL).">" .
+					($target?
+						"<td align='center'>" .
+							"<a href='javascript://' " .
+								($multiple?
+									"onclick=\"" .
+										"jQuery('".$target."').val(" .
+											"jQuery('".$target."').val()+" .
+											"(jQuery('".$target."').val()?'" .
+												htmlspecialchars($separator, ENT_QUOTES)." ':'')+" .
+											"'".$formatedvalue."');" .
+										"\" class='add-link'>":
+									"onclick='jQuery(\"".$target."\")" .
+										".val(\"".$formatedvalue."\");" .
+										(JCORE_VERSION >= '0.7'?
+											"jQuery(this).closest(\".tipsy\").hide();":
+											"jQuery(this).closest(\".qtip\").qtip(\"hide\");") .
+										"' class='select-link'>") .
+							"</a>" .
+						"</td>":
+						null) .
+					"<td class='auto-width'>" .
+						"<b>" .
+						$row['UserName'] .
+						"</b>" .
+					"</td>" .
+					"<td style='text-align: right;'>" .
+						($row['Admin']?
+							_('Yes'):
+							null).
+					"</td>" .
+					"<td style='text-align: right;'>" .
+						"<a href='mailto:".$row['Email']."'>" .
+							$row['Email'] .
+						"</a>" .
+					"</td>" .
+					"<td style='text-align: right;'>" .
+						"<span class='nowrap'>" .
+						calendar::date($row['TimeStamp']) .
+						"</span>" .
+					"</td>" .
+				"</tr>";
+			
+			$i++;
+		}
+		
+		echo
+					"</tbody>" .
+				"</table>" .
+				"<br />";
+				
+		$paging->display();
+		
+		if (!isset($search) && !isset($_GET['limit']))
+			echo
+				"</div>";
+	}
+	
 	function displayQuickAccountForm(&$form) {
 		$form->display();
 	}

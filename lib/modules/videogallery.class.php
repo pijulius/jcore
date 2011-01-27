@@ -647,6 +647,7 @@ class videoGallery extends modules {
 	var $ignorePaging = false;
 	var $showPaging = true;
 	var $ajaxPaging = AJAX_PAGING;
+	var $ajaxRequest = null;
 	var $randomizeVideos = false;
 	var $videosPath;
 	var $adminPath = 'admin/modules/videogallery';
@@ -1294,6 +1295,20 @@ class videoGallery extends modules {
 		$form->setValueType(FORM_VALUE_TYPE_INT);
 		
 		$form->add(
+			__('Owner'),
+			'Owner',
+			FORM_INPUT_TYPE_TEXT);
+		$form->setStyle('width: 110px;');
+		
+		$form->addAdditionalText(
+			"<a style='zoom: 1;' href='".url::uri('request, users') .
+				"&amp;request=".$this->adminPath .
+				"&amp;users=1' " .
+				"class='select-owner-link ajax-content-link'>" .
+				_("Select User") .
+			"</a>");
+		
+		$form->add(
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
@@ -1353,6 +1368,31 @@ class videoGallery extends modules {
 		
 		if (!$form->verify())
 			return false;
+		
+		if ($form->get('Owner')) {
+			$user = sql::fetch(sql::run(
+				" SELECT * FROM `{users}` " .
+				" WHERE `UserName` = '".sql::escape($form->get('Owner'))."'"));
+			
+			if (!$user) {
+				tooltip::display(
+					sprintf(__("User \"%s\" couldn't be found!"), 
+						$form->get('Owner'))." " .
+					__("Please make sure you have entered / selected the right " .
+						"username or if it's a new user please first create " .
+						"the user at Member Management -> Users."),
+					TOOLTIP_ERROR);
+				
+				$form->setError('Owner', FORM_ERROR_REQUIRED);
+				return false;
+			}
+			
+			$form->add(
+				'UserID',
+				'UserID',
+				FORM_INPUT_TYPE_HIDDEN);
+			$form->setValue('UserID', $user['ID']);
+		}
 		
 		if ($edit && $form->get('SubGalleryOfID')) {
 			foreach(videoGallery::getBackTraceTree($form->get('SubGalleryOfID')) as $gallery) {
@@ -1907,6 +1947,9 @@ class videoGallery extends modules {
 					$row += videoGalleryYouTubeVideos::parseAPIURL($row['YouTubeAPIURL']);
 				
 				$form->setValues($row);
+				
+				$user = $GLOBALS['USER']->get($row['UserID']);
+				$form->setValue('Owner', $user['UserName']);
 			}
 			
 			echo
@@ -2008,7 +2051,10 @@ class videoGallery extends modules {
 			" `Limit` = '".
 				(int)$values['Limit']."'," .
 			" `UserID` = '".
-				(int)$GLOBALS['USER']->data['ID']."'," .
+				(isset($values['UserID']) && (int)$values['UserID']?
+					(int)$values['UserID']:
+					(int)$GLOBALS['USER']->data['ID']) .
+				"'," .
 			" `OrderID` = '".
 				(int)$values['OrderID']."'");
 		
@@ -2118,6 +2164,9 @@ class videoGallery extends modules {
 				null) .
 			" `Limit` = '".
 				(int)$values['Limit']."'," .
+			(isset($values['UserID']) && (int)$values['UserID']?
+				" `UserID` = '".(int)$values['UserID']."',":
+				null) .
 			" `OrderID` = '".
 				(int)$values['OrderID']."'" .
 			" WHERE `ID` = '".(int)$id."'");
@@ -2362,6 +2411,44 @@ class videoGallery extends modules {
 			return false;
 		
 		return true;
+	}
+	
+	function ajaxRequest() {
+		$users = null;
+		
+		if (isset($_GET['users']))
+			$users = $_GET['users'];
+		
+		if ($users) {
+			if (!$GLOBALS['USER']->loginok || 
+				!$GLOBALS['USER']->data['Admin']) 
+			{
+				tooltip::display(
+					__("Request can only be accessed by administrators!"),
+					TOOLTIP_ERROR);
+				return true;
+			}
+			
+			include_once('lib/userpermissions.class.php');
+			
+			$permission = userPermissions::check(
+				$GLOBALS['USER']->data['ID'],
+				$this->adminPath);
+			
+			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
+				$permission['PermissionIDs'])
+			{
+				tooltip::display(
+					__("You do not have permission to access this path!"),
+					TOOLTIP_ERROR);
+				return true;
+			}
+			
+			$GLOBALS['USER']->displayQuickList('#neweditgalleryform #entryOwner');
+			return true;
+		}
+		
+		return false;
 	}
 	
 	function displayLogin() {

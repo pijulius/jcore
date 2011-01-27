@@ -53,7 +53,9 @@ class _userPermissions {
 				"<div class='form-entry-user-multi-permission-paths-container'></div>" .
 				"<div class='form-entry-title'></div>" .
 				"<div class='form-entry-content'>" .
-					"<a href='index.php?request=admin/members/users/userpermissions&amp;sections=1' " .
+					"<a href='".url::uri('request, sections') .
+						"&amp;request=".$this->adminPath .
+						"&amp;sections=1' " .
 						"class='select-link ajax-content-link'>" .
 						__("Select path") .
 					"</a> &nbsp; " .
@@ -79,7 +81,9 @@ class _userPermissions {
 			$form->setStyle('width: 300px;');
 			
 			$form->addAdditionalText(
-					"<a href='index.php?request=admin/members/users/userpermissions&amp;sections=1' " .
+					"<a href='".url::uri('request, sections') .
+						"&amp;request=".$this->adminPath .
+						"&amp;sections=1' " .
 						"class='select-link ajax-content-link'>" .
 						__("Select path") .
 					"</a>",

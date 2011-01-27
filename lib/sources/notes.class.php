@@ -209,6 +209,8 @@ class _notes {
 	}
 	
 	function displayAdminListItem(&$row) {
+		$user = $GLOBALS['USER']->get($row['UserID']);
+		
 		echo
 			"<td class='auto-width' " .
 				($row['StatusID'] == NOTE_STATUS_CLOSED?
@@ -221,7 +223,8 @@ class _notes {
 					$row['Title'] .
 				"</a>" .
 				"<div class='comment' style='padding-left: 10px;'>" .
-					calendar::dateTime($row['TimeStamp']) .
+					calendar::dateTime($row['TimeStamp'])." " .
+					$GLOBALS['USER']->constructUserName($user, __('by %s')) .
 				"</div>" .
 			"</td>";
 	}
@@ -497,7 +500,10 @@ class _notes {
 			" `StatusID` = '".
 				(int)$values['StatusID']."'," .
 			" `UserID` = '".
-				(int)$GLOBALS['USER']->data['ID']."'");
+				(isset($values['UserID']) && (int)$values['UserID']?
+					(int)$values['UserID']:
+					(int)$GLOBALS['USER']->data['ID']) .
+				"'");
 		
 		if (!$newid) {
 			tooltip::display(
@@ -547,6 +553,9 @@ class _notes {
 					"'".sql::escape($values['DueDate'])."'":
 					"NULL").
 				"," .
+			(isset($values['UserID']) && (int)$values['UserID']?
+				" `UserID` = '".(int)$values['UserID']."',":
+				null) .
 			" `StatusID` = '".
 				(int)$values['StatusID']."'" .
 			" WHERE `ID` = '".(int)$id."'");

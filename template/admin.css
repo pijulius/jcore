@@ -268,6 +268,11 @@
 	background-image: url("http://icons.jcore.net/32/folder.png");
 }
 
+.select-owner-link {
+	padding: 0 0 5px 20px;
+	background: url("http://icons.jcore.net/16/user.png") no-repeat;
+}
+
 .mass-email-users-search span {
 	display: block;
 	white-space: nowrap;
