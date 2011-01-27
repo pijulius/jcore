@@ -7,13 +7,23 @@
  *  Copyright  2009  Istvan Petres (aka P.I.Julius)
  *  me@pijulius.com
  ****************************************************************************/
- 
+
+if (!extension_loaded('gettext')) {
+	define('MANUAL_GETTEXT', true);
+	include_once('lib/gettext/gettext.inc');
+} else {
+	define('MANUAL_GETTEXT', false);
+}
+
 function __($message, $domain = null) {
 	if (!$message)
 		return $message;
 	
 	if (!$domain)
 		$domain = 'messages';
+	
+	if (MANUAL_GETTEXT)
+		return T_dgettext($domain, $message);
 	
 	return dgettext($domain, $message);
 }
@@ -680,15 +690,20 @@ class _languages {
 		$locale = $locale.'.'.PAGE_CHARSET;
 		putenv('LC_ALL='.$locale);
 		
-		# there is a problem with Turkish locales in PHP 5 but fixed in PHP 6
-		if (substr($locale, 0, 2) == 'tr' && phpversion() < '6.0') {
-			setlocale(LC_COLLATE, $locale);
-			setlocale(LC_MONETARY, $locale);
-			setlocale(LC_TIME, $locale);
-			setlocale(LC_MESSAGES, $locale);
+		if (MANUAL_GETTEXT) {
+			T_setlocale(LC_ALL, $locale);
 			
 		} else {
-			setlocale(LC_ALL, $locale);
+			# there is a problem with Turkish locales in PHP 5 but fixed in PHP 6
+			if (substr($locale, 0, 2) == 'tr' && phpversion() < '6.0') {
+				setlocale(LC_COLLATE, $locale);
+				setlocale(LC_MONETARY, $locale);
+				setlocale(LC_TIME, $locale);
+				setlocale(LC_MESSAGES, $locale);
+				
+			} else {
+				setlocale(LC_ALL, $locale);
+			}
 		}
 		
 		return languages::loadMessages();
@@ -698,8 +713,14 @@ class _languages {
 		if (!$file)
 			return false;
 		
-		$result = bindtextdomain($file, SITE_PATH."locale");
-		bind_textdomain_codeset($file, PAGE_CHARSET);
+		if (MANUAL_GETTEXT) {
+			$result = T_bindtextdomain($file, SITE_PATH."locale");
+			T_bind_textdomain_codeset($file, PAGE_CHARSET);
+			
+		} else {
+			$result = bindtextdomain($file, SITE_PATH."locale");
+			bind_textdomain_codeset($file, PAGE_CHARSET);
+		}
 		
 		return $result;
 	}
@@ -744,6 +765,10 @@ class _languages {
 			return true;
 		
 		languages::$selectedTextsDomain = $file;
+		
+		if (MANUAL_GETTEXT)
+			return T_textdomain($file);
+		
 		return textdomain($file);
 	}
 	
