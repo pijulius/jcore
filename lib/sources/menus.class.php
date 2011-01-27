@@ -625,6 +625,17 @@ class _menus {
 		if (!$this->arguments)
 			return false;
 		
+		if (preg_match('/(^|\/)selected($|\/)/', $this->arguments)) {
+			if (menuItems::$selected) {
+				if (SEO_FRIENDLY_LINKS)
+					echo menuItems::$selected['Path'];
+				else
+					echo menuItems::$selected['ID'];
+			}
+			
+			return true;
+		}
+		
 		preg_match('/(.*?)(\/|$)(.*)/', $this->arguments, $matches);
 		
 		$menu = null;

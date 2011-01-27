@@ -787,6 +787,17 @@ class _languages {
 		if (!$this->arguments)
 			return false;
 		
+		if (preg_match('/(^|\/)selected($|\/)/', $this->arguments)) {
+			if (languages::$selected) {
+				if (SEO_FRIENDLY_LINKS)
+					echo languages::$selected['Path'];
+				else
+					echo languages::$selected['ID'];
+			}
+			
+			return true;
+		}
+		
 		$row = sql::fetch(sql::run(
 			" SELECT * FROM `{languages}` " .
 			" WHERE `Path` LIKE '".sql::escape($this->arguments)."'" .
