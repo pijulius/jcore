@@ -516,7 +516,7 @@ class videoGalleryYouTubeVideos extends videoGalleryVideos {
 		if (!$paging->items) {
 			if (!isset($matches[1]) && $data)
 				tooltip::display(
-					sprintf(_("Couldn't fetch photo list. Error: %s"),
+					sprintf(_("Couldn't fetch video list. Error: %s"),
 						strip_tags($data)),
 					TOOLTIP_NOTIFICATION);
 			
