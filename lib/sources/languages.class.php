@@ -68,7 +68,7 @@ class _languages {
 			
 		if (SEO_FRIENDLY_LINKS && $selected)
 			url::setPath(preg_replace(
-				'/'.addcslashes($selected['Path'], '/').'(\/|$)/i', '', 
+				'/'.preg_quote($selected['Path'], '/').'(\/|$)/i', '', 
 				url::path(), 1));
 		
 		if (!$selected)

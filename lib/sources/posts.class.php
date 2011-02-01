@@ -259,7 +259,7 @@ class _posts {
 		
 		if (SEO_FRIENDLY_LINKS && $selected)
 			url::setPath(preg_replace(
-				'/'.addcslashes($selected['Path'], '/').'(\/|$)/i', '', 
+				'/'.preg_quote($selected['Path'], '/').'(\/|$)/i', '', 
 				url::path(), 1));
 		
 		if ($selected) {
@@ -2791,7 +2791,7 @@ class _posts {
 		
 		$this->selectedMenuID = $menu['ID'];
 		$this->arguments = preg_replace(
-			'/'.addcslashes($menu['Path'], '/').'(\/|$)/i', '', 
+			'/'.preg_quote($menu['Path'], '/').'(\/|$)/i', '', 
 			$this->arguments, 1);
 		
 		if (!$this->arguments)
