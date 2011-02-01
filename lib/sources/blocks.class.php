@@ -1353,7 +1353,7 @@ class _blocks {
 			url::flushDisplay();
 	}
 	
-	function displayOne($block, $language = null) {
+	function displayOne($block) {
 		if ($block['LanguageIDs']) {
 			if (!$this->selectedLanguageID && !$block['LanguageExcept'])
 				return;
@@ -1405,18 +1405,15 @@ class _blocks {
 		if (isset($block['_BrowserSelector']))
 			$cssclass[] = $block['_BrowserSelector'];
 		
+		if (isset($block['_CurrentPath']))
+			$cssclass[] = str_replace('/', ' ', $block['_CurrentPath']);
+		
 		if ($block['Class'])
 			$cssclass[] = $block['Class'];
 		
 		if (JCORE_VERSION < '0.6' && $block['SubBlockOfID'])
 			$cssclass[] = 'subblock';
 			
-		if ($this->selectedLanguageID && $language['Path'])
-			$cssclass[] = $language['Path'];
-		
-		if (isset($block['_CurrentPath']))
-			$cssclass[] = str_replace('/', ' ', $block['_CurrentPath']);
-		
 		echo
 			"<div" .
 				($block['BlockID']?
@@ -1475,7 +1472,7 @@ class _blocks {
 			" ORDER BY `OrderID`");
 		
 		while ($row = sql::fetch($rows))
-			$this->displayOne($row, $language);
+			$this->displayOne($row);
 		
 		if (JCORE_VERSION >= '0.4' && $block['Caching'] && 
 			(!$block['CacheOnlyForGuests'] || !$GLOBALS['USER']->loginok) && 
@@ -1536,14 +1533,6 @@ class _blocks {
 		if ($this->displayArguments())
 			return;
 		
-		$language = null;
-		
-		if ((int)$this->selectedLanguageID)	
-			$language = sql::fetch(sql::run(
-				" SELECT `Path` FROM `{languages}` " .
-				" WHERE `ID` = '".(int)$this->selectedLanguageID."'" .
-				" LIMIT 1"));
-		
 		// In admin caching is turned off for Main Content
 		if (JCORE_VERSION >= '0.4' && isset($GLOBALS['ADMIN']) && 
 			$GLOBALS['ADMIN']) 
@@ -1565,22 +1554,34 @@ class _blocks {
 		$rows = sql::run(
 			$this->SQL());
 		
-		$path = null;
-		$browserselector = css::browserSelector();
-		
-		if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN'])
+		if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN']) {
 			$path = 'admin';
-		elseif (isset($_GET['path']) && $_GET['path'])
-			$path = trim(preg_replace('/[^a-zA-Z0-9\@\.\_\-\/]/', '',
-						strip_tags($_GET['path'])));
-		elseif (menuItems::$selected && isset(menuItems::$selected['Path']))
-			$path = menuItems::$selected['Path'];
+			
+		} else {
+			$path =
+				(languages::$selected?
+					 languages::$selected['Path']:
+					 null) .
+				(languages::$selected && menuItems::$selected?
+					'/':
+					null) .
+				(menuItems::$selected?
+					menuItems::$selected['Path']:
+					null);
+			
+			if (url::path())
+				$path .= ($path?'/':null).
+					trim(preg_replace('/[^a-zA-Z0-9\@\.\_\-\/]/', '',
+						strip_tags(url::path())));
+		}
+		
+		$browserselector = css::browserSelector();
 		
 		while ($row = sql::fetch($rows)) {
 			$row['_CurrentPath'] = $path;
 			$row['_BrowserSelector'] = $browserselector;
 			
-			$this->displayOne($row, $language);
+			$this->displayOne($row);
 		}
 	}
 }
