@@ -534,9 +534,6 @@ class _url {
 	}
 	
 	function displayArguments() {
-		if (!$this->arguments)
-			return false;
-		
 		$encode = false;
 		$decode = false;
 			
@@ -617,7 +614,7 @@ class _url {
 				break;
 			
 			default:
-				echo $parameters;
+				echo $this->arguments;
 				break;
 		}
 		
