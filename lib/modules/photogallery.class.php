@@ -1,12 +1,14 @@
 <?php
 
 /***************************************************************************
- *            photogallery.class.php
- * 			  Ver 0.7.1 - Jan 5, 2010
- *
- *  Jul 05, 07:00:00 2009
- *  Copyright  2009  Istvan Petres (aka P.I.Julius)
- *  me@pijulius.com
+ * 
+ *  Name: Photo Gallery Module
+ *  URI: http://jcore.net
+ *  Description: Share files in a directory/gallery like strcture.
+ *  Author: Istvan Petres
+ *  Version: 0.8
+ *  Tags: photo gallery module, gpl
+ * 
  ****************************************************************************/
 
 modules::register(
@@ -768,11 +770,6 @@ class photoGallery extends modules {
 	}
 	
 	function installFiles() {
-		$iconspath = SITE_URL."lib/icons/";
-		
-		if (defined('JCORE_URL') && JCORE_URL)
-			$iconspath = JCORE_URL."lib/icons/";
-		
 		$css = 
 			".photogallery-selected {\n" .
 			"	margin-bottom: 15px;\n" .
@@ -799,20 +796,20 @@ class photoGallery extends modules {
 			"	display: inline-block;\n" .
 			"	text-decoration: none;\n" .
 			"	padding: 5px 0px 5px 20px;\n" .
-			"	background: url(\"".$iconspath."16/link.png\") 0px 50% no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/link.png\") 0px 50% no-repeat;\n" .
 			"	margin-right: 10px;\n" .
 			"}\n" .
 			"\n" .
 			".photogallery-links .back {\n" .
-			"	background-image: url(\"".$iconspath."16/doc_page_previous.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/doc_page_previous.png\");\n" .
 			"}\n" .
 			"\n" .
 			".photogallery-links .pictures {\n" .
-			"	background-image: url(\"".$iconspath."16/images.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/images.png\");\n" .
 			"}\n" .
 			"\n" .
 			".photogallery-links .comments {\n" .
-			"	background-image: url(\"".$iconspath."16/comment.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/comment.png\");\n" .
 			"}\n" .
 			"\n" .
 			".photogallery-folder {\n" .
@@ -850,11 +847,11 @@ class photoGallery extends modules {
 			"	float: left;\n" .
 			"	width: 48px;\n" .
 			"	height: 48px;\n" .
-			"	background: url(\"".$iconspath."48/folder-photos.png\");\n" .
+			"	background: url(\"http://icons.jcore.net/48/folder-photos.png\");\n" .
 			"}\n" .
 			"\n" .
 			".photogallery-folder-icon.subfolders {\n" .
-			"	background-image: url(\"".$iconspath."48/folder-subfolders-photos.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/folder-subfolders-photos.png\");\n" .
 			"}\n" .
 			"\n" .
 			".photogallery-folder-icon.icon,\n" .
@@ -870,7 +867,7 @@ class photoGallery extends modules {
 			"}\n" .
 			"\n" .
 			".as-modules-photogallery a {\n" .
-			"	background-image: url(\"".$iconspath."48/folder-photos.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/folder-photos.png\");\n" .
 			"}\n";
 		
 		if (!files::save(SITE_PATH.'template/modules/css/photogallery.css', $css, true)) {

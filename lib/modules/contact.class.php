@@ -1,12 +1,14 @@
 <?php
 
 /***************************************************************************
- *            contact.class.php
- * 			  Ver 0.7.1 - Jan 5, 2010
- *
- *  Jul 05, 07:00:00 2009
- *  Copyright  2009  Istvan Petres (aka P.I.Julius)
- *  me@pijulius.com
+ * 
+ *  Name: Contact Module
+ *  URI: http://jcore.net
+ *  Description: A simple contact form using the Dynamic Forms feature.
+ *  Author: Istvan Petres
+ *  Version: 0.8
+ *  Tags: contact module, gpl
+ * 
  ****************************************************************************/
 
 modules::register(
@@ -73,14 +75,9 @@ class contact extends modules {
 	}
 	
 	function installFiles() {
-		$iconspath = SITE_URL."lib/icons/";
-		
-		if (defined('JCORE_URL') && JCORE_URL)
-			$iconspath = JCORE_URL."lib/icons/";
-		
 		$css = 
 			".as-modules-contact a {\n" .
-			"	background-image: url(\"".$iconspath."48/contact-form.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/contact-form.png\");\n" .
 			"}\n";
 		
 		if (!files::save(SITE_PATH.'template/modules/css/contact.css', $css, true)) {

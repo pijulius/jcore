@@ -1,12 +1,14 @@
 <?php
 
 /***************************************************************************
- *            shoppingcart.class.php
- * 			  Ver 0.7.1 - Jan 5, 2010
- *
- *  Jul 05, 07:00:00 2009
- *  Copyright  2009  Istvan Petres (aka P.I.Julius)
- *  me@pijulius.com
+ * 
+ *  Name: Shopping Cart Module
+ *  URI: http://jcore.net
+ *  Description: Allow people to put together their shopping carts and checkout/place order.
+ *  Author: Istvan Petres
+ *  Version: 0.8
+ *  Tags: shopping cart module, gpl
+ * 
  ****************************************************************************/
 
 modules::register(
@@ -3315,11 +3317,6 @@ class shoppingCart extends modules {
 	}
 	
 	function installFiles() {
-		$iconspath = SITE_URL."lib/icons/";
-		
-		if (defined('JCORE_URL') && JCORE_URL)
-			$iconspath = JCORE_URL."lib/icons/";
-		
 		$css = 
 			".shopping-cart-item .pictures {\n" .
 			"	float: left;\n" .
@@ -3353,7 +3350,7 @@ class shoppingCart extends modules {
 			"	padding: 0;\n" .
 			"	border: 0;\n" .
 			"	background: transparent;\n" .
-			"	background-image: url(\"".$iconspath."32/window-close.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/32/window-close.png\");\n" .
 			"}\n" .
 			"\n" .
 			".shopping-cart-totals {\n" .
@@ -3407,7 +3404,7 @@ class shoppingCart extends modules {
 			"\n" .
 			".shopping-cart-discounts-select-user {\n" .
 			"	padding: 0 0 5px 20px;\n" .
-			"	background: url(\"".$iconspath."16/user.png\") no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/user.png\") no-repeat;\n" .
 			"}\n" .
 			"\n" .
 			".shopping-cart-discounts-users .shopping-cart-discounts-select-user {\n" .
@@ -3415,14 +3412,14 @@ class shoppingCart extends modules {
 			"	padding: 0;\n" .
 			"	width: 16px;\n" .
 			"	height: 16px;\n" .
-			"	background: url(\"".$iconspath."16/target.png\") no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/target.png\") no-repeat;\n" .
 			"}\n" .
 			"\n" .
 			".shopping-cart-fees-select-order-form-field,\n" .
 			".shopping-cart-taxes-select-order-form-field\n" .
 			"{\n" .
 			"	padding: 0 0 5px 20px;\n" .
-			"	background: url(\"".$iconspath."16/target.png\") no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/target.png\") no-repeat;\n" .
 			"}\n" .
 			"\n" .
 			".shopping-cart-fees-order-form-fields .shopping-cart-fees-select-order-form-field,\n" .
@@ -3451,23 +3448,23 @@ class shoppingCart extends modules {
 			"}\n" .
 			"\n" .
 			".as-modules-shoppingcart a {\n" .
-			"	background-image: url(\"".$iconspath."48/shopping-cart.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/shopping-cart.png\");\n" .
 			"}\n" .
 			"\n" .
 			".as-shopping-cart-settings a {\n" .
-			"	background-image: url(\"".$iconspath."48/shopping-cart-settings.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/shopping-cart-settings.png\");\n" .
 			"}\n" .
 			"\n" .
 			".as-shopping-cart-discounts a {\n" .
-			"	background-image: url(\"".$iconspath."48/shopping-cart-discounts.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/shopping-cart-discounts.png\");\n" .
 			"}\n" .
 			"\n" .
 			".as-shopping-cart-fees a {\n" .
-			"	background-image: url(\"".$iconspath."48/shopping-cart-fees.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/shopping-cart-fees.png\");\n" .
 			"}\n" .
 			"\n" .
 			".as-shopping-cart-taxes a {\n" .
-			"	background-image: url(\"".$iconspath."48/shopping-cart-taxes.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/shopping-cart-taxes.png\");\n" .
 			"}\n";
 		
 		if (!files::save(SITE_PATH.'template/modules/css/shoppingcart.css', $css, true)) {

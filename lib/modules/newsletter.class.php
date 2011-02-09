@@ -1,12 +1,14 @@
 <?php
 
 /***************************************************************************
- *            examplemodule.class.php
- * 			  Ver 0.2.1 - Jan 5, 2010
- *
- *  Jul 05, 07:00:00 2009
- *  Copyright  2009  Istvan Petres (aka P.I.Julius)
- *  me@pijulius.com
+ * 
+ *  Name: Newsletter Module
+ *  URI: http://jcore.net
+ *  Description: Create newsletter lists with subscribers and send newsletters.
+ *  Author: Istvan Petres
+ *  Version: 0.3
+ *  Tags: newsletter module, gpl
+ * 
  ****************************************************************************/
 
 modules::register(
@@ -2389,18 +2391,13 @@ class newsletter extends modules {
 	}
 	
 	function installFiles() {
-		$iconspath = SITE_URL."lib/icons/";
-		
-		if (defined('JCORE_URL') && JCORE_URL)
-			$iconspath = JCORE_URL."lib/icons/";
-		
 		$css = 
 			".form-entry-listids .form-entry-content {\n" .
 			"	margin-left: 130px;\n" .
 			"}\n" .
 			"\n" .
 			".admin-link.newsletter-members {\n" .
-			"	background-image: url(\"".$iconspath."32/stock_people.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/32/stock_people.png\");\n" .
 			"}\n" .
 			"\n" .
 			".admin-section-item.as-modules-newsletter-subscriptions {\n" .
@@ -2415,19 +2412,19 @@ class newsletter extends modules {
 			"}\n" .
 			"\n" .
 			".admin-section-item.as-modules-newsletter-emails a {\n" .
-			"	background-image: url(\"".$iconspath."48/newslettersend.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/newslettersend.png\");\n" .
 			"}\n" .
 			"\n" .
 			".admin-section-item.as-modules-newsletter-subscriptions a {\n" .
-			"	background-image: url(\"".$iconspath."48/newslettersubscriptions.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/newslettersubscriptions.png\");\n" .
 			"}\n" .
 			"\n" .
 			".admin-section-item.as-modules-newsletter-lists a {\n" .
-			"	background-image: url(\"".$iconspath."48/newsletterlists.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/newsletterlists.png\");\n" .
 			"}\n" .
 			"\n" .
 			".admin-section-item.as-modules-newsletter a {\n" .
-			"	background-image: url(\"".$iconspath."48/newsletter.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/newsletter.png\");\n" .
 			"}\n";
 		
 		if (!files::save(SITE_PATH.'template/modules/css/newsletter.css', $css, true)) {

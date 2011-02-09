@@ -1,12 +1,14 @@
 <?php
 
 /***************************************************************************
- *            videogallery.class.php
- * 			  Ver 0.2.1 - Jan 5, 2010
- *
- *  Jul 05, 07:00:00 2009
- *  Copyright  2009  Istvan Petres (aka P.I.Julius)
- *  me@pijulius.com
+ * 
+ *  Name: Video Gallery Module
+ *  URI: http://jcore.net
+ *  Description: Display videos in a folder/gallery like structure.
+ *  Author: Istvan Petres
+ *  Version: 0.3
+ *  Tags: video gallery module, gpl
+ * 
  ****************************************************************************/
 
 modules::register(
@@ -813,11 +815,6 @@ class videoGallery extends modules {
 	}
 	
 	function installFiles() {
-		$iconspath = SITE_URL."lib/icons/";
-		
-		if (defined('JCORE_URL') && JCORE_URL)
-			$iconspath = JCORE_URL."lib/icons/";
-		
 		$css = 
 			".videogallery-selected {\n" .
 			"	margin-bottom: 15px;\n" .
@@ -844,20 +841,20 @@ class videoGallery extends modules {
 			"	display: inline-block;\n" .
 			"	text-decoration: none;\n" .
 			"	padding: 5px 0px 5px 20px;\n" .
-			"	background: url(\"".$iconspath."16/link.png\") 0px 50% no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/link.png\") 0px 50% no-repeat;\n" .
 			"	margin-right: 10px;\n" .
 			"}\n" .
 			"\n" .
 			".videogallery-links .back {\n" .
-			"	background-image: url(\"".$iconspath."16/doc_page_previous.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/doc_page_previous.png\");\n" .
 			"}\n" .
 			"\n" .
 			".videogallery-links .videos {\n" .
-			"	background-image: url(\"".$iconspath."16/films.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/films.png\");\n" .
 			"}\n" .
 			"\n" .
 			".videogallery-links .comments {\n" .
-			"	background-image: url(\"".$iconspath."16/comment.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/comment.png\");\n" .
 			"}\n" .
 			"\n" .
 			".videogallery-folder {\n" .
@@ -902,11 +899,11 @@ class videoGallery extends modules {
 			"	float: left;\n" .
 			"	width: 48px;\n" .
 			"	height: 48px;\n" .
-			"	background: url(\"".$iconspath."48/folder-videos.png\");\n" .
+			"	background: url(\"http://icons.jcore.net/48/folder-videos.png\");\n" .
 			"}\n" .
 			"\n" .
 			".videogallery-folder-icon.subfolders {\n" .
-			"	background-image: url(\"".$iconspath."48/folder-subfolders-videos.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/folder-subfolders-videos.png\");\n" .
 			"}\n" .
 			"\n" .
 			".videogallery-folder-icon.icon,\n" .
@@ -922,7 +919,7 @@ class videoGallery extends modules {
 			"}\n" .
 			"\n" .
 			".as-modules-videogallery a {\n" .
-			"	background-image: url(\"".$iconspath."48/folder-videos.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/folder-videos.png\");\n" .
 			"}\n";
 		
 		if (!files::save(SITE_PATH.'template/modules/css/videogallery.css', $css, true)) {

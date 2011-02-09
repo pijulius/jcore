@@ -1,12 +1,14 @@
 <?php
 
 /***************************************************************************
- *            shoppingorders.class.php
- * 			  Ver 0.7.1 - Jan 5, 2010
- *
- *  Aug 18, 07:00:00 2009
- *  Copyright  2009  Istvan Petres (aka P.I.Julius)
- *  me@pijulius.com
+ * 
+ *  Name: Shopping Orders Module
+ *  URI: http://jcore.net
+ *  Description: Hande new/processed orders and display order status to the clients.
+ *  Author: Istvan Petres
+ *  Version: 0.8
+ *  Tags: shopping orders module, gpl
+ * 
  ****************************************************************************/
  
 include_once('lib/json.class.php');
@@ -2027,11 +2029,6 @@ class shoppingOrders extends modules {
 	}
 	
 	function installFiles() {
-		$iconspath = SITE_URL."lib/icons/";
-		
-		if (defined('JCORE_URL') && JCORE_URL)
-			$iconspath = JCORE_URL."lib/icons/";
-		
 		$css = 
 			".shopping-order-comments-link {\n" .
 			"	width: 32px;\n" .
@@ -2042,7 +2039,7 @@ class shoppingOrders extends modules {
 			"	padding: 0;\n" .
 			"	border: 0;\n" .
 			"	background: transparent;\n" .
-			"	background-image: url(\"".$iconspath."32/internet-group-chat.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/32/internet-group-chat.png\");\n" .
 			"	text-decoration: none;\n" .
 			"}\n" .
 			"\n" .
@@ -2061,13 +2058,13 @@ class shoppingOrders extends modules {
 			".shopping-order-links a {\n" .
 			"	display: block;\n" .
 			"	padding: 5px 0px 5px 20px;\n" .
-			"	background: url(\"".$iconspath."16/link.png\") 0px 50% no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/link.png\") 0px 50% no-repeat;\n" .
 			"	float: left;\n" .
 			"	margin-right: 10px;\n" .
 			"}\n" .
 			"\n" .
 			".shopping-order-links .back {\n" .
-			"	background-image: url(\"".$iconspath."16/doc_page_previous.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/doc_page_previous.png\");\n" .
 			"}\n" .
 			"\n" .
 			".shopping-orders-cart-add-item,\n" .
@@ -2077,12 +2074,12 @@ class shoppingOrders extends modules {
 			"	float: left;\n" .
 			"	margin-top: 10px;\n" .
 			"	padding: 0 0 5px 20px;\n" .
-			"	background: url(\"".$iconspath."16/add.png\") no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/add.png\") no-repeat;\n" .
 			"}\n" .
 			"\n" .
 			".shopping-orders-cart-refresh {\n" .
 			"	margin-left: 10px;\n" .
-			"	background: url(\"".$iconspath."16/arrow_refresh.png\") no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/arrow_refresh.png\") no-repeat;\n" .
 			"}\n" .
 			"\n" .
 			".shopping-order-new-order-items .list .auto-width {\n" .
@@ -2091,28 +2088,28 @@ class shoppingOrders extends modules {
 			"\n" .
 			".shopping-order-new-order-add-user {\n" .
 			"	padding: 0 0 5px 20px;\n" .
-			"	background: url(\"".$iconspath."16/user.png\") no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/user.png\") no-repeat;\n" .
 			"}\n" .
 			"\n" .
 			".shopping-order-new-order-select-user {\n" .
 			"	display: block;\n" .
 			"	width: 16px;\n" .
 			"	height: 16px;\n" .
-			"	background: url(\"".$iconspath."16/target.png\") no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/target.png\") no-repeat;\n" .
 			"}\n" .
 			"\n" .
 			".shopping-order-new-order-add-item {\n" .
 			"	display: block;\n" .
 			"	width: 16px;\n" .
 			"	height: 16px;\n" .
-			"	background: url(\"".$iconspath."16/add.png\") no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/add.png\") no-repeat;\n" .
 			"}\n" .
 			"\n" .
 			".shopping-order-new-order-remove-item {\n" .
 			"	display: block;\n" .
 			"	width: 16px;\n" .
 			"	height: 16px;\n" .
-			"	background: url(\"".$iconspath."16/cross.png\") no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/cross.png\") no-repeat;\n" .
 			"}\n" .
 			"\n" .
 			".shopping-order-new-order-items-search span {\n" .
@@ -2123,11 +2120,11 @@ class shoppingOrders extends modules {
 			"}\n" .
 			"\n" .
 			".as-modules-shoppingorders a {\n" .
-			"	background-image: url(\"".$iconspath."48/shopping-orders.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/shopping-orders.png\");\n" .
 			"}\n" .
 			"\n" .
 			".as-shopping-new-orders a {\n" .
-			"	background-image: url(\"".$iconspath."48/shopping-orders-new.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/shopping-orders-new.png\");\n" .
 			"}\n";
 		
 		if (!files::save(SITE_PATH.'template/modules/css/shoppingorders.css', $css, true)) {

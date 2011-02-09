@@ -1,12 +1,14 @@
 <?php
 
 /***************************************************************************
- *            shopping.class.php
- * 			  Ver 0.7.1 - Jan 5, 2010
- *
- *  Jul 05, 07:00:00 2009
- *  Copyright  2009  Istvan Petres (aka P.I.Julius)
- *  me@pijulius.com
+ * 
+ *  Name: Shopping Module
+ *  URI: http://jcore.net
+ *  Description: Sell items in a folder/category like structure.
+ *  Author: Istvan Petres
+ *  Version: 0.8
+ *  Tags: shopping module, gpl
+ * 
  ****************************************************************************/
  
 include_once('lib/modules/shoppingcart.class.php');
@@ -4321,11 +4323,6 @@ class shopping extends modules {
 	}
 	
 	function installFiles() {
-		$iconspath = SITE_URL."lib/icons/";
-		
-		if (defined('JCORE_URL') && JCORE_URL)
-			$iconspath = JCORE_URL."lib/icons/";
-		
 		$css = 
 			".shopping-category-selected {\n" .
 			"	margin-bottom: 15px;\n" .
@@ -4378,11 +4375,11 @@ class shopping extends modules {
 			"	float: left;\n" .
 			"	width: 48px;\n" .
 			"	height: 48px;\n" .
-			"	background: url(\"".$iconspath."48/folder-shopping-categories.png\");\n" .
+			"	background: url(\"http://icons.jcore.net/48/folder-shopping-categories.png\");\n" .
 			"}\n" .
 			"\n" .
 			".shopping-category-icon.subcategories {\n" .
-			"	background-image: url(\"".$iconspath."48/folder-shopping-subcategories.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/folder-shopping-subcategories.png\");\n" .
 			"}\n" .
 			"\n" .
 			".shopping-category-icon.icon,\n" .
@@ -4401,16 +4398,16 @@ class shopping extends modules {
 			"	display: inline-block;\n" .
 			"	text-decoration: none;\n" .
 			"	padding: 5px 0px 5px 20px;\n" .
-			"	background: url(\"".$iconspath."16/link.png\") 0px 50% no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/link.png\") 0px 50% no-repeat;\n" .
 			"	margin-right: 10px;\n" .
 			"}\n" .
 			"\n" .
 			".shopping-category-links .back {\n" .
-			"	background-image: url(\"".$iconspath."16/doc_page_previous.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/doc_page_previous.png\");\n" .
 			"}\n" .
 			"\n" .
 			".shopping-category-links .items {\n" .
-			"	background-image: url(\"".$iconspath."16/paper_bag.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/paper_bag.png\");\n" .
 			"}\n" .
 			"\n" .
 			".shopping-sub-categories {\n" .
@@ -4476,7 +4473,7 @@ class shopping extends modules {
 			"}\n" .
 			"\n" .
 			".shopping-item-add-to-cart-button span {\n" .
-			"	background: url(\"".$iconspath."16/cart.png\") no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/cart.png\") no-repeat;\n" .
 			"	padding-left: 20px;\n" .
 			"	display: block;\n" .
 			"	height: 16px;\n" .
@@ -4490,24 +4487,24 @@ class shopping extends modules {
 			"	display: inline-block;\n" .
 			"	text-decoration: none;\n" .
 			"	padding: 5px 0px 5px 20px;\n" .
-			"	background: url(\"".$iconspath."16/link.png\") 0px 50% no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/link.png\") 0px 50% no-repeat;\n" .
 			"	margin-right: 10px;\n" .
 			"}\n" .
 			"\n" .
 			".shopping-item-links .back {\n" .
-			"	background-image: url(\"".$iconspath."16/doc_page_previous.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/doc_page_previous.png\");\n" .
 			"}\n" .
 			"\n" .
 			".shopping-item-links .more-details {\n" .
-			"	background-image: url(\"".$iconspath."16/doc_text_image.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/doc_text_image.png\");\n" .
 			"}\n" .
 			"\n" .
 			".shopping-item-links .comments {\n" .
-			"	background-image: url(\"".$iconspath."16/comment.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/comment.png\");\n" .
 			"}\n" .
 			"\n" .
 			".shopping-item-links .edit {\n" .
-			"	background-image: url(\"".$iconspath."16/page_white_edit.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/page_white_edit.png\");\n" .
 			"}\n" .
 			"\n" .
 			".shopping-keywords-cloud {\n" .
@@ -4517,15 +4514,15 @@ class shopping extends modules {
 			"}\n" .
 			"\n" .
 			".admin-link.items {\n" .
-			"	background-image: url(\"".$iconspath."32/box-items.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/32/box-items.png\");\n" .
 			"}\n" .
 			"\n" .
 			".admin-link.digital-goods {\n" .
-			"	background-image: url(\"".$iconspath."32/document-save.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/32/document-save.png\");\n" .
 			"}\n" .
 			"\n" .
 			".as-modules-shopping a {\n" .
-			"	background-image: url(\"".$iconspath."48/folder-shopping-categories.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/folder-shopping-categories.png\");\n" .
 			"}\n";
 		
 		if (!files::save(SITE_PATH.'template/modules/css/shopping.css', $css, true)) {

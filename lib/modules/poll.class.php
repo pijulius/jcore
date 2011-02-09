@@ -1,12 +1,14 @@
 <?php
 
 /***************************************************************************
- *            poll.class.php
- * 			  Ver 0.2.1 - Jan 5, 2010
- *
- *  Jul 05, 07:00:00 2009
- *  Copyright  2009  Istvan Petres (aka P.I.Julius)
- *  me@pijulius.com
+ * 
+ *  Name: Poll Module
+ *  URI: http://jcore.net
+ *  Description: Allow people to vote on subjects.
+ *  Author: Istvan Petres
+ *  Version: 0.3
+ *  Tags: poll module, gpl
+ * 
  ****************************************************************************/
 
 modules::register(
@@ -609,11 +611,6 @@ class poll extends modules {
 	}
 	
 	function installFiles() {
-		$iconspath = SITE_URL."lib/icons/";
-		
-		if (defined('JCORE_URL') && JCORE_URL)
-			$iconspath = JCORE_URL."lib/icons/";
-		
 		$css = 
 			".poll {\n" .
 			"	margin-bottom: 20px;\n" .
@@ -660,16 +657,16 @@ class poll extends modules {
 			".poll-links a {\n" .
 			"	display: inline-block;\n" .
 			"	padding: 5px 0px 5px 20px;\n" .
-			"	background: url(\"".$iconspath."16/link.png\") 0px 50% no-repeat;\n" .
+			"	background: url(\"http://icons.jcore.net/16/link.png\") 0px 50% no-repeat;\n" .
 			"	margin: 10px 10px 0 0;\n" .
 			"}\n" .
 			"\n" .
 			".poll-links .back {\n" .
-			"	background-image: url(\"".$iconspath."16/doc_page_previous.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/doc_page_previous.png\");\n" .
 			"}\n" .
 			"\n" .
 			".poll-links .comments {\n" .
-			"	background-image: url(\"".$iconspath."16/comment.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/comment.png\");\n" .
 			"}\n" .
 			"\n" .
 			".poll.last .separator.bottom,\n" .
@@ -679,7 +676,7 @@ class poll extends modules {
 			"}\n" .
 			"\n" .
 			".as-modules-poll a {\n" .
-			"	background-image: url(\"".$iconspath."48/eq.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/eq.png\");\n" .
 			"}\n";
 		
 		if (!files::save(SITE_PATH.'template/modules/css/poll.css', $css, true)) {

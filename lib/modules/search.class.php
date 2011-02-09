@@ -1,12 +1,14 @@
 <?php
 
 /***************************************************************************
- *            searches.class.php
- * 			  Ver 0.7.1 - Jan 5, 2010
- *
- *  Jul 05, 07:00:00 2009
- *  Copyright  2009  Istvan Petres (aka P.I.Julius)
- *  me@pijulius.com
+ * 
+ *  Name: Search Module
+ *  URI: http://jcore.net
+ *  Description: Implement your own search engine for posts and searchable modules.
+ *  Author: Istvan Petres
+ *  Version: 0.8
+ *  Tags: search module, gpl
+ * 
  ****************************************************************************/
 
 modules::register(
@@ -71,11 +73,6 @@ class search extends modules {
 	}
 	
 	function installFiles() {
-		$iconspath = SITE_URL."lib/icons/";
-		
-		if (defined('JCORE_URL') && JCORE_URL)
-			$iconspath = JCORE_URL."lib/icons/";
-		
 		$css = 
 			"#searchform {\n" .
 			"	margin-bottom: 10px;\n" .
@@ -125,7 +122,7 @@ class search extends modules {
 			"}\n" .
 			"\n" .
 			".as-modules-search a {\n" .
-			"	background-image: url(\"".$iconspath."48/system-search.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/system-search.png\");\n" .
 			"}\n";
 		
 		if (!files::save(SITE_PATH.'template/modules/css/search.css', $css, true)) {
