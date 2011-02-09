@@ -22,6 +22,7 @@ email::add('DynamicForm',
 		"%PAGE_TITLE%");
 
 class _dynamicForms extends form {
+	var $formID = null;
 	var $sendNotificationEmail = true;
 	var $sendNotificationEmailTo = WEBMASTER_EMAIL;
 	var $successMessage = null;
@@ -31,6 +32,7 @@ class _dynamicForms extends form {
 	
 	function __construct($title = null, $id = null, $method = 'post') {
 		parent::__construct($title, $id, $method);
+		$this->formID = $id;
 		$this->textsDomain = languages::$selectedTextsDomain;
 	}
 	
@@ -972,7 +974,7 @@ class _dynamicForms extends form {
 		
 		$form = sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicforms}`" .
-			" WHERE `FormID` = '".sql::escape($this->id)."'"));
+			" WHERE `FormID` = '".sql::escape($this->formID)."'"));
 			
 		$this->title = __($form['Title'], $this->textsDomain);
 		$this->method = $form['Method'];
@@ -998,6 +1000,7 @@ class _dynamicForms extends form {
 				null) .
 			" ORDER BY `OrderID`, `ID`");
 		
+		$presetvalues = array();
 		$formhassubmitbutton = false;
 		
 		while ($row = sql::fetch($rows)) {
@@ -1045,13 +1048,13 @@ class _dynamicForms extends form {
 						if (strstr($value, '='))
 							list($valuetitle, $value) = array_map('trim', explode('=', current($values)));
 						
-						if ($presetvalue && !isset($GLOBALS['_'.strtoupper($this->method)][$row['Name']]))
-							$this->setValue($value);
-						
 						$defaultvalue = $value;
 					} else {
 						$defaultvalue = 'Yes';
 					}
+					
+					if ($presetvalue && !isset($GLOBALS['_'.strtoupper($this->method)][$row['Name']]))
+						$presetvalues[$row['Name']] = $defaultvalue;
 				}
 				
 			} else {
@@ -1118,7 +1121,7 @@ class _dynamicForms extends form {
 					FORM_INPUT_TYPE_RECIPIENT_SELECT))) 
 				{
 					if ($presetvalue && !isset($GLOBALS['_'.strtoupper($this->method)][$row['Name']]))
-						$this->setValue($value);
+						$presetvalues[$row['Name']] = $value;
 					
 					continue;
 				}
@@ -1126,10 +1129,8 @@ class _dynamicForms extends form {
 				if (in_array($row['TypeID'], array(
 					FORM_INPUT_TYPE_MULTISELECT, FORM_INPUT_TYPE_CHECKBOX))) 
 				{
-					if ($presetvalue && !isset($GLOBALS['_'.strtoupper($this->method)][$row['Name']])) {
-						$selectedvalues[] = $value;
-						$this->setValue($selectedvalues);
-					}
+					if ($presetvalue && !isset($GLOBALS['_'.strtoupper($this->method)][$row['Name']]))
+						$presetvalues[$row['Name']][] = $value;
 					
 					continue;
 				}
@@ -1138,6 +1139,9 @@ class _dynamicForms extends form {
 		
 		if (!$formhassubmitbutton && $addformbuttons)
 			$this->addSubmitButtons();
+		
+		if (count($presetvalues) && !$this->submitted())
+			$this->setValues($presetvalues);
 	}
 	
 	static function displayPreview($formid) {
