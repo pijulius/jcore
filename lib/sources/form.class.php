@@ -111,14 +111,14 @@ class _form {
 	}
 	
 	function submitted() {
-		if ($this->get($this->id."submit"))
-			return $this->get($this->id."submit");
+		if (isset($GLOBALS['_'.strtoupper($this->method)][$this->id.'submit']))
+			return $GLOBALS['_'.strtoupper($this->method)][$this->id.'submit'];
 		
 		foreach($this->elements as $element) {
 			if ($element['Type'] == FORM_INPUT_TYPE_SUBMIT && 
-				$this->get($element['Name']))
+				isset($GLOBALS['_'.strtoupper($this->method)][$element['Name']]))
 			{
-				return $this->get($element['Name']);
+				return $GLOBALS['_'.strtoupper($this->method)][$element['Name']];
 			}
 		}
 		
@@ -1289,10 +1289,16 @@ class _form {
 					FORM_INPUT_TYPE_RESET, 
 					FORM_INPUT_TYPE_BUTTON))) 
 			{
-				if ($currentpage < $this->selectedPage)
-					$element['Type'] = FORM_INPUT_TYPE_HIDDEN;
-				elseif ($currentpage > $this->selectedPage)
-					continue;
+				if ($currentpage < $this->selectedPage || $currentpage > $this->selectedPage) {
+					if (in_array($element['Type'], array(
+						FORM_OPEN_FRAME_CONTAINER,
+						FORM_CLOSE_FRAME_CONTAINER,
+						FORM_STATIC_TEXT,
+						FORM_PAGE_BREAK)))
+						continue;
+					else
+						$element['Type'] = FORM_INPUT_TYPE_HIDDEN;
+				}
 			}
 			
 			if (in_array($element['Type'], array(
