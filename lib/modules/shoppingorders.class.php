@@ -1598,7 +1598,7 @@ class shoppingOrderItems {
 		if (!$newid) {
 			tooltip::display(
 				_("Order item couldn't be added to the db! Please contact us " .
-					"with this error asap."),
+					"with this error as soon as possible."),
 				TOOLTIP_ERROR);
 			
 			return false;
@@ -2965,7 +2965,7 @@ class shoppingOrders extends modules {
 				tooltip::display(
 					_("There were some errors while processing your order (some " .
 						"items couldn't be added to your order). Please contact " .
-						"us with this error and your order number asap."),
+						"us with this error and your order number as soon as possible."),
 					TOOLTIP_ERROR);
 			}
 		}
@@ -4368,7 +4368,7 @@ class shoppingOrders extends modules {
 		if (!$newid) {
 			tooltip::display(
 				_("We are sorry for the inconvenience but the order couldn't be " .
-					"added to the db. Please contact us with this error asap."),
+					"added to the db. Please contact us with this error as soon as possible."),
 				TOOLTIP_ERROR);
 			
 			return false;

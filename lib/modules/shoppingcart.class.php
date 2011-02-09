@@ -2502,7 +2502,7 @@ class shoppingCartCheckoutForm extends dynamicForms {
 				tooltip::display(
 					_("There were some errors while processing your order (some " .
 						"items couldn't be added to your order). Please contact " .
-						"us with this error and your order number asap."),
+						"us with this error and your order number as soon as possible."),
 					TOOLTIP_ERROR);
 			}
 		}
