@@ -2257,6 +2257,7 @@ class shoppingOrders extends modules {
 		}
 		
 		$orderform = new shoppingOrderForm();
+		$orderform->id = 'neworder';
 		$orderform->load(false);
 		
 		foreach($orderform->elements as $element)

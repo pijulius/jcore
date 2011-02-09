@@ -2666,6 +2666,7 @@ class shoppingCartCheckoutForm extends dynamicForms {
 				}
 
 				$orderform = new shoppingOrderForm();
+				$orderform->id = 'checkout';
 				$orderform->load(false);
 				
 				foreach($orderform->elements as $element) {
@@ -2815,6 +2816,7 @@ class shoppingCartCheckoutForm extends dynamicForms {
 				}
 		
 				$orderform = new shoppingOrderForm();
+				$orderform->id = 'checkout';
 				$orderform->load(false);
 				
 				if (!count($orderform->elements)) 
@@ -2913,6 +2915,7 @@ class shoppingCartCheckoutForm extends dynamicForms {
 				}
 		
 				$orderform = new shoppingOrderForm();
+				$orderform->id = 'checkout';
 				$orderform->load(false);
 				
 				foreach($orderform->elements as $element) {
@@ -3003,6 +3006,7 @@ class shoppingCartCheckoutForm extends dynamicForms {
 				}
 		
 				$orderform = new shoppingOrderForm();
+				$orderform->id = 'checkout';
 				$orderform->load(false);
 				
 				if (!count($orderform->elements)) {
@@ -3069,6 +3073,7 @@ class shoppingCartCheckoutForm extends dynamicForms {
 				$this->setValueType(FORM_VALUE_TYPE_LIMITED_STRING);
 				
 				$orderform = new shoppingOrderForm();
+				$orderform->id = 'checkout';
 				$orderform->load(false);
 				
 				if (!count($orderform->elements)) {

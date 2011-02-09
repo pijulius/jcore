@@ -467,6 +467,7 @@ class shoppingItems {
 					
 		if (JCORE_VERSION >= '0.7') {
 			$itemsform = new shoppingItemsForm();
+			$itemsform->id = 'newedititem';
 			$itemsform->load(false);
 			
 			$firstcontainer = true;
