@@ -4662,7 +4662,7 @@ class shoppingOrders extends modules {
 			$email->variables['PaymentStatus'] = 
 				strtoupper(_("Pending"));
 			$email->variables['PaymentStatusNote'] = 
-				_("IMPORTANT: do NOT ship any goods till payment has been " .
+				_("IMPORTANT: do NOT ship any goods until payment has been " .
 					"confirmed / processed!");
 		}
 		
@@ -4944,7 +4944,7 @@ class shoppingOrders extends modules {
 			
 			tooltip::display(
 				_("Your payment is still pending. To access your Digital Goods " .
-					"please finalize your payments below or wait till we receive " .
+					"please finalize your payments below or wait until we receive " .
 					"the confirmation for your payment."),
 				TOOLTIP_NOTIFICATION);
 			return;
@@ -5169,7 +5169,7 @@ class shoppingOrders extends modules {
 			_("It seems the payment has not been processed yet or you " .
 				"haven't finalized the payment. If you sure the " .
 				"payment has been processed please wait a few more minutes " .
-				"till we receive the confirmation, otherwise please click " .
+				"until we receive the confirmation, otherwise please click " .
 				"on the button below.");
 		$ordermethod->postProcess($row['ID']);
 		unset($ordermethod);
