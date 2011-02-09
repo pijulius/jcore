@@ -306,6 +306,7 @@ class _posts {
 					
 		if (JCORE_VERSION >= '0.7') {
 			$postsform = new postsForm();
+			$postsform->id = 'neweditpost';
 			$postsform->load(false);
 			
 			foreach($postsform->elements as $element)
