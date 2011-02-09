@@ -911,7 +911,8 @@ class _form {
 			if (!isset($values[$element['Name']]))
 				continue;
 			
-			if ($element['ValueType'] == FORM_VALUE_TYPE_ARRAY)
+			if ($element['ValueType'] == FORM_VALUE_TYPE_ARRAY && 
+				!is_array($values[$element['Name']]))
 				$value = explode('|', $values[$element['Name']]);
 			else
 				$value = $values[$element['Name']];
