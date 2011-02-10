@@ -192,10 +192,10 @@ class _requests {
 			exit();
 		}
 		
-		if ($requestsuccess) {
-			$this->clear();
+		$this->clear();
+		
+		if ($requestsuccess)
 			return;
-		}
 		
 		unset($GLOBALS['_'.strtoupper($this->method)][$this->variable]);
 		url::setURI(url::uri($this->variable));
