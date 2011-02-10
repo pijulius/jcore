@@ -1513,6 +1513,27 @@ class _menuItems {
 			" LIMIT 1"));
 	}
 	
+	static function getMainMenuIDs() {
+		$languageids = languages::getIDs();
+		
+		if (!$languageids) {
+			if ($menu = menuitems::getMainMenu())
+				return array($menu['ID']);
+			
+			return false;
+		}
+		
+		$menuids = null;
+		$languageids[] = 0;
+		
+		foreach($languageids as $languageid) {
+			if ($menu = menuitems::getMainMenu($languageid))
+				$menuids[] = $menu['ID'];
+		}
+		
+		return $menuids;
+	}
+	
 	function getSelectedMenuIDs($menuid = null) {
 		if (!$menuid)
 			$menuid = $this->selectedID;
