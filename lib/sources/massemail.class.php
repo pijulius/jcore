@@ -70,8 +70,9 @@ class _massEmail {
 				"onclick=\"jQuery('#newemailform #entryTo').val('<ALL-USERS>');\">" .
 				__("All Users") .
 			"</a>" .
-			"<a href='".url::site().
-				"index.php?request=admin/members/massemail&amp;users=1' " .
+			"<a href='".url::uri('request, users') .
+				"&amp;request=".$this->adminPath .
+				"&amp;users=1' " .
 				"class='mass-email-select-users ajax-content-link' " .
 				"title='".htmlspecialchars(__("Add User(s)"), ENT_QUOTES)."'>" .
 				__("Add User(s)") .
