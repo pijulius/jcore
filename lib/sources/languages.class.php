@@ -776,6 +776,22 @@ class _languages {
 		return languages::setText('messages');
 	}
 	
+	static function getIDs() {
+		$languageids = sql::fetch(sql::run(
+			" SELECT GROUP_CONCAT(DISTINCT `ID` SEPARATOR '|') AS `IDs`" .
+			" FROM `{languages}`" .
+			" ORDER BY" .
+			(JCORE_VERSION >= '0.7'?
+				" `OrderID`,":
+				null) .
+			" `ID`"));
+		
+		if ($languageids)
+			$languageids = explode('|', $languageids['IDs']);
+		
+		return $languageids;
+	}
+	
 	function displayTitle(&$row) {
 		echo 
 			"<a href='".$row['_Link']."'>" .
