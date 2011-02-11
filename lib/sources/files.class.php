@@ -109,6 +109,7 @@ class _files {
 		"movie" => "video/x-sgi-movie",
 		"mp2" => "video/mpeg",
 		"mp3" => "audio/mpeg",
+		"mp4" => "video/mpeg",
 		"mpa" => "video/mpeg",
 		"mpe" => "video/mpeg",
 		"mpeg" => "video/mpeg",
@@ -188,6 +189,7 @@ class _files {
 		"vcf" => "text/x-vcard",
 		"vrml" => "x-world/x-vrml",
 		"wav" => "audio/x-wav",
+		"webm" => "video/webm",
 		"wcm" => "application/vnd.ms-works",
 		"wdb" => "application/vnd.ms-works",
 		"wks" => "application/vnd.ms-works",
@@ -385,6 +387,8 @@ class _files {
 		
 		if ($forcedownload)
 			header('Content-Disposition: attachment; filename="' . $filename . '"');
+		else
+			header('Content-Disposition: filename="' . $filename . '"');
 		
 		if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && 
 			(strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $filemtime)) 
