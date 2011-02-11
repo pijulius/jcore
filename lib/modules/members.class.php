@@ -460,7 +460,9 @@ class members extends modules {
 					return true;
 				}
 				
-				echo $GLOBALS['USER']->data[$parameters];
+				if (isset($GLOBALS['USER']->data[$parameters]))
+					echo $GLOBALS['USER']->data[$parameters];
+				
 				return true;
 			
 			default:
