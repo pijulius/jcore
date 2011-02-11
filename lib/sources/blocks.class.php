@@ -138,7 +138,11 @@ class _blocks {
 			__('Content'),
 			'Content',
 			FORM_INPUT_TYPE_TEXTAREA);
-		$form->setStyle('width: 350px; height: 100px;');
+		$form->setStyle('width: ' .
+			(JCORE_VERSION >= '0.7'?
+				'90%':
+				'350px') .
+			'; height: 200px;');
 		$form->setValueType(FORM_VALUE_TYPE_HTML);
 		
 		$form->add(

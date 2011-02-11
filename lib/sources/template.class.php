@@ -72,7 +72,11 @@ class _templateExporter {
 			FORM_INPUT_TYPE_TEXTAREA,
 			false,
 			$row['_Description']);
-		$form->setStyle('width: 400px; height: 110px;');
+		$form->setStyle('width: ' .
+			(JCORE_VERSION >= '0.7'?
+				'90%':
+				'400px') .
+			'; height: 110px;');
 		
 		$form->add(
 			__('Tags'),

@@ -638,7 +638,7 @@ class newsletterSubscriptions {
 				'Emails',
 				FORM_INPUT_TYPE_TEXTAREA,
 				true);
-			$form->setStyle('width: 250px; height: 50px;');
+			$form->setStyle('width: 300px; height: 100px;');
 			$form->addAdditionalTitle("<div class='comment'>" .
 				_("one email per line")."</div>");
 			
@@ -1606,7 +1606,11 @@ class newsletterEmails {
 				_("If you do not wish to receive our newsletters in the future, " .
 				"please click the link below to unsubscribe.") .
 			"\n%UNSUBSCRIBE_LINK%");
-		$form->setStyle("width: 350px; height: 200px;");
+		$form->setStyle('width: ' .
+			(JCORE_VERSION >= '0.7'?
+				'90%':
+				'350px') .
+			'; height: 200px;');
 		
 		$form->add(
 			__('Partial sending (split your emails into chunks)'),

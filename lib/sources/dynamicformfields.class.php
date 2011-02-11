@@ -164,8 +164,11 @@ class _dynamicFormFields {
 				__('Value(s)'),
 				'Values',
 				FORM_INPUT_TYPE_TEXTAREA);
-			$form->setStyle('width: 300px;');
-			$form->setAttributes("rows='7'");
+			$form->setStyle('width: ' .
+				(JCORE_VERSION >= '0.7'?
+					'90%':
+					'300px') .
+				'; height: 150px;');
 			
 			$form->addAdditionalText(
 				"<div class='comment'>" .

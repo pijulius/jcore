@@ -142,7 +142,11 @@ class _comments {
 			'Comment',
 			FORM_INPUT_TYPE_TEXTAREA,
 			true);
-		$form->setStyle('width: 350px; height: 150px;');
+		$form->setStyle('width: ' .
+			(JCORE_VERSION >= '0.7'?
+				'90%':
+				'350px') .
+			'; height: 150px;');
 		
 		$form->add(
 			__('In Reply To'),

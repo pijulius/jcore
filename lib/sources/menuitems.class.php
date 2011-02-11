@@ -274,19 +274,23 @@ class _menuItems {
 				__('Page Title'),
 				'SEOTitle',
 				FORM_INPUT_TYPE_TEXT);
-			$form->setStyle('width: 300px;');
+			$form->setStyle('width: 250px;');
 			
 			$form->add(
 				__('Description'),
 				'SEODescription',
 				FORM_INPUT_TYPE_TEXTAREA);
-			$form->setStyle('width: 300px;');
+			$form->setStyle('width: ' .
+				(JCORE_VERSION >= '0.7'?
+					'90%':
+					'300px') .
+				'; height: 100px;');
 			
 			$form->add(
 				__('Keywords'),
 				'SEOKeywords',
 				FORM_INPUT_TYPE_TEXT);
-			$form->setStyle('width: 300px;');
+			$form->setStyle('width: 350px;');
 			
 			$form->add(
 				null,

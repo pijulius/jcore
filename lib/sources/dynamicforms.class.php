@@ -32,7 +32,7 @@ class _dynamicForms extends form {
 	
 	function __construct($title = null, $id = null, $method = 'post') {
 		parent::__construct($title, $id, $method);
-		$this->formID = $id;
+		$this->formID = $this->id;
 		$this->textsDomain = languages::$selectedTextsDomain;
 	}
 	
@@ -135,7 +135,11 @@ class _dynamicForms extends form {
 				__('Success Message'),
 				'SuccessMessage',
 				FORM_INPUT_TYPE_TEXTAREA);
-			$form->setStyle('width: 300px;');
+			$form->setStyle('width: ' .
+				(JCORE_VERSION >= '0.7'?
+					'90%':
+					'300px') .
+					'; height: 100px;');
 		}
 		
 		$form->add(

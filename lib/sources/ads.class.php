@@ -132,7 +132,11 @@ class _ads {
 			__('Ad Code (leave it empty to automatically generate code for flash ads)'),
 			'AdCode',
 			FORM_INPUT_TYPE_TEXTAREA);
-		$form->setStyle('width: 300px; height: 100px;');
+		$form->setStyle('width: ' .
+			(JCORE_VERSION >= '0.7'?
+				'90%':
+				'300px') .
+			'; height: 200px;');
 		$form->setValueType(FORM_VALUE_TYPE_HTML);
 		
 		if (JCORE_VERSION >= '0.6')

@@ -56,7 +56,15 @@ class _massEmail {
 			'To',
 			FORM_INPUT_TYPE_TEXTAREA,
 			true);
-		$form->setStyle("width: 300px; height: 30px;");
+		$form->setStyle('width: ' .
+			(JCORE_VERSION >= '0.7'?
+				'70%':
+				'300px') .
+			'; height: ' .
+			(JCORE_VERSION >= '0.7'?
+				'70px':
+				'30px') .
+			';');
 		$form->setValueType(FORM_VALUE_TYPE_HTML);
 		
 		$tolinks = 
@@ -103,7 +111,11 @@ class _massEmail {
 			'Message',
 			FORM_INPUT_TYPE_TEXTAREA,
 			true);
-		$form->setStyle("width: 350px; height: 200px;");
+		$form->setStyle('width: ' .
+			(JCORE_VERSION >= '0.7'?
+				'90%':
+				'350px') .
+			'; height: 200px;');
 		
 		$form->add(
 			__('Partial sending (split your emails into chunks)'),
