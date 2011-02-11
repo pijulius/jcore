@@ -276,7 +276,6 @@ class _tar
  
         // Generate Records for each file, if we have files (We should...)
         if($this->numFiles > 0) {
-            $this->tar_file = '';
             foreach($this->files as $key => $information) {
                 $header = null;
  
@@ -460,7 +459,7 @@ class _tar
         $activeDir        = &$this->directories[];
         $activeDir["name"]    = $dirname;
         $activeDir["mode"]    = $file_information["mode"];
-        $activeDir["time"]    = $file_information["time"];
+        $activeDir["time"]    = $file_information["mtime"];
         $activeDir["user_id"]    = $file_information["uid"];
         $activeDir["group_id"]    = $file_information["gid"];
         $activeDir["checksum"]    = null;
@@ -512,6 +511,64 @@ class _tar
         $activeFile["user_name"]    = "";
         $activeFile["group_name"]    = "";
         $activeFile["file"]        = trim($file_contents);
+ 
+        return true;
+    }
+ 
+    function pushDirectory($dirname, $options = null)
+    {
+    	if (!isset($options['mode']))
+        	$options["mode"] = 0755;
+        
+    	if (!isset($options['mtime']))
+        	$options["mtime"] = time();
+        
+    	if (!isset($options['uid']))
+        	$options["uid"] = 0;
+        
+    	if (!isset($options['gid']))
+        	$options["gid"] = 0;
+        
+        // Add directory to processed data
+        $this->numDirectories++;
+        $activeDir        = &$this->directories[];
+        $activeDir["name"]    = $dirname;
+        $activeDir["mode"]    = $options["mode"];
+        $activeDir["time"]    = $options["mtime"];
+        $activeDir["user_id"]    = $options["uid"];
+        $activeDir["group_id"]    = $options["gid"];
+        $activeDir["checksum"]    = null;
+ 
+        return true;
+    }
+ 
+    function pushFile($filename, $filecontents, $options = null)
+    {
+    	if (!isset($options['mode']))
+        	$options["mode"] = 0755;
+        
+    	if (!isset($options['mtime']))
+        	$options["mtime"] = time();
+        
+    	if (!isset($options['uid']))
+        	$options["uid"] = 0;
+        
+    	if (!isset($options['gid']))
+        	$options["gid"] = 0;
+        
+        // Add file to processed data
+        $this->numFiles++;
+        $activeFile            = &$this->files[];
+        $activeFile["name"]        = $filename;
+        $activeFile["mode"]        = $options["mode"];
+        $activeFile["user_id"]        = $options["uid"];
+        $activeFile["group_id"]        = $options["gid"];
+        $activeFile["size"]        = strlen($filecontents);
+        $activeFile["time"]        = $options["mtime"];
+        $activeFile["checksum"]        = isset($checksum) ? $checksum : '';
+        $activeFile["user_name"]    = "";
+        $activeFile["group_name"]    = "";
+        $activeFile["file"]        = $filecontents;
  
         return true;
     }
@@ -602,7 +659,11 @@ class _tar
         }
  
         // Write the TAR file
-        $fp = fopen($filename,"wb");
+        $fp = @fopen($filename,"wb");
+        
+        if (!$fp)
+        	return false;
+        
         fwrite($fp,$file);
         fclose($fp);
  
@@ -616,12 +677,8 @@ class _tar
      * @param   bool    $useGzip    Use GZ compression?
      * @return  string 
      ***/
-    function toTarOutput($filename,$useGzip)
+    function toTarOutput($useGzip)
     {
-        if ( !$filename ) {
-            return false;
-        }
- 
         // Encode processed files into TAR file format
         $this->__generateTar();
  
