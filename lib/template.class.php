@@ -10,6 +10,9 @@
  
 include_once('lib/sources/template.class.php');
 
+class templateExporter extends _templateExporter {
+}
+
 class templateCSSEditor extends _templateCSSEditor {
 }
 
