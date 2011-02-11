@@ -793,12 +793,6 @@ class _menuItems {
 					"<div class='fc-content'>";
 			
 			if ($languages) {
-				if (sql::rows($languages))
-					sql::seek($languages, 0);
-				
-				while($language = sql::fetch($languages))
-					$this->displayAdminListLanguages($row['ID'], $language);
-				
 				if (sql::count(
 					" SELECT COUNT(`ID`) AS `Rows` " .
 					" FROM `{menuitems}` " .
@@ -812,6 +806,12 @@ class _menuItems {
 					$language['Title'] = __('No Language Defined');
 					$this->displayAdminListLanguages($row['ID'], $language);
 				}
+				
+				if (sql::rows($languages))
+					sql::seek($languages, 0);
+				
+				while($language = sql::fetch($languages))
+					$this->displayAdminListLanguages($row['ID'], $language);
 				
 			} else {	
 				if (!$this->displayAdminListItems($row['ID']))
@@ -1524,7 +1524,11 @@ class _menuItems {
 		}
 		
 		$menuids = null;
-		$languageids[] = 0;
+		
+		if (!languages::getDefault())
+			array_unshift($languageids, 0);
+		else
+			$languageids[] = 0;
 		
 		foreach($languageids as $languageid) {
 			if ($menu = menuitems::getMainMenu($languageid))
