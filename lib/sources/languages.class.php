@@ -792,6 +792,15 @@ class _languages {
 		return $languageids;
 	}
 	
+	static function getDefault() {
+		$row = sql::fetch(sql::run(
+			" SELECT * FROM `{languages}`" .
+			" WHERE `Default`" .
+			" LIMIT 1"));
+		
+		return $row;
+	}
+	
 	function displayTitle(&$row) {
 		echo 
 			"<a href='".$row['_Link']."'>" .
