@@ -1223,15 +1223,16 @@ class _videos {
 	
 	function displayHTML5Video(&$row) {
 		echo
-			"<video src='" .
-				(strstr($row['Location'], '://')?
-					$row['Location']:
-					$this->rootURL.$row['Location']) .
-				"' " .
+			"<video " .
 				"width='".$this->videoWidth."' " .
 				"height='".$this->videoHeight."' " .
 				"controls='true' " .
-				"autoplay='true'>";
+				"autoplay='true'>" .
+				"<source src='" .
+				(strstr($row['Location'], '://')?
+					$row['Location']:
+					$this->rootURL.$row['Location']) .
+				"' />";
 		
 		$this->displayVideoPlayer($row);
 		
@@ -1241,9 +1242,9 @@ class _videos {
 	
 	function displayIframeVideo(&$row) {
 		echo
-			"<iframe type='text/html' " .
+			"<iframe " .
 				"width='".$this->videoWidth."' height='".$this->videoHeight."' " .
-				"src='".$row['Location']."' frameborder='0'>
+				"src='".$row['Location']."' frameborder='0' allowfullscreen='true'>
 			</iframe>";
 	}
 	
@@ -1253,14 +1254,16 @@ class _videos {
 	}
 	
 	function displayYouTubeVideo(&$row) {
-		$row['Location'] .= '&amp;fs=1&amp;autoplay=1';
+		$row['Location'] = str_replace('/v/', '/embed/', $row['Location']) .
+			'&amp;fs=1&amp;autoplay=1';
+		
 		$this->displayIframeVideo($row);
 	}
 	
 	function displayVimeoVideo(&$row) {
 		preg_match('/([0-9]*)$/', $row['Location'], $matches);
-		$row['Location'] = 'http://vimeo.com/moogaloop.swf?clip_id=' .
-			$matches[1].'&amp;server=vimeo.com&amp;show_title=1&amp;show_byline=1&amp;show_portrait=0&amp;color=&amp;fullscreen=1&amp;autoplay=1';
+		$row['Location'] = 'http://player.vimeo.com/video/' .
+			$matches[1].'?show_title=1&amp;show_byline=1&amp;show_portrait=0&amp;fullscreen=1&amp;autoplay=1';
 		
 		$this->displayIframeVideo($row);
 	}
@@ -1273,11 +1276,11 @@ class _videos {
 	function displayLocalVideo(&$row) {
 		$file = $row['Location'];
 		
-		$row['Location'] = url::uri().
+		$row['Location'] = url::site().'index.php?'.
 			"&request=".$this->uriRequest .
 			"&get=".$row['ID']."&ajax=1";
 		
-		if (preg_match('/\.(mp4|webm|ogv)$/i', $file)) {
+		if (preg_match('/\.(mp4|mov|webm|ogv)$/i', $file)) {
 			$this->displayHTML5Video($row);
 			return true;
 		}
@@ -1312,7 +1315,7 @@ class _videos {
 			return true;
 		}
 		
-		if (preg_match('/\.(mp4|webm|ogv)$/i', $row['Location'])) {
+		if (preg_match('/\.(mp4|mov|webm|ogv)$/i', $row['Location'])) {
 			$this->displayHTML5Video($row);
 			return true;
 		}
