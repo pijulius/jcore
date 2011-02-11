@@ -156,7 +156,7 @@ class _settings {
 			}
 			
 			echo
-				"<table>";
+				"<table width='100%'>";
 			
 			$settings = sql::run(
 				" SELECT * FROM `{".$this->sqlTable."}`" .
@@ -170,18 +170,24 @@ class _settings {
 				
 				echo
 					"<tr>" .
-						"<td style='text-align: right; padding: 0px 10px 5px 0px; white-space: nowrap;'>";
+						"<td style='width: 1px; text-align: right; padding: 0px 10px 5px 0px;'>" .
+						"<span style='white-space: nowrap;'>";
 				
 				$this->displayAdminItemTitle($setting['ID'], $row['ID']);
 				
 				echo
-						":</td>" .
-						"<td style='padding: 0px 10px 5px 0px;'>";
+						":</span>" .
+						"</td>" .
+						"<td class='auto-width' style='padding: 0px 10px 5px 0px;'>";
 						
 					if ($setting['TypeID'] == SETTINGS_TYPE_TEXTAREA) {
 						echo 
-							"<textarea rows='5' cols='30' " .
-								"name='settings[".$setting['ID']."]' style='width: 350px;' " .
+							"<textarea " .
+								"name='settings[".$setting['ID']."]' style='width: " .
+								(JCORE_VERSION >= '0.7'?
+									'90%':
+									'350px') .
+									"; height: 200px;' " .
 								($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
 									"readonly='readonly' ":
 									null) .
