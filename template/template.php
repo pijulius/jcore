@@ -11,9 +11,9 @@
 <meta name="keywords" content="<?php url::displayPageKeywords(); ?>" />
 <meta name="description" content="<?php url::displayPageDescription(); ?>" />
 <link rel="icon" type="image/png" href="<?php url::displayRootPath(); ?>template/images/favicon.png" />
-<?php jQuery::display(); ?>
-<?php css::display(); ?>
 <?php rss::displayFeeds(); ?>
+<?php css::display(); ?>
+<?php jQuery::display(); ?>
 </head>
 <body>
 <?php
