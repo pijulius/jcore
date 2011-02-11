@@ -565,7 +565,10 @@ class _files {
 		if ($dir && !is_dir($dir) && !@mkdir($dir, 0777, true))
 			return false;
  		
- 		return @file_put_contents($file, $data);
+ 		if (@file_put_contents($file, $data) === false)
+ 			return false;
+ 		
+ 		return true;
  	}
  	
  	static function save($file, $data = null, $debug = false) {
