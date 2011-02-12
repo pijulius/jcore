@@ -174,10 +174,10 @@ class _massEmail {
 			return false;
 		
 		$fromemail = $form->get('From');
-		preg_match('/<(.*)>/', $fromemail, $matches);
+		preg_match('/(.*?)<(.*)>/', $fromemail, $matches);
 		
-		if (isset($matches[1]))
-			$fromemail = $matches[1];
+		if (isset($matches[2]))
+			$fromemail = $matches[2];
 		
 		if (!email::verify($fromemail)) {
 			tooltip::display(
@@ -186,6 +186,11 @@ class _massEmail {
 			
 			return false;
 		}
+		
+		if (isset($matches[1]))
+			$form->set('From', 
+				preg_replace('/(,|;)/', '', strip_tags($matches[1])) .
+				' <'.$fromemail.'>');
 		
 		$emails = preg_split('/(,|;)/', $form->get('To'));
 		$toemails = array();
