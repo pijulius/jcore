@@ -134,7 +134,7 @@ class contact extends modules {
 			" LIMIT 1"));
 		
 		echo
-			"<td>" .
+			"<td align='center'>" .
 				"<a class='admin-link fields' " .
 					"title='".htmlspecialchars(__("Fields"), ENT_QUOTES) .
 					" (".$fields['Rows'].")' " .

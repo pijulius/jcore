@@ -463,7 +463,7 @@ class _dynamicFormFields {
 					" LIMIT 1"));
 			
 			echo
-				"<td>" .
+				"<td align='center'>" .
 					"<a class='admin-link values' " .
 						"title='".htmlspecialchars(__("Values"), ENT_QUOTES) .
 						(JCORE_VERSION >= '0.5'?
@@ -488,7 +488,7 @@ class _dynamicFormFields {
 	
 	function displayAdminListItemFunctions(&$row) {
 		echo
-			"<td>" .
+			"<td align='center'>" .
 				"<a class='admin-link edit' " .
 					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
@@ -506,7 +506,7 @@ class _dynamicFormFields {
 				"</td>";
 		else	
 			echo
-			"<td>" .
+			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
 					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .

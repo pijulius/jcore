@@ -169,7 +169,7 @@ class _security {
 	
 	function displayAdminBFListItemFunctions(&$row) {
 		echo
-			"<td>" .
+			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
 					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
 					"href='".url::uri('bfon, pton, ip, userid, delete') .
@@ -314,7 +314,7 @@ class _security {
 	
 	function displayAdminPTListItemFunctions(&$row) {
 		echo
-			"<td>" .
+			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
 					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
 					"href='".url::uri('bfon, pton, ip, userid, delete') .

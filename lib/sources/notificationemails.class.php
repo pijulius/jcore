@@ -170,7 +170,7 @@ class _notificationEmails {
 	
 	function displayAdminListItemFunctions(&$row) {
 		echo
-			"<td>" .
+			"<td align='center'>" .
 				"<a class='admin-link edit' " .
 					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit') .

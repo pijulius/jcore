@@ -303,7 +303,7 @@ class _dynamicForms extends form {
 					"</a>":
 					null) .
 			"</td>" .
-			"<td>" .
+			"<td align='center'>" .
 				"<a class='admin-link fields' " .
 					"title='".htmlspecialchars(__("Fields"), ENT_QUOTES) .
 					(JCORE_VERSION >= '0.5'?
@@ -327,7 +327,7 @@ class _dynamicForms extends form {
 	
 	function displayAdminListItemFunctions(&$row) {
 		echo
-			"<td>" .
+			"<td align='center'>" .
 				"<a class='admin-link edit' " .
 					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
@@ -345,7 +345,7 @@ class _dynamicForms extends form {
 				"</td>";
 		else
 			echo
-			"<td>" .
+			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
 					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .

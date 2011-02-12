@@ -236,7 +236,7 @@ class search extends modules {
 					$moduledescription .
 				"</div>" .
 			"</td>" .
-			"<td>" .
+			"<td align='right'>" .
 				"<input type='text' name='modulelimits[".$row['ID']."]' " .
 					"value='".$moduleset['Limit']."' " .
 					($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?

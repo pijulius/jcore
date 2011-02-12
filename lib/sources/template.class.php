@@ -1054,7 +1054,7 @@ class _template {
 	
 	function displayAdminListItemFunctions(&$row) {
 		echo
-			"<td>" .
+			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
 					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, delete, activate, deactivate, setadmin, unsetadmin') .

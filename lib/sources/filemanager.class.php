@@ -423,14 +423,14 @@ class _fileManager {
 	
 	function displayItemFunctions(&$row) {
 		echo
-			"<td>" .
+			"<td align='center'>" .
 				"<a class='admin-link edit' " .
 					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
 					"href='".url::uri('file, edit, delete') .
 					"&amp;file=".$row['_File']."&amp;edit=1#form'>" .
 				"</a>" .
 			"</td>" .
-			"<td>" .
+			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
 					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
 					"href='".url::uri('file, edit, delete') .

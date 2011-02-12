@@ -447,7 +447,7 @@ class _massEmail {
 					"&amp;id=".$row['ID']."&amp;resend=1#adminform'>" .
 				"</a>" .
 			"</td>" .
-			"<td>" .
+			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
 					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, resend, delete') .
