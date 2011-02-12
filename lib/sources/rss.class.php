@@ -197,7 +197,7 @@ class _rss {
 	}
 	
 	function displayAdminAvailableFeeds() {
-		if (!isset($_GET['limit']))
+		if (!isset($_GET['ajaxlimit']))
 			echo
 				"<div class='rss-feeds-available-feeds'>";
 		
@@ -234,6 +234,7 @@ class _rss {
 		
 		$paging = new paging(10);
 		
+		$paging->track('ajaxlimit');
 		$paging->ajax = true;
 		$paging->setTotalItems(count($files));
 		
@@ -277,7 +278,7 @@ class _rss {
 		
 		$paging->display();
 		
-		if (!isset($_GET['limit']))
+		if (!isset($_GET['ajaxlimit']))
 			echo
 				"</div>";
 	}

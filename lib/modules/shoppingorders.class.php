@@ -3003,30 +3003,30 @@ class shoppingOrders extends modules {
 		$shoppingids = null;
 		$shoppingurl = shopping::getURL();
 		
-		if (isset($_POST['shoppingid']))
-			$shoppingid = (int)$_POST['shoppingid'];
+		if (isset($_POST['ajaxshoppingid']))
+			$shoppingid = (int)$_POST['ajaxshoppingid'];
 		
-		if (isset($_GET['shoppingid']))
-			$shoppingid = (int)$_GET['shoppingid'];
+		if (isset($_GET['ajaxshoppingid']))
+			$shoppingid = (int)$_GET['ajaxshoppingid'];
 		
-		if (isset($_POST['search']))
-			$search = trim(strip_tags($_POST['search']));
+		if (isset($_POST['ajaxsearch']))
+			$search = trim(strip_tags($_POST['ajaxsearch']));
 		
-		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+		if (isset($_GET['ajaxsearch']))
+			$search = trim(strip_tags($_GET['ajaxsearch']));
 		
-		if (!isset($search) && !isset($_GET['limit']))
+		if (!isset($search) && !isset($_GET['ajaxlimit']))
 			echo 
 				"<div class='shopping-order-new-order-items'>";
 		
 		echo
 				"<div class='shopping-order-new-order-items-search' " .
 					"style='margin-right: 20px;'>" .
-					"<form action='".url::uri('shoppingid, search, limit, ajax')."' method='post' " .
+					"<form action='".url::uri('ajaxshoppingid, ajaxsearch, ajaxlimit, ajax')."' method='post' " .
 						"class='ajax-form' " .
 						"target='.shopping-order-new-order-items'>" .
 					__("Search").": " .
-					"<select name='shoppingid' " .
+					"<select name='ajaxshoppingid' " .
 						"onchange=\"jQuery('.shopping-order-new-order-items form').ajaxSubmit();\">" .
 					"<option value=''></option>";
 					
@@ -3048,7 +3048,7 @@ class shoppingOrders extends modules {
 		echo
 					"</select> " .
 					"<input type='search' " .
-						"name='search' " .
+						"name='ajaxsearch' " .
 						"value='".
 							htmlspecialchars($search, ENT_QUOTES).
 						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' />" .
@@ -3109,9 +3109,10 @@ class shoppingOrders extends modules {
 					"<tbody>";
 					
 		$paging = new paging(10,
-			'&amp;search='.urlencode($search) .
-			'&amp;shoppingid='.$shoppingid);
+			'&amp;ajaxsearch='.urlencode($search) .
+			'&amp;ajaxshoppingid='.$shoppingid);
 		
+		$paging->track('ajaxlimit');
 		$paging->ajax = true;
 		
 		$rows = sql::run(
@@ -3247,7 +3248,7 @@ class shoppingOrders extends modules {
 				
 		$paging->display();
 		
-		if (!isset($search) && !isset($_GET['limit']))
+		if (!isset($search) && !isset($_GET['ajaxlimit']))
 			echo
 				"</div>";
 	}

@@ -1995,25 +1995,25 @@ class _users {
 	function displayQuickList($target = null, $multiple = false, $format = '%UserName%', $separator = ',') {
 		$search = null;
 		
-		if (isset($_POST['search']))
-			$search = trim(strip_tags($_POST['search']));
+		if (isset($_POST['ajaxsearch']))
+			$search = trim(strip_tags($_POST['ajaxsearch']));
 		
-		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+		if (isset($_GET['ajaxsearch']))
+			$search = trim(strip_tags($_GET['ajaxsearch']));
 		
-		if (!isset($search) && !isset($_GET['limit']))
+		if (!isset($search) && !isset($_GET['ajaxlimit']))
 			echo 
 				"<div class='select-users-list'>";
 			
 		echo
 				"<div class='select-users-list-search' " .
 					"style='margin-right: 20px;'>" .
-					"<form action='".url::uri('search, limit, ajax')."' method='post' " .
+					"<form action='".url::uri('ajaxsearch, ajaxlimit, ajax')."' method='post' " .
 						"class='ajax-form' " .
 						"target='.select-users-list'>" .
 					__("Search").": " .
 					"<input type='search' " .
-						"name='search' " .
+						"name='ajaxsearch' " .
 						"value='".
 							htmlspecialchars($search, ENT_QUOTES).
 						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' />" .
@@ -2057,8 +2057,9 @@ class _users {
 					"<tbody>";
 					
 		$paging = new paging(10,
-			'&amp;search='.urlencode($search));
+			'&amp;ajaxsearch='.urlencode($search));
 		
+		$paging->track('ajaxlimit');
 		$paging->ajax = true;
 		
 		$rows = sql::run(
@@ -2140,7 +2141,7 @@ class _users {
 				
 		$paging->display();
 		
-		if (!isset($search) && !isset($_GET['limit']))
+		if (!isset($search) && !isset($_GET['ajaxlimit']))
 			echo
 				"</div>";
 	}
