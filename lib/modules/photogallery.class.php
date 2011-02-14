@@ -170,6 +170,31 @@ class photoGalleryPictures extends pictures {
 		
 		return parent::download($id, $force);
 	}
+	
+	function displayGalleryPreview($gallery) {
+		echo
+			"<div class='".
+				strtolower(preg_replace('/([A-Z])/', '-\\1', get_class($this))).
+				" pictures'>";
+		
+		$row = array();
+		$row['ID'] = "preview";
+		$row['Title'] = $gallery['Title'];
+		$row['Location'] = "none";
+		$row['TimeStamp'] = $gallery['TimeStamp'];
+		$row['URL'] = "";
+		$row['Views'] = 0;
+		$row['_PictureNumber'] = 'preview';
+		$row['_ThumbnailLocation'] = $gallery['PreviewPicURL'];
+		
+		$this->displayOne($row);
+		
+		echo
+			"<div class='clear-both'></div>";
+		
+		echo
+			"</div>"; //pictures
+	}
 }
 
 class photoGalleryPicasaPictures extends photoGalleryPictures {
@@ -464,13 +489,26 @@ class photoGalleryPicasaPictures extends photoGalleryPictures {
 		unset($gdata);
 		
 		preg_match('/<openSearch:totalResults>(.*?)</is', $data, $matches);
+		preg_match('/<entry.*?' .
+			'<media:thumbnail.*?url=.([^ \'"]+).*?' .
+			'<\/entry>/is', $data, $newestphoto);
+		
 		if (isset($matches[1]))
 			$paging->setTotalItems((int)$matches[1]);
 		
-		if ($gallery['Pictures'] != $paging->items)
+		if (!$paging->getStart())
 			sql::run(
 				" UPDATE `{" .$this->sqlOwnerTable . "}` SET" .
-				" `Pictures` = '".$paging->items."'," .
+				" `Pictures` = '" .
+					(isset($matches[1])?
+						(int)$matches[1]:
+						0)."'," .
+				(JCORE_VERSION >= '0.8'?
+					" `PreviewPicURL` = '" .
+						(isset($newestphoto[1])?
+							$newestphoto[1]:
+							null)."',":
+					null) .
 				" `TimeStamp` = `TimeStamp`" .
 				" WHERE `ID` = '".(int)$this->selectedOwnerID."'");
 		
@@ -652,6 +690,9 @@ class photoGallery extends modules {
 			" `GDataToken` VARCHAR( 100 ) NOT NULL DEFAULT ''," .
 			" `SubGalleryOfID` smallint(5) unsigned NOT NULL default '0'," .
 			" `Preview` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0'," .
+			(JCORE_VERSION >= '0.8'?
+				" `PreviewPicURL` VARCHAR( 255 ) NOT NULL DEFAULT '',":
+				null) .
 			" `Comments` smallint(5) unsigned NOT NULL default '0'," .
 			" `Pictures` mediumint(8) unsigned NOT NULL default '0'," .
 			" `Icons` SMALLINT UNSIGNED NOT NULL DEFAULT '0'," .
@@ -2052,16 +2093,32 @@ class photoGallery extends modules {
 			$gdata = new GData();
 			$gdata->token = $values['GDataToken'];
 			$data = $gdata->get($values['PicasaAPIURL'] .
-				"&max-results=0&kind=photo");
+				"&thumbsize=".
+					(PICTURE_THUMBNAIL_WIDTH?
+						PICTURE_THUMBNAIL_WIDTH:
+						PICTURE_THUMBNAIL_HEIGHT)."c" .
+				"&max-results=1&kind=photo");
 			unset($gdata);
 			
 			preg_match('/<openSearch:totalResults>(.*?)</is', $data, $matches);
-			if (isset($matches[1]) && (int)$matches[1])
-				sql::run(
-					" UPDATE `{photogalleries}` SET" .
-					" `Pictures` = '".(int)$matches[1]."'," .
-					" `TimeStamp` = `TimeStamp`" .
-					" WHERE `ID` = '".(int)$newid."'");
+			preg_match('/<entry.*?' .
+				'<media:thumbnail.*?url=.([^ \'"]+).*?' .
+				'<\/entry>/is', $data, $newestphoto);
+			
+			sql::run(
+				" UPDATE `{photogalleries}` SET" .
+				" `Pictures` = '" .
+					(isset($matches[1])?
+						(int)$matches[1]:
+						0)."'," .
+				(JCORE_VERSION >= '0.8'?
+					" `PreviewPicURL` = '" .
+						(isset($newestphoto[1])?
+							$newestphoto[1]:
+							null)."',":
+					null) .
+				" `TimeStamp` = `TimeStamp`" .
+				" WHERE `ID` = '".(int)$newid."'");
 		}
 		
 		if (JCORE_VERSION >= '0.5')
@@ -2232,16 +2289,32 @@ class photoGallery extends modules {
 			$gdata = new GData();
 			$gdata->token = $values['GDataToken'];
 			$data = $gdata->get($values['PicasaAPIURL'] .
-				"&max-results=0&kind=photo");
+				"&thumbsize=".
+					(PICTURE_THUMBNAIL_WIDTH?
+						PICTURE_THUMBNAIL_WIDTH:
+						PICTURE_THUMBNAIL_HEIGHT)."c" .
+				"&max-results=1&kind=photo");
 			unset($gdata);
 			
 			preg_match('/<openSearch:totalResults>(.*?)</is', $data, $matches);
-			if (isset($matches[1]) && $gallery['Pictures'] != (int)$matches[1])
-				sql::run(
-					" UPDATE `{photogalleries}` SET" .
-					" `Pictures` = '".(int)$matches[1]."'," .
-					" `TimeStamp` = `TimeStamp`" .
-					" WHERE `ID` = '".(int)$id."'");
+			preg_match('/<entry.*?' .
+				'<media:thumbnail.*?url=.([^ \'"]+).*?' .
+				'<\/entry>/is', $data, $newestphoto);
+			
+			sql::run(
+				" UPDATE `{photogalleries}` SET" .
+				" `Pictures` = '" .
+					(isset($matches[1])?
+						(int)$matches[1]:
+						0)."'," .
+				(JCORE_VERSION >= '0.8'?
+					" `PreviewPicURL` = '" .
+						(isset($newestphoto[1])?
+							$newestphoto[1]:
+							null)."',":
+					null) .
+				" `TimeStamp` = `TimeStamp`" .
+				" WHERE `ID` = '".(int)$id."'");
 		}
 		
 		if (JCORE_VERSION >= '0.5')
@@ -2479,7 +2552,9 @@ class photoGallery extends modules {
 		echo
 			"<div class='photogallery-folder-icon preview'>";
 		
-		if (isset($row['PicasaAPIURL']) && $row['PicasaAPIURL'])
+		if (isset($row['PreviewPicURL']) && $row['PreviewPicURL'])
+			$pictures = new photoGalleryPictures();
+		elseif (isset($row['PicasaAPIURL']) && $row['PicasaAPIURL'])
 			$pictures = new photoGalleryPicasaPictures();
 		else
 			$pictures = new photoGalleryPictures();
@@ -2493,7 +2568,11 @@ class photoGallery extends modules {
 		else
 			$pictures->customLink = $row['_Link'];
 		
-		$pictures->display();
+		if (isset($row['PreviewPicURL']) && $row['PreviewPicURL'])
+			$pictures->displayGalleryPreview($row);
+		else
+			$pictures->display();
+		
 		unset($pictures);
 		
 		echo

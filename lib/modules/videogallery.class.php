@@ -157,6 +157,31 @@ class videoGalleryVideos extends videos {
 		
 		return videos::download($id);
 	}
+	
+	function displayGalleryPreview($gallery) {
+		echo
+			"<div class='".
+				strtolower(preg_replace('/([A-Z])/', '-\\1', get_class($this))).
+				" videos'>";
+		
+		$row = array();
+		$row['ID'] = "preview";
+		$row['Title'] = $gallery['Title'];
+		$row['Location'] = "none";
+		$row['CapLocation'] = $gallery['PreviewPicURL'];
+		$row['TimeStamp'] = $gallery['TimeStamp'];
+		$row['URL'] = "";
+		$row['Views'] = 0;
+		$row['_VideoNumber'] = 'preview';
+		
+		$this->displayOne($row);
+		
+		echo
+			"<div class='clear-both'></div>";
+		
+		echo
+			"</div>"; //pictures
+	}
 }
 
 class videoGalleryYouTubeVideos extends videoGalleryVideos {
@@ -505,13 +530,26 @@ class videoGalleryYouTubeVideos extends videoGalleryVideos {
 		unset($gdata);
 		
 		preg_match('/<openSearch:totalResults>(.*?)</is', $data, $matches);
+		preg_match('/<entry.*?' .
+			'<media:thumbnail.*?url=.([^ \'"]+0\.jpg).*?' .
+			'<\/entry>/is', $data, $newestvideo);
+	
 		if (isset($matches[1]))
 			$paging->setTotalItems((int)$matches[1]);
 		
-		if ($gallery['Videos'] != $paging->items)
+		if (!$paging->getStart())
 			sql::run(
 				" UPDATE `{" .$this->sqlOwnerTable . "}` SET" .
-				" `Videos` = '".$paging->items."'," .
+				" `Videos` = '" .
+					(isset($matches[1])?
+						(int)$matches[1]:
+						0)."'," .
+				(JCORE_VERSION >= '0.8'?
+					" `PreviewPicURL` = '" .
+						(isset($newestvideo[1])?
+							$newestvideo[1]:
+							null)."',":
+					null) .
 				" `TimeStamp` = `TimeStamp`" .
 				" WHERE `ID` = '".(int)$this->selectedOwnerID."'");
 		
@@ -698,6 +736,9 @@ class videoGallery extends modules {
 			" `GDataToken` VARCHAR( 100 ) NOT NULL DEFAULT ''," .
 			" `SubGalleryOfID` smallint(5) unsigned NOT NULL default '0'," .
 			" `Preview` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0'," .
+			(JCORE_VERSION >= '0.8'?
+				" `PreviewPicURL` VARCHAR( 255 ) NOT NULL DEFAULT '',":
+				null) .
 			" `Comments` smallint(5) unsigned NOT NULL default '0'," .
 			" `Videos` mediumint(8) unsigned NOT NULL default '0'," .
 			" `Icons` SMALLINT UNSIGNED NOT NULL DEFAULT '0'," .
@@ -2070,16 +2111,29 @@ class videoGallery extends modules {
 		if (JCORE_VERSION >= '0.7' && $values['YouTubeAPIURL']) {
 			$gdata = new GData();
 			$gdata->token = $values['GDataToken'];
-			$data = $gdata->get($values['YouTubeAPIURL']);
+			$data = $gdata->get($values['YouTubeAPIURL'] .
+				"&max-results=1");
 			unset($gdata);
 			
 			preg_match('/<openSearch:totalResults>(.*?)</is', $data, $matches);
-			if (isset($matches[1]) && (int)$matches[1])
-				sql::run(
-					" UPDATE `{videogalleries}` SET" .
-					" `Videos` = '".(int)$matches[1]."'," .
-					" `TimeStamp` = `TimeStamp`" .
-					" WHERE `ID` = '".(int)$newid."'");
+			preg_match('/<entry.*?' .
+				'<media:thumbnail.*?url=.([^ \'"]+0\.jpg).*?' .
+				'<\/entry>/is', $data, $newestvideo);
+			
+			sql::run(
+				" UPDATE `{videogalleries}` SET" .
+				" `Videos` = '" .
+					(isset($matches[1])?
+						(int)$matches[1]:
+						0)."'," .
+				(JCORE_VERSION >= '0.8'?
+					" `PreviewPicURL` = '" .
+						(isset($newestvideo[1])?
+							$newestvideo[1]:
+							null)."',":
+					null) .
+				" `TimeStamp` = `TimeStamp`" .
+				" WHERE `ID` = '".(int)$newid."'");
 		}
 		
 		$this->protectVideos();
@@ -2236,16 +2290,29 @@ class videoGallery extends modules {
 		if (JCORE_VERSION >= '0.7' && $values['YouTubeAPIURL']) {
 			$gdata = new GData();
 			$gdata->token = $values['GDataToken'];
-			$data = $gdata->get($values['YouTubeAPIURL']);
+			$data = $gdata->get($values['YouTubeAPIURL'] .
+				"&max-results=1");
 			unset($gdata);
 			
 			preg_match('/<openSearch:totalResults>(.*?)</is', $data, $matches);
-			if (isset($matches[1]) && (int)$matches[1])
-				sql::run(
-					" UPDATE `{videogalleries}` SET" .
-					" `Videos` = '".(int)$matches[1]."'," .
-					" `TimeStamp` = `TimeStamp`" .
-					" WHERE `ID` = '".(int)$id."'");
+			preg_match('/<entry.*?' .
+				'<media:thumbnail.*?url=.([^ \'"]+0\.jpg).*?' .
+				'<\/entry>/is', $data, $newestvideo);
+			
+			sql::run(
+				" UPDATE `{videogalleries}` SET" .
+				" `Videos` = '" .
+					(isset($matches[1])?
+						(int)$matches[1]:
+						0)."'," .
+				(JCORE_VERSION >= '0.8'?
+					" `PreviewPicURL` = '" .
+						(isset($newestvideo[1])?
+							$newestvideo[1]:
+							null)."',":
+					null) .
+				" `TimeStamp` = `TimeStamp`" .
+				" WHERE `ID` = '".(int)$id."'");
 		}
 		
 		$this->protectVideos();
@@ -2465,7 +2532,9 @@ class videoGallery extends modules {
 		echo
 			"<div class='videogallery-folder-icon preview'>";
 		
-		if (isset($row['YouTubeAPIURL']) && $row['YouTubeAPIURL'])
+		if (isset($row['PreviewPicURL']) && $row['PreviewPicURL'])
+			$videos = new videoGalleryVideos();
+		elseif (isset($row['YouTubeAPIURL']) && $row['YouTubeAPIURL'])
 			$videos = new videoGalleryYouTubeVideos();
 		else
 			$videos = new videoGalleryVideos();
@@ -2479,7 +2548,11 @@ class videoGallery extends modules {
 		else
 			$videos->customLink = $row['_Link'];
 		
-		$videos->display();
+		if (isset($row['PreviewPicURL']) && $row['PreviewPicURL'])
+			$videos->displayGalleryPreview($row);
+		else
+			$videos->display();
+		
 		unset($videos);
 		
 		echo
