@@ -930,7 +930,7 @@ class _menuItems {
 			tooltip::display(
 					__("No menu blocks found.")." " .
 					__("Please go to Admin -> Site Layout and Functionality -> Menu Blocks " .
-						"and creat at least one menu block to put menu items in."),
+						"and create at least one menu block to put menu items in."),
 					TOOLTIP_NOTIFICATION);
 		
 		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
