@@ -57,7 +57,7 @@ class fileSharingAttachments extends attachments {
 			$this->rootURL = $this->rootURL.'filesharing/';
 		}
 		
-		$this->selectedOwner = __('Folder');
+		$this->selectedOwner = _('Folder');
 		$this->uriRequest = "modules/filesharing/".$this->uriRequest;
 	}
 	
