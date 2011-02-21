@@ -125,7 +125,7 @@ class _postsHandling {
 			SITE_URL);
 	}
 	
-	function displayAdminListHeader($isownermainmenu = false, $menuroute = null) {
+	function displayAdminListHeader($menuroute = null) {
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' alt='.list' " .
@@ -138,14 +138,7 @@ class _postsHandling {
 				"<div class='nowrap'>" .
 				$menuroute .
 				"</div>" .
-			"</th>" .
-			($isownermainmenu?
-				"<th style='text-align: right;' " .
-					"title='".htmlspecialchars(__("Display On All Pages"), ENT_QUOTES)."'>" .
-					"<span class='nowrap'>".__("On All Pages")."</span></th>":
-				"<th style='text-align: right;' " .
-					"title='".htmlspecialchars(__("Display On Main Page"), ENT_QUOTES)."'>" .
-					"<span class='nowrap'>".__("On Main Page")."</span></th>");
+			"</th>";
 	}
 	
 	function displayAdminListHeaderOptions() {
@@ -197,11 +190,6 @@ class _postsHandling {
 						null) .
 					", ".sprintf(__("%s views"), $row['Views']) .
 				"</div>" .
-			"</td>" .
-			"<td style='text-align: right;'>" .
-				($row['OnMainPage']?
-					__("Yes"):
-					null) .
 			"</td>";
 	}
 	
@@ -351,34 +339,35 @@ class _postsHandling {
 				url::uri('delete')."' method='post'>";
 		
 		$i = 0;
-		$menuitemid = 0;
+		$menuitemid = null;
 		$menuroute = null;
-		$isownermainmenu = false;
 		
 		while($row = sql::fetch($rows)) {
-			if ($menuitemid != $row['MenuItemID']) {
+			if ($menuitemid !== $row['MenuItemID']) {
 				$menuroute = null;
 				
-				foreach(menuItems::getBackTraceTree($row['MenuItemID']) as $menuitem) {
-					$menuroute .=
-						"<div".
-							($menuitem['ID'] == $row['MenuItemID']?
-								" class='bold' style='font-size: 120%;'":
-								null) .
-							">" . 
-						($menuitem['SubMenuOfID']?
-							str_replace(' ', '&nbsp;', 
-								str_pad('', $menuitem['PathDeepnes']*4, ' ')).
-							"|- ":
-							null). 
-						$menuitem['Title'] .
-						"</div>";
+				if ($row['MenuItemID']) {
+					foreach(menuItems::getBackTraceTree($row['MenuItemID']) as $menuitem) {
+						$menuroute .=
+							"<div".
+								($menuitem['ID'] == $row['MenuItemID']?
+									" class='bold' style='font-size: 120%;'":
+									null) .
+								">" . 
+							($menuitem['SubMenuOfID']?
+								str_replace(' ', '&nbsp;', 
+									str_pad('', $menuitem['PathDeepnes']*4, ' ')).
+								"|- ":
+								null). 
+							$menuitem['Title'] .
+							"</div>";
+					}
+					
+				} else {
+					$menuroute = __('Title / Created on');
 				}
-				
-				$isownermainmenu = menuItems::isMainMenu(
-					$row['MenuItemID'], $menuitem['LanguageID']);
 		
-				if ($menuitemid)
+				if (isset($menuitemid))
 					echo 
 						"</tbody>" .
 					"</table>" .
@@ -389,7 +378,7 @@ class _postsHandling {
 					"<thead>" .
 					"<tr>";
 					
-				$this->displayAdminListHeader($isownermainmenu, $menuroute);
+				$this->displayAdminListHeader($menuroute);
 				$this->displayAdminListHeaderOptions();
 							
 				if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
