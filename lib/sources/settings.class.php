@@ -170,7 +170,7 @@ class _settings {
 				
 				echo
 					"<tr>" .
-						"<td style='width: 1px; text-align: right; padding: 0px 10px 5px 0px;'>" .
+						"<td style='width: 1px; text-align: right; vertical-align: middle; padding: 0px 10px 5px 0px;'>" .
 						"<span style='white-space: nowrap;'>";
 				
 				$this->displayAdminItemTitle($setting['ID'], $row['ID']);
