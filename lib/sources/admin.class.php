@@ -13,6 +13,7 @@ if (!defined('ADMIN_ITEMS_COUNTER_ENABLED'))
  
 include_once('lib/modules.class.php');
 include_once('lib/ads.class.php');
+include_once('lib/postsatglance.class.php');
 include_once('lib/postshandling.class.php');
 include_once('lib/contentfiles.class.php');
 include_once('lib/dynamicformdata.class.php');
@@ -62,10 +63,20 @@ class _admin {
 			"<a href='".url::uri('ALL')."?path=admin/content/menuitems' " .
 				"title='".
 					htmlspecialchars(
-						__("Manage the content (posts) of your site"), 
+						__("Manage the content (pages) of your site"), 
 						ENT_QUOTES).
 				"'>" .
 				"<span>".__("Content Management")."</span>" .
+			"</a>");
+		
+		$this->add('Content', 'PostsAtGlance', 
+			"<a href='".url::uri('ALL')."?path=admin/content/postsatglance' " .
+				"title='".
+					htmlspecialchars(
+						__("Quicly create / modify posts"), 
+						ENT_QUOTES).
+				"'>" .
+				"<span>".__("Posts at Glance")."</span>" .
 			"</a>");
 		
 		$this->add('Content', 'Ads', 

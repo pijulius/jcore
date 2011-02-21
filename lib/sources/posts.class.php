@@ -95,7 +95,9 @@ class _postRating extends starRating {
 	var $sqlTable = 'postratings';
 	var $sqlRow = 'PostID';
 	var $sqlOwnerTable = 'posts';
-	var $adminPath = 'admin/content/menuitems/posts/postrating';
+	var $adminPath = array(
+		'admin/content/menuitems/posts/postrating',
+		'admin/content/postsatglance/postrating');
 	
 	function __construct() {
 		parent::__construct();
@@ -109,7 +111,9 @@ class _postComments extends comments {
 	var $sqlTable = 'postcomments';
 	var $sqlRow = 'PostID';
 	var $sqlOwnerTable = 'posts';
-	var $adminPath = 'admin/content/menuitems/posts/postcomments';
+	var $adminPath = array(
+		'admin/content/menuitems/posts/postcomments',
+		'admin/content/postsatglance/postcomments');
 	
 	function __construct() {
 		parent::__construct();
@@ -128,7 +132,9 @@ class _postAttachments extends attachments {
 	var $sqlTable = 'postattachments';
 	var $sqlRow = 'PostID';
 	var $sqlOwnerTable = 'posts';
-	var $adminPath = 'admin/content/menuitems/posts/postattachments';
+	var $adminPath = array(
+		'admin/content/menuitems/posts/postattachments',
+		'admin/content/postsatglance/postattachments');
 	
 	function __construct() {
 		parent::__construct();
@@ -142,7 +148,9 @@ class _postPictures extends pictures {
 	var $sqlTable = 'postpictures';
 	var $sqlRow = 'PostID';
 	var $sqlOwnerTable = 'posts';
-	var $adminPath = 'admin/content/menuitems/posts/postpictures';
+	var $adminPath = array(
+		'admin/content/menuitems/posts/postpictures',
+		'admin/content/postsatglance/postpictures');
 	
 	function __construct() {
 		parent::__construct();
@@ -168,7 +176,9 @@ class _posts {
 	var $search = null;
 	var $ajaxPaging = AJAX_PAGING;
 	var $ajaxRequest = null;
-	var $adminPath = 'admin/content/menuitems/posts';
+	var $adminPath = array(
+		'admin/content/menuitems/posts',
+		'admin/content/postsatglance');
 	
 	static $selected = null;
 	
@@ -228,7 +238,7 @@ class _posts {
 				($this->selectedMenuID?
 					" AND (`MenuItemID` = '".$this->selectedMenuID."'" .
 					($mainmenu['ID'] == $this->selectedMenuID?
-						" OR `OnMainPage` ":
+						" OR `OnMainPage` OR !`MenuItemID` ":
 						" OR (`MenuItemID` = '".$mainmenu['ID']."'" .
 							" AND `OnMainPage`) ") .
 					" ) ":
@@ -250,7 +260,7 @@ class _posts {
 			" SELECT `ID`, `Title`, `Path`, `Keywords`" .
 			" FROM `{posts}`" .
 			" WHERE !`Deactivated`" .
-			" AND `MenuItemID` = '".(int)$_GET['menuid']."'" .
+			" AND (!`MenuItemID` OR `MenuItemID` = '".(int)$_GET['menuid']."')" .
 			(SEO_FRIENDLY_LINKS && !(int)$_GET['postid']?
 				" AND '".sql::escape(url::path())."/' LIKE CONCAT(`Path`,'/%')":
 				" AND `ID` = '".(int)$_GET['postid']."'") .
@@ -296,14 +306,6 @@ class _posts {
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
 		
-		$form->add(
-			'MenuItemID',
-			'MenuItemID',
-			FORM_INPUT_TYPE_HIDDEN,
-			true,
-			admin::getPathID());
-		$form->setValueType(FORM_VALUE_TYPE_INT);
-					
 		if (JCORE_VERSION >= '0.7') {
 			$postsform = new postsForm();
 			$postsform->id = 'neweditpost';
@@ -373,6 +375,16 @@ class _posts {
 					_("Select User") .
 				"</a>");
 			
+			$form->insert(
+				'TimeStamp',
+				'MenuItemID',
+				'MenuItemID',
+				FORM_INPUT_TYPE_HIDDEN,
+				true,
+				admin::getPathID(),
+				FORM_INSERT_BEFORE);
+			$form->setValueType(FORM_VALUE_TYPE_INT);
+			
 			unset($postsform);
 			return;
 		}
@@ -395,6 +407,14 @@ class _posts {
 			__('Blogging Options'),
 			null,
 			FORM_OPEN_FRAME_CONTAINER);
+		
+		$form->add(
+			'MenuItemID',
+			'MenuItemID',
+			FORM_INPUT_TYPE_HIDDEN,
+			true,
+			admin::getPathID());
+		$form->setValueType(FORM_VALUE_TYPE_INT);
 		
 		$form->add(
 			__('Created on'),
@@ -1482,11 +1502,30 @@ class _posts {
 			return false;
 		}
 		
-		if (JCORE_VERSION >= '0.5')
+		if (JCORE_VERSION >= '0.5') {
+			if ($post['MenuItemID'] != $values['MenuItemID']) {
+				$posts = sql::fetch(sql::run(
+					" SELECT COUNT(`ID`) AS `Rows` FROM `{posts}`" .
+					" WHERE `MenuItemID` = '".(int)$values['MenuItemID']."'"));
+				
+				sql::run("UPDATE `{menuitems}`" .
+					" SET `Posts` = '".(int)$posts['Rows']."'" .
+					" WHERE `ID` = '".(int)$values['MenuItemID']."'");
+				
+				$posts = sql::fetch(sql::run(
+					" SELECT COUNT(`ID`) AS `Rows` FROM `{posts}`" .
+					" WHERE `MenuItemID` = '".(int)$post['MenuItemID']."'"));
+				
+				sql::run("UPDATE `{menuitems}`" .
+					" SET `Posts` = '".(int)$posts['Rows']."'" .
+					" WHERE `ID` = '".(int)$post['MenuItemID']."'");
+			}
+			
 			$this->updateKeywordsCloud(
 				$values['Keywords'], $post['Keywords'],
 				(JCORE_VERSION >= '0.7'?$values['MenuItemID']:null),
 				(JCORE_VERSION >= '0.7'?$post['MenuItemID']:null));
+		}
 		
 		$sitemap = new siteMap();
 		$sitemap->load();
@@ -1603,6 +1642,42 @@ class _posts {
 				TOOLTIP_NOTIFICATION);
 		
 		return true;
+	}
+	
+	function activate($id) {
+		if (!$id)
+			return false;
+		
+		$post = sql::fetch(sql::run(
+			" SELECT * FROM `{posts}`" .
+			" WHERE `ID` = '".(int)$id."'"));
+		
+		if (!$post)
+			return false;
+		
+		if (!$post['Deactivated'])
+			return true;
+		
+		$post['Deactivated'] = false;
+		return $this->edit($id, $post);
+	}
+	
+	function deactivate($id) {
+		if (!$id)
+			return false;
+		
+		$post = sql::fetch(sql::run(
+			" SELECT * FROM `{posts}`" .
+			" WHERE `ID` = '".(int)$id."'"));
+		
+		if (!$post)
+			return false;
+		
+		if ($post['Deactivated'])
+			return true;
+		
+		$post['Deactivated'] = true;
+		return $this->edit($id, $post);
 	}
 	
 	static function updateRSS($menuid = null) {
@@ -1844,7 +1919,9 @@ class _posts {
 		$language = $this->selectedLanguage;
 		$menu = $this->selectedMenu;
 		
-		if (!$menu)
+		if (!$row['MenuItemID'])
+			$menu = menuItems::getMainMenu();
+		elseif (!$menu)
 			$menu = sql::fetch(sql::run(
 				" SELECT `ID`, `Path`, `LanguageID` FROM `{menuitems}`" .
 				" WHERE `ID` = '".$row['MenuItemID']."'"));

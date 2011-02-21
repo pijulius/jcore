@@ -415,22 +415,19 @@ class _comments {
 		if (JCORE_VERSION >= '0.7')
 			$this->displayAvatar($row);
 		
+		$avatarsize = 64;
+		if (defined('AVATARS_SIZE') && AVATARS_SIZE)
+			$avatarsize = (int)AVATARS_SIZE;
+		
 		echo
-					"<div class='nowrap bold'>" .
+					"<div style='width: ".$avatarsize."px; word-wrap: break-word;' class='bold'>" .
 						$row['UserName'] .
 					"</div>" .
-					"<div class='nowrap'>";
+					"<div style='width: ".$avatarsize."px; word-wrap: break-word;'>";
 			
 		if ($row['UserID']) {
 			$user = $GLOBALS['USER']->get($row['UserID']);
-			
-			echo
-					" (";
-				
-			$GLOBALS['USER']->displayUserName($user);
-			
-			echo
-					")";
+			$GLOBALS['USER']->displayUserName($user, '(%s)');
 			
 		} elseif (isset($row['Email']) && $row['Email']) {
 			echo
