@@ -367,7 +367,9 @@ input:focus, select:focus, textarea:focus, .fc:focus {
 	background-image: url("http://icons.jcore.net/16/expanded-black.png");
 }
 
-.button.fc .fc-title:hover {
+.button.fc .fc-title:hover,
+.button.fc:focus .fc-title
+{
 	background-image: url("http://icons.jcore.net/16/expanded-focused-black.png");
 }
 
@@ -434,13 +436,17 @@ input.button:hover {
 	background-image: url("http://icons.jcore.net/16/colapsed-black.png");
 }
 
-.fc-title:hover {
+.fc-title:hover,
+.fc:focus .fc-title
+{
 	color: #000;
 	background-image: url("http://icons.jcore.net/16/colapsed-focused-black.png");
 }
 
 .fc.expanded > a:hover,
-.fc-title.expanded:hover
+.fc-title.expanded:hover,
+.fc.expanded:focus > a,
+.fc:focus .fc-title.expanded
 {
 	background-image: url("http://icons.jcore.net/16/expanded-focused-black.png");
 }
