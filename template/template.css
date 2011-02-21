@@ -77,7 +77,7 @@ input, select, textarea {
 	border-radius: 3px;
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus, select:focus, textarea:focus, .fc:focus {
 	outline: none;
 	border: 1px solid #338ead;
 	-webkit-box-shadow: 0px 0px 5px #338ead;
