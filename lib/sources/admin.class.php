@@ -73,7 +73,7 @@ class _admin {
 			"<a href='".url::uri('ALL')."?path=admin/content/postsatglance' " .
 				"title='".
 					htmlspecialchars(
-						__("Quicly create / modify posts"), 
+						__("Quickly create / modify posts"), 
 						ENT_QUOTES).
 				"'>" .
 				"<span>".__("Posts at Glance")."</span>" .
