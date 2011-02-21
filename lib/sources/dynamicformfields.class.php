@@ -727,7 +727,7 @@ class _dynamicFormFields {
 		}
 		
 		echo 
-			"<div class='fc" .
+			"<div tabindex='0' class='fc" .
 				form::fcState('fcdyfp') .
 				"'>" .
 				"<a class='fc-title' name='fcdyfp'>".

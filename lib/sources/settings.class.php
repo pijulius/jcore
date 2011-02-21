@@ -142,7 +142,7 @@ class _settings {
 				
 			}else {
 				echo
-					"<div class='fc" .
+					"<div tabindex='0' class='fc" .
 						form::fcState('fcstgs'.$row['OrderID']) .
 						"'>" .
 						"<a class='fc-title' ".

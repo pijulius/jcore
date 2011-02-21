@@ -1226,7 +1226,7 @@ class _template {
 		
 		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
 			echo 
-				"<div class='fc" .
+				"<div tabindex='0' class='fc" .
 					form::fcState('fcts', true) .
 					"'>" .
 					"<a class='fc-title' name='fcts'>";

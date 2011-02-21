@@ -393,7 +393,7 @@ class _admin {
 			return;
 		
 		echo 
-		"<div class='fc" .
+		"<div tabindex='0' class='fc" .
 			form::fcState('fc'.substr(strtolower(trim($sectionid)), 0, 3), true) .
 			"'>" .
 			"<a class='fc-title' name='fc" .

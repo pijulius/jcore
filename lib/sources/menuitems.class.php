@@ -579,7 +579,7 @@ class _menuItems {
 	
 	function displayAdminListLanguages($menuid, $language) {
 		echo 
-		"<div class='fc" . 
+		"<div tabindex='0' class='fc" . 
 			form::fcState('fcl'.$menuid.$language['ID'], true) . 
 			"'>" .
 			"<a class='fc-title' name='fcl".$menuid.$language['ID']."'>" .
@@ -788,7 +788,7 @@ class _menuItems {
 		
 		while($row = sql::fetch($rows)) {
 			echo 
-				"<div class='fc" .
+				"<div tabindex='0' class='fc" .
 					form::fcState('fcm'.$row['ID'], true) .
 					"'>" .
 					"<a class='fc-title' name='fcm".$row['ID']."'>".

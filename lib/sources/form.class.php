@@ -1418,7 +1418,7 @@ class _form {
 			
 			if ($element['Type'] == FORM_OPEN_FRAME_CONTAINER) {
 				echo
-				"<div class='fc" .
+				"<div tabindex='0' class='fc" .
 					($element['Name']?
 						" fc-".url::genPathFromString($element['Name']):
 						null) .

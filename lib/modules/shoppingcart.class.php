@@ -3600,7 +3600,7 @@ class shoppingCart extends modules {
 			"<div class='admin-content'>";
 		
 		echo 
-			"<div class='fc" .
+			"<div tabindex='0' class='fc" .
 				form::fcState('fcshcs', true) .
 				"'>" .
 				"<a class='fc-title' name='fcshcs'>";

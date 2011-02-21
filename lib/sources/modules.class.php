@@ -158,7 +158,7 @@ class _modules {
 	
 	function displayInstallResults($title, $results, $success = false) {
 		echo
-			"<div class='fc" .
+			"<div tabindex='0' class='fc" .
 				(!$success?
 					" expanded":
 					null) .

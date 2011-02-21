@@ -509,7 +509,7 @@ class _favoriteLinks {
 		if (count(favoriteLinks::$links) == 1) {
 			echo
 				"<div class='admin-favorite-links'>" .
-					"<div class='button fc'>" .
+					"<div tabindex='0' class='button fc'>" .
 						"<a href='".key(favoriteLinks::$links)."'" .
 							(preg_match('/https?:\/\//i', key(favoriteLinks::$links))?
 								" target='_blank'":
@@ -532,7 +532,7 @@ class _favoriteLinks {
 			if ($i == 1) {
 				echo
 					"<div class='admin-favorite-links'>" .
-						"<div class='button fc'>" .
+						"<div tabindex='0' class='button fc'>" .
 							"<a class='fc-title'>&nbsp;</a>" .
 							"<a href='".$link."'".$target.">" .
 								"<span>".$title."</span>" .

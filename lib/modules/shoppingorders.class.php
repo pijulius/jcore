@@ -3723,7 +3723,7 @@ class shoppingOrders extends modules {
 			"<div class='admin-content'>";
 		
 		echo 
-			"<div class='fc" .
+			"<div tabindex='0' class='fc" .
 				form::fcState('fcshod', true) .
 				"'>" .
 				"<a class='fc-title' name='fcshod'>";
@@ -3856,7 +3856,7 @@ class shoppingOrders extends modules {
 		
 		if (!$this->ajaxRequest) {
 			echo 
-			"<div class='fc" .
+			"<div tabindex='0' class='fc" .
 				form::fcState('fcshos') .
 				"'>" .
 				"<a class='fc-title' name='fcshos'>" .
@@ -4093,7 +4093,7 @@ class shoppingOrders extends modules {
 		
 		if (!$this->ajaxRequest)
 			echo 
-			"<div class='fc" .
+			"<div tabindex='0' class='fc" .
 				form::fcState('fcshob') .
 				"'>" .
 				"<a class='fc-title' name='fcshob'>" .
@@ -4249,7 +4249,7 @@ class shoppingOrders extends modules {
 		
 		if (!$this->ajaxRequest)
 			echo 
-			"<div class='fc" .
+			"<div tabindex='0' class='fc" .
 				form::fcState('fcshom') .
 				"'>" .
 				"<a class='fc-title' name='fcshom'>" .
@@ -5178,7 +5178,7 @@ class shoppingOrders extends modules {
 		$ordermethod = shoppingOrderMethods::get($row['OrderMethod']);
 		
 		echo
-			"<div class='fc" .
+			"<div tabindex='0' class='fc" .
 				($row['PaymentStatus'] != SHOPPING_ORDER_PAYMENT_STATUS_PAID?
 					" expanded":
 					null) .
@@ -5303,7 +5303,7 @@ class shoppingOrders extends modules {
 			return;
 		
 		echo
-			"<div class='fc'>" .
+			"<div tabindex='0' class='fc'>" .
 				"<a class='fc-title'>" .
 					_("Downloads") .
 					" (".sql::rows($downloads).")" .
