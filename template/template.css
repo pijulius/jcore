@@ -319,7 +319,9 @@ input:focus, select:focus, textarea:focus, .fc:focus {
 	text-shadow: 1px 1px 1px #fff;
 }
 
-.button:hover {
+.button:hover,
+.button:focus
+{
 	color: #000;
 	background: url("images/inputbg.jpg") repeat-x 0 0 #fff;
 }
@@ -331,7 +333,9 @@ input:focus, select:focus, textarea:focus, .fc:focus {
 	text-shadow: 1px 1px 1px #338ead;
 }
 
-.button.submit:hover {
+.button.submit:hover,
+.button.submit:focus
+{
 	color: #fff;
 	background: url("images/buttonbluefocusedbg.jpg") repeat-x #50b1d4;
 }
@@ -344,12 +348,15 @@ input:focus, select:focus, textarea:focus, .fc:focus {
 	white-space: nowrap;
 }
 
-.button a:hover {
+.button a:hover,
+.button a:focus
+{
 	color: #000;
 }
 
 .button.submit a,
-.button.submit a:hover
+.button.submit a:hover,
+.button.submit a:focus
 {
 	color: #fff;
 }
