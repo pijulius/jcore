@@ -44,6 +44,7 @@ include_once('lib/url.class.php');
 include_once('lib/users.class.php');
 include_once('lib/languages.class.php');
 include_once('lib/menus.class.php');
+include_once('lib/pages.class.php');
 include_once('lib/posts.class.php');
 include_once('lib/rss.class.php');
 include_once('lib/css.class.php');
@@ -62,7 +63,7 @@ $GLOBALS['USER']->check();
 // and so on can be added to the html tags/titles
 template::populate();
 languages::populate();
-menus::populate();
+pages::populate();
 posts::populate();
 
 // We look for requests (including ajax requests) and if the request

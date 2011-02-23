@@ -35,15 +35,15 @@ class _postsForm extends dynamicForms {
 
 class _postsCalendar extends monthCalendar {
 	var $searchURL = null;
-	var $menuItemID = null;
+	var $pageID = null;
 	var $weekDaysFormat = 'D';
 	
-	function __construct($menuid = null) {
+	function __construct($pageid = null) {
 		parent::__construct();
 		
 		$this->uriRequest = "posts/" .
-			($menuid?
-				$menuid."/":
+			($pageid?
+				$pageid."/":
 				null) .
 			$this->uriRequest;
 		
@@ -62,8 +62,8 @@ class _postsCalendar extends monthCalendar {
 		$posts = sql::rows(sql::run(
 			" SELECT `ID` FROM `{posts}`" .
 			" WHERE `TimeStamp` LIKE '".date('Y-m-d', $time)."%'" .
-			($this->menuItemID?
-				" AND `MenuItemID` = '".(int)$this->menuItemID."'":
+			($this->pageID?
+				" AND `PageID` = '".(int)$this->pageID."'":
 				null) .
 			" LIMIT 1"));
 		
@@ -79,8 +79,8 @@ class _postsCalendar extends monthCalendar {
 	}
 	
 	function display() {
-		if (!$this->menuItemID)
-			$this->menuItemID = url::getPathID(0, $this->uriRequest);
+		if (!$this->pageID)
+			$this->pageID = url::getPathID(0, $this->uriRequest);
 		
 		$this->searchURL = modules::getOwnerURL('Search');
 		
@@ -96,7 +96,7 @@ class _postRating extends starRating {
 	var $sqlRow = 'PostID';
 	var $sqlOwnerTable = 'posts';
 	var $adminPath = array(
-		'admin/content/menuitems/posts/postrating',
+		'admin/content/pages/posts/postrating',
 		'admin/content/postsatglance/postrating');
 	
 	function __construct() {
@@ -112,7 +112,7 @@ class _postComments extends comments {
 	var $sqlRow = 'PostID';
 	var $sqlOwnerTable = 'posts';
 	var $adminPath = array(
-		'admin/content/menuitems/posts/postcomments',
+		'admin/content/pages/posts/postcomments',
 		'admin/content/postsatglance/postcomments');
 	
 	function __construct() {
@@ -123,7 +123,7 @@ class _postComments extends comments {
 		
 		if ($GLOBALS['ADMIN'])
 			$this->commentURL = SITE_URL .
-				"?menuid=".admin::getPathID(2) . 
+				"?pageid=".admin::getPathID(2) . 
 				"&postid=".admin::getPathID();
 	}
 }
@@ -133,7 +133,7 @@ class _postAttachments extends attachments {
 	var $sqlRow = 'PostID';
 	var $sqlOwnerTable = 'posts';
 	var $adminPath = array(
-		'admin/content/menuitems/posts/postattachments',
+		'admin/content/pages/posts/postattachments',
 		'admin/content/postsatglance/postattachments');
 	
 	function __construct() {
@@ -149,7 +149,7 @@ class _postPictures extends pictures {
 	var $sqlRow = 'PostID';
 	var $sqlOwnerTable = 'posts';
 	var $adminPath = array(
-		'admin/content/menuitems/posts/postpictures',
+		'admin/content/pages/posts/postpictures',
 		'admin/content/postsatglance/postpictures');
 	
 	function __construct() {
@@ -163,10 +163,10 @@ class _postPictures extends pictures {
 class _posts {
 	var $arguments;
 	var $selectedID;
-	var $selectedMenuID;
+	var $selectedPageID;
 	var $selectedLanguageID;
 	var $selectedBlockID;
-	var $selectedMenu;
+	var $selectedPage;
 	var $selectedLanguage;
 	var $limit = 0;
 	var $keywordsCloudLimit = 21;
@@ -177,7 +177,7 @@ class _posts {
 	var $ajaxPaging = AJAX_PAGING;
 	var $ajaxRequest = null;
 	var $adminPath = array(
-		'admin/content/menuitems/posts',
+		'admin/content/pages/posts',
 		'admin/content/postsatglance');
 	
 	static $selected = null;
@@ -189,8 +189,8 @@ class _posts {
 		if (isset($_GET['languageid']))
 			$this->selectedLanguageID = (int)$_GET['languageid'];
 		
-		if (isset($_GET['menuid']))
-			$this->selectedMenuID = (int)$_GET['menuid'];
+		if (isset($_GET['pageid']))
+			$this->selectedPageID = (int)$_GET['pageid'];
 		
 		if (isset($_GET['searchin']) && isset($_GET['search']) && 
 			$_GET['searchin'] == 'posts')
@@ -201,21 +201,21 @@ class _posts {
 	}
 	
 	function SQL() {
-		$mainmenu = 
-			menuitems::getMainMenu($this->selectedLanguageID);
+		$homepage = 
+			pages::getHome($this->selectedLanguageID);
 		
-		$searchignoremenuids = null;
-		if ($this->search || !$this->selectedMenuID) {
-			$menuids = sql::fetch(sql::run(
-				" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS MenuIDs" .
-				" FROM `{menuitems}`" .
+		$searchignorepageids = null;
+		if ($this->search || !$this->selectedPageID) {
+			$pageids = sql::fetch(sql::run(
+				" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS PageIDs" .
+				" FROM `{pages}`" .
 				" WHERE `Deactivated`" .
 				(!$GLOBALS['USER']->loginok?
 					" OR `ViewableBy` > 1":
 					null)));
 			
-			if (isset($menuids['MenuIDs']) && $menuids['MenuIDs'])
-				$searchignoremenuids = $menuids['MenuIDs'];
+			if (isset($pageids['PageIDs']) && $pageids['PageIDs'])
+				$searchignorepageids = $pageids['PageIDs'];
 		}
 		
 		return
@@ -225,8 +225,8 @@ class _posts {
 			($this->selectedID?
 				" AND `ID` = '".$this->selectedID."'":
 				" AND !`BlockID`") .
-			($searchignoremenuids?
-				" AND `MenuItemID` NOT IN (".$searchignoremenuids.")":
+			($searchignorepageids?
+				" AND `PageID` NOT IN (".$searchignorepageids.")":
 				null) .
 			($this->search && !$this->selectedID?
 				sql::search(
@@ -235,11 +235,11 @@ class _posts {
 						dynamicForms::searchableFields('posts'):
 						array('Title', 'Content', 'Keywords')),
 					'AND', array('date' => 'TimeStamp')):
-				($this->selectedMenuID?
-					" AND (`MenuItemID` = '".$this->selectedMenuID."'" .
-					($mainmenu['ID'] == $this->selectedMenuID?
-						" OR `OnMainPage` OR !`MenuItemID` ":
-						" OR (`MenuItemID` = '".$mainmenu['ID']."'" .
+				($this->selectedPageID?
+					" AND (`PageID` = '".$this->selectedPageID."'" .
+					($homepage['ID'] == $this->selectedPageID?
+						" OR `OnMainPage` OR !`PageID` ":
+						" OR (`PageID` = '".$homepage['ID']."'" .
 							" AND `OnMainPage`) ") .
 					" ) ":
 					null)) .
@@ -256,11 +256,14 @@ class _posts {
 		if (!isset($_GET['postid']))
 			$_GET['postid'] = 0;
 		
+		if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN'])
+			return false;
+		
 		$selected = sql::fetch(sql::run(
 			" SELECT `ID`, `Title`, `Path`, `Keywords`" .
 			" FROM `{posts}`" .
 			" WHERE !`Deactivated`" .
-			" AND (!`MenuItemID` OR `MenuItemID` = '".(int)$_GET['menuid']."')" .
+			" AND (!`PageID` OR `PageID` = '".(int)$_GET['pageid']."')" .
 			(SEO_FRIENDLY_LINKS && !(int)$_GET['postid']?
 				" AND '".sql::escape(url::path())."/' LIKE CONCAT(`Path`,'/%')":
 				" AND `ID` = '".(int)$_GET['postid']."'") .
@@ -300,7 +303,7 @@ class _posts {
 			SITE_URL);
 	}
 	
-	function setupAdminForm(&$form, $isownermainmenu = false) {
+	function setupAdminForm(&$form, $isownerhomepage = false) {
 		$edit = null;
 		
 		if (isset($_GET['edit']))
@@ -336,7 +339,7 @@ class _posts {
 			
 			$form->edit(
 				'OnMainPage',
-				($isownermainmenu?
+				($isownerhomepage?
 					__('Display on All pages'):
 					__('Display on Main page')));
 			
@@ -377,8 +380,8 @@ class _posts {
 			
 			$form->insert(
 				'TimeStamp',
-				'MenuItemID',
-				'MenuItemID',
+				'PageID',
+				'PageID',
 				FORM_INPUT_TYPE_HIDDEN,
 				true,
 				admin::getPathID(),
@@ -409,8 +412,8 @@ class _posts {
 			FORM_OPEN_FRAME_CONTAINER);
 		
 		$form->add(
-			'MenuItemID',
-			'MenuItemID',
+			'PageID',
+			'PageID',
 			FORM_INPUT_TYPE_HIDDEN,
 			true,
 			admin::getPathID());
@@ -485,7 +488,7 @@ class _posts {
 			FORM_OPEN_FRAME_CONTAINER);
 		
 		$form->add(
-			($isownermainmenu?
+			($isownerhomepage?
 				__('Display on All pages'):
 				__('Display on Main page')),
 			'OnMainPage',
@@ -784,7 +787,7 @@ class _posts {
 		return true;
 	}
 	
-	function displayAdminListItemSelected(&$row, $isownermainmenu = null) {
+	function displayAdminListItemSelected(&$row, $isownerhomepage = null) {
 		$blockroute = null;
 		
 		admin::displayItemData(
@@ -815,7 +818,7 @@ class _posts {
 		
 		if ($row['OnMainPage'])
 			admin::displayItemData(
-				($isownermainmenu?
+				($isownerhomepage?
 					__("Display on All pages"):
 					__("Display on Main page")),
 				__("Yes"));
@@ -879,7 +882,7 @@ class _posts {
 			$this->displayCustomFields($row);
 	}
 	
-	function displayAdminListHeader($isownermainmenu = false) {
+	function displayAdminListHeader($isownerhomepage = false) {
 		echo
 			"<th><span class='nowrap'>".
 				__("Order")."</span></th>" .
@@ -1028,7 +1031,7 @@ class _posts {
 				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
 	}
 	
-	function displayAdminList(&$rows, $isownermainmenu = false) {
+	function displayAdminList(&$rows, $isownerhomepage = false) {
 		$id = null;
 		
 		if (isset($_GET['id']))
@@ -1043,7 +1046,7 @@ class _posts {
 				"<thead>" .
 				"<tr>";
 				
-		$this->displayAdminListHeader($isownermainmenu);
+		$this->displayAdminListHeader($isownerhomepage);
 		$this->displayAdminListHeaderOptions();
 		
 		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
@@ -1074,7 +1077,7 @@ class _posts {
 						"<td class='auto-width' colspan='10'>" .
 							"<div class='admin-content-preview'>";
 				
-				$this->displayAdminListItemSelected($row, $isownermainmenu);
+				$this->displayAdminListItemSelected($row, $isownerhomepage);
 				
 				echo
 							"</div>" .
@@ -1141,10 +1144,10 @@ class _posts {
 		
 		$selectedowner = sql::fetch(sql::run(
 			" SELECT `Title`, `LanguageID` " .
-			" FROM `{menuitems}` " .
+			" FROM `{pages}` " .
 			" WHERE `ID` = '".admin::getPathID()."'"));
 			
-		$isownermainmenu = menuitems::isMainMenu(
+		$isownerhomepage = pages::isHome(
 			admin::getPathID(), $selectedowner['LanguageID']);
 		
 		echo
@@ -1172,7 +1175,7 @@ class _posts {
 		if (!$edit)
 			$form->action = url::uri('id, delete, limit');
 					
-		$this->setupAdminForm($form, $isownermainmenu);
+		$this->setupAdminForm($form, $isownerhomepage);
 		$form->addSubmitButtons();
 		
 		if ($edit) {
@@ -1198,7 +1201,7 @@ class _posts {
 		
 		$rows = sql::run(
 				" SELECT * FROM `{posts}`" .
-				" WHERE `MenuItemID` = '".admin::getPathID()."'" .
+				" WHERE `PageID` = '".admin::getPathID()."'" .
 				($this->userPermissionIDs?
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
@@ -1212,7 +1215,7 @@ class _posts {
 		$paging->setTotalItems(sql::count());
 				
 		if ($paging->items)
-			$this->displayAdminList($rows, $isownermainmenu);
+			$this->displayAdminList($rows, $isownerhomepage);
 		else
 			tooltip::display(
 				__("No posts found."),
@@ -1227,7 +1230,7 @@ class _posts {
 			if ($edit && $id && ($verifyok || !$form->submitted())) {
 				$row = sql::fetch(sql::run(
 					" SELECT * FROM `{posts}`" .
-					" WHERE `MenuItemID` = '".admin::getPathID()."'" .
+					" WHERE `PageID` = '".admin::getPathID()."'" .
 					" AND `ID` = '".$id."'"));
 		
 				$form->setValues($row);
@@ -1257,7 +1260,7 @@ class _posts {
 				" UPDATE `{posts}` SET " .
 				" `OrderID` = `OrderID` + 1," .
 				" `TimeStamp` = `TimeStamp`" .
-				" WHERE `MenuItemID` = '".(int)$values['MenuItemID']."'");
+				" WHERE `PageID` = '".(int)$values['PageID']."'");
 			
 			$values['OrderID'] = 1;
 			
@@ -1266,7 +1269,7 @@ class _posts {
 				" UPDATE `{posts}` SET " .
 				" `OrderID` = `OrderID` + 1," .
 				" `TimeStamp` = `TimeStamp`" .
-				" WHERE `MenuItemID` = '".(int)$values['MenuItemID']."'" .
+				" WHERE `PageID` = '".(int)$values['PageID']."'" .
 				" AND `OrderID` >= '".(int)$values['OrderID']."'");
 		}
 		
@@ -1284,8 +1287,8 @@ class _posts {
 		} else {
 			$newid = sql::run(
 				" INSERT INTO `{posts}` SET ".
-				" `MenuItemID` = '".
-					(int)$values['MenuItemID']."'," .
+				" `PageID` = '".
+					(int)$values['PageID']."'," .
 				" `Title` = '".
 					sql::escape($values['Title'])."'," .
 				" `Content` = '".
@@ -1354,30 +1357,30 @@ class _posts {
 		
 		if (JCORE_VERSION >= '0.5') {
 			sql::run(
-				" UPDATE `{menuitems}` SET " .
+				" UPDATE `{pages}` SET " .
 				" `Posts` = `Posts` + 1" .
-				" WHERE `ID` = '".(int)$values['MenuItemID']."'");
+				" WHERE `ID` = '".(int)$values['PageID']."'");
 			
 			$this->updateKeywordsCloud(
 				$values['Keywords'], null,
-				(JCORE_VERSION >= '0.7'?$values['MenuItemID']:null));
+				(JCORE_VERSION >= '0.7'?$values['PageID']:null));
 		}
 				
 		$sitemap = new siteMap();
 		$sitemap->load();
 		
-		$menuitem = sql::fetch(sql::run(
-			" SELECT * FROM `{menuitems}`" .
-			" WHERE `ID` = '".(int)$values['MenuItemID']."'"));
+		$page = sql::fetch(sql::run(
+			" SELECT * FROM `{pages}`" .
+			" WHERE `ID` = '".(int)$values['PageID']."'"));
 			
 		if (SEO_FRIENDLY_LINKS)
-			$menuitemurl = SITE_URL.
-				$menuitem['Path'];
+			$pageurl = SITE_URL.
+				$page['Path'];
 		else
-			$menuitemurl = SITE_URL.'index.php' .
-				'?menuid='.$menuitem['ID'];
+			$pageurl = SITE_URL.'index.php' .
+				'?pageid='.$page['ID'];
 		
-		$sitemap->edit($menuitemurl, array(
+		$sitemap->edit($pageurl, array(
 			'LastModified' => 
 				($values['TimeStamp']?
 					$values['TimeStamp']:
@@ -1392,7 +1395,7 @@ class _posts {
 		
 		unset($sitemap);
 		
-		if (!$this->updateRSS() || !$this->updateRSS((int)$values['MenuItemID']))
+		if (!$this->updateRSS() || !$this->updateRSS((int)$values['PageID']))
 			tooltip::display(
 				__("Post successfully created but rss feed couldn't be updated.")." " .
 				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
@@ -1400,7 +1403,7 @@ class _posts {
 				TOOLTIP_NOTIFICATION);
 		
 		if (defined('BLOG_PING_ON_NEW_POSTS') && BLOG_PING_ON_NEW_POSTS && 
-			!$this->blogPing((int)$values['MenuItemID']))
+			!$this->blogPing((int)$values['PageID']))
 			tooltip::display(
 				__("Post successfully created but couldn't ping blog servers. " .
 					"Please define at least one blog ping server or multiple " .
@@ -1503,45 +1506,45 @@ class _posts {
 		}
 		
 		if (JCORE_VERSION >= '0.5') {
-			if ($post['MenuItemID'] != $values['MenuItemID']) {
+			if ($post['PageID'] != $values['PageID']) {
 				$posts = sql::fetch(sql::run(
 					" SELECT COUNT(`ID`) AS `Rows` FROM `{posts}`" .
-					" WHERE `MenuItemID` = '".(int)$values['MenuItemID']."'"));
+					" WHERE `PageID` = '".(int)$values['PageID']."'"));
 				
-				sql::run("UPDATE `{menuitems}`" .
+				sql::run("UPDATE `{pages}`" .
 					" SET `Posts` = '".(int)$posts['Rows']."'" .
-					" WHERE `ID` = '".(int)$values['MenuItemID']."'");
+					" WHERE `ID` = '".(int)$values['PageID']."'");
 				
 				$posts = sql::fetch(sql::run(
 					" SELECT COUNT(`ID`) AS `Rows` FROM `{posts}`" .
-					" WHERE `MenuItemID` = '".(int)$post['MenuItemID']."'"));
+					" WHERE `PageID` = '".(int)$post['PageID']."'"));
 				
-				sql::run("UPDATE `{menuitems}`" .
+				sql::run("UPDATE `{pages}`" .
 					" SET `Posts` = '".(int)$posts['Rows']."'" .
-					" WHERE `ID` = '".(int)$post['MenuItemID']."'");
+					" WHERE `ID` = '".(int)$post['PageID']."'");
 			}
 			
 			$this->updateKeywordsCloud(
 				$values['Keywords'], $post['Keywords'],
-				(JCORE_VERSION >= '0.7'?$values['MenuItemID']:null),
-				(JCORE_VERSION >= '0.7'?$post['MenuItemID']:null));
+				(JCORE_VERSION >= '0.7'?$values['PageID']:null),
+				(JCORE_VERSION >= '0.7'?$post['PageID']:null));
 		}
 		
 		$sitemap = new siteMap();
 		$sitemap->load();
 		
-		$menuitem = sql::fetch(sql::run(
-			" SELECT * FROM `{menuitems}`" .
-			" WHERE `ID` = '".(int)$values['MenuItemID']."'"));
+		$page = sql::fetch(sql::run(
+			" SELECT * FROM `{pages}`" .
+			" WHERE `ID` = '".(int)$values['PageID']."'"));
 			
 		if (SEO_FRIENDLY_LINKS)
-			$menuitemurl = SITE_URL.
-				$menuitem['Path'];
+			$pageurl = SITE_URL.
+				$page['Path'];
 		else
-			$menuitemurl = SITE_URL.'index.php' .
-				'?menuid='.$menuitem['ID'];
+			$pageurl = SITE_URL.'index.php' .
+				'?pageid='.$page['ID'];
 		
-		$sitemap->edit($menuitemurl, array(
+		$sitemap->edit($pageurl, array(
 			'LastModified' => 
 				($values['TimeStamp']?
 					$values['TimeStamp']:
@@ -1556,7 +1559,7 @@ class _posts {
 		
 		unset($sitemap);
 		
-		if (!$this->updateRSS() || !$this->updateRSS((int)$values['MenuItemID']))
+		if (!$this->updateRSS() || !$this->updateRSS((int)$values['PageID']))
 			tooltip::display(
 				__("Post successfully updated but rss feed couldn't be updated.")." " .
 				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
@@ -1612,8 +1615,8 @@ class _posts {
 				" DELETE FROM `{postratings}` " .
 				" WHERE `PostID` = '".$id."'");
 			
-		$menuitem = sql::fetch(sql::run(
-			" SELECT `MenuItemID` FROM `{posts}` " .
+		$page = sql::fetch(sql::run(
+			" SELECT `PageID` FROM `{posts}` " .
 			" WHERE `ID` = '".$id."'"));
 			
 		sql::run(
@@ -1623,18 +1626,18 @@ class _posts {
 		if (JCORE_VERSION >= '0.5') {
 			$row = sql::fetch(sql::run(
 				" SELECT COUNT(`ID`) AS `Rows` FROM `{posts}`" .
-				" WHERE `MenuItemID` = '".$menuitem['MenuItemID']."'"));
+				" WHERE `PageID` = '".$page['PageID']."'"));
 			
-			sql::run("UPDATE `{menuitems}`" .
+			sql::run("UPDATE `{pages}`" .
 				" SET `Posts` = '".(int)$row['Rows']."'" .
-				" WHERE `ID` = '".$menuitem['MenuItemID']."'");
+				" WHERE `ID` = '".$page['PageID']."'");
 			
 			$this->updateKeywordsCloud(
 				null, $post['Keywords'],
-				null, (JCORE_VERSION >= '0.7'?$post['MenuItemID']:null));
+				null, (JCORE_VERSION >= '0.7'?$post['PageID']:null));
 		}
 					
-		if (!$this->updateRSS() || !$this->updateRSS($menuitem['MenuItemID']))
+		if (!$this->updateRSS() || !$this->updateRSS($page['PageID']))
 			tooltip::display(
 				__("Post successfully deleted but rss feed couldn't be updated.")." " .
 				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
@@ -1680,51 +1683,51 @@ class _posts {
 		return $this->edit($id, $post);
 	}
 	
-	static function updateRSS($menuid = null) {
+	static function updateRSS($pageid = null) {
 		$rss = new rss();
 		$rss->file = SITE_PATH.'rss/posts.xml';
 		
-		if ($menuid) {
-			$menuitem = sql::fetch(sql::run(
+		if ($pageid) {
+			$page = sql::fetch(sql::run(
 				" SELECT `Title`, `Path` " .
-				" FROM `{menuitems}` " .
-				" WHERE `ID` = '".(int)$menuid."'"));
+				" FROM `{pages}` " .
+				" WHERE `ID` = '".(int)$pageid."'"));
 			
-			if (!$menuitem['Path'])
+			if (!$page['Path'])
 				return false;
 			
-			$rss->channel['Title'] = $menuitem['Title']." - ".
+			$rss->channel['Title'] = $page['Title']." - ".
 				$rss->channel['Title'];
 			
 			$rss->file = SITE_PATH.'rss/posts-'.preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '',
-					str_replace('/', '-', $menuitem['Path'])).'.xml';
+					str_replace('/', '-', $page['Path'])).'.xml';
 		}
 		
 		$rows = sql::run(
 			" SELECT * FROM `{posts}`" .
 			" WHERE !`Deactivated`" .
 			" AND !`BlockID`" .
-			($menuid?
-				" AND `MenuItemID` = '".(int)$menuid."'":
+			($pageid?
+				" AND `PageID` = '".(int)$pageid."'":
 				null) .
 			" ORDER BY `OrderID`, `StartDate`, `ID` DESC" .
 			" LIMIT 10");
 			
 		while($row = sql::fetch($rows)) {
-			$menu = sql::fetch(sql::run(
+			$page = sql::fetch(sql::run(
 				" SELECT `ID`, `Path` " .
-				" FROM `{menuitems}` " .
-				" WHERE `ID` = '".$row['MenuItemID']."'"));
+				" FROM `{pages}` " .
+				" WHERE `ID` = '".$row['PageID']."'"));
 			
 			$user = $GLOBALS['USER']->get($row['UserID']);
 		
 			if (SEO_FRIENDLY_LINKS) {
 				$postlink = SITE_URL.
-					$menu['Path'].'/'.$row['Path'];
+					$page['Path'].'/'.$row['Path'];
 			
 			} else {
 				$postlink = SITE_URL.'index.php' .
-					'?menuid='.$menu['ID'].
+					'?pageid='.$page['ID'].
 					'&amp;postid='.$row['ID'];
 			}
 			
@@ -1750,7 +1753,7 @@ class _posts {
 	}
 	
 	static function updateKeywordsCloud($newkeywords = null, $oldkeywords = null, 
-		$newmenuid = null, $oldmenuid = null) 
+		$newpageid = null, $oldpageid = null) 
 	{
 		$oldkeywords = array_map('trim', explode(',', $oldkeywords));
 		$newkeywords = array_map('trim', explode(',', $newkeywords));
@@ -1758,37 +1761,37 @@ class _posts {
 		if (count($oldkeywords)) {
 			foreach($oldkeywords as $oldkeyword) {
 				if (!$oldkeyword || (in_array($oldkeyword, $newkeywords) && 
-					$oldmenuid == $newmenuid))
+					$oldpageid == $newpageid))
 					continue;
 				
-				$menuids = null;
-				if ($oldmenuid) {
-					$menuids = sql::fetch(sql::run(
-						" SELECT `MenuItemIDs` FROM `{postkeywords}`" .
+				$pageids = null;
+				if ($oldpageid) {
+					$pageids = sql::fetch(sql::run(
+						" SELECT `PageIDs` FROM `{postkeywords}`" .
 						" WHERE `Keyword` = '".sql::escape($oldkeyword)."'"));
 					
-					if ($menuids) {
-						$menuids = explode('|', $menuids['MenuItemIDs']);
+					if ($pageids) {
+						$pageids = explode('|', $pageids['PageIDs']);
 						
 						$exists = sql::fetch(sql::run(
 							" SELECT `ID` FROM `{posts}`" .
-							" WHERE `MenuItemID` = '".(int)$oldmenuid."'" .
+							" WHERE `PageID` = '".(int)$oldpageid."'" .
 							" AND CONCAT(',', `Keywords`, ',') LIKE '%," .
 								sql::escape($oldkeyword).",%'" .
 							" LIMIT 1"));
 						
 						if (!$exists) {
-							$menuids = array_flip($menuids);
-							unset($menuids[(int)$oldmenuid]);
-							$menuids = array_flip($menuids);
+							$pageids = array_flip($pageids);
+							unset($pageids[(int)$oldpageid]);
+							$pageids = array_flip($pageids);
 						}
 					}
 				}
 				
 				sql::run(
 					" UPDATE `{postkeywords}` SET " .
-					(is_array($menuids)?
-						"`MenuItemIDs` = '".implode('|', $menuids)."',":
+					(is_array($pageids)?
+						"`PageIDs` = '".implode('|', $pageids)."',":
 						null) .
 					" `Counter` = `Counter` - 1" .
 					" WHERE `Keyword` = '".sql::escape($oldkeyword)."'");
@@ -1798,33 +1801,33 @@ class _posts {
 		if (count($newkeywords)) {
 			foreach($newkeywords as $newkeyword) {
 				if (!$newkeyword || (in_array($newkeyword, $oldkeywords) &&
-					$newmenuid == $oldmenuid))
+					$newpageid == $oldpageid))
 					continue;
 				
-				$menuids = null;
-				if ($newmenuid) {
-					$menuids = sql::fetch(sql::run(
-						" SELECT `MenuItemIDs` FROM `{postkeywords}`" .
+				$pageids = null;
+				if ($newpageid) {
+					$pageids = sql::fetch(sql::run(
+						" SELECT `PageIDs` FROM `{postkeywords}`" .
 						" WHERE `Keyword` = '".sql::escape($newkeyword)."'"));
 					
-					if ($menuids) {
-						if ($menuids['MenuItemIDs'])
-							$menuids = explode('|', $menuids['MenuItemIDs']);
+					if ($pageids) {
+						if ($pageids['PageIDs'])
+							$pageids = explode('|', $pageids['PageIDs']);
 						else
-							$menuids = array();
+							$pageids = array();
 						
-						if (!in_array((int)$newmenuid, $menuids))
-							$menuids[] = (int)$newmenuid;
+						if (!in_array((int)$newpageid, $pageids))
+							$pageids[] = (int)$newpageid;
 						
 					} else {
-						$menuids[] = (int)$newmenuid;
+						$pageids[] = (int)$newpageid;
 					}
 				}
 				
 				sql::run(
 					" UPDATE `{postkeywords}` SET " .
-					($menuids?
-						"`MenuItemIDs` = '".implode('|', $menuids)."',":
+					($pageids?
+						"`PageIDs` = '".implode('|', $pageids)."',":
 						null) .
 					" `Counter` = `Counter` + 1" .
 					" WHERE `Keyword` = '".sql::escape($newkeyword)."'");
@@ -1832,8 +1835,8 @@ class _posts {
 				if (!sql::affected())
 					sql::run(
 						" INSERT INTO `{postkeywords}` SET" .
-						($menuids?
-							"`MenuItemIDs` = '".implode('|', $menuids)."',":
+						($pageids?
+							"`PageIDs` = '".implode('|', $pageids)."',":
 							null) .
 						" `Keyword` = '".sql::escape($newkeyword)."'," .
 						" `Counter` = 1");
@@ -1847,23 +1850,23 @@ class _posts {
 		return true;
 	}
 	
-	static function blogPing($menuid = null) {
+	static function blogPing($pageid = null) {
 		if (!defined('BLOG_PING_SERVERS') || !BLOG_PING_SERVERS)
 			return false;
 		
 		$rssfile = SITE_URL.'rss/posts.xml';
 		
-		if ($menuid) {
-			$menuitem = sql::fetch(sql::run(
+		if ($pageid) {
+			$page = sql::fetch(sql::run(
 				" SELECT `Title`, `Path` " .
-				" FROM `{menuitems}` " .
-				" WHERE `ID` = '".(int)$menuid."'"));
+				" FROM `{pages}` " .
+				" WHERE `ID` = '".(int)$pageid."'"));
 			
-			if (!$menuitem['Path'])
+			if (!$page['Path'])
 				return false;
 			
 			$rssfile = SITE_URL.'rss/posts-'.preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '',
-					str_replace('/', '-', $menuitem['Path'])).'.xml';
+					str_replace('/', '-', $page['Path'])).'.xml';
 		}
 		
 		$servers = explode(",", BLOG_PING_SERVERS);
@@ -1917,19 +1920,19 @@ class _posts {
 	
 	function generateLink(&$row) {
 		$language = $this->selectedLanguage;
-		$menu = $this->selectedMenu;
+		$page = $this->selectedPage;
 		
-		if (!$row['MenuItemID'])
-			$menu = menuItems::getMainMenu();
-		elseif (!$menu)
-			$menu = sql::fetch(sql::run(
-				" SELECT `ID`, `Path`, `LanguageID` FROM `{menuitems}`" .
-				" WHERE `ID` = '".$row['MenuItemID']."'"));
+		if (!$row['PageID'])
+			$page = pages::getHome();
+		elseif (!$page)
+			$page = sql::fetch(sql::run(
+				" SELECT `ID`, `Path`, `LanguageID` FROM `{pages}`" .
+				" WHERE `ID` = '".$row['PageID']."'"));
 		
-		if (!$language && $menu['LanguageID'])
+		if (!$language && $page['LanguageID'])
 			$language = sql::fetch(sql::run(
 				" SELECT `ID`, `Path` FROM `{languages}`" .
-				" WHERE `ID` = '".$menu['LanguageID']."'"));
+				" WHERE `ID` = '".$page['LanguageID']."'"));
 		
 		if (SEO_FRIENDLY_LINKS)
 			return 
@@ -1937,9 +1940,9 @@ class _posts {
 				($language?
 					$language['Path'].'/':
 					null) .
-				$menu['Path'].'/' .
+				$page['Path'].'/' .
 				$row['Path'] .
-				($this->selectedMenuID == $this->selectedMenu['ID'] &&
+				($this->selectedPageID == $this->selectedPage['ID'] &&
 				 url::arg('postslimit')?
 					'?'.url::arg('postslimit'):
 					null);
@@ -1949,27 +1952,27 @@ class _posts {
 			($language?
 				'&amp;languageid='.$language['ID']:
 				null) .
-			'&amp;menuid='.$menu['ID'].
+			'&amp;pageid='.$page['ID'].
 			'&amp;postid='.$row['ID'];
-			($this->selectedMenuID == $this->selectedMenu['ID'] &&
+			($this->selectedPageID == $this->selectedPage['ID'] &&
 			 url::arg('postslimit')?
 				'&amp;'.url::arg('postslimit'):
 				null);
 	}
 	
-	function generateMenuLink(&$row) {
+	function generatePageLink(&$row) {
 		$language = $this->selectedLanguage;
-		$menu = $this->selectedMenu;
+		$page = $this->selectedPage;
 		
-		if (!$menu)
-			$menu = sql::fetch(sql::run(
-				" SELECT `ID`, `Path`, `LanguageID` FROM `{menuitems}`" .
-				" WHERE `ID` = '".$row['MenuItemID']."'"));
+		if (!$page)
+			$page = sql::fetch(sql::run(
+				" SELECT `ID`, `Path`, `LanguageID` FROM `{pages}`" .
+				" WHERE `ID` = '".$row['PageID']."'"));
 		
-		if (!$language && $menu['LanguageID'])
+		if (!$language && $page['LanguageID'])
 			$language = sql::fetch(sql::run(
 				" SELECT `ID`, `Path` FROM `{languages}`" .
-				" WHERE `ID` = '".$menu['LanguageID']."'"));
+				" WHERE `ID` = '".$page['LanguageID']."'"));
 		
 		if (SEO_FRIENDLY_LINKS)
 			return 
@@ -1977,9 +1980,9 @@ class _posts {
 				($language?
 					$language['Path'].'/':
 					null) .
-				$menu['Path'].
+				$page['Path'].
 				($this->selectedID == $row['ID'] &&
-				 $this->selectedMenuID == $menu['ID'] &&
+				 $this->selectedPageID == $page['ID'] &&
 				 url::arg('postslimit')?
 					'?'.url::arg('postslimit'):
 					null);
@@ -1989,9 +1992,9 @@ class _posts {
 			($language?
 				'&amp;languageid='.$language['ID']:
 				null) .
-			'&amp;menuid='.$menu['ID'] .
+			'&amp;pageid='.$page['ID'] .
 			($this->selectedID == $row['ID'] &&
-			 $this->selectedMenuID == $menu['ID'] &&
+			 $this->selectedPageID == $page['ID'] &&
 			 url::arg('postslimit')?
 				'&amp;'.url::arg('postslimit'):
 				null);
@@ -1999,7 +2002,7 @@ class _posts {
 	
 	function generateCSSClass(&$row) {
 		$class = null;
-		$paths = explode('/', $this->selectedMenu['Path']);
+		$paths = explode('/', $this->selectedPage['Path']);
 		
 		foreach($paths as $path)
 			$class .= " menu-" .
@@ -2052,7 +2055,7 @@ class _posts {
 		}
 		
 		if (preg_match('/[0-9]/', $this->uriRequest))
-			$this->selectedMenuID = url::getPathID(0, $this->uriRequest);
+			$this->selectedPageID = url::getPathID(0, $this->uriRequest);
 		
 		$this->ajaxPaging = true;
 		$this->display();
@@ -2074,11 +2077,11 @@ class _posts {
 		echo $row['Title'];
 	}
 	
-	function displayMenuTitle() {
+	function displayPageTitle() {
 		echo
 				"<h1 class='post-title'>";
 		
-		$this->displaySelectedTitle($this->selectedMenu);
+		$this->displaySelectedTitle($this->selectedPage);
 		
 		echo
 				"</h1>" .
@@ -2248,7 +2251,7 @@ class _posts {
 	}
 	
 	function displayKeywordsCloud($arguments = null) {
-		$menu = null;
+		$page = null;
 		$byranks = false;
 		
 		if (preg_match('/(^|\/)byranks($|\/)/', $arguments)) {
@@ -2257,8 +2260,8 @@ class _posts {
 		}
 		
 		if ($arguments)
-			$menu = sql::fetch(sql::run(
-				" SELECT `ID` FROM `{menuitems}` " .
+			$page = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{pages}` " .
 				" WHERE !`Deactivated`" .
 				($this->selectedLanguageID?
 					" AND `LanguageID` = '".$this->selectedLanguageID."'":
@@ -2282,8 +2285,8 @@ class _posts {
 		sql::run(
 			" INSERT INTO `{TMPKeywordsCloud}` " .
 			" SELECT `Keyword`, `Counter`, NULL FROM `{postkeywords}`" .
-			($menu?
-				" WHERE CONCAT('|', `MenuItemIDs`, '|') LIKE '%|".$menu['ID']."|%'":
+			($page?
+				" WHERE CONCAT('|', `PageIDs`, '|') LIKE '%|".$page['ID']."|%'":
 				null) .
 			" ORDER BY `Counter` DESC" .
 			" LIMIT ".$this->keywordsCloudLimit);
@@ -2321,17 +2324,17 @@ class _posts {
 		echo "</div>";
 	}
 	
-	function displayCalendar($menupath = null) {
-		$menu = null;
+	function displayCalendar($pagepath = null) {
+		$page = null;
 		
-		if ($menupath)
-			$menu = sql::fetch(sql::run(
-				" SELECT `ID` FROM `{menuitems}` " .
+		if ($pagepath)
+			$page = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{pages}` " .
 				" WHERE !`Deactivated`" .
 				($this->selectedLanguageID?
 					" AND `LanguageID` = '".$this->selectedLanguageID."'":
 					null) .
-				" AND '".sql::escape($menupath)."/' LIKE CONCAT(`Path`,'/%')" .
+				" AND '".sql::escape($pagepath)."/' LIKE CONCAT(`Path`,'/%')" .
 				" ORDER BY `Path` DESC," .
 					(menus::$order?
 						" FIELD(`MenuID`, ".menus::$order."),":
@@ -2339,7 +2342,7 @@ class _posts {
 					" `OrderID`" .
 				" LIMIT 1"));
 		
-		$calendar = new postsCalendar(($menu?$menu['ID']:null));
+		$calendar = new postsCalendar(($page?$page['ID']:null));
 		$calendar->display();
 		unset($calendar);
 	}
@@ -2351,7 +2354,7 @@ class _posts {
 				echo ", ";
 			
 			echo  
-				"<a href='".$row['_MenuLink']."?search=".
+				"<a href='".$row['_PageLink']."?search=".
 					($this->search?
 						urlencode($this->search.","):
 						null) .
@@ -2375,7 +2378,7 @@ class _posts {
 	function displayFunctions(&$row) {
 		if ($this->selectedID == $row['ID']) {
 			echo
-				"<a href='".$row['_MenuLink']."' class='back comment'>" .
+				"<a href='".$row['_PageLink']."' class='back comment'>" .
 					"<span>".
 					__("Back").
 					"</span>" .
@@ -2421,8 +2424,8 @@ class _posts {
 		if (JCORE_VERSION >= '0.7.1' &&
 			$GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin'])
 			echo
-				"<a href='".SITE_URL."admin/?path=admin/content/menuitems/" .
-					$row['MenuItemID']."/posts&amp;id=".$row['ID'] .
+				"<a href='".SITE_URL."admin/?path=admin/content/pages/" .
+					$row['PageID']."/posts&amp;id=".$row['ID'] .
 					"&amp;edit=1#adminform' " .
 					"class='edit comment' target='_blank'>" .
 					"<span>".
@@ -2466,9 +2469,9 @@ class _posts {
 		while($post = sql::fetch($posts)) {
 			$language = null;
 			
-			$menuitem = sql::fetch(sql::run(
-				" SELECT `ID`, `Path`, `LanguageID` FROM `{menuitems}`" .
-				" WHERE `ID` = '".$post['MenuItemID']."'" .
+			$page = sql::fetch(sql::run(
+				" SELECT `ID`, `Path`, `LanguageID` FROM `{pages}`" .
+				" WHERE `ID` = '".$post['PageID']."'" .
 				" AND !`Deactivated`" .
 				" AND (!`ViewableBy` OR " .
 					($GLOBALS['USER']->loginok?
@@ -2478,13 +2481,13 @@ class _posts {
 						" `ViewableBy` = 1") .
 				" )"));
 			
-			if (!$menuitem)
+			if (!$page)
 				continue;
 			
-			if ($menuitem['LanguageID']) {
+			if ($page['LanguageID']) {
 				$language = sql::fetch(sql::run(
 					" SELECT `ID`, `Path` FROM `{languages}`" .
-					" WHERE `ID` = '".$menuitem['LanguageID']."'" .
+					" WHERE `ID` = '".$page['LanguageID']."'" .
 					" AND !`Deactivated`"));
 					
 				if (!$language)
@@ -2496,7 +2499,7 @@ class _posts {
 					($language?
 						$language['Path'].'/':
 						null) .
-					$menuitem['Path'].'/' .
+					$page['Path'].'/' .
 					$post['Path'];
 			
 			} else {
@@ -2504,7 +2507,7 @@ class _posts {
 					($language?
 						'&amp;languageid='.$language['ID']:
 						null) .
-					'&amp;menuid='.$menuitem['ID'].
+					'&amp;pageid='.$page['ID'].
 					'&amp;postid='.$post['ID'];
 			}
 		
@@ -2715,18 +2718,18 @@ class _posts {
 		if (!(int)$blockid)
 			return false;
 		
-		$mainmenu = 
-			menuitems::getMainMenu($this->selectedLanguageID);
+		$homepage = 
+			pagess::getHome($this->selectedLanguageID);
 		
 		$rows = sql::run(
 			" SELECT * " .
 			" FROM `{posts}`" .
 			" WHERE !`Deactivated`" .
 			" AND `BlockID` = '".(int)$blockid."'" .
-			" AND (`MenuItemID` = '".$this->selectedMenuID."'" .
-			($mainmenu['ID'] == $this->selectedMenuID?
+			" AND (`PageID` = '".$this->selectedPageID."'" .
+			($homepage['ID'] == $this->selectedPageID?
 				" OR `OnMainPage` ":
-				" OR (`MenuItemID` = '".$mainmenu['ID']."'" .
+				" OR (`PageID` = '".$homepage['ID']."'" .
 					" AND `OnMainPage`) ") .
 			" ) " .
 			" ORDER BY `OrderID`, `StartDate`, `ID` DESC" .
@@ -2738,37 +2741,37 @@ class _posts {
 		
 		$i = 1;
 		$total = sql::rows($rows);
-		$menuitemid = 0;
+		$pageid = 0;
 			
 		$cssclass = null;
-		$menulink = null;
+		$pagelink = null;
 		
 		if (!$total)
 			return false;
 			
 		while ($row = sql::fetch($rows)) {
-			if ($row['MenuItemID'] != $menuitemid) {
-				$this->selectedMenu = sql::fetch(sql::run(
-					" SELECT * FROM `{menuitems}` " .
-					" WHERE `ID` = '".$row['MenuItemID']."'"));
+			if ($row['PageID'] != $pageid) {
+				$this->selectedPage = sql::fetch(sql::run(
+					" SELECT * FROM `{pages}` " .
+					" WHERE `ID` = '".$row['PageID']."'"));
 			
-				if ($this->selectedMenu['LanguageID'] && 
-					$this->selectedMenu['LanguageID'] != $this->selectedLanguageID)
+				if ($this->selectedPage['LanguageID'] && 
+					$this->selectedPage['LanguageID'] != $this->selectedLanguageID)
 					continue;
 		
-				if ($this->selectedMenu['LanguageID'])	
+				if ($this->selectedPage['LanguageID'])	
 					$this->selectedLanguage = sql::fetch(sql::run(
 						" SELECT * FROM `{languages}` " .
-						" WHERE `ID` = '".$this->selectedMenu['LanguageID']."'"));
+						" WHERE `ID` = '".$this->selectedPage['LanguageID']."'"));
 				
-				$menuitemid = $row['MenuItemID'];
-				$menulink = $this->generateMenuLink($row);
+				$pageid = $row['PageID'];
+				$pagelink = $this->generatePageLink($row);
 				$cssclass = $this->generateCSSClass($row);
 			}
 			
 			$row['_PostNumber'] = $i;
 			$row['_Link'] = $this->generateLink($row);
-			$row['_MenuLink'] = $menulink;
+			$row['_PageLink'] = $pagelink;
 			$row['_CSSClass'] = $cssclass;
 			
 			if ($i == 1)
@@ -2797,7 +2800,7 @@ class _posts {
 	}
 	
 	function displayModules() {
-		menuitems::displayModules($this->selectedMenuID);
+		pages::displayModules($this->selectedPageID);
 	}
 	
 	function displayArguments() {
@@ -2847,11 +2850,11 @@ class _posts {
 		if (!$this->arguments)
 			return false;
 		
-		$this->selectedMenuID = null;
+		$this->selectedPageID = null;
 		$this->selectedID = null;
 		
-		$menu = sql::fetch(sql::run(
-			" SELECT `ID`, `Path` FROM `{menuitems}` " .
+		$page = sql::fetch(sql::run(
+			" SELECT `ID`, `Path` FROM `{pages}` " .
 			" WHERE !`Deactivated`" .
 			($this->selectedLanguageID?
 				" AND `LanguageID` = '".$this->selectedLanguageID."'":
@@ -2864,21 +2867,21 @@ class _posts {
 				" `OrderID`" .
 			" LIMIT 1"));
 		
-		if (!$menu)
+		if (!$page)
 			return true;
 		
-		$this->selectedMenuID = $menu['ID'];
+		$this->selectedPageID = $page['ID'];
 		$this->arguments = preg_replace(
-			'/'.preg_quote($menu['Path'], '/').'(\/|$)/i', '', 
+			'/'.preg_quote($page['Path'], '/').'(\/|$)/i', '', 
 			$this->arguments, 1);
 		
 		if (!$this->arguments)
 			return false;
 		
 		$post = sql::fetch(sql::run(
-			" SELECT `ID`, `MenuItemID` FROM `{posts}` " .
+			" SELECT `ID`, `PageID` FROM `{posts}` " .
 			" WHERE !`Deactivated`" .
-			" AND `MenuItemID` = '".$menu['ID']."'" .
+			" AND `PageID` = '".$page['ID']."'" .
 			" AND '".sql::escape($this->arguments)."/' LIKE CONCAT(`Path`,'/%')" .
 			" ORDER BY `OrderID`" .
 			" LIMIT 1"));
@@ -2887,7 +2890,7 @@ class _posts {
 			return true;
 			
 		$this->selectedID = $post['ID'];
-		$this->selectedMenuID = $post['MenuItemID'];
+		$this->selectedPageID = $post['PageID'];
 	}
 	
 	function display() {
@@ -2897,44 +2900,44 @@ class _posts {
 		if ($this->selectedBlockID)
 			return $this->displayBlockPosts($this->selectedBlockID);
 		
-		if (!$this->selectedMenuID && !isset($this->arguments)) {
+		if (!$this->selectedPageID && !isset($this->arguments)) {
 			url::displayError();
 			return false;
 		}
 		
-		if ($this->selectedMenuID) {
-			$this->selectedMenu = sql::fetch(sql::run(
-				" SELECT * FROM `{menuitems}` " .
-				" WHERE `ID` = '".(int)$this->selectedMenuID."'"));
+		if ($this->selectedPageID) {
+			$this->selectedPage = sql::fetch(sql::run(
+				" SELECT * FROM `{pages}` " .
+				" WHERE `ID` = '".(int)$this->selectedPageID."'"));
 				
-			if ($this->selectedMenu['Deactivated']) {
+			if ($this->selectedPage['Deactivated']) {
 				tooltip::display(
 					__("This page has been deactivated."),
 					TOOLTIP_NOTIFICATION);
 				return false;
 			}
 			
-			if ($this->selectedMenu['ViewableBy'] > MENU_GUESTS_ONLY && 
+			if ($this->selectedPage['ViewableBy'] > PAGE_GUESTS_ONLY && 
 				!$GLOBALS['USER']->loginok) 
 			{
 				if (JCORE_VERSION >= '0.7')
-					$this->displayMenuTitle();
+					$this->displayPageTitle();
 				
 				$this->displayLogin();
 				return true;
 			}
 			
-			if ($this->selectedMenu['LanguageID'] && 
-				$this->selectedMenu['LanguageID'] != $this->selectedLanguageID)
+			if ($this->selectedPage['LanguageID'] && 
+				$this->selectedPage['LanguageID'] != $this->selectedLanguageID)
 				return false;
 			
-			if ($this->selectedMenu['LanguageID'])	
+			if ($this->selectedPage['LanguageID'])	
 				$this->selectedLanguage = sql::fetch(sql::run(
 					" SELECT * FROM `{languages}` " .
-					" WHERE `ID` = '".$this->selectedMenu['LanguageID']."'"));
+					" WHERE `ID` = '".$this->selectedPage['LanguageID']."'"));
 			
 			if (!$this->limit)
-				$this->limit = $this->selectedMenu['Limit'];
+				$this->limit = $this->selectedPage['Limit'];
 		}
 		
 		if (preg_match('/(\?|&)search=/i', url::referer(true)) && $this->selectedID) {
@@ -2949,8 +2952,8 @@ class _posts {
 		if ($this->ajaxPaging) {
 			$paging->ajax = true;
 			$paging->otherArgs = "&amp;request=posts" .
-				($this->selectedMenuID?
-					"/".$this->selectedMenuID:
+				($this->selectedPageID?
+					"/".$this->selectedPageID:
 					null) .
 				(isset($this->arguments)?
 					"&amp;arguments=".urlencode($this->arguments) .
@@ -2989,40 +2992,40 @@ class _posts {
 			echo
 				"<div class='posts'>";
 		
-		if (JCORE_VERSION >= '0.7' && !$paging->items && !$this->search && $this->selectedMenu)
-			$this->displayMenuTitle();
+		if (JCORE_VERSION >= '0.7' && !$paging->items && !$this->search && $this->selectedPage)
+			$this->displayPageTitle();
 		
 		$i = 1;
 		$total = sql::rows($rows);
-		$menuitemid = $this->selectedMenuID;
+		$pageid = $this->selectedPageID;
 		
 		$cssclass = null;
-		$menulink = null;
+		$pagelink = null;
 		
 		while ($row = sql::fetch($rows)) {
-			if ($row['MenuItemID'] != $menuitemid || !$menulink) {
-				if ($row['MenuItemID'] != $menuitemid) {
-					$this->selectedMenu = sql::fetch(sql::run(
-						" SELECT * FROM `{menuitems}`" .
-						" WHERE `ID` = '".$row['MenuItemID']."'"));
+			if ($row['PageID'] != $pageid || !$pagelink) {
+				if ($row['PageID'] != $pageid) {
+					$this->selectedPage = sql::fetch(sql::run(
+						" SELECT * FROM `{pages}`" .
+						" WHERE `ID` = '".$row['PageID']."'"));
 					
-					if ($this->selectedMenu['LanguageID'])
+					if ($this->selectedPage['LanguageID'])
 						$this->selectedLanguage = sql::fetch(sql::run(
 							" SELECT * FROM `{languages}`" .
-							" WHERE `ID` = '".$this->selectedMenu['LanguageID']."'"));
+							" WHERE `ID` = '".$this->selectedPage['LanguageID']."'"));
 					else
 						$this->selectedLanguage = null;
 					
-					$menuitemid = $row['MenuItemID'];
+					$pageid = $row['PageID'];
 				}
 				
-				$menulink = $this->generateMenuLink($row);
+				$pagelink = $this->generatePageLink($row);
 				$cssclass = $this->generateCSSClass($row);
 			}
 			
 			$row['_PostNumber'] = $i;
 			$row['_Link'] = $this->generateLink($row);
-			$row['_MenuLink'] = $menulink;
+			$row['_PageLink'] = $pagelink;
 			$row['_CSSClass'] = $cssclass;
 			
 			if ($i == 1)

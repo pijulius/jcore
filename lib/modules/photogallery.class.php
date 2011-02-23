@@ -943,7 +943,7 @@ class photoGallery extends modules {
 		
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/menuitems');
+			'?path=admin/content/pages');
 		favoriteLinks::add(
 			__('Settings'), 
 			'?path=admin/site/settings');

@@ -486,7 +486,7 @@ class members extends modules {
 			return;
 		}
 		
-		if ($this->owner['ViewableBy'] == MENU_GUESTS_ONLY) {
+		if ($this->owner['ViewableBy'] == PAGE_GUESTS_ONLY) {
 			$this->displayRegistration();
 			return;
 		}

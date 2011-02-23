@@ -178,7 +178,7 @@ class search extends modules {
 	function setupAdmin() {
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/menuitems');
+			'?path=admin/content/pages');
 		favoriteLinks::add(
 			__('Layout Blocks'), 
 			'?path=admin/site/blocks');
@@ -205,7 +205,7 @@ class search extends modules {
 	function displayAdminListItem(&$row) {
 		if ($row['ID'] == 65536) {
 			$moduletitle = __('Posts');
-			$moduledescription = _('Blog like content for menu items.');
+			$moduledescription = _('Blog like content for pages.');
 		} else {
 			$moduletitle = modules::getTitle($row['Name']);
 			$moduledescription = modules::getDescription($row['Name']);
@@ -312,7 +312,7 @@ class search extends modules {
 					"Search Engine and you can also define custom limits " .
 					"for them. By default if none checked all modules will " .
 					"be searchable and if no limit defined (0) the one " .
-					"set for the menu under which the search module is " .
+					"set for the page under which the search module is " .
 					"will be used.") .
 			"</p>";
 	}
