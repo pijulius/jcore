@@ -27,7 +27,7 @@ class _blocks {
 	var $cachingInProgress = false;
 	var $arguments = '';
 	var $selectedLanguageID;
-	var $selectedMenuID;
+	var $selectedPageID;
 	var $ignoreCache4BlockIDs = array();
 	var $adminPath = 'admin/site/blocks';
 	
@@ -35,8 +35,8 @@ class _blocks {
 		if (isset($_GET['languageid']))
 			$this->selectedLanguageID = (int)$_GET['languageid'];
 		
-		if (isset($_GET['menuid']))
-			$this->selectedMenuID = (int)$_GET['menuid'];
+		if (isset($_GET['pageid']))
+			$this->selectedPageID = (int)$_GET['pageid'];
 	}
 	
 	function SQL() {
@@ -192,8 +192,8 @@ class _blocks {
 		}
 		
 		$form->add(
-			__('In Menu(s)'),
-			'MenuItemIDs',
+			__('On Page(s)'),
+			'PageIDs',
 			FORM_INPUT_TYPE_MULTISELECT);
 		$form->setValueType(FORM_VALUE_TYPE_ARRAY);
 		$form->setStyle('height: 150px;');
@@ -201,20 +201,20 @@ class _blocks {
 		$form->addValue('A', '* ' .
 			__('Administration Section'));
 		
-		foreach(menuItems::getTree() as $menuitem)
-			$form->addValue($menuitem['ID'], 
-				($menuitem['SubMenuOfID']?
+		foreach(pages::getTree() as $page)
+			$form->addValue($page['ID'], 
+				($page['SubPageOfID']?
 					str_replace(' ', '&nbsp;', 
-						str_pad('', $menuitem['PathDeepnes']*4, ' ')).
+						str_pad('', $page['PathDeepnes']*4, ' ')).
 					"|- ":
 					null) .
-				$menuitem['Title']);
+				$page['Title']);
 		
 		$form->groupValues(array('0'));
 		
 		$form->add(
-			'MenuItemExcept',
-			'MenuItemExcept',
+			'PageExcept',
+			'PageExcept',
 			FORM_INPUT_TYPE_HIDDEN,
 			false,
 			0);
@@ -525,30 +525,30 @@ class _blocks {
 	}
 	
 	function displayAdminListItemSelected(&$row) {
-		$menuroute = null;
-		if ($row['MenuItemIDs']) {
-			foreach(explode('|', $row['MenuItemIDs']) as $blockmenuitem) {
-				if ($blockmenuitem == 'A') {
-					$menuroute .= 
+		$pageroute = null;
+		if ($row['PageIDs']) {
+			foreach(explode('|', $row['PageIDs']) as $blockpage) {
+				if ($blockpage == 'A') {
+					$pageroute .= 
 						"<div>* " .
 							__("Administration Section") .
 						"</div>";
 					continue;
 				}
 				
-				foreach(menuItems::getBackTraceTree($blockmenuitem) as $menuitem) {
-					$menuroute .=
+				foreach(pages::getBackTraceTree($blockpage) as $page) {
+					$pageroute .=
 						"<div ".
-							($menuitem['ID'] != $blockmenuitem?
+							($page['ID'] != $blockpage?
 								"class='comment'":
 								null) .
 							">" . 
-						($menuitem['SubMenuOfID']?
+						($page['SubPageOfID']?
 							str_replace(' ', '&nbsp;', 
-								str_pad('', $menuitem['PathDeepnes']*4, ' ')).
+								str_pad('', $page['PathDeepnes']*4, ' ')).
 							"|- ":
 							null). 
-						$menuitem['Title'] .
+						$page['Title'] .
 						"</div>";
 				}
 			}
@@ -566,12 +566,12 @@ class _blocks {
 			}
 		}
 		
-		if ($row['MenuItemIDs'])
+		if ($row['PageIDs'])
 			admin::displayItemData(
-				($row['MenuItemExcept']?
-					__("Display Except in Menu"):
-					__("Display Only in Menu")),
-				$menuroute);
+				($row['PageExcept']?
+					__("Display Except on Page"):
+					__("Display Only on Page")),
+				$pageroute);
 		
 		if ($row['LanguageIDs'])
 			admin::displayItemData(
@@ -854,20 +854,20 @@ class _blocks {
 			}
 			
 			$form->addAdditionalText(
-				'MenuItemIDs',
+				'PageIDs',
 				" <label>" .
-					"<input type='radio' name='MenuItemExceptRadio' value='0' " .
-						"onclick=\"this.form.MenuItemExcept.value = 0;\" " .
-						(!$form->get('MenuItemExcept')?
+					"<input type='radio' name='PageExceptRadio' value='0' " .
+						"onclick=\"this.form.PageExcept.value = 0;\" " .
+						(!$form->get('PageExcept')?
 							"checked='checked'":
 							null) .
 						" /> " .
 					__("Only") .
 				"</label> " .
 				" <label>" .
-					"<input type='radio' name='MenuItemExceptRadio' value='1' " .
-						"onclick=\"this.form.MenuItemExcept.value = 1;\" " .
-						($form->get('MenuItemExcept')?
+					"<input type='radio' name='PageExceptRadio' value='1' " .
+						"onclick=\"this.form.PageExcept.value = 1;\" " .
+						($form->get('PageExcept')?
 							"checked='checked'":
 							null) .
 						" /> " .
@@ -952,10 +952,10 @@ class _blocks {
 				(int)$values['SubBlockOfID']."'," .
 			" `TypeID` = '".
 				(int)$values['TypeID']."'," .
-			" `MenuItemIDs` = '".
-				sql::escape(implode('|', (array)$values['MenuItemIDs']))."'," .
-			" `MenuItemExcept` = '".
-				(int)$values['MenuItemExcept']."'," .
+			" `PageIDs` = '".
+				sql::escape(implode('|', (array)$values['PageIDs']))."'," .
+			" `PageExcept` = '".
+				(int)$values['PageExcept']."'," .
 			" `LanguageIDs` = '".
 				sql::escape(implode('|', (array)$values['LanguageIDs']))."'," .
 			" `LanguageExcept` = '".
@@ -1070,10 +1070,10 @@ class _blocks {
 				(int)$values['SubBlockOfID']."'," .
 			" `TypeID` = '".
 				(int)$values['TypeID']."'," .
-			" `MenuItemIDs` = '".
-				sql::escape(implode('|', (array)$values['MenuItemIDs']))."'," .
-			" `MenuItemExcept` = '".
-				(int)$values['MenuItemExcept']."'," .
+			" `PageIDs` = '".
+				sql::escape(implode('|', (array)$values['PageIDs']))."'," .
+			" `PageExcept` = '".
+				(int)$values['PageExcept']."'," .
 			" `LanguageIDs` = '".
 				sql::escape(implode('|', (array)$values['LanguageIDs']))."'," .
 			" `LanguageExcept` = '".
@@ -1366,38 +1366,38 @@ class _blocks {
 			
 			if ((!$block['LanguageExcept'] && 
 					!in_array($this->selectedLanguageID, $languageids)) ||
-				($block['MenuItemExcept'] && 
+				($block['PageExcept'] && 
 					in_array($this->selectedLanguageID, $languageids)))
 			{ 
 					return;
 			}
 		}
 		
-		if ($block['MenuItemIDs']) {
+		if ($block['PageIDs']) {
 			$limitedtoadmin = false;
 			
 			if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN'] && 
-				preg_match('/A(\||$)/', $block['MenuItemIDs'])) 
+				preg_match('/A(\||$)/', $block['PageIDs'])) 
 			{
 				$limitedtoadmin = true;
 				
-				if ($block['MenuItemExcept'])
+				if ($block['PageExcept'])
 					return;
 			}
 			
-			if (!$limitedtoadmin && !(int)$this->selectedMenuID && !$block['MenuItemExcept'])
+			if (!$limitedtoadmin && !(int)$this->selectedPageID && !$block['PageExcept'])
 				return;
 			
-			$menuparents = menuItems::getBackTraceTree(
-				(int)$this->selectedMenuID, true, 'ID');
+			$pageparents = pages::getBackTraceTree(
+				(int)$this->selectedPageID, true, 'ID');
 			
-			$menuids = explode('|', $block['MenuItemIDs']);
+			$pageids = explode('|', $block['PageIDs']);
 			
-			foreach($menuparents as $menuparent) {
-				if ((!$block['MenuItemExcept'] && 
-						!in_array($menuparent['ID'], $menuids)) ||
-					($block['MenuItemExcept'] && 
-						in_array($menuparent['ID'], $menuids)))
+			foreach($pageparents as $pageparent) {
+				if ((!$block['PageExcept'] && 
+						!in_array($pageparent['ID'], $pageids)) ||
+					($block['PageExcept'] && 
+						in_array($pageparent['ID'], $pageids)))
 				{ 
 					return;
 				}
@@ -1566,11 +1566,11 @@ class _blocks {
 				(languages::$selected?
 					 languages::$selected['Path']:
 					 null) .
-				(languages::$selected && menuItems::$selected?
+				(languages::$selected && pages::$selected?
 					'/':
 					null) .
-				(menuItems::$selected?
-					menuItems::$selected['Path']:
+				(pages::$selected?
+					pages::$selected['Path']:
 					null);
 			
 			if (url::path())

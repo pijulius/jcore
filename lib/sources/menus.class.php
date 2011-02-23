@@ -37,19 +37,6 @@ class _menus {
 			" `ID`";
 	}
 	
-	static function populate() {
-		if (JCORE_VERSION >= '0.7') {
-			$menuorder = sql::fetch(sql::run(
-				" SELECT GROUP_CONCAT(`ID` ORDER BY `OrderID`, `ID` SEPARATOR ',') AS `MenuIDs`" .
-				" FROM `{menus}`" .
-				" LIMIT 1"));
-			
-			menus::$order = $menuorder['MenuIDs'];
-		}
-		
-		menuitems::populate();
-	}
-	
 	// ************************************************   Admin Part
 	function countAdminItems() {
 		$row = sql::fetch(sql::run(
@@ -70,7 +57,7 @@ class _menus {
 			'?path=admin/site/blocks');
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/menuitems');
+			'?path=admin/content/pages');
 	}
 	
 	function setupAdminForm(&$form) {
@@ -196,7 +183,7 @@ class _menus {
 				
 			tooltip::display(
 				__("Menu has been successfully updated.")." " .
-				"<a href='?path=admin/content/menuitems'>" .
+				"<a href='?path=admin/content/pages'>" .
 					__("View Pages") .
 				"</a>" .
 				" - " .
@@ -214,7 +201,7 @@ class _menus {
 		
 		tooltip::display(
 			__("Menu has been successfully created.")." " .
-			"<a href='?path=admin/content/menuitems'>" .
+			"<a href='?path=admin/content/pages'>" .
 				__("View Pages") .
 			"</a>" .
 			" - " .
@@ -560,7 +547,7 @@ class _menus {
 			return false;
 		
 		/*
-		 * We do not delete any menu items and their contents as we want to 
+		 * We do not delete any pages and their contents as we want to 
 		 * keep a backup just for sure.
 		 * In the future this may change but for now it is as it is.
 		 */
@@ -573,6 +560,20 @@ class _menus {
 	}
 	
 	// ************************************************   Client Part
+	static function getOrder() {
+		if (JCORE_VERSION >= '0.7') {
+			$menuorder = sql::fetch(sql::run(
+				" SELECT GROUP_CONCAT(`ID` ORDER BY `OrderID`, `ID` SEPARATOR ',') AS `MenuIDs`" .
+				" FROM `{menus}`" .
+				" LIMIT 1"));
+			
+			menus::$order = $menuorder['MenuIDs'];
+			return menus::$order;
+		}
+		
+		return false;
+	}
+	
 	function displayItems(&$row, $language = null, $menuitem = null) {
 		$menuitems = new menuItems();
 		$menuitems->arguments = $this->arguments;
@@ -681,7 +682,7 @@ class _menus {
 			}
 				
 			$menuitem = sql::fetch(sql::run(
-				" SELECT * FROM `{menuitems}` " .
+				" SELECT * FROM `{pages}` " .
 				" WHERE !`Deactivated`" .
 				" AND !`Hidden`" .
 				($language?
@@ -697,10 +698,10 @@ class _menus {
 			
 			if ($menuitem) {
 				$submenus = sql::run(
-					" SELECT * FROM `{menuitems}` " .
+					" SELECT * FROM `{pages}` " .
 					" WHERE !`Deactivated`" .
 					" AND !`Hidden`" .
-					" AND `SubMenuOfID` = '".(int)$menuitem['ID']."'" .
+					" AND `SubPageOfID` = '".(int)$menuitem['ID']."'" .
 					($language?
 						" AND `LanguageID` = '".(int)$language['ID']."'":
 						null) .

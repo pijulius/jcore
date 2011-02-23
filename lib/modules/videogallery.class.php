@@ -995,7 +995,7 @@ class videoGallery extends modules {
 		
 		favoriteLinks::add(
 			_('Pages / Posts'), 
-			'?path=admin/content/menuitems');
+			'?path=admin/content/pages');
 		favoriteLinks::add(
 			_('Settings'), 
 			'?path=admin/site/settings');

@@ -29,7 +29,7 @@ class _dynamicFormFields {
 			'?path=admin/content/dynamicforms');
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/menuitems');
+			'?path=admin/content/pages');
 	}
 	
 	function setupAdminForm(&$form) {

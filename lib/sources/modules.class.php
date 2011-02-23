@@ -395,6 +395,10 @@ class _modules {
 	}
 	
 	static function getOwnerMenu($name, $languageid = 0, $moduleitemid = 0) {
+		return modules::getOwnerPage($name, $languageid, $moduleitemid);
+	}
+	
+	static function getOwnerPage($name, $languageid = 0, $moduleitemid = 0) {
 		if (!$name)
 			return false;
 		
@@ -403,58 +407,58 @@ class _modules {
 		if (!$module)
 			return false;
 		
-		$modulemenus = sql::fetch(sql::run(
-			" SELECT GROUP_CONCAT(`MenuItemID` SEPARATOR ',') AS `MenuItemIDs` " .
-			" FROM `{menuitemmodules}`" .
+		$modulepages = sql::fetch(sql::run(
+			" SELECT GROUP_CONCAT(`PageID` SEPARATOR ',') AS `PageIDs` " .
+			" FROM `{pagemodules}`" .
 			" WHERE `ModuleID` = '".$module['ID']."'" .
 			($moduleitemid && JCORE_VERSION >= '0.3'?
 				" AND (`ModuleItemID` = '".(int)$moduleitemid."' OR !`ModuleItemID`)" .
-					" ORDER BY `ModuleItemID` DESC, `MenuItemID`":
-				" ORDER BY `MenuItemID`") .
+					" ORDER BY `ModuleItemID` DESC, `PageID`":
+				" ORDER BY `PageID`") .
 			" LIMIT 1"));
 			
-		if (!$modulemenus['MenuItemIDs'])
+		if (!$modulepages['PageIDs'])
 			return false;
 			
-		$menu = sql::fetch(sql::run(
-			" SELECT * FROM `{menuitems}`" .
-			" WHERE `ID` IN (".$modulemenus['MenuItemIDs'].")" .
+		$page = sql::fetch(sql::run(
+			" SELECT * FROM `{pages}`" .
+			" WHERE `ID` IN (".$modulepages['PageIDs'].")" .
 			" AND `LanguageID` = ".(int)$languageid .
 			" ORDER BY `MenuID`, `OrderID`" .
 			" LIMIT 1"));
 		
-		if (!$menu)
+		if (!$page)
 			return false;
 			
-		return $menu;
+		return $page;
 	}
 	
 	static function getOwnerURL($name, $moduleitemid = 0, $languageid = 0) {
 		if (!$languageid)
 			$languageid = (int)$_GET['languageid'];
 		
-		$menu = modules::getOwnerMenu($name, $languageid, $moduleitemid);
+		$page = modules::getOwnerPage($name, $languageid, $moduleitemid);
 		
-		if (!$menu)
+		if (!$page)
 			return false;
 			
-		if ($menu['LanguageID'])	
+		if ($page['LanguageID'])	
 			$selectedlanguage = sql::fetch(sql::run(
 				" SELECT * FROM `{languages}` " .
-				" WHERE `ID` = '".$menu['LanguageID']."'"));
+				" WHERE `ID` = '".$page['LanguageID']."'"));
 			
 		if (SEO_FRIENDLY_LINKS)
 			return url::site().
 				(isset($selectedlanguage)?
 					$selectedlanguage['Path'].'/':
 					null) .
-				$menu['Path'].'?';
+				$page['Path'].'?';
 			
 		return url::site().'index.php?' .
 			(isset($selectedlanguage)?
 				'&amp;languageid='.$selectedlanguage['ID']:
 				null) .
-			'&amp;menuid='.$menu['ID'];
+			'&amp;pageid='.$page['ID'];
 	}
 	
 	static function count() {

@@ -250,7 +250,7 @@ class templateInstaller extends template {
 	var $templateID = 0;
 	
 	function installSQL() {
-		$mainmenuids = menuitems::getMainMenuIDs();
+		$homepageids = pages::getHomeIDs();
 		$languageids = languages::getIDs();
 		
 		'.$blockqueries.'return true;
@@ -341,42 +341,42 @@ class templateInstaller extends template {
 				continue;
 			}
 			
-			if ($fieldid == 'MenuItemIDs' && $fieldvalue) {
-				$mainmenuids = menuitems::getMainMenuIDs();
+			if ($fieldid == 'PageIDs' && $fieldvalue) {
+				$homepageids = pages::getHomeIDs();
 				$fieldvalues = explode('|', $fieldvalue);
 				
-				if (!count(array_diff(array_merge($fieldvalues, $mainmenuids), 
-					array_intersect($fieldvalues, $mainmenuids))))
+				if (!count(array_diff(array_merge($fieldvalues, $homepageids), 
+					array_intersect($fieldvalues, $homepageids))))
 				{
 					$code .= '
-			" `'.$fieldid.'` = \'".implode(\'|\', $mainmenuids)."\'," .';
+			" `'.$fieldid.'` = \'".implode(\'|\', $homepageids)."\'," .';
 					continue;
 				}
 				
-				$mainmenuidcodes = null;
+				$homepageidcodes = null;
 				
-				if (!count(array_diff($mainmenuids, $fieldvalues))) {
-					$mainmenuidcodes[] = 'implode(\'|\', $mainmenuids)';
+				if (!count(array_diff($homepageids, $fieldvalues))) {
+					$homepageidcodes[] = 'implode(\'|\', $homepageids)';
 					
-					if (count(array_diff($fieldvalues, $mainmenuids)))
-						$fieldvalues = array_diff($fieldvalues, $mainmenuids);
+					if (count(array_diff($fieldvalues, $homepageids)))
+						$fieldvalues = array_diff($fieldvalues, $homepageids);
 				}
 				
 				foreach($fieldvalues as $value) {
-					$key = array_search($value, $mainmenuids);
+					$key = array_search($value, $homepageids);
 					
 					if ($key === false) {
-						$mainmenuidcodes[] = "'".$value."'";
+						$homepageidcodes[] = "'".$value."'";
 						continue;
 					}
 					
-					$mainmenuidcodes[] = '(isset($mainmenuids['.$key.'])?$mainmenuids['.$key.']:\'-\')';
+					$homepageidcodes[] = '(isset($homepageids['.$key.'])?$homepageids['.$key.']:\'-\')';
 				}
 				
-				if ($mainmenuidcodes) {
+				if ($homepageidcodes) {
 					$code .= '
 			" `'.$fieldid.'` = \'".implode(\'|\', array(' .
-			implode(',', $mainmenuidcodes).'))."\'," .';
+			implode(',', $homepageidcodes).'))."\'," .';
 					continue;
 				}
 				
@@ -435,6 +435,9 @@ class templateInstaller extends template {
 			" INSERT INTO `{blocks}` SET" .' .
 			$code.'
 			" `TemplateID` = \'".$this->templateID."\'");
+		
+		if (sql::error())
+			return false;
 		
 		';
 		
@@ -551,7 +554,7 @@ class _templateCSSEditor extends fileEditor {
 			'?path=admin/site/template/templatejseditor');
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/menuitems');
+			'?path=admin/content/pages');
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
@@ -605,7 +608,7 @@ class _templateJSEditor extends fileEditor {
 			'?path=admin/site/template/templateimages');
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/menuitems');
+			'?path=admin/content/pages');
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
@@ -670,7 +673,7 @@ class _templateImages extends fileManager {
 			'?path=admin/site/template/templatejseditor');
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/menuitems');
+			'?path=admin/content/pages');
 		favoriteLinks::add(
 			__('Content Files'), 
 			'?path=admin/content/contentfiles');
@@ -1437,6 +1440,21 @@ class _template {
 		return true;
 	}
 	
+	function cleanUp($templateid) {
+		if (!$templateid)
+			return false;
+		
+		sql::run(
+			" DELETE FROM `{blocks}`" .
+			" WHERE `TemplateID` = '".(int)$templateid."'");
+		
+		sql::run(
+			" DELETE FROM `{templates}`" .
+			" WHERE `ID` = '".(int)$templateid."'");
+		
+		return true;
+	}
+	
 	function activate($id) {
 		if (!$id)
 			return false;
@@ -1492,6 +1510,11 @@ class _template {
 		if (method_exists('templateInstaller', 'installFiles') &&
 			!$installer->installFiles()) 
 		{
+			tooltip::display(
+				__("Template couldn't be activated!")." " .
+				__("Please see detailed error messages above and try again."),
+				TOOLTIP_ERROR);
+			
 			unset($installer);
 			return false;
 		}
@@ -1499,6 +1522,13 @@ class _template {
 		if (method_exists('templateInstaller', 'installSQL') &&
 			!$installer->installSQL()) 
 		{
+			$this->cleanUp($newid);
+			
+			tooltip::display(
+				__("Template couldn't be activated!")." " .
+				__("Please see detailed error messages above and try again."),
+				TOOLTIP_ERROR);
+			
 			unset($installer);
 			return false;
 		}

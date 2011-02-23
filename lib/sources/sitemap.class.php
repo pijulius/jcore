@@ -38,7 +38,7 @@ class _sitemap {
 	function setupAdmin() {
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/menuitems');
+			'?path=admin/content/pages');
 		favoriteLinks::add(
 			__('Languages'), 
 			'?path=admin/site/languages');
@@ -53,16 +53,16 @@ class _sitemap {
 			$regenerate = true;
 		
 		if ($regenerate) {
-			$menuitems = new menuItems();
+			$pages = new pages();
 			
-			if (!$menuitems->updateSitemap()) {
+			if (!$pages->updateSitemap()) {
 				tooltip::display(
 					__("Couldn't regenerate sitemap XML file.")." " .
 					sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
 						"sitemap.xml"),
 					TOOLTIP_ERROR);
 			
-				unset($menuitems);
+				unset($pages);
 				return false;
 			}
 			
@@ -70,7 +70,7 @@ class _sitemap {
 				__("Sitemap XML file has been successfully regenerated."),
 				TOOLTIP_SUCCESS);
 			
-			unset($menuitems);
+			unset($pages);
 			return true;
 		}
 	}
@@ -85,7 +85,7 @@ class _sitemap {
 		echo
 			"<p>" .
 				sprintf(__("This file (%s) gets updated automatically every time you " .
-					"create / edit / delete a menu item but you can regenerate or modify it " .
+					"create / edit / delete a page but you can regenerate or modify it " .
 					"manually below."),
 					"<a href='".SITE_URL."sitemap.xml' target='_blank'>" .
 						SITE_URL."sitemap.xml</a>") .
