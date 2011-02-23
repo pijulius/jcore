@@ -18,19 +18,18 @@ class _postsAtGlance extends posts {
 		return $row['Rows'];
 	}
 	
-	function setupAdminForm(&$form, $isownermainmenu = false) {
-		parent::setupAdminForm($form, $isownermainmenu);
+	function setupAdminForm(&$form, $isownerhomepage = false) {
+		parent::setupAdminForm($form, $isownerhomepage);
 		
 		$form->edit(
-			'MenuItemID',
+			'PageID',
 			__('Post to Page'),
-			'MenuItemID',
+			'PageID',
 			FORM_INPUT_TYPE_SELECT,
 			false,
 			0);
 		
-		$form->addValue('MenuItemID',
-			'', '');
+		$form->addValue('PageID', '', '');
 	}
 	
 	function verifyAdmin(&$form) {
@@ -100,7 +99,7 @@ class _postsAtGlance extends posts {
 		return parent::verifyAdmin($form);
 	}
 	
-	function displayAdminListHeader($isownermainmenu = false) {
+	function displayAdminListHeader($isownerhomepage = false) {
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' alt='.list' " .
@@ -113,35 +112,36 @@ class _postsAtGlance extends posts {
 				__("Title / Created on")."</span></th>";
 	}
 	
-	function displayAdminListItemSelected(&$row, $isownermainmenu = false) {
-		if ($row['MenuItemID']) {
-			$menuroute = null;
+	function displayAdminListItemSelected(&$row, $isownerhomepage = false) {
+		if ($row['PageID']) {
+			$pageroute = null;
 			
-			foreach(menuItems::getBackTraceTree($row['MenuItemID']) as $menuitem) {
-				$menuroute .=
+			foreach(pages::getBackTraceTree($row['PageID']) as $page) {
+				$pageroute .=
 					"<div".
-						($menuitem['ID'] == $row['MenuItemID']?
+						($page['ID'] == $row['PageID']?
 							" class='bold'":
 							null) .
 						">" . 
-					($menuitem['SubMenuOfID']?
+					($page['SubPageOfID']?
 						str_replace(' ', '&nbsp;', 
-							str_pad('', $menuitem['PathDeepnes']*4, ' ')).
+							str_pad('', $page['PathDeepnes']*4, ' ')).
 						"|- ":
 						null). 
-					$menuitem['Title'] .
+					$page['Title'] .
 					"</div>";
 			}
 			
-			$isownermainmenu = menuItems::isMainMenu(
-				$row['MenuItemID'], $menuitem['LanguageID']);
+			$isownerhomepage = pages::isHome(
+				$row['PageID'], 
+				$page['LanguageID']);
 	
 			admin::displayItemData(
 				__("Page"),
-				$menuroute);
+				$pageroute);
 		}
 		
-		parent::displayAdminListItemSelected($row, $isownermainmenu);
+		parent::displayAdminListItemSelected($row, $isownerhomepage);
 	}
 	
 	function displayAdminListItem(&$row) {
@@ -194,26 +194,26 @@ class _postsAtGlance extends posts {
 	}
 	
 	function displayAdminListSearch() {
-		$menuid = null;
+		$pageid = null;
 		$search = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
 		
-		if (isset($_GET['searchmenuid']))
-			$menuid = (int)$_GET['searchmenuid'];
+		if (isset($_GET['searchpageid']))
+			$pageid = (int)$_GET['searchpageid'];
 		
 		echo 
 			"<input type='hidden' name='path' value='".admin::path()."' />" .
 			"<input type='search' name='search' value='".
 				htmlspecialchars($search, ENT_QUOTES).
 				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
-			"<select style='width: 100px;' name='searchmenuid' onchange='this.form.submit();'>" .
+			"<select style='width: 100px;' name='searchpageid' onchange='this.form.submit();'>" .
 				"<option value=''>".__("All")."</option>";
 		
 		$optgroup = false;
 		
-		foreach(menuItems::getTree() as $row) {
+		foreach(pages::getTree() as $row) {
 			if ($row['ID'] === 0) {
 				if ($optgroup)
 					echo "</optgroup>";
@@ -227,11 +227,11 @@ class _postsAtGlance extends posts {
 			
 			echo
 				"<option value='".$row['ID']."'" .
-					($menuid == $row['ID']?
+					($pageid == $row['ID']?
 						" selected='selected'":
 						null) .
 					">" . 
-				($row['SubMenuOfID']?
+				($row['SubPageOfID']?
 					str_replace(' ', '&nbsp;', 
 						str_pad('', $row['PathDeepnes']*4, ' ')).
 					"|- ":
@@ -256,7 +256,7 @@ class _postsAtGlance extends posts {
 	}
 	
 	function displayAdmin() {
-		$menuid = null;
+		$pageid = null;
 		$search = null;
 		$edit = null;
 		$id = null;
@@ -264,8 +264,8 @@ class _postsAtGlance extends posts {
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
 		
-		if (isset($_GET['searchmenuid']))
-			$menuid = (int)$_GET['searchmenuid'];
+		if (isset($_GET['searchpageid']))
+			$pageid = (int)$_GET['searchpageid'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -284,7 +284,7 @@ class _postsAtGlance extends posts {
 		
 		$selectedowner = sql::fetch(sql::run(
 			" SELECT `Title`, `LanguageID` " .
-			" FROM `{menuitems}` " .
+			" FROM `{pages}` " .
 			" WHERE `ID` = '".admin::getPathID()."'"));
 			
 		echo
@@ -336,17 +336,18 @@ class _postsAtGlance extends posts {
 		$paging = new paging(10);
 		$paging->ignoreArgs = 'id, edit, delete';
 		
-		foreach(menuItems::getTree() as $row)
-			$form->addValue('MenuItemID',
+		foreach(pages::getTree() as $row)
+			$form->addValue(
+				'PageID',
 				$row['ID'], 
-				($row['SubMenuOfID']?
+				($row['SubPageOfID']?
 					str_replace(' ', '&nbsp;', 
 						str_pad('', $row['PathDeepnes']*4, ' ')).
 					"|- ":
 					null) .
 				$row['Title']);
 		
-		$form->groupValues('MenuItemID', array('0'));
+		$form->groupValues('PageID', array('0'));
 		
 		$rows = sql::run(
 			" SELECT * FROM `{posts}` " .
@@ -354,8 +355,8 @@ class _postsAtGlance extends posts {
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				null) .
-			($menuid?
-				" AND `MenuItemID` = '".$menuid."'":
+			($pageid?
+				" AND `PageID` = '".$pageid."'":
 				null) .
 			($search?
 				" AND (`Title` LIKE '%".sql::escape($search)."%' " .

@@ -59,8 +59,8 @@ class _admin {
 	}
 	
 	function load() {
-		$this->add('Content', 'MenuItems', 
-			"<a href='".url::uri('ALL')."?path=admin/content/menuitems' " .
+		$this->add('Content', 'Pages', 
+			"<a href='".url::uri('ALL')."?path=admin/content/pages' " .
 				"title='".
 					htmlspecialchars(
 						__("Manage the content (pages) of your site"), 
@@ -104,7 +104,7 @@ class _admin {
 				"<a href='".url::uri('ALL')."?path=admin/content/postshandling' " .
 					"title='".
 						htmlspecialchars(
-							__("Copy and/or Move posts from one menu to another"), 
+							__("Copy and/or Move posts from one page to another"), 
 							ENT_QUOTES).
 					"'>" .
 					"<span>".__("Moving Posts")."</span>" .

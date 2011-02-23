@@ -44,10 +44,10 @@ class _userPermissions {
 			$form->setValueType(FORM_VALUE_TYPE_ARRAY);
 			
 			if (JCORE_VERSION >= '0.6')
-				$form->setTooltipText(__("e.g. admin/content/menuitems/1/posts"));
+				$form->setTooltipText(__("e.g. admin/content/pages/1/posts"));
 			else
 				$form->addAdditionalText(
-					" (".__("e.g. admin/content/menuitems/1/posts").")");
+					" (".__("e.g. admin/content/pages/1/posts").")");
 			
 			$form->add(
 				"<div class='form-entry-user-multi-permission-paths-container'></div>" .
@@ -91,10 +91,10 @@ class _userPermissions {
 				FORM_STATIC_TEXT);
 			
 			if (JCORE_VERSION >= '0.6')
-				$form->setTooltipText(__("e.g. admin/content/menuitems/1/posts"));
+				$form->setTooltipText(__("e.g. admin/content/pages/1/posts"));
 			else
 				$form->addAdditionalText(
-					" (".__("e.g. admin/content/menuitems/1/posts").")");
+					" (".__("e.g. admin/content/pages/1/posts").")");
 		}
 			
 		$form->add(

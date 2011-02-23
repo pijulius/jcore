@@ -18,7 +18,7 @@ class _postsHandling {
 		$move = null;
 		$id = null;
 		$ids = null;
-		$tomenuid = null;
+		$topageid = null;
 		
 		if (isset($_GET['delete']))
 			$delete = $_GET['delete'];
@@ -35,8 +35,8 @@ class _postsHandling {
 		if (isset($_POST['postids']))
 			$ids = (array)$_POST['postids'];
 			
-		if (isset($_POST['tomenuid']))
-			$tomenuid = (int)$_POST['tomenuid'];
+		if (isset($_POST['topageid']))
+			$topageid = (int)$_POST['topageid'];
 		
 		if ($delete) {
 			if (!$this->delete($id))
@@ -61,23 +61,23 @@ class _postsHandling {
 			return false;
 		}
 		
-		if (!$tomenuid) {
+		if (!$topageid) {
 			tooltip::display(
-				__("No menu selected to copy and/or move posts to! Please select " .
-					"a menu to move the posts to at the bottom of the list."),
+				__("No page selected to copy and/or move posts to! Please select " .
+					"a page to move the posts to at the bottom of the list."),
 				TOOLTIP_ERROR);
 			
 			return false;
 		}
 		
-		$tomenu = sql::fetch(sql::run(
-			" SELECT * FROM `{menuitems}`" .
-			" WHERE `ID` = '".$tomenuid."'"));
+		$topage = sql::fetch(sql::run(
+			" SELECT * FROM `{pages}`" .
+			" WHERE `ID` = '".$topageid."'"));
 		
-		if (!$tomenu) {
+		if (!$topage) {
 			tooltip::display(
-				__("The menu you have selected to copy and/or move posts to does not " .
-					"exists. This could be happening because the menu has been " .
+				__("The page you have selected to copy and/or move posts to does not " .
+					"exists. This could be happening because the page has been " .
 					"deleted meanwhile."),
 				TOOLTIP_ERROR);
 			
@@ -86,26 +86,26 @@ class _postsHandling {
 		
 		if ($move) {
 			foreach($ids as $postid)
-				$this->move($postid, $tomenu['ID']);
+				$this->move($postid, $topage['ID']);
 					
 			$_POST = array();
 			
 			tooltip::display(
 				sprintf(__("Posts have been successfully moved over to \"%s\"."),
-					$tomenu['Title']),
+					$topage['Title']),
 				TOOLTIP_SUCCESS);
 			
 			return true;
 		}
 		
 		foreach($ids as $postid)
-			$this->copy($postid, $tomenu['ID']);
+			$this->copy($postid, $topage['ID']);
 		
 		$_POST = array();
 		
 		tooltip::display(
 			sprintf(__("Posts have been successfully copied over to \"%s\"."),
-				$tomenu['Title']),
+				$topage['Title']),
 			TOOLTIP_SUCCESS);
 		
 		return true;
@@ -115,7 +115,7 @@ class _postsHandling {
 		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('Pages / Posts'), 
-				'?path=admin/content/menuitems');
+				'?path=admin/content/pages');
 		
 		favoriteLinks::add(
 			__('Settings'), 
@@ -125,7 +125,7 @@ class _postsHandling {
 			SITE_URL);
 	}
 	
-	function displayAdminListHeader($menuroute = null) {
+	function displayAdminListHeader($pageroute = null) {
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' alt='.list' " .
@@ -136,7 +136,7 @@ class _postsHandling {
 			"</th>" .
 			"<th>" .
 				"<div class='nowrap'>" .
-				$menuroute .
+				$pageroute .
 				"</div>" .
 			"</th>";
 	}
@@ -201,8 +201,8 @@ class _postsHandling {
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
 					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
-					"href='?path=admin/content/menuitems/".
-					$row['MenuItemID']."/posts&amp;id=".$row['ID'].
+					"href='?path=admin/content/pages/".
+					$row['PageID']."/posts&amp;id=".$row['ID'].
 					"&amp;edit=1#adminform'>" .
 				"</a>" .
 			"</td>" .
@@ -222,26 +222,26 @@ class _postsHandling {
 	}
 	
 	function displayAdminListSearch() {
-		$menuid = null;
+		$pageid = null;
 		$search = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
 		
-		if (isset($_GET['searchmenuid']))
-			$menuid = (int)$_GET['searchmenuid'];
+		if (isset($_GET['searchpageid']))
+			$pageid = (int)$_GET['searchpageid'];
 		
 		echo 
 			"<input type='hidden' name='path' value='".admin::path()."' />" .
 			"<input type='search' name='search' value='".
 				htmlspecialchars($search, ENT_QUOTES).
 				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
-			"<select style='width: 100px;' name='searchmenuid' onchange='this.form.submit();'>" .
+			"<select style='width: 100px;' name='searchpageid' onchange='this.form.submit();'>" .
 				"<option value=''>".__("All")."</option>";
 		
 		$optgroup = false;
 		
-		foreach(menuItems::getTree() as $row) {
+		foreach(pages::getTree() as $row) {
 			if ($row['ID'] === 0) {
 				if ($optgroup)
 					echo "</optgroup>";
@@ -255,11 +255,11 @@ class _postsHandling {
 			
 			echo
 				"<option value='".$row['ID']."'" .
-					($menuid == $row['ID']?
+					($pageid == $row['ID']?
 						" selected='selected'":
 						null) .
 					">" . 
-				($row['SubMenuOfID']?
+				($row['SubPageOfID']?
 					str_replace(' ', '&nbsp;', 
 						str_pad('', $row['PathDeepnes']*4, ' ')).
 					"|- ":
@@ -278,19 +278,19 @@ class _postsHandling {
 	}
 	
 	function displayAdminListFunctions() {
-		$tomenuid = null;
+		$topageid = null;
 		
-		if (isset($_POST['tomenuid']))
-			$tomenuid = (int)$_POST['tomenuid'];
+		if (isset($_POST['topageid']))
+			$topageid = (int)$_POST['topageid'];
 		
 		echo 
 			__("Copy / Move selected posts to:")." " .
-			"<select name='tomenuid'>" .
+			"<select name='topageid'>" .
 				"<option value=''></option>";
 		
 		$optgroup = false;
 		
-		foreach(menuItems::getTree() as $row) {
+		foreach(pages::getTree() as $row) {
 			if ($row['ID'] === 0) {
 				if ($optgroup)
 					echo "</optgroup>";
@@ -304,11 +304,11 @@ class _postsHandling {
 			
 			echo
 				"<option value='".$row['ID']."'" .
-					($tomenuid == $row['ID']?
+					($topageid == $row['ID']?
 						" selected='selected'":
 						null) .
 					">" . 
-				($row['SubMenuOfID']?
+				($row['SubPageOfID']?
 					str_replace(' ', '&nbsp;', 
 						str_pad('', $row['PathDeepnes']*4, ' ')).
 					"|- ":
@@ -339,35 +339,35 @@ class _postsHandling {
 				url::uri('delete')."' method='post'>";
 		
 		$i = 0;
-		$menuitemid = null;
-		$menuroute = null;
+		$pageid = null;
+		$pageroute = null;
 		
 		while($row = sql::fetch($rows)) {
-			if ($menuitemid !== $row['MenuItemID']) {
-				$menuroute = null;
+			if ($pageid !== $row['PageID']) {
+				$pageroute = null;
 				
-				if ($row['MenuItemID']) {
-					foreach(menuItems::getBackTraceTree($row['MenuItemID']) as $menuitem) {
-						$menuroute .=
+				if ($row['PageID']) {
+					foreach(pages::getBackTraceTree($row['PageID']) as $page) {
+						$pageroute .=
 							"<div".
-								($menuitem['ID'] == $row['MenuItemID']?
+								($page['ID'] == $row['PageID']?
 									" class='bold' style='font-size: 120%;'":
 									null) .
 								">" . 
-							($menuitem['SubMenuOfID']?
+							($page['SubPageOfID']?
 								str_replace(' ', '&nbsp;', 
-									str_pad('', $menuitem['PathDeepnes']*4, ' ')).
+									str_pad('', $page['PathDeepnes']*4, ' ')).
 								"|- ":
 								null). 
-							$menuitem['Title'] .
+							$page['Title'] .
 							"</div>";
 					}
 					
 				} else {
-					$menuroute = __('Title / Created on');
+					$pageroute = __('Title / Created on');
 				}
 		
-				if (isset($menuitemid))
+				if (isset($pageid))
 					echo 
 						"</tbody>" .
 					"</table>" .
@@ -378,7 +378,7 @@ class _postsHandling {
 					"<thead>" .
 					"<tr>";
 					
-				$this->displayAdminListHeader($menuroute);
+				$this->displayAdminListHeader($pageroute);
 				$this->displayAdminListHeaderOptions();
 							
 				if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
@@ -389,7 +389,7 @@ class _postsHandling {
 					"</thead>" .
 					"<tbody>";
 					
-				$menuitemid = $row['MenuItemID'];
+				$pageid = $row['PageID'];
 			}
 			
 			echo
@@ -448,14 +448,14 @@ class _postsHandling {
 	}
 	
 	function displayAdmin() {
-		$menuid = null;
+		$pageid = null;
 		$search = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
 		
-		if (isset($_GET['searchmenuid']))
-			$menuid = (int)$_GET['searchmenuid'];
+		if (isset($_GET['searchpageid']))
+			$pageid = (int)$_GET['searchpageid'];
 		
 		echo
 			"<div style='float: right;'>" .
@@ -484,14 +484,14 @@ class _postsHandling {
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				null) .
-			($menuid?
-				" AND `MenuItemID` = '".$menuid."'":
+			($pageid?
+				" AND `PageID` = '".$pageid."'":
 				null) .
 			($search?
 				" AND (`Title` LIKE '%".sql::escape($search)."%' " .
 				" 	OR `Keywords` LIKE '%".sql::escape($search)."%') ":
 				null) .
-			" ORDER BY `MenuItemID`, `OrderID`, `ID` DESC" .
+			" ORDER BY `PageID`, `OrderID`, `ID` DESC" .
 			" LIMIT ".$paging->limit);
 		
 		$paging->setTotalItems(sql::count());
@@ -509,8 +509,8 @@ class _postsHandling {
 			"</div>";	//admin-content
 	}
 	
-	function copy($postid, $tomenuid) {
-		if (!$postid || !$tomenuid)
+	function copy($postid, $topageid) {
+		if (!$postid || !$topageid)
 			return false;
 			
 		$columns = sql::run(
@@ -537,13 +537,13 @@ class _postsHandling {
 		
 		if (JCORE_VERSION >= '0.5')
 			sql::run(
-				" UPDATE `{menuitems}` SET " .
+				" UPDATE `{pages}` SET " .
 				" `Posts` = `Posts` + 1" .
-				" WHERE `ID` = '".(int)$tomenuid."'");
+				" WHERE `ID` = '".(int)$topageid."'");
 		
 		sql::run(
 			" UPDATE `{posts}` SET" .
-			" `MenuItemID` = '".$tomenuid."'," .
+			" `PageID` = '".$topageid."'," .
 			" `TimeStamp` = `TimeStamp`" .
 			" WHERE `ID` = '".$newpostid."'");
 		
@@ -606,14 +606,14 @@ class _postsHandling {
 			
 			posts::updateKeywordsCloud(
 				$post['Keywords'], null,
-				$post['MenuItemID']);
+				$post['PageID']);
 		}
 		
 		return $newpostid;
 	}
 	
-	function move($postid, $tomenuid) {
-		if (!$postid || !$tomenuid)
+	function move($postid, $topageid) {
+		if (!$postid || !$topageid)
 			return false;
 			
 		$post = sql::fetch(sql::run(
@@ -622,7 +622,7 @@ class _postsHandling {
 		
 		sql::run(
 			" UPDATE `{posts}` SET" .
-			" `MenuItemID` = '".$tomenuid."'," .
+			" `PageID` = '".$topageid."'," .
 			" `TimeStamp` = `TimeStamp`" .
 			" WHERE `ID` = '".(int)$postid."'");
 		
@@ -636,14 +636,14 @@ class _postsHandling {
 		
 		if (JCORE_VERSION >= '0.5') {
 			sql::run(
-				" UPDATE `{menuitems}` SET " .
+				" UPDATE `{pages}` SET " .
 				" `Posts` = `Posts` + 1" .
-				" WHERE `ID` = '".(int)$tomenuid."'");
+				" WHERE `ID` = '".(int)$topageid."'");
 			
 			sql::run(
-				" UPDATE `{menuitems}` SET " .
+				" UPDATE `{pages}` SET " .
 				" `Posts` = `Posts` - 1" .
-				" WHERE `ID` = '".(int)$post['MenuItemID']."'");
+				" WHERE `ID` = '".(int)$post['PageID']."'");
 		}
 		
 		if (sql::affected() == -1) {
@@ -657,7 +657,7 @@ class _postsHandling {
 		if (JCORE_VERSION >= '0.7')
 			posts::updateKeywordsCloud(
 				$post['Keywords'], $post['Keywords'],
-				$tomenuid, $post['MenuItemID']);
+				$topageid, $post['PageID']);
 		
 		return true;
 	}

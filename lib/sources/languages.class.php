@@ -110,7 +110,7 @@ class _languages {
 		
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/menuitems');
+			'?path=admin/content/pages');
 		favoriteLinks::add(
 			__('Blocks'), 
 			'?path=admin/site/blocks');
@@ -253,7 +253,7 @@ class _languages {
 				
 			tooltip::display(
 				__("Language has been successfully updated.")." " .
-				"<a href='?path=admin/content/menuitems'>" .
+				"<a href='?path=admin/content/pages'>" .
 					__("View Pages") .
 				"</a>" .
 				" - " .
@@ -270,7 +270,7 @@ class _languages {
 		
 		tooltip::display(
 			__("Language has been successfully created.")." " .
-			"<a href='?path=admin/content/menuitems'>" .
+			"<a href='?path=admin/content/pages'>" .
 				__("View Pages") .
 			"</a>" .
 			" - " .
@@ -649,12 +649,12 @@ class _languages {
 			" WHERE `ID` = '".$id."'");
 		
 		/*	
-		 * If a language deleted we set all menus to 0 so they are kept
+		 * If a language deleted we set all pages to 0 so they are kept
 		 * in the db for backup but are shown as No Language Selected.
 		 */
 		
 		sql::run(
-			" UPDATE `{menuitems}` " .
+			" UPDATE `{pages}` " .
 			" SET `LanguageID` = 0" .
 			" WHERE `LanguageID` = '".$id."'");
 			

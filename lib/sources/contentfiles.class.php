@@ -34,7 +34,7 @@ class _contentFiles extends fileManager {
 		
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/menuitems');
+			'?path=admin/content/pages');
 		favoriteLinks::add(
 			__('Template Files'), 
 			'?path=admin/site/template/templateimages');

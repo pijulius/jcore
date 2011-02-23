@@ -63,7 +63,7 @@ class _notes {
 		
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/menuitems');
+			'?path=admin/content/pages');
 		favoriteLinks::add(
 			__('View Website'), 
 			SITE_URL);
