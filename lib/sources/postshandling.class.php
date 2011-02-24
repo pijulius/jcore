@@ -201,8 +201,12 @@ class _postsHandling {
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
 					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
-					"href='?path=admin/content/pages/".
-					$row['PageID']."/posts&amp;id=".$row['ID'].
+					"href='?path=" .
+					($row['PageID']?
+						"admin/content/pages/".$row['PageID']."/posts":
+						"admin/content/postsatglance") .
+					"&amp;search=".urlencode($row['Title']) .
+					"&amp;id=".$row['ID'].
 					"&amp;edit=1#adminform'>" .
 				"</a>" .
 			"</td>" .
