@@ -1489,7 +1489,7 @@ class _users {
 		if (!$id)
 			return false;
 		
-		$user = sql::fetch(sql::query(
+		$user = sql::fetch(sql::run(
 			" SELECT * FROM `{users}`" .
 			" WHERE `ID` = '".(int)$id."'"));
 		
