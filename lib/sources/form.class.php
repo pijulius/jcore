@@ -236,7 +236,7 @@ class _form {
 					
 			$this->elements[$elementid]['AdditionalTitle'] =
 				"<div class='comment'>" .
-					__("Enter the code shown on the right") .
+					__("Enter the code shown in the image") .
 				"<p>&nbsp;</p></div>";
 				
 			$this->elements[$elementid]['EntryID'] = "scimagecode";				
