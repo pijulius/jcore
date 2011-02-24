@@ -1237,7 +1237,9 @@ class _users {
 			
 			sql::run(
 				" INSERT INTO `{userlogins}` SET" .
-				" `SessionID` = '".sql::escape(session_id())."', " .
+				" `SessionID` = '".sql::escape(sha1(session_id().time() .
+					$record['ID'].$record['Email'] .
+					$record['TimeStamp'].$record['LastVisitTimeStamp']))."', " .
 				" `UserID` = '".$record['ID']."'," .
 				" `FromIP` = '".ip2long($_SERVER['REMOTE_ADDR'])."'," .
 				($record['StayLoggedIn']?
@@ -1271,10 +1273,14 @@ class _users {
 				$cookiedomain = false;
 					
 			if ($record['StayLoggedIn']) 
-				setcookie ("memberloginid", session_id(), 
+				setcookie ("memberloginid", sha1(session_id().time() .
+					$record['ID'].$record['Email'] .
+					$record['TimeStamp'].$record['LastVisitTimeStamp']), 
 					time()+7*24*60*60, '/', $cookiedomain);
 			else 
-				setcookie ("memberloginid", session_id(), 
+				setcookie ("memberloginid", sha1(session_id().time() .
+					$record['ID'].$record['Email'] .
+					$record['TimeStamp'].$record['LastVisitTimeStamp']), 
 					0, '/', $cookiedomain);
 			
 			header("Location: ".str_replace('&amp;', '&', url::uri('login, requestpassword')));
