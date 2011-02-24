@@ -2719,7 +2719,7 @@ class _posts {
 			return false;
 		
 		$homepage = 
-			pagess::getHome($this->selectedLanguageID);
+			pages::getHome($this->selectedLanguageID);
 		
 		$rows = sql::run(
 			" SELECT * " .
