@@ -2232,7 +2232,7 @@ class shoppingOrders extends modules {
 			
 			$form->addAdditionalText(
 				"<a style='zoom: 1;' href='".url::uri('request, users').
-					"&amp;request=".$this->adminPath .
+					"&amp;request=".url::path() .
 					"&amp;users=1' " .
 					"class='shopping-order-new-order-add-user ajax-content-link' " .
 					"title='".htmlspecialchars(_("Define the owner of this order"), ENT_QUOTES)."'>" .
@@ -2516,7 +2516,7 @@ class shoppingOrders extends modules {
 					"</tbody>" .
 				"</table>" .
 				"<a href='".url::uri('request, shoppingitems').
-					"&amp;request=".$this->adminPath .
+					"&amp;request=".url::path() .
 					"&amp;shoppingitems=1' " .
 					"class='shopping-orders-cart-add-item ajax-content-link' " .
 					"title='".htmlspecialchars(_("Add items to this order"), ENT_QUOTES)."'>" .

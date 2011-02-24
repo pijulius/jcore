@@ -67,7 +67,7 @@ class _rss {
 		
 		$form->addAdditionalText(
 			"<a href='".url::uri('request, feeds').
-				"&amp;request=".$this->adminPath .
+				"&amp;request=".url::path() .
 				"&amp;feeds=1' " .
 				"class='select-link ajax-content-link' " .
 				"title='".htmlspecialchars(__("Select Feed"), ENT_QUOTES)."'>" .

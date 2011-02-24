@@ -96,7 +96,7 @@ class _sitemap {
 		$editor = new sitemapFileEditor();
 		
 		$editor->file = $this->file;
-		$editor->uriRequest = $this->adminPath;
+		$editor->uriRequest = url::path();
 		
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
@@ -273,7 +273,7 @@ class _sitemap {
 	function ajaxRequest() {
 		$editor = new fileEditor();
 		$editor->file = $this->file;
-		$editor->uriRequest = $this->adminPath;
+		$editor->uriRequest = url::path();
 		$editor->ajaxRequest = $this->ajaxRequest;
 		$editor->ajaxRequest();
 		unset($editor);

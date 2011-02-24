@@ -54,7 +54,7 @@ class _userPermissions {
 				"<div class='form-entry-title'></div>" .
 				"<div class='form-entry-content'>" .
 					"<a href='".url::uri('request, sections') .
-						"&amp;request=".$this->adminPath .
+						"&amp;request=".url::path() .
 						"&amp;sections=1' " .
 						"class='select-link ajax-content-link'>" .
 						__("Select path") .
@@ -82,7 +82,7 @@ class _userPermissions {
 			
 			$form->addAdditionalText(
 					"<a href='".url::uri('request, sections') .
-						"&amp;request=".$this->adminPath .
+						"&amp;request=".url::path() .
 						"&amp;sections=1' " .
 						"class='select-link ajax-content-link'>" .
 						__("Select path") .

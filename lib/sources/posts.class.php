@@ -372,7 +372,7 @@ class _posts {
 			$form->addAdditionalText(
 				'Owner',
 				"<a style='zoom: 1;' href='".url::uri('request, users') .
-					"&amp;request=".$this->adminPath .
+					"&amp;request=".url::path() .
 					"&amp;users=1' " .
 					"class='select-owner-link ajax-content-link'>" .
 					_("Select User") .
@@ -647,7 +647,7 @@ class _posts {
 		
 		$form->addAdditionalText(
 			"<a style='zoom: 1;' href='".url::uri('request, users') .
-				"&amp;request=".$this->adminPath .
+				"&amp;request=".url::path() .
 				"&amp;users=1' " .
 				"class='select-owner-link ajax-content-link'>" .
 				_("Select User") .

@@ -123,7 +123,7 @@ class _templateExporter {
 		tooltip::display(
 			__("Template has been successfully created.")." " .
 			"<a href='".url::uri('request, download') .
-				"&amp;request=".$this->adminPath .
+				"&amp;request=".url::path() .
 				"&amp;download=".$file .
 				"&amp;ajax=1'>" .
 				__("Download") .
@@ -131,7 +131,7 @@ class _templateExporter {
 			"<script type='text/javascript'>" .
 				"jQuery(document).ready(function() {" .
 					"window.location='".url::uri('request, download') .
-						"&request=".$this->adminPath .
+						"&request=".url::path() .
 						"&download=".$file .
 						"&ajax=1';" .
 				"});" .

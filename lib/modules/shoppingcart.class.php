@@ -154,7 +154,7 @@ class shoppingCartDiscounts {
 			
 			$form->addAdditionalText(
 				"<a href='".url::uri('request, users').
-					"&amp;request=".$this->adminPath .
+					"&amp;request=".url::path() .
 					"&amp;users=1' " .
 					"class='shopping-cart-discounts-select-user ajax-content-link' " .
 					"title='".htmlspecialchars(_("Define the owner of the discount."), ENT_QUOTES)."'>" .
@@ -912,7 +912,7 @@ class shoppingCartFees {
 			
 			$form->addAdditionalText(
 				"<a href='".url::uri('request, orderformfields').
-					"&amp;request=".$this->adminPath .
+					"&amp;request=".url::path() .
 					"&amp;orderformfields=1' " .
 					"class='shopping-cart-fees-select-order-form-field ajax-content-link' " .
 					"title='".htmlspecialchars(_("Define the field you would like to compare."), ENT_QUOTES)."'>" .
@@ -1745,7 +1745,7 @@ class shoppingCartTaxes {
 		
 		$form->addAdditionalText(
 			"<a href='".url::uri('request, orderformfields').
-				"&amp;request=".$this->adminPath .
+				"&amp;request=".url::path() .
 				"&amp;orderformfields=1' " .
 				"class='shopping-cart-taxes-select-order-form-field ajax-content-link' " .
 				"title='".htmlspecialchars(_("Define the field you would like to compare."), ENT_QUOTES)."'>" .

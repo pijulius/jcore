@@ -79,7 +79,7 @@ class _massEmail {
 				__("All Users") .
 			"</a>" .
 			"<a href='".url::uri('request, users') .
-				"&amp;request=".$this->adminPath .
+				"&amp;request=".url::path() .
 				"&amp;users=1' " .
 				"class='mass-email-select-users ajax-content-link' " .
 				"title='".htmlspecialchars(__("Add User(s)"), ENT_QUOTES)."'>" .
