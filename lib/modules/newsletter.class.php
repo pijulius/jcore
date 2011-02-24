@@ -90,7 +90,20 @@ class newsletterLists {
 			FORM_INPUT_TYPE_TEXT,
 			true);
 		$form->setStyle('width: 200px;');
-			
+		
+		if (JCORE_VERSION >= '0.8') {
+			$form->add(
+				__('Description'),
+				'Description',
+				FORM_INPUT_TYPE_TEXTAREA);
+			$form->setStyle('width: ' .
+				(JCORE_VERSION >= '0.7'?
+					'90%':
+					'350px') .
+				'; height: 50px;');
+			$form->setValueType(FORM_VALUE_TYPE_HTML);
+		}
+		
 		$form->add(
 			__('Additional Options'),
 			null,
@@ -244,12 +257,20 @@ class newsletterLists {
 					"value='".$row['OrderID']."' " .
 					"class='order-id-entry' tabindex='1' />" .
 			"</td>" .
-			"<td class='auto-width bold'" .
+			"<td class='auto-width'" .
 				($row['Deactivated']?
 					" style='text-decoration: line-through;' ":
 					null).
 				">" .
-				$row['Title'] .
+				(JCORE_VERSION >= '0.8'?
+					"<a href='".url::uri('id, edit, delete') .
+						"&amp;id=".$row['ID']."' " .
+						"class='bold'>":
+					"<div class='bold'>") .
+					$row['Title'] .
+				(JCORE_VERSION >= '0.8'?
+					"</a>":
+					"</div>") .
 				"<div class='comment' style='padding-left: 10px;'>" .
 					$row['Path'] .
 				"</div>" .
@@ -300,6 +321,13 @@ class newsletterLists {
 			"</td>";
 	}
 	
+	function displayAdminListItemSelected(&$row) {
+		if (JCORE_VERSION >= '0.8')
+			admin::displayItemData(
+				__("Description"),
+				nl2br($row['Description']));
+	}
+	
 	function displayAdminListFunctions() {
 		echo
 			"<input type='submit' name='reordersubmit' value='".
@@ -309,6 +337,11 @@ class newsletterLists {
 	}
 	
 	function displayAdminList(&$rows) {
+		$id = null;
+		
+		if (isset($_GET['id']))
+			$id = (int)$_GET['id'];
+		
 		echo
 			"<form action='".url::uri('edit, delete')."' method='post'>";
 				
@@ -340,6 +373,20 @@ class newsletterLists {
 			
 			echo
 				"</tr>";
+			
+			if ($row['ID'] == $id) {
+				echo
+					"<tr".($i%2?" class='pair'":NULL).">" .
+						"<td class='auto-width' colspan='10'>" .
+							"<div class='admin-content-preview'>";
+							
+				$this->displayAdminListItemSelected($row);
+							
+				echo
+							"</div>" .
+						"</td>" .
+					"</tr>";
+			}
 			
 			$i++;
 		}
@@ -482,6 +529,10 @@ class newsletterLists {
 			" INSERT INTO `{newsletterlists}` SET ".
 			" `Title` = '" .
 				sql::escape($values['Title'])."'," .
+			(JCORE_VERSION >= '0.8'?
+				" `Description` = '".
+					sql::escape($values['Description'])."',":
+				null) .
 			" `Path` = '".
 				sql::escape($values['Path'])."'," .
 			" `Deactivated` = '".
@@ -514,6 +565,10 @@ class newsletterLists {
 			" UPDATE `{newsletterlists}` SET ".
 			" `Title` = '" .
 				sql::escape($values['Title'])."'," .
+			(JCORE_VERSION >= '0.8'?
+				" `Description` = '".
+					sql::escape($values['Description'])."',":
+				null) .
 			" `Path` = '".
 				sql::escape($values['Path'])."'," .
 			" `Deactivated` = '".
@@ -1016,8 +1071,10 @@ class newsletterSubscriptions {
 						null) .
 					" />" .
 			"</td>" .
-			"<td class='auto-width bold'>" .
-				$row['Email'] .
+			"<td class='auto-width'>" .
+				"<div class='bold'>" .
+					$row['Email'] .
+				"</div>" .
 				"<div class='comment' style='padding-left: 10px;'>" .
 					calendar::dateTime($row['TimeStamp']) .
 				"</div>" .
@@ -2348,6 +2405,9 @@ class newsletter extends modules {
 			"CREATE TABLE IF NOT EXISTS `{newsletterlists}` (" .
 			" `ID` SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ," .
 			" `Title` VARCHAR( 255 ) NOT NULL default '' ," .
+			(JCORE_VERSION >= '0.8'?
+				" `Description` TEXT NULL,":
+				null) .
 			" `Path` VARCHAR( 255 ) NOT NULL default '' ," .
 			" `Deactivated` tinyint(1) unsigned NOT NULL default '0'," .
 			" `OrderID` mediumint(9) NOT NULL default '0'," .
@@ -2860,7 +2920,15 @@ class newsletter extends modules {
 					true);
 				
 				while($list = sql::fetch($lists))
-					$form->addValue($list['ID'], $list['Title'].'<br />');
+					$form->addValue($list['ID'], 
+						"<span class='newsletter-list-title'>" .
+							$list['Title'] .
+						"<br /></span>".
+						(JCORE_VERSION >= '0.8' && trim($list['Description'])?
+							"<span class='newsletter-list-description comment'>" .
+								nl2br($list['Description']) .
+							"<br /><span>":
+							null));
 			}
 		}
 		
