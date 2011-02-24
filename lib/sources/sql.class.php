@@ -219,10 +219,13 @@ class _sql {
 		if (!trim($search) || !is_array($fields) || !count($fields))
 			return null;
 			
-		if (strstr($search, ','))
+		if (strstr($search, ',')) {
 			$separator = ',';
-		else
+			$search = trim($search, ', ');
+		} else {
 			$separator = ' ';
+			$search = trim($search);
+		}
 		
 		$query = null;
 		$commands = array();

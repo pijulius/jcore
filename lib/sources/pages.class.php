@@ -266,6 +266,62 @@ class _pages {
 				FORM_CLOSE_FRAME_CONTAINER);
 		}
 		
+		$form->add(
+			__('Display Options'),
+			null,
+			FORM_OPEN_FRAME_CONTAINER);
+		
+		$form->add(
+			__('Path'),
+			'Path',
+			FORM_INPUT_TYPE_TEXT);
+		$form->setStyle('width: 200px;');
+		
+		$form->add(
+			__('Link to URL'),
+			'Link',
+			FORM_INPUT_TYPE_TEXT);
+		$form->setStyle('width: 300px;');
+		$form->setValueType(FORM_VALUE_TYPE_URL);
+		$form->setTooltipText(__("e.g. http://domain.com"));
+		
+		if (JCORE_VERSION >= '0.8') {
+			$form->add(
+				__('Post Keywords'),
+				'PostKeywords',
+				FORM_INPUT_TYPE_TEXT);
+			$form->setStyle('width: 250px;');
+			$form->setTooltipText(__("e.g. oranges, lemons, limes"));
+		}
+		
+		$form->add(
+			__('Viewable by'),
+			'ViewableBy',
+			FORM_INPUT_TYPE_SELECT);
+		$form->setValueType(FORM_VALUE_TYPE_INT);
+			
+		$form->addValue(
+			PAGE_EVERYONE, $this->access2Text(PAGE_EVERYONE));
+		$form->addValue(
+			PAGE_GUESTS_ONLY, $this->access2Text(PAGE_GUESTS_ONLY));
+		$form->addValue(
+			PAGE_USERS_ONLY, $this->access2Text(PAGE_USERS_ONLY));
+		$form->addValue(
+			PAGE_ADMINS_ONLY, $this->access2Text(PAGE_ADMINS_ONLY));
+		
+		$form->add(
+			__('Hidden'),
+			'Hidden',
+			FORM_INPUT_TYPE_CHECKBOX,
+			false,
+			'1');
+		$form->setValueType(FORM_VALUE_TYPE_BOOL);
+			
+		$form->add(
+			null,
+			null,
+			FORM_CLOSE_FRAME_CONTAINER);
+		
 		if (JCORE_VERSION >= '0.6') {
 			$form->add(
 				__('SEO Options'),
@@ -306,35 +362,6 @@ class _pages {
 			FORM_OPEN_FRAME_CONTAINER);
 		
 		$form->add(
-			__('Path'),
-			'Path',
-			FORM_INPUT_TYPE_TEXT);
-		$form->setStyle('width: 250px;');
-		
-		$form->add(
-			__('Link to URL'),
-			'Link',
-			FORM_INPUT_TYPE_TEXT);
-		$form->setStyle('width: 300px;');
-		$form->setValueType(FORM_VALUE_TYPE_URL);
-		$form->setTooltipText(__("e.g. http://domain.com"));
-		
-		$form->add(
-			__('Viewable by'),
-			'ViewableBy',
-			FORM_INPUT_TYPE_SELECT);
-		$form->setValueType(FORM_VALUE_TYPE_INT);
-			
-		$form->addValue(
-			PAGE_EVERYONE, $this->access2Text(PAGE_EVERYONE));
-		$form->addValue(
-			PAGE_GUESTS_ONLY, $this->access2Text(PAGE_GUESTS_ONLY));
-		$form->addValue(
-			PAGE_USERS_ONLY, $this->access2Text(PAGE_USERS_ONLY));
-		$form->addValue(
-			PAGE_ADMINS_ONLY, $this->access2Text(PAGE_ADMINS_ONLY));
-		
-		$form->add(
 			__('Deactivated'),
 			'Deactivated',
 			FORM_INPUT_TYPE_CHECKBOX,
@@ -346,14 +373,6 @@ class _pages {
 			"<span class='comment' style='text-decoration: line-through;'>" .
 			__("(marked with strike through)").
 			"</span>");	
-			
-		$form->add(
-			__('Hidden'),
-			'Hidden',
-			FORM_INPUT_TYPE_CHECKBOX,
-			false,
-			'1');
-		$form->setValueType(FORM_VALUE_TYPE_BOOL);
 			
 		$form->add(
 			__('Limit'),
@@ -633,6 +652,13 @@ class _pages {
 	function displayAdminListItem(&$row) {
 		$tooltiptxt = null;
 			
+		if (JCORE_VERSION >= '0.8' && $row['PostKeywords'])
+			$tooltiptxt .= 
+				"<b>".__("Post Keywords")."</b>" .
+				"<ul>" .
+					"<li>".$row['PostKeywords']."</li>" .
+				"</ul>";
+		
 		if (JCORE_VERSION >= '0.6' && ($row['SEOTitle'] ||
 			$row['SEODescription'] || $row['SEOKeywords']))
 			$tooltiptxt .= 
@@ -1039,6 +1065,10 @@ class _pages {
 				" `SEOKeywords` = '".
 					sql::escape($values['SEOKeywords'])."',":
 				null) .
+			(JCORE_VERSION >= '0.8'?
+				" `PostKeywords` = '".
+					sql::escape($values['PostKeywords'])."',":
+				null) .
 			" `ViewableBy` = '".
 				(int)$values['ViewableBy']."'," .
 			" `Deactivated` = '".
@@ -1166,6 +1196,10 @@ class _pages {
 				" `SEOKeywords` = '".
 					sql::escape($values['SEOKeywords'])."',":
 				null) .
+			(JCORE_VERSION >= '0.8'?
+				" `PostKeywords` = '".
+					sql::escape($values['PostKeywords'])."',":
+				null) .
 			" `ViewableBy` = '".
 				(int)$values['ViewableBy']."'," .
 			" `Deactivated` = '".
@@ -1222,7 +1256,7 @@ class _pages {
 			($page['ViewableBy'] > $values['ViewableBy'] && $values['ViewableBy'] < 2))
 			$sitemap->add(array('Link' => $pageurl));
 			
-		foreach(oages::getTree((int)$id) as $row) {
+		foreach(pages::getTree((int)$id) as $row) {
 			$updatesql = null;
 			$url = str_replace('&amp;', '&', $this->generateLink($row));
 			
@@ -1415,6 +1449,18 @@ class _pages {
 	}
 	
 	// ************************************************   Client Part
+	static function get($pageid) {
+		if (!(int)$pageid)
+			return false;
+		
+		if (pages::$selected && $pageid == pages::$selected['ID'])
+			return pages::$selected;
+		
+		return sql::fetch(sql::run(
+			" SELECT * FROM `pages`" .
+			" WHERE `ID` = '".$pageid."'"));
+	}
+	
 	static function access2Text($typeid) {
 		switch($typeid) {
 			case PAGE_ADMINS_ONLY:

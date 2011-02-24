@@ -201,11 +201,11 @@ class _posts {
 	}
 	
 	function SQL() {
-		$homepage = 
-			pages::getHome($this->selectedLanguageID);
+		$homepage = pages::getHome($this->selectedLanguageID);
+		$page = pages::get($this->selectedPageID);
 		
 		$searchignorepageids = null;
-		if ($this->search || !$this->selectedPageID) {
+		if ($this->search || !$page) {
 			$pageids = sql::fetch(sql::run(
 				" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS PageIDs" .
 				" FROM `{pages}`" .
@@ -235,9 +235,14 @@ class _posts {
 						dynamicForms::searchableFields('posts'):
 						array('Title', 'Content', 'Keywords')),
 					'AND', array('date' => 'TimeStamp')):
-				($this->selectedPageID?
-					" AND (`PageID` = '".$this->selectedPageID."'" .
-					($homepage['ID'] == $this->selectedPageID?
+				($page?
+					" AND (`PageID` = '".$page['ID']."'" .
+					(JCORE_VERSION >= '0.8' && trim($page['PostKeywords'])?
+						" OR (1" .
+							sql::search($page['PostKeywords'].',', array('Keywords'), 'OR') .
+						")":
+						null) .
+					($homepage['ID'] == $page['ID']?
 						" OR `OnMainPage` OR !`PageID` ":
 						" OR (`PageID` = '".$homepage['ID']."'" .
 							" AND `OnMainPage`) ") .
@@ -248,6 +253,9 @@ class _posts {
 				" RAND()":
 				($this->search && !$this->selectedID?
 					" `Views` DESC,":
+					null) .
+				(JCORE_VERSION >= '0.8' && $page && trim($page['PostKeywords'])?
+					" `TimeStamp` DESC,":
 					null) .
 				" `OrderID`, `StartDate`, `ID` DESC");
 	}
