@@ -115,16 +115,26 @@ class _users {
 				__('New User'), 
 				'?path='.admin::path().'#adminform');
 		
-		favoriteLinks::add(
-			__('Mass Email'), 
-			'?path=admin/members/massemail');
+		if (JCORE_VERSION >= '0.8')
+			favoriteLinks::add(
+				__('User Groups'), 
+				'?path=admin/members/usergroups');
+		else
+			favoriteLinks::add(
+				__('Mass Email'), 
+				'?path=admin/members/massemail');
+		
 		favoriteLinks::add(
 			__('Settings'), 
 			'?path=admin/site/settings');
 	}
 	
 	function setupAdminForm(&$form, $membersModuleAvailable = false) {
+		$groupid = null;
 		$edit = null;
+		
+		if (isset($_GET['searchgroupid']))
+			$groupid = $_GET['searchgroupid'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -182,6 +192,24 @@ class _users {
 				$form->setValueType(FORM_VALUE_TYPE_BOOL);
 				$form->addAdditionalText(
 					__("(don't bind user to IP)"));
+			}
+				
+			if (JCORE_VERSION >= '0.8' && !$form->getElementID('GroupID')) {
+				$groups = userGroups::get();
+				
+				if (sql::rows($groups)) {
+					$form->add(
+						__('Group'),
+						'GroupID',
+						FORM_INPUT_TYPE_SELECT,
+						false,
+						$groupid);
+					$form->setValueType(FORM_VALUE_TYPE_INT);
+					
+					$form->addValue('', '');
+					while($group = sql::fetch($groups))
+						$form->addValue($group['ID'], $group['GroupName']);
+				}
 			}
 				
 			$form->add(
@@ -302,7 +330,25 @@ class _users {
 				$form->addAdditionalText(
 					__("(don't bind user to IP)"));
 			}
+			
+			if (JCORE_VERSION >= '0.8' && !$form->getElementID('GroupID')) {
+				$groups = userGroups::get();
 				
+				if (sql::rows($groups)) {
+					$form->add(
+						__('Group'),
+						'GroupID',
+						FORM_INPUT_TYPE_SELECT,
+						false,
+						$groupid);
+					$form->setValueType(FORM_VALUE_TYPE_INT);
+					
+					$form->addValue('', '');
+					while($group = sql::fetch($groups))
+						$form->addValue($group['ID'], $group['GroupName']);
+				}
+			}
+			
 			$form->add(
 				null,
 				null,
@@ -448,7 +494,14 @@ class _users {
 			"<th><span class='nowrap'>".
 				__("Username / Registered on")."</span></th>" .
 			"<th style='text-align: right;'><span class='nowrap'>".
-				__("Admin")."</span></th>" .
+				__("Admin")."</span></th>";
+		
+		if (JCORE_VERSION >= '0.8')
+			echo
+				"<th style='text-align: right;'><span class='nowrap'>".
+					__("Group")."</span></th>";
+		
+		echo
 			"<th style='text-align: right;'><span class='nowrap'>".
 				__("Email")."</span></th>";
 	}
@@ -469,9 +522,13 @@ class _users {
 	
 	function displayAdminListItem(&$row) {
 		$ids = null;
+		$group = null;
 		
 		if (isset($_POST['ids']))
 			$ids = (array)$_POST['ids'];
+		
+		if (JCORE_VERSION >= '0.8' && $row['GroupID'])
+			$group = userGroups::get($row['GroupID']);
 		
 		echo
 			"<td>" .
@@ -499,7 +556,19 @@ class _users {
 				($row['Admin']?
 					__('Yes'):
 					null).
-			"</td>" .
+			"</td>";
+		
+		if (JCORE_VERSION >= '0.8')
+			echo
+				"<td style='text-align: right;'>" .
+					"<span class='nowrap'>" .
+					($group?
+						$group['GroupName']:
+						null).
+					"</span>" .
+				"</td>";
+		
+		echo
 			"<td style='text-align: right;'>" .
 				"<a href='mailto:".$row['Email']."'>".
 					$row['Email'] .
@@ -619,15 +688,45 @@ class _users {
 	
 	function displayAdminListSearch() {
 		$search = null;
+		$groupid = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
+		
+		if (isset($_GET['searchgroupid']))
+			$groupid = (int)$_GET['searchgroupid'];
 		
 		echo
 			"<input type='hidden' name='path' value='".admin::path()."' />" .
 			"<input type='search' name='search' value='".
 				htmlspecialchars($search, ENT_QUOTES).
-				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
+				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> ";
+		
+		if (JCORE_VERSION >= '0.8') {
+			$groups = userGroups::get();
+			
+			if (sql::rows($groups)) {
+				echo
+					"<select name='searchgroupid' style='width: 100px;' " .
+						"onchange='this.form.submit();'>" .
+						"<option value=''>"._("All")."</option>";
+				
+				while($group = sql::fetch($groups))
+					echo
+						"<option value='".$group['ID']."'" .
+							($group['ID'] == $groupid?
+								" selected='selected'":
+								null) .
+							">" .
+							$group['GroupName'] .
+						"</option>";
+				
+				echo
+					"</select> ";
+			}
+		}
+		
+		echo
 			"<input type='submit' value='" .
 				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
 	}
@@ -733,11 +832,15 @@ class _users {
 	
 	function displayAdmin() {
 		$search = null;
+		$groupid = null;
 		$edit = null;
 		$id = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
+		
+		if (isset($_GET['searchgroupid']))
+			$groupid = (int)$_GET['searchgroupid'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -801,6 +904,9 @@ class _users {
 				" WHERE 1" .
 				($this->userPermissionIDs?
 					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null) .
+				(JCORE_VERSION >= '0.8' && $groupid?
+					" AND `GroupID` = '".(int)$groupid."'":
 					null) .
 				($search?
 					sql::search(

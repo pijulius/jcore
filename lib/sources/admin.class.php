@@ -22,6 +22,8 @@ include_once('lib/template.class.php');
 include_once('lib/notes.class.php');
 include_once('lib/massemail.class.php');
 include_once('lib/userpermissions.class.php');
+include_once('lib/usergroups.class.php');
+include_once('lib/usergrouppermissions.class.php');
 include_once('lib/sitemap.class.php');
 
 if (JCORE_VERSION < '0.7')
@@ -257,7 +259,18 @@ class _admin {
 				"'>" .
 				"<span>".__("Users")."</span>" .
 			"</a>");
-			
+		
+		if (JCORE_VERSION >= '0.8')
+			$this->add('Members', 'UserGroups', 
+				"<a href='".url::uri('ALL')."?path=admin/members/usergroups' " .
+					"title='".
+						htmlspecialchars(
+							__("Manage user groups, set group permissions"), 
+							ENT_QUOTES).
+					"'>" .
+					"<span>".__("User Groups")."</span>" .
+				"</a>");
+		
 		$this->add('Members', 'MassEmail', 
 			"<a href='".url::uri('ALL')."?path=admin/members/massemail' " .
 				"title='".

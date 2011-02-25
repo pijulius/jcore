@@ -12,6 +12,10 @@ define('USER_PERMISSION_TYPE_READ', 1);
 define('USER_PERMISSION_TYPE_WRITE', 2);
  
 class _userPermissions {
+	var $sqlTable = 'userpermissions';
+	var $sqlRow = 'UserID';
+	var $sqlOwnerTable = 'users';
+	var $sqlOwnerField = 'UserName';
 	var $ajaxRequest = null;
 	var $adminPath = 'admin/members/users/userpermissions';
 	
@@ -23,8 +27,8 @@ class _userPermissions {
 			$edit = $_GET['edit'];
 		
 		$form->add(
-			'UserID',
-			'UserID',
+			$this->sqlRow,
+			$this->sqlRow,
 			FORM_INPUT_TYPE_HIDDEN,
 			true,
 			admin::getPathID());
@@ -470,10 +474,10 @@ class _userPermissions {
 			$id = (int)$_GET['id'];
 		
 		$owner = sql::fetch(sql::run(
-			" SELECT * FROM `{users}`" .
+			" SELECT * FROM `{".$this->sqlOwnerTable."}`" .
 			" WHERE `ID` = '".admin::getPathID()."'"));
 			
-		$this->displayAdminTitle($owner['UserName']);
+		$this->displayAdminTitle($owner[$this->sqlOwnerField]);
 		$this->displayAdminDescription();
 		
 		echo
@@ -510,8 +514,8 @@ class _userPermissions {
 		}
 		
 		$rows = sql::run(
-			" SELECT * FROM `{userpermissions}`" .
-			" WHERE `UserID` = '".admin::getPathID()."'" .
+			" SELECT * FROM `{".$this->sqlTable."}`" .
+			" WHERE `".$this->sqlRow."` = '".admin::getPathID()."'" .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				null) .
@@ -521,7 +525,7 @@ class _userPermissions {
 			$this->displayAdminList($rows);
 		else
 			tooltip::display(
-				__("No user permissions found."),
+				__("No permissions found."),
 				TOOLTIP_NOTIFICATION);
 		
 		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
@@ -530,8 +534,8 @@ class _userPermissions {
 		{
 			if ($edit && $id && ($verifyok || !$form->submitted())) {
 				$row = sql::fetch(sql::run(
-					" SELECT * FROM `{userpermissions}`" .
-					" WHERE `UserID` = '".admin::getPathID()."'" .
+					" SELECT * FROM `{".$this->sqlTable."}`" .
+					" WHERE `".$this->sqlRow."` = '".admin::getPathID()."'" .
 					" AND `ID` = '".$id."'"));
 			
 				$form->setValues($row);
@@ -554,11 +558,11 @@ class _userPermissions {
 			return false;
 			
 		$exists = sql::fetch(sql::run(
-			" SELECT `ID` FROM `{userpermissions}` " .
+			" SELECT `ID` FROM `{".$this->sqlTable."}` " .
 			" WHERE `Path` = '".
 				sql::escape($values['Path'])."'" .
-			" AND `UserID` = '".
-				(int)$values['UserID']."'" .
+			" AND `".$this->sqlRow."` = '".
+				(int)$values[$this->sqlRow]."'" .
 			" LIMIT 1"));
 			
 		if ($exists) {
@@ -570,9 +574,9 @@ class _userPermissions {
 		}
 			
 		$newid = sql::run(
-			" INSERT INTO `{userpermissions}` SET " .
-			" `UserID` = " .
-				"'".(int)$values['UserID']."',".
+			" INSERT INTO `{".$this->sqlTable."}` SET " .
+			" `".$this->sqlRow."` = " .
+				"'".(int)$values[$this->sqlRow]."',".
 			" `Path` = '".
 				sql::escape($values['Path'])."'," .
 			" `PermissionTypeID` = '".
@@ -597,11 +601,11 @@ class _userPermissions {
 			return false;
 		
 		$exists = sql::fetch(sql::run(
-			" SELECT `ID` FROM `{userpermissions}` " .
+			" SELECT `ID` FROM `{".$this->sqlTable."}` " .
 			" WHERE `Path` = '".
 				sql::escape($values['Path'])."'" .
-			" AND `UserID` = '".
-				(int)$values['UserID']."'" .
+			" AND `".$this->sqlRow."` = '".
+				(int)$values[$this->sqlRow]."'" .
 			" AND `ID` != '".(int)$id."'" .
 			" LIMIT 1"));
 			
@@ -614,7 +618,7 @@ class _userPermissions {
 		}
 			
 		sql::run(
-			" UPDATE `{userpermissions}` SET ".
+			" UPDATE `{".$this->sqlTable."}` SET ".
 			" `Path` = '".
 				sql::escape($values['Path'])."'," .
 			" `PermissionTypeID` = '".
@@ -637,7 +641,7 @@ class _userPermissions {
 			return false;
 			
 		sql::run(
-			" DELETE FROM `{userpermissions}` " .
+			" DELETE FROM `{".$this->sqlTable."}` " .
 			" WHERE `ID` = '".$id."'");
 		
 		return true;
@@ -661,7 +665,9 @@ class _userPermissions {
 	static function check($userid, $path = null) {
 		if (!(int)$userid)
 			return false;
-			
+		
+		$user = null;
+		
 		if (!$path)
 			$path = url::path();
 		
@@ -670,11 +676,21 @@ class _userPermissions {
 			" WHERE `UserID` = '".(int)$userid."'" .
 			" LIMIT 1"));
 		
+		if (JCORE_VERSION >= '0.8' && !$haspermissions) {
+			$user = $GLOBALS['USER']->get($userid);
+			
+			if ($user['GroupID'])
+				$haspermissions = sql::fetch(sql::run(
+					" SELECT `ID` FROM `{usergrouppermissions}`" .
+					" WHERE `GroupID` = '".(int)$user['GroupID']."'" .
+					" LIMIT 1"));
+		}
+		
 		if (!$haspermissions)
 			return array(
 				'PermissionType' => USER_PERMISSION_TYPE_WRITE,
 				'PermissionIDs' => null);
-			
+		
 		$permissions = sql::run(
 			" SELECT `PermissionTypeID`, `Path` " .
 			" FROM `{userpermissions}`" .
@@ -682,6 +698,20 @@ class _userPermissions {
 			" AND ('".sql::escape($path)."/' LIKE CONCAT(`Path`, '/%')" .
 			" 	OR CONCAT(`Path`, '/') LIKE '".sql::escape($path)."/%')" .
 			" ORDER BY `Path`");
+		
+		if (JCORE_VERSION >= '0.8' && !sql::rows($permissions)) {
+			if (!$user)
+				$user = $GLOBALS['USER']->get($userid);
+			
+			if ($user['GroupID'])
+				$permissions = sql::run(
+					" SELECT `PermissionTypeID`, `Path` " .
+					" FROM `{usergrouppermissions}`" .
+					" WHERE `GroupID` = '".(int)$user['GroupID']."'" .
+					" AND ('".sql::escape($path)."/' LIKE CONCAT(`Path`, '/%')" .
+					" 	OR CONCAT(`Path`, '/') LIKE '".sql::escape($path)."/%')" .
+					" ORDER BY `Path`");
+		}
 		
 		$permissiontype = 0;
 		$permissionids = null;

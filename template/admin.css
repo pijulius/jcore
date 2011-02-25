@@ -118,6 +118,10 @@
 	background-image: url("http://icons.jcore.net/32/mail-message-new.png");
 }
 
+.admin-link.users {
+	background-image: url("http://icons.jcore.net/32/stock_people.png");
+}
+
 .admin-favorite-links {
 	float: right;
 	position: relative;
@@ -262,6 +266,10 @@
 
 .as-members-users a {
 	background-image: url("http://icons.jcore.net/48/emesene.png");
+}
+
+.as-members-usergroups a {
+	background-image: url("http://icons.jcore.net/48/user-groups.png");
 }
 
 .as-members-massemail a {
