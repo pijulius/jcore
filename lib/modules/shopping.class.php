@@ -2162,8 +2162,9 @@ class shoppingItems {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($search?
-					" AND (`Title` LIKE '%".sql::escape($search)."%' " .
-					" 	OR `Keywords` LIKE '%".sql::escape($search)."%') ":
+					sql::search(
+						$search,
+						array('Title', 'Description', 'Keywords')):
 					null) .
 				" ORDER BY `OrderID`, `ID` DESC");
 				
@@ -2195,8 +2196,9 @@ class shoppingItems {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($search?
-					" AND (`Title` LIKE '%".sql::escape($search)."%' " .
-					" 	OR `Keywords` LIKE '%".sql::escape($search)."%') ":
+					sql::search(
+						$search,
+						array('Title', 'Description', 'Keywords')):
 					null) .
 				" ORDER BY `OrderID`, `ID` DESC" .
 				" LIMIT ".$paging->limit);

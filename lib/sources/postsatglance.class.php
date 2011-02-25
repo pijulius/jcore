@@ -364,6 +364,11 @@ class _postsAtGlance extends posts {
 				" AND `PageID` = '".$pageid."'":
 				null) .
 			($search?
+				sql::search(
+					$search,
+					array('Title', 'Content', 'Keywords')):
+				null) .
+			($search?
 				" AND (`Title` LIKE '%".sql::escape($search)."%' " .
 				" 	OR `Keywords` LIKE '%".sql::escape($search)."%') ":
 				null) .

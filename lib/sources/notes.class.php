@@ -307,6 +307,21 @@ class _notes {
 			$row['Content']);
 	}
 	
+	function displayAdminListSearch() {
+		$search = null;
+		
+		if (isset($_GET['search']))
+			$search = trim(strip_tags($_GET['search']));
+		
+		echo
+			"<input type='hidden' name='path' value='".admin::path()."' />" .
+			"<input type='search' name='search' value='".
+				htmlspecialchars($search, ENT_QUOTES).
+				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
+			"<input type='submit' value='" .
+				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
+	}
+	
 	function displayAdminList(&$rows) {
 		$id = null;
 		
@@ -389,14 +404,28 @@ class _notes {
 	}
 	
 	function displayAdmin() {
+		$search = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['search']))
+			$search = trim(strip_tags($_GET['search']));
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
+		
+		echo
+			"<div style='float: right;'>" .
+				"<form action='".url::uri('ALL')."' method='get'>";
+		
+		$this->displayAdminListSearch();
+		
+		echo
+				"</form>" .
+			"</div>";
 		
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
@@ -439,6 +468,12 @@ class _notes {
 		
 		$rows = sql::run(
 				" SELECT * FROM `{notes}`" .
+				" WHERE 1" .
+				($search?
+					sql::search(
+						$search,
+						array('Title', 'Content')):
+					null) .
 				" ORDER BY `ID` DESC" .
 				" LIMIT ".$paging->limit);
 		

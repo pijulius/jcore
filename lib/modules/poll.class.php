@@ -1258,6 +1258,21 @@ class poll extends modules {
 		$this->displayAdminAnswers($row);
 	}
 	
+	function displayAdminListSearch() {
+		$search = null;
+		
+		if (isset($_GET['search']))
+			$search = trim(strip_tags($_GET['search']));
+		
+		echo
+			"<input type='hidden' name='path' value='".admin::path()."' />" .
+			"<input type='search' name='search' value='".
+				htmlspecialchars($search, ENT_QUOTES).
+				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
+			"<input type='submit' value='" .
+				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
+	}
+	
 	function displayAdminListFunctions() {
 		echo
 			"<input type='submit' name='reordersubmit' value='".
@@ -1365,8 +1380,12 @@ class poll extends modules {
 		if (modules::displayAdmin())
 			return;
 		
+		$search = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['search']))
+			$search = trim(strip_tags($_GET['search']));
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -1374,6 +1393,16 @@ class poll extends modules {
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
 			
+		echo
+			"<div style='float: right;'>" .
+				"<form action='".url::uri('ALL')."' method='get'>";
+		
+		$this->displayAdminListSearch();
+		
+		echo
+				"</form>" .
+			"</div>";
+		
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
 		
@@ -1415,6 +1444,11 @@ class poll extends modules {
 			" WHERE 1" .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
+				null) .
+			($search?
+				sql::search(
+					$search,
+					array('Title', 'Description')):
 				null) .
 			" ORDER BY `OrderID`, `ID` DESC");
 		

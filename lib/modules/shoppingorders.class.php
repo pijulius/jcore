@@ -3563,8 +3563,9 @@ class shoppingOrders extends modules {
 				" AND `OrderStatus` = '".(int)$status."'":
 				null) .
 			($search?
-				" AND (`OrderID` LIKE '%".sql::escape($search)."%' " .
-				" 	OR `OrderMethodDetails` LIKE '%".sql::escape($search)."%') ":
+				sql::search(
+					$search,
+					array('OrderID', 'OrderMethodDetails')):
 				null) .
 			" ORDER BY `ID` DESC" .
 			" LIMIT ".$paging->limit);
