@@ -474,7 +474,7 @@ class _favoriteLinks {
 		if (isset(favoriteLinks::$links[$link]))
 			return false;
 		
-		preg_match('/(\?|&)path=(.*?)(&|\'|")/i', $link, $matches);
+		preg_match('/(\?|&)path=(.*?)(&|\'|"|$)/i', $link, $matches);
 		
 		$userpermission = userPermissions::check($GLOBALS['USER']->data['ID'], 
 			(isset($matches[2])?
