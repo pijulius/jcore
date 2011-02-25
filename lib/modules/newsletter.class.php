@@ -289,7 +289,7 @@ class newsletterLists {
 					"title='".htmlspecialchars(_("Members"), ENT_QUOTES) .
 					" (".$members['Rows'].")' " .
 					"href='?path=admin/modules/newsletter/newslettersubscriptions" .
-						"&listid=".$row['ID']."'>" .
+						"&searchlistid=".$row['ID']."'>" .
 					(ADMIN_ITEMS_COUNTER_ENABLED && $members['Rows']?
 						"<span class='counter'>" .
 							"<span>" .
@@ -664,9 +664,13 @@ class newsletterSubscriptions {
 	
 	function setupAdminForm(&$form) {
 		$edit = null;
+		$listid = null;
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
+		
+		if (isset($_GET['searchlistid']))
+			$listid = (float)$_GET['searchlistid'];
 		
 		if ($edit) {
 			$form->add(
@@ -701,7 +705,8 @@ class newsletterSubscriptions {
 				_('Subscribed to'),
 				'ListIDs',
 				FORM_INPUT_TYPE_MULTISELECT,
-				true);
+				true,
+				array($listid));
 			$form->setValueType(FORM_VALUE_TYPE_ARRAY);
 			$form->addAdditionalTitle("<div class='comment'>" .
 				_("hold CTRL down to select more")."</div>");
@@ -762,8 +767,8 @@ class newsletterSubscriptions {
 		if (isset($_POST['confirmsubmit']))
 			$confirm = $_POST['confirmsubmit'];
 		
-		if (isset($_GET['listid']))
-			$listid = (int)$_GET['listid'];
+		if (isset($_GET['searchlistid']))
+			$listid = (int)$_GET['searchlistid'];
 		
 		if (isset($_GET['search']))
 			$search = $_GET['search'];
@@ -1135,15 +1140,15 @@ class newsletterSubscriptions {
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
 		
-		if (isset($_GET['listid']))
-			$listid = (float)$_GET['listid'];
+		if (isset($_GET['searchlistid']))
+			$listid = (float)$_GET['searchlistid'];
 		
 		echo
 			"<input type='hidden' name='path' value='".admin::path()."' />" .
 			"<input type='search' name='search' value='".
 				htmlspecialchars($search, ENT_QUOTES).
 				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
-			"<select name='listid' value='".
+			"<select name='searchlistid' value='".
 				(int)$listid .
 				"' style='width: 100px;' onchange='this.form.submit();'>" .
 				"<option value=''>"._("All")."</option>" .
@@ -1246,8 +1251,8 @@ class newsletterSubscriptions {
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
 		
-		if (isset($_GET['listid']))
-			$listid = (float)$_GET['listid'];
+		if (isset($_GET['searchlistid']))
+			$listid = (float)$_GET['searchlistid'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];

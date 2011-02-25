@@ -19,6 +19,11 @@ class _postsAtGlance extends posts {
 	}
 	
 	function setupAdminForm(&$form, $isownerhomepage = false) {
+		$pageid = null;
+		
+		if (isset($_GET['searchpageid']))
+			$pageid = (int)$_GET['searchpageid'];
+		
 		parent::setupAdminForm($form, $isownerhomepage);
 		
 		$form->edit(
@@ -27,7 +32,7 @@ class _postsAtGlance extends posts {
 			'PageID',
 			FORM_INPUT_TYPE_SELECT,
 			false,
-			0);
+			$pageid);
 		
 		$form->addValue('PageID', '', '');
 	}
