@@ -3459,9 +3459,8 @@ class shoppingOrders extends modules {
 			"<input type='search' name='search' value='".
 				htmlspecialchars($search, ENT_QUOTES).
 				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
-			"<select name='status' value='".
-				(int)$status .
-				"' style='width: 100px;' onchange='this.form.submit();'>" .
+			"<select name='status' style='width: 100px;' " .
+				"onchange='this.form.submit();'>" .
 				"<option value=''>".__("All")."</option>";
 		
 		foreach($ordertypes as $type)

@@ -1148,9 +1148,8 @@ class newsletterSubscriptions {
 			"<input type='search' name='search' value='".
 				htmlspecialchars($search, ENT_QUOTES).
 				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
-			"<select name='searchlistid' value='".
-				(int)$listid .
-				"' style='width: 100px;' onchange='this.form.submit();'>" .
+			"<select name='searchlistid' style='width: 100px;' " .
+				"onchange='this.form.submit();'>" .
 				"<option value=''>"._("All")."</option>" .
 				"<option value='-1'" .
 					($listid == -1?" selected='selected'":null) .
