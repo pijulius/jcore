@@ -908,7 +908,8 @@ class _users {
 		$query = 
 			" `UserName` = '".sql::escape($values['UserName'])."'," .
 			(JCORE_VERSION < '0.6' || 
-			 ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin'])?
+			 ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin']) ||
+			 (defined('INSTANT_USER_REGISTRATION') && INSTANT_USER_REGISTRATION)?
 				" `Password` = '".sql::escape(security::text2Hash($password))."',":
 				null) .
 			" `Email` = '".sql::escape($values['Email'])."',";
@@ -940,7 +941,8 @@ class _users {
 		}
 		
 		if (JCORE_VERSION >= '0.6' && (!$GLOBALS['USER']->loginok ||
-			!$GLOBALS['USER']->data['Admin']))
+			!$GLOBALS['USER']->data['Admin']) &&
+			(!defined('INSTANT_USER_REGISTRATION') || !INSTANT_USER_REGISTRATION))
 		{
 			$email = new email();
 			$email->load('NewAccountActivation');

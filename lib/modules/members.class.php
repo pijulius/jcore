@@ -85,7 +85,8 @@ class memberRegistrationForm extends dynamicForms {
 			return false;
 		
 		if (JCORE_VERSION >= '0.6' && (!$GLOBALS['USER']->loginok ||
-			!$GLOBALS['USER']->data['Admin']))
+			!$GLOBALS['USER']->data['Admin']) &&
+			(!defined('INSTANT_USER_REGISTRATION') || !INSTANT_USER_REGISTRATION))
 			tooltip::display(
 				_("<b>Thank you for your registration.</b><br />" .
 					" Your account has been created. However we require" .
