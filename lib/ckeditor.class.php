@@ -10,9 +10,6 @@
  
 include_once('lib/sources/ckeditor.class.php');
 
-class ckEditorFileManager extends _ckEditorFileManager {
-}
- 
 class ckEditor extends _ckEditor {
 }
  

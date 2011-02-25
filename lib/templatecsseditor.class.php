@@ -1,16 +1,16 @@
 <?php
 
 /***************************************************************************
- *            calendar.class.php
+ *            templatecsseditor.class.php
  *
  *  Jul 05, 07:00:00 2009
  *  Copyright  2009  Istvan Petres (aka P.I.Julius)
  *  me@pijulius.com
  ****************************************************************************/
  
-include_once('lib/sources/calendar.class.php');
+include_once('lib/sources/templatecsseditor.class.php');
 
-class calendar extends _calendar {
+class templateCSSEditor extends _templateCSSEditor {
 }
- 
+
 ?>

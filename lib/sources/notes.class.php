@@ -9,39 +9,11 @@
  ****************************************************************************/
 
 include_once('lib/paging.class.php');
-include_once('lib/attachments.class.php');
-include_once('lib/comments.class.php');
+include_once('lib/notecomments.class.php');
+include_once('lib/noteattachments.class.php');
 
 define('NOTE_STATUS_OPEN', 1);
 define('NOTE_STATUS_CLOSED', 2);
-
-class _noteComments extends comments {
-	var $sqlTable = 'notecomments';
-	var $sqlRow = 'NoteID';
-	var $sqlOwnerTable = 'notes';
-	var $adminPath = 'admin/site/notes/notecomments';
-	
-	function __construct() {
-		parent::__construct();
-		
-		$this->selectedOwner = __('Note');
-		$this->uriRequest = "notes&amp;comments=1";
-	}
-}
-
-class _noteAttachments extends attachments {
-	var $sqlTable = 'noteattachments';
-	var $sqlRow = 'NoteID';
-	var $sqlOwnerTable = 'notes';
-	var $adminPath = 'admin/site/notes/noteattachments';
-	
-	function __construct() {
-		parent::__construct();
-		
-		$this->selectedOwner = __('Note');
-		$this->uriRequest = "notes&amp;attachments=1";
-	}
-}
 
 class _notes {
 	var $adminPath = 'admin/site/notes';

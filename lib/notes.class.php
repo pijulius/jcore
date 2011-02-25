@@ -10,12 +10,6 @@
 
 include_once('lib/sources/notes.class.php');
 
-class noteComments extends _noteComments {
-}
-
-class noteAttachments extends _noteAttachments {
-}
-
 class notes extends _notes {
 }
 

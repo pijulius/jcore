@@ -10,9 +10,6 @@
  
 include_once('lib/sources/sitemap.class.php');
 
-class sitemapFileEditor extends _sitemapFileEditor {
-}
-
 class sitemap extends _sitemap {
 }
 

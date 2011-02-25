@@ -25,6 +25,11 @@ include_once('lib/userpermissions.class.php');
 include_once('lib/usergroups.class.php');
 include_once('lib/usergrouppermissions.class.php');
 include_once('lib/sitemap.class.php');
+include_once('lib/sitemapfileeditor.class.php');
+include_once('lib/templatecsseditor.class.php');
+include_once('lib/templatejseditor.class.php');
+include_once('lib/templateimages.class.php');
+include_once('lib/templateexporter.class.php');
 
 if (JCORE_VERSION < '0.7')
 	include_once('lib/dynamicformfieldvalues.class.php');

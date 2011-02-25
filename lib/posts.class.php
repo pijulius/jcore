@@ -10,24 +10,6 @@
 
 include_once('lib/sources/posts.class.php');
 
-class postsForm extends _postsForm {
-}
-
-class postsCalendar extends _postsCalendar {
-}
-
-class postRating extends _postRating {
-}
-
-class postComments extends _postComments {
-}
-
-class postAttachments extends _postAttachments {
-}
-
-class postPictures extends _postPictures {
-}
-
 class posts extends _posts {
 }
 
