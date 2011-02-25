@@ -69,6 +69,11 @@ class _ckEditorFileManager extends fileManager {
 				$GLOBALS['USER']->data['ID'],
 				'admin/content/pages');
 		
+		if (!$permission['PermissionType'])
+			$permission = userPermissions::check(
+				$GLOBALS['USER']->data['ID'],
+				'admin/content/postsatglance');
+		
 		if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
 			$permission['PermissionIDs'])
 			$this->readOnly = true;
