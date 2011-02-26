@@ -354,7 +354,8 @@ class _url {
 		$string = preg_replace('/([^a-zA-Z0-9_-]*)/', '', 
 			preg_replace($chars, array_keys($chars), 
 				htmlentities(strip_tags(trim($string)), 
-					ENT_NOQUOTES)));
+					ENT_NOQUOTES,
+					PAGE_CHARSET)));
 		
 		if (!$lowercase)
 			return $string;
