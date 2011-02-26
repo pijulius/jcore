@@ -166,7 +166,12 @@ class _sql {
 	}
 
 	static function escape($string) {
-		return mysql_real_escape_string($string, sql::$link);
+		return mysql_real_escape_string( sql::stripAccents($string), sql::$link);
+	}
+	
+	function stripAccents($string){
+		return strtr($string,'àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ',
+			'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY');
 	}
 	
 	static function count($tblkey = '`ID`', $debug = false) {
