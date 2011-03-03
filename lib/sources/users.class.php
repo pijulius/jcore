@@ -1773,7 +1773,7 @@ class _users {
 			$email->variables = $user;
 			$email->variables['RequestID'] = $newid;
 			$email->variables['RequestURL'] = 
-				url::site().str_replace('&amp;', '&', url::uri('requestpassword')).
+				str_replace('&amp;', '&', url::get('request, requestid, requestpassword')).
 				"&request=users&requestid=".$newid;
 			
 			if (JCORE_VERSION >= '0.6')
