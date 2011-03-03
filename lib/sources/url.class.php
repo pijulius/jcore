@@ -130,16 +130,15 @@ class _url {
 	}
 	
 	static function args($notincludeargs = null) {
-		$uri = str_replace('//', '/', $_SERVER['REQUEST_URI']);
-		$expuri = explode('?', $uri);
+		$uri = parse_url($_SERVER['REQUEST_URI']);
 		
-		if (!isset($expuri[1]))
+		if (!isset($uri['query']))
 			return null;
 		
 		if (!$notincludeargs)
-			return str_replace('&', '&amp;', $expuri[1]);
+			return str_replace('&', '&amp;', $uri['query']);
 		
-		$args = explode('&', $expuri[1]);
+		$args = explode('&', $uri['query']);
 		$notincludeargs = explode(",", str_replace(" ", "", $notincludeargs));
 		
 		$rargs = null;
@@ -184,22 +183,21 @@ class _url {
 	}
 
 	static function uri($notincludeargs = null, $inverse = false) {
-		$uri = str_replace('//', '/', $_SERVER['REQUEST_URI']);
-		$expuri = explode('?', $uri);
+		$uri = parse_url($_SERVER['REQUEST_URI']);
 		
 		if (!$notincludeargs)
-			return str_replace('&', '&amp;', $uri).
-				(!isset($expuri[1])?
+			return str_replace('&', '&amp;', $_SERVER['REQUEST_URI']).
+				(!isset($uri['query'])?
 					'?':
 					null);
 		
 		if ($notincludeargs == 'ALL')
-			return $expuri[0];
+			return (isset($uri['path'])?$uri['path']:'');
 		
-		if (!isset($expuri[1]))
-			return $expuri[0].'?';
+		if (!isset($uri['query']))
+			return (isset($uri['path'])?$uri['path']:'').'?';
 		
-		$args = explode('&', $expuri[1]);
+		$args = explode('&', $uri['query']);
 		$notincludeargs = explode(",", str_replace(" ", "", $notincludeargs));
 		
 		$rargs = null;
@@ -216,13 +214,14 @@ class _url {
 			}
 		}
 		
-		return $expuri[0].'?'.substr($rargs, 0, strlen($rargs)-5);
+		return (isset($uri['path'])?$uri['path']:'').'?' .
+			substr($rargs, 0, strlen($rargs)-5);
 	}
 	
-	static function get() {
+	static function get($args = null) {
 		$https = false;
 		
-		if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on')
+		if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'])
 			$https = true;
 		
 		$url = 'http'.($https?'s':null).'://'.$_SERVER['SERVER_NAME'];
@@ -231,7 +230,7 @@ class _url {
 			($_SERVER['SERVER_PORT'] != '443' && $https))
 			$url .= ':'.$_SERVER['SERVER_PORT'];
 		
-		$url .= $_SERVER['REQUEST_URI'];
+		$url .= url::uri($args);
 		return $url;
 	}
 	
@@ -302,9 +301,12 @@ class _url {
 	}
 	
 	static function rootDomain($url = null) {
-		return preg_replace('/(\/.*|^www\.)/', '',  
-					preg_replace('/.*:\/\//', '',
-						($url?$url:url::site())));
+		$url = parse_url($url?$url:url::site());
+		
+		if (!isset($url['host']))
+			return null;
+		
+		return preg_replace('/(\/.*|^www\.)/', '', $url['host']);
 	}
 	
 	static function getPathID($level = 0, $path = null) {
