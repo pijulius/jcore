@@ -70,9 +70,7 @@ class _comments {
 	var $ajaxRequest = null;
 	
 	function __construct() {
-		$this->commentURL = "http://".$_SERVER['HTTP_HOST'].
-			str_replace('&amp;', '&', url::uri());
-		
+		$this->commentURL = str_replace('&amp;', '&', url::get());
 		$this->uriRequest = strtolower(get_class($this));
 		
 		if ($this->sqlRow && isset($_GET[strtolower($this->sqlRow)]))
