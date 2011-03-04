@@ -53,13 +53,13 @@ class _pages {
 	}
 	
 	static function populate() {
+		menus::getOrder();
+		
 		if (!isset($_GET['pageid']))
 			$_GET['pageid'] = 0;
 		
 		if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN'])
 			return false;
-		
-		menus::getOrder();
 		
 		$selected = sql::fetch(sql::run(
 			" SELECT * FROM `{pages}`" .
