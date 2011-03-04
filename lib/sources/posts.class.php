@@ -185,25 +185,27 @@ class _posts {
 			foreach($postsform->elements as $element)
 				$form->elements[] = $element;
 			
-			$form->addValue('BlockID', '','');
-			$disabledblocks = array();
-			
-			foreach(blocks::getTree() as $block) {
-				$form->addValue(
-					'BlockID',
-					$block['ID'], 
-					($block['SubBlockOfID']?
-						str_replace(' ', '&nbsp;', 
-							str_pad('', $block['PathDeepnes']*4, ' ')).
-						"|- ":
-						null) .
-					$block['Title']);
+			if ($form->getElementID('BlockID')) {
+				$form->addValue('BlockID', '','');
+				$disabledblocks = array();
 				
-				if ($block['TypeID'] != BLOCK_TYPE_CONTENT)
-					$disabledblocks[] = $block['ID'];
+				foreach(blocks::getTree() as $block) {
+					$form->addValue(
+						'BlockID',
+						$block['ID'], 
+						($block['SubBlockOfID']?
+							str_replace(' ', '&nbsp;', 
+								str_pad('', $block['PathDeepnes']*4, ' ')).
+							"|- ":
+							null) .
+						$block['Title']);
+					
+					if ($block['TypeID'] != BLOCK_TYPE_CONTENT)
+						$disabledblocks[] = $block['ID'];
+				}
+				
+				$form->disableValues('BlockID', $disabledblocks);
 			}
-			
-			$form->disableValues('BlockID', $disabledblocks);
 			
 			$form->edit(
 				'OnMainPage',
@@ -247,7 +249,7 @@ class _posts {
 				"</a>");
 			
 			$form->insert(
-				'TimeStamp',
+				'OnMainPage',
 				'PageID',
 				'PageID',
 				FORM_INPUT_TYPE_HIDDEN,
@@ -278,14 +280,6 @@ class _posts {
 			__('Blogging Options'),
 			null,
 			FORM_OPEN_FRAME_CONTAINER);
-		
-		$form->add(
-			'PageID',
-			'PageID',
-			FORM_INPUT_TYPE_HIDDEN,
-			true,
-			admin::getPathID());
-		$form->setValueType(FORM_VALUE_TYPE_INT);
 		
 		$form->add(
 			__('Created on'),
@@ -354,6 +348,14 @@ class _posts {
 			__('Display Options'),
 			null,
 			FORM_OPEN_FRAME_CONTAINER);
+		
+		$form->add(
+			'PageID',
+			'PageID',
+			FORM_INPUT_TYPE_HIDDEN,
+			true,
+			admin::getPathID());
+		$form->setValueType(FORM_VALUE_TYPE_INT);
 		
 		$form->add(
 			($isownerhomepage?
