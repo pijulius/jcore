@@ -15,6 +15,7 @@ class _postPictures extends pictures {
 	var $sqlRow = 'PostID';
 	var $sqlOwnerTable = 'posts';
 	var $adminPath = array(
+		'admin/content/menuitems/posts/postpictures',
 		'admin/content/pages/posts/postpictures',
 		'admin/content/postsatglance/postpictures');
 	

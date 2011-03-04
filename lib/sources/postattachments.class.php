@@ -15,6 +15,7 @@ class _postAttachments extends attachments {
 	var $sqlRow = 'PostID';
 	var $sqlOwnerTable = 'posts';
 	var $adminPath = array(
+		'admin/content/menuitems/posts/postattachments',
 		'admin/content/pages/posts/postattachments',
 		'admin/content/postsatglance/postattachments');
 	

@@ -15,6 +15,7 @@ class _postComments extends comments {
 	var $sqlRow = 'PostID';
 	var $sqlOwnerTable = 'posts';
 	var $adminPath = array(
+		'admin/content/menuitems/posts/postcomments',
 		'admin/content/pages/posts/postcomments',
 		'admin/content/postsatglance/postcomments');
 	

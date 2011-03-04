@@ -40,7 +40,8 @@ class _postsCalendar extends monthCalendar {
 			" SELECT `ID` FROM `{posts}`" .
 			" WHERE `TimeStamp` LIKE '".date('Y-m-d', $time)."%'" .
 			($this->pageID?
-				" AND `PageID` = '".(int)$this->pageID."'":
+				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+					(int)$this->pageID."'":
 				null) .
 			" LIMIT 1"));
 		

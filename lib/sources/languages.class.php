@@ -110,7 +110,8 @@ class _languages {
 		
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/pages');
+			'?path=' .
+			(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
 		favoriteLinks::add(
 			__('Blocks'), 
 			'?path=admin/site/blocks');
@@ -260,7 +261,7 @@ class _languages {
 				
 			tooltip::display(
 				__("Language has been successfully updated.")." " .
-				"<a href='?path=admin/content/pages'>" .
+				"<a href='?path=".(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems')."'>" .
 					__("View Pages") .
 				"</a>" .
 				" - " .
@@ -277,7 +278,7 @@ class _languages {
 		
 		tooltip::display(
 			__("Language has been successfully created.")." " .
-			"<a href='?path=admin/content/pages'>" .
+			"<a href='?path=".(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems')."'>" .
 				__("View Pages") .
 			"</a>" .
 			" - " .
@@ -744,7 +745,11 @@ class _languages {
 		 */
 		
 		sql::run(
-			" UPDATE `{pages}` " .
+			" UPDATE `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}` " .
 			" SET `LanguageID` = 0" .
 			" WHERE `LanguageID` = '".$id."'");
 			

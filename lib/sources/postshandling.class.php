@@ -71,7 +71,11 @@ class _postsHandling {
 		}
 		
 		$topage = sql::fetch(sql::run(
-			" SELECT * FROM `{pages}`" .
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
 			" WHERE `ID` = '".$topageid."'"));
 		
 		if (!$topage) {
@@ -115,7 +119,8 @@ class _postsHandling {
 		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('Pages / Posts'), 
-				'?path=admin/content/pages');
+				'?path=' .
+				(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
 		
 		favoriteLinks::add(
 			__('Settings'), 
@@ -202,8 +207,9 @@ class _postsHandling {
 				"<a class='admin-link edit' " .
 					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
 					"href='?path=" .
-					($row['PageID']?
-						"admin/content/pages/".$row['PageID']."/posts":
+					($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]?
+						(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems') .
+							$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."/posts":
 						"admin/content/postsatglance") .
 					"&amp;search=".urlencode($row['Title']) .
 					"&amp;id=".$row['ID'].
@@ -263,7 +269,7 @@ class _postsHandling {
 						" selected='selected'":
 						null) .
 					">" . 
-				($row['SubPageOfID']?
+				($row[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]?
 					str_replace(' ', '&nbsp;', 
 						str_pad('', $row['PathDeepnes']*4, ' ')).
 					"|- ":
@@ -312,7 +318,7 @@ class _postsHandling {
 						" selected='selected'":
 						null) .
 					">" . 
-				($row['SubPageOfID']?
+				($row[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]?
 					str_replace(' ', '&nbsp;', 
 						str_pad('', $row['PathDeepnes']*4, ' ')).
 					"|- ":
@@ -347,18 +353,18 @@ class _postsHandling {
 		$pageroute = null;
 		
 		while($row = sql::fetch($rows)) {
-			if ($pageid !== $row['PageID']) {
+			if ($pageid !== $row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]) {
 				$pageroute = null;
 				
-				if ($row['PageID']) {
-					foreach(pages::getBackTraceTree($row['PageID']) as $page) {
+				if ($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]) {
+					foreach(pages::getBackTraceTree($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]) as $page) {
 						$pageroute .=
 							"<div".
-								($page['ID'] == $row['PageID']?
+								($page['ID'] == $row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]?
 									" class='bold' style='font-size: 120%;'":
 									null) .
 								">" . 
-							($page['SubPageOfID']?
+							($page[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]?
 								str_replace(' ', '&nbsp;', 
 									str_pad('', $page['PathDeepnes']*4, ' ')).
 								"|- ":
@@ -393,7 +399,7 @@ class _postsHandling {
 					"</thead>" .
 					"<tbody>";
 					
-				$pageid = $row['PageID'];
+				$pageid = $row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')];
 			}
 			
 			echo
@@ -489,13 +495,15 @@ class _postsHandling {
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				null) .
 			($pageid?
-				" AND `PageID` = '".$pageid."'":
+				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+					$pageid."'":
 				null) .
 			($search?
 				" AND (`Title` LIKE '%".sql::escape($search)."%' " .
 				" 	OR `Keywords` LIKE '%".sql::escape($search)."%') ":
 				null) .
-			" ORDER BY `PageID`, `OrderID`, `ID` DESC" .
+			" ORDER BY `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`," .
+				" `OrderID`, `ID` DESC" .
 			" LIMIT ".$paging->limit);
 		
 		$paging->setTotalItems(sql::count());
@@ -541,13 +549,18 @@ class _postsHandling {
 		
 		if (JCORE_VERSION >= '0.5')
 			sql::run(
-				" UPDATE `{pages}` SET " .
+				" UPDATE `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}` SET " .
 				" `Posts` = `Posts` + 1" .
 				" WHERE `ID` = '".(int)$topageid."'");
 		
 		sql::run(
 			" UPDATE `{posts}` SET" .
-			" `PageID` = '".$topageid."'," .
+			" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+				$topageid."'," .
 			" `TimeStamp` = `TimeStamp`" .
 			" WHERE `ID` = '".$newpostid."'");
 		
@@ -610,7 +623,7 @@ class _postsHandling {
 			
 			posts::updateKeywordsCloud(
 				$post['Keywords'], null,
-				$post['PageID']);
+				$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]);
 		}
 		
 		return $newpostid;
@@ -626,7 +639,8 @@ class _postsHandling {
 		
 		sql::run(
 			" UPDATE `{posts}` SET" .
-			" `PageID` = '".$topageid."'," .
+			" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+				$topageid."'," .
 			" `TimeStamp` = `TimeStamp`" .
 			" WHERE `ID` = '".(int)$postid."'");
 		
@@ -640,14 +654,23 @@ class _postsHandling {
 		
 		if (JCORE_VERSION >= '0.5') {
 			sql::run(
-				" UPDATE `{pages}` SET " .
+				" UPDATE `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}` SET " .
 				" `Posts` = `Posts` + 1" .
 				" WHERE `ID` = '".(int)$topageid."'");
 			
 			sql::run(
-				" UPDATE `{pages}` SET " .
+				" UPDATE `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}` SET " .
 				" `Posts` = `Posts` - 1" .
-				" WHERE `ID` = '".(int)$post['PageID']."'");
+				" WHERE `ID` = '" .
+					(int)$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'");
 		}
 		
 		if (sql::affected() == -1) {
@@ -661,7 +684,7 @@ class _postsHandling {
 		if (JCORE_VERSION >= '0.7')
 			posts::updateKeywordsCloud(
 				$post['Keywords'], $post['Keywords'],
-				$topageid, $post['PageID']);
+				$topageid, $post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]);
 		
 		return true;
 	}

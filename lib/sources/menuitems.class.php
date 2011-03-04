@@ -48,7 +48,11 @@ class _menuItems extends pages {
 	
 	function displaySubmenus(&$row) {
 		$rows = sql::run(
-			" SELECT * FROM `{pages}`" .
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
 			" WHERE !`Deactivated`" .
 			" AND !`Hidden`" .
 			" AND `MenuID` = '".(int)$this->selectedMenuID."'" .
@@ -57,7 +61,8 @@ class _menuItems extends pages {
 					(int)languages::$selected['ID']:
 					0) .
 				"'" .
-			" AND `SubPageOfID` = '".(int)$row['ID']."'" .
+			" AND `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '" .
+				(int)$row['ID']."'" .
 			" AND (!`ViewableBy` OR " .
 				($GLOBALS['USER']->loginok?
 					($GLOBALS['USER']->data['Admin']?

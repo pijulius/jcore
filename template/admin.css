@@ -160,11 +160,15 @@
 	text-decoration: none;
 }
 
-.as-content-pages {
+.as-content-pages,
+.as-content-menuitems
+{
 	width: 80px;
 }
 
-.as-content-pages a {
+.as-content-pages a,
+.as-content-menuitems a
+{
 	background-image: url("http://icons.jcore.net/48/accessories-text-editor.png");
 }
 

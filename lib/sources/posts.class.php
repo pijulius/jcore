@@ -37,6 +37,7 @@ class _posts {
 	var $ajaxPaging = AJAX_PAGING;
 	var $ajaxRequest = null;
 	var $adminPath = array(
+		'admin/content/menuitems/posts',
 		'admin/content/pages/posts',
 		'admin/content/postsatglance');
 	
@@ -68,7 +69,11 @@ class _posts {
 		if ($this->search || !$page) {
 			$pageids = sql::fetch(sql::run(
 				" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS PageIDs" .
-				" FROM `{pages}`" .
+				" FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
 				" WHERE `Deactivated`" .
 				(!$GLOBALS['USER']->loginok?
 					" OR `ViewableBy` > 1":
@@ -86,7 +91,8 @@ class _posts {
 				" AND `ID` = '".$this->selectedID."'":
 				" AND !`BlockID`") .
 			($searchignorepageids?
-				" AND `PageID` NOT IN (".$searchignorepageids.")":
+				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` NOT IN (" .
+					$searchignorepageids.")":
 				null) .
 			($this->search && !$this->selectedID?
 				sql::search(
@@ -96,15 +102,16 @@ class _posts {
 						array('Title', 'Content', 'Keywords')),
 					'AND', array('date' => 'TimeStamp')):
 				($page?
-					" AND (`PageID` = '".$page['ID']."'" .
+					" AND (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+						$page['ID']."'" .
 					(JCORE_VERSION >= '0.8' && trim($page['PostKeywords'])?
 						" OR (1" .
 							sql::search($page['PostKeywords'].',', array('Keywords'), 'OR') .
 						")":
 						null) .
 					($homepage['ID'] == $page['ID']?
-						" OR `OnMainPage` OR !`PageID` ":
-						" OR (`PageID` = '".$homepage['ID']."'" .
+						" OR `OnMainPage` OR !`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` ":
+						" OR (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$homepage['ID']."'" .
 							" AND `OnMainPage`) ") .
 					" ) ":
 					null)) .
@@ -131,7 +138,9 @@ class _posts {
 			" SELECT `ID`, `Title`, `Path`, `Keywords`" .
 			" FROM `{posts}`" .
 			" WHERE !`Deactivated`" .
-			" AND (!`PageID` OR `PageID` = '".(int)$_GET['pageid']."')" .
+			" AND (!`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
+				" OR `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+					(int)$_GET['pageid']."')" .
 			(SEO_FRIENDLY_LINKS && !(int)$_GET['postid']?
 				" AND '".sql::escape(url::path())."/' LIKE CONCAT(`Path`,'/%')":
 				" AND `ID` = '".(int)$_GET['postid']."'") .
@@ -250,8 +259,8 @@ class _posts {
 			
 			$form->insert(
 				'OnMainPage',
-				'PageID',
-				'PageID',
+				(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'),
+				(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'),
 				FORM_INPUT_TYPE_HIDDEN,
 				true,
 				admin::getPathID(),
@@ -350,23 +359,13 @@ class _posts {
 			FORM_OPEN_FRAME_CONTAINER);
 		
 		$form->add(
-			'PageID',
-			'PageID',
+			(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'),
+			(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'),
 			FORM_INPUT_TYPE_HIDDEN,
 			true,
 			admin::getPathID());
 		$form->setValueType(FORM_VALUE_TYPE_INT);
 		
-		$form->add(
-			($isownerhomepage?
-				__('Display on All pages'):
-				__('Display on Main page')),
-			'OnMainPage',
-			FORM_INPUT_TYPE_CHECKBOX,
-			false,
-			'1');
-		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-			
 		$form->add(
 			__('In Block'),
 			'BlockID',
@@ -392,6 +391,16 @@ class _posts {
 		
 		$form->disableValues($disabledblocks);
 		
+		$form->add(
+			($isownerhomepage?
+				__('Display on All pages'):
+				__('Display on Main page')),
+			'OnMainPage',
+			FORM_INPUT_TYPE_CHECKBOX,
+			false,
+			'1');
+		$form->setValueType(FORM_VALUE_TYPE_BOOL);
+			
 		$form->add(
 			__('Partial Content'),
 			'PartialContent',
@@ -1014,7 +1023,11 @@ class _posts {
 		
 		$selectedowner = sql::fetch(sql::run(
 			" SELECT `Title`, `LanguageID` " .
-			" FROM `{pages}` " .
+			" FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}` " .
 			" WHERE `ID` = '".admin::getPathID()."'"));
 			
 		$isownerhomepage = pages::isHome(
@@ -1071,7 +1084,8 @@ class _posts {
 		
 		$rows = sql::run(
 				" SELECT * FROM `{posts}`" .
-				" WHERE `PageID` = '".admin::getPathID()."'" .
+				" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+					admin::getPathID()."'" .
 				($this->userPermissionIDs?
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
@@ -1101,7 +1115,8 @@ class _posts {
 			if ($edit && $id && ($verifyok || !$form->submitted())) {
 				$row = sql::fetch(sql::run(
 					" SELECT * FROM `{posts}`" .
-					" WHERE `PageID` = '".admin::getPathID()."'" .
+					" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+						admin::getPathID()."'" .
 					" AND `ID` = '".$id."'"));
 		
 				$form->setValues($row);
@@ -1131,7 +1146,8 @@ class _posts {
 				" UPDATE `{posts}` SET " .
 				" `OrderID` = `OrderID` + 1," .
 				" `TimeStamp` = `TimeStamp`" .
-				" WHERE `PageID` = '".(int)$values['PageID']."'");
+				" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+					(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'");
 			
 			$values['OrderID'] = 1;
 			
@@ -1140,7 +1156,8 @@ class _posts {
 				" UPDATE `{posts}` SET " .
 				" `OrderID` = `OrderID` + 1," .
 				" `TimeStamp` = `TimeStamp`" .
-				" WHERE `PageID` = '".(int)$values['PageID']."'" .
+				" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+					(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'" .
 				" AND `OrderID` >= '".(int)$values['OrderID']."'");
 		}
 		
@@ -1158,8 +1175,8 @@ class _posts {
 		} else {
 			$newid = sql::run(
 				" INSERT INTO `{posts}` SET ".
-				" `PageID` = '".
-					(int)$values['PageID']."'," .
+				" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".
+					(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'," .
 				" `Title` = '".
 					sql::escape($values['Title'])."'," .
 				" `Content` = '".
@@ -1228,21 +1245,29 @@ class _posts {
 		
 		if (JCORE_VERSION >= '0.5') {
 			sql::run(
-				" UPDATE `{pages}` SET " .
+				" UPDATE `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}` SET " .
 				" `Posts` = `Posts` + 1" .
-				" WHERE `ID` = '".(int)$values['PageID']."'");
+				" WHERE `ID` = '".(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'");
 			
 			$this->updateKeywordsCloud(
 				$values['Keywords'], null,
-				(JCORE_VERSION >= '0.7'?$values['PageID']:null));
+				(JCORE_VERSION >= '0.7'?$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]:null));
 		}
 				
 		$sitemap = new siteMap();
 		$sitemap->load();
 		
 		$page = sql::fetch(sql::run(
-			" SELECT * FROM `{pages}`" .
-			" WHERE `ID` = '".(int)$values['PageID']."'"));
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
+			" WHERE `ID` = '".(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
 			
 		if (SEO_FRIENDLY_LINKS)
 			$pageurl = SITE_URL.
@@ -1266,7 +1291,7 @@ class _posts {
 		
 		unset($sitemap);
 		
-		if (!$this->updateRSS() || !$this->updateRSS((int)$values['PageID']))
+		if (!$this->updateRSS() || !$this->updateRSS((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]))
 			tooltip::display(
 				__("Post successfully created but rss feed couldn't be updated.")." " .
 				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
@@ -1274,7 +1299,7 @@ class _posts {
 				TOOLTIP_NOTIFICATION);
 		
 		if (defined('BLOG_PING_ON_NEW_POSTS') && BLOG_PING_ON_NEW_POSTS && 
-			!$this->blogPing((int)$values['PageID']))
+			!$this->blogPing((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]))
 			tooltip::display(
 				__("Post successfully created but couldn't ping blog servers. " .
 					"Please define at least one blog ping server or multiple " .
@@ -1377,36 +1402,54 @@ class _posts {
 		}
 		
 		if (JCORE_VERSION >= '0.5') {
-			if ($post['PageID'] != $values['PageID']) {
+			if ($post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')] != 
+				$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]) 
+			{
 				$posts = sql::fetch(sql::run(
 					" SELECT COUNT(`ID`) AS `Rows` FROM `{posts}`" .
-					" WHERE `PageID` = '".(int)$values['PageID']."'"));
+					" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+						(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
 				
-				sql::run("UPDATE `{pages}`" .
+				sql::run(
+					"UPDATE `{" .
+						(JCORE_VERSION >= '0.8'?
+							'pages':
+							'menuitems') .
+						"}`" .
 					" SET `Posts` = '".(int)$posts['Rows']."'" .
-					" WHERE `ID` = '".(int)$values['PageID']."'");
+					" WHERE `ID` = '".(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'");
 				
 				$posts = sql::fetch(sql::run(
 					" SELECT COUNT(`ID`) AS `Rows` FROM `{posts}`" .
-					" WHERE `PageID` = '".(int)$post['PageID']."'"));
+					" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+						(int)$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
 				
-				sql::run("UPDATE `{pages}`" .
+				sql::run(
+					"UPDATE `{" .
+						(JCORE_VERSION >= '0.8'?
+							'pages':
+							'menuitems') .
+						"}`" .
 					" SET `Posts` = '".(int)$posts['Rows']."'" .
-					" WHERE `ID` = '".(int)$post['PageID']."'");
+					" WHERE `ID` = '".(int)$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'");
 			}
 			
 			$this->updateKeywordsCloud(
 				$values['Keywords'], $post['Keywords'],
-				(JCORE_VERSION >= '0.7'?$values['PageID']:null),
-				(JCORE_VERSION >= '0.7'?$post['PageID']:null));
+				(JCORE_VERSION >= '0.7'?$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]:null),
+				(JCORE_VERSION >= '0.7'?$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]:null));
 		}
 		
 		$sitemap = new siteMap();
 		$sitemap->load();
 		
 		$page = sql::fetch(sql::run(
-			" SELECT * FROM `{pages}`" .
-			" WHERE `ID` = '".(int)$values['PageID']."'"));
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
+			" WHERE `ID` = '".(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
 			
 		if (SEO_FRIENDLY_LINKS)
 			$pageurl = SITE_URL.
@@ -1430,7 +1473,7 @@ class _posts {
 		
 		unset($sitemap);
 		
-		if (!$this->updateRSS() || !$this->updateRSS((int)$values['PageID']))
+		if (!$this->updateRSS() || !$this->updateRSS((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]))
 			tooltip::display(
 				__("Post successfully updated but rss feed couldn't be updated.")." " .
 				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
@@ -1487,7 +1530,7 @@ class _posts {
 				" WHERE `PostID` = '".$id."'");
 			
 		$page = sql::fetch(sql::run(
-			" SELECT `PageID` FROM `{posts}` " .
+			" SELECT `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` FROM `{posts}` " .
 			" WHERE `ID` = '".$id."'"));
 			
 		sql::run(
@@ -1497,18 +1540,24 @@ class _posts {
 		if (JCORE_VERSION >= '0.5') {
 			$row = sql::fetch(sql::run(
 				" SELECT COUNT(`ID`) AS `Rows` FROM `{posts}`" .
-				" WHERE `PageID` = '".$page['PageID']."'"));
+				" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+					$page[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
 			
-			sql::run("UPDATE `{pages}`" .
+			sql::run(
+				"UPDATE `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
 				" SET `Posts` = '".(int)$row['Rows']."'" .
-				" WHERE `ID` = '".$page['PageID']."'");
+				" WHERE `ID` = '".$page[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'");
 			
 			$this->updateKeywordsCloud(
 				null, $post['Keywords'],
-				null, (JCORE_VERSION >= '0.7'?$post['PageID']:null));
+				null, (JCORE_VERSION >= '0.7'?$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]:null));
 		}
 					
-		if (!$this->updateRSS() || !$this->updateRSS($page['PageID']))
+		if (!$this->updateRSS() || !$this->updateRSS($page[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]))
 			tooltip::display(
 				__("Post successfully deleted but rss feed couldn't be updated.")." " .
 				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
@@ -1561,7 +1610,11 @@ class _posts {
 		if ($pageid) {
 			$page = sql::fetch(sql::run(
 				" SELECT `Title`, `Path` " .
-				" FROM `{pages}` " .
+				" FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}` " .
 				" WHERE `ID` = '".(int)$pageid."'"));
 			
 			if (!$page['Path'])
@@ -1579,7 +1632,8 @@ class _posts {
 			" WHERE !`Deactivated`" .
 			" AND !`BlockID`" .
 			($pageid?
-				" AND `PageID` = '".(int)$pageid."'":
+				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+					(int)$pageid."'":
 				null) .
 			" ORDER BY `OrderID`, `StartDate`, `ID` DESC" .
 			" LIMIT 10");
@@ -1587,8 +1641,12 @@ class _posts {
 		while($row = sql::fetch($rows)) {
 			$page = sql::fetch(sql::run(
 				" SELECT `ID`, `Path` " .
-				" FROM `{pages}` " .
-				" WHERE `ID` = '".$row['PageID']."'"));
+				" FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}` " .
+				" WHERE `ID` = '".$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
 			
 			$user = $GLOBALS['USER']->get($row['UserID']);
 		
@@ -1638,15 +1696,16 @@ class _posts {
 				$pageids = null;
 				if ($oldpageid) {
 					$pageids = sql::fetch(sql::run(
-						" SELECT `PageIDs` FROM `{postkeywords}`" .
+						" SELECT `".(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')."` FROM `{postkeywords}`" .
 						" WHERE `Keyword` = '".sql::escape($oldkeyword)."'"));
 					
 					if ($pageids) {
-						$pageids = explode('|', $pageids['PageIDs']);
+						$pageids = explode('|', $pageids[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')]);
 						
 						$exists = sql::fetch(sql::run(
 							" SELECT `ID` FROM `{posts}`" .
-							" WHERE `PageID` = '".(int)$oldpageid."'" .
+							" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+								(int)$oldpageid."'" .
 							" AND CONCAT(',', `Keywords`, ',') LIKE '%," .
 								sql::escape($oldkeyword).",%'" .
 							" LIMIT 1"));
@@ -1662,7 +1721,8 @@ class _posts {
 				sql::run(
 					" UPDATE `{postkeywords}` SET " .
 					(is_array($pageids)?
-						"`PageIDs` = '".implode('|', $pageids)."',":
+						"`".(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')."` = '" .
+							implode('|', $pageids)."',":
 						null) .
 					" `Counter` = `Counter` - 1" .
 					" WHERE `Keyword` = '".sql::escape($oldkeyword)."'");
@@ -1678,12 +1738,12 @@ class _posts {
 				$pageids = null;
 				if ($newpageid) {
 					$pageids = sql::fetch(sql::run(
-						" SELECT `PageIDs` FROM `{postkeywords}`" .
+						" SELECT `".(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')."` FROM `{postkeywords}`" .
 						" WHERE `Keyword` = '".sql::escape($newkeyword)."'"));
 					
 					if ($pageids) {
-						if ($pageids['PageIDs'])
-							$pageids = explode('|', $pageids['PageIDs']);
+						if ($pageids[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')])
+							$pageids = explode('|', $pageids[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')]);
 						else
 							$pageids = array();
 						
@@ -1698,7 +1758,8 @@ class _posts {
 				sql::run(
 					" UPDATE `{postkeywords}` SET " .
 					($pageids?
-						"`PageIDs` = '".implode('|', $pageids)."',":
+						"`".(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')."` = '" .
+							implode('|', $pageids)."',":
 						null) .
 					" `Counter` = `Counter` + 1" .
 					" WHERE `Keyword` = '".sql::escape($newkeyword)."'");
@@ -1707,7 +1768,8 @@ class _posts {
 					sql::run(
 						" INSERT INTO `{postkeywords}` SET" .
 						($pageids?
-							"`PageIDs` = '".implode('|', $pageids)."',":
+							"`".(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')."` = '" .
+								implode('|', $pageids)."',":
 							null) .
 						" `Keyword` = '".sql::escape($newkeyword)."'," .
 						" `Counter` = 1");
@@ -1730,7 +1792,11 @@ class _posts {
 		if ($pageid) {
 			$page = sql::fetch(sql::run(
 				" SELECT `Title`, `Path` " .
-				" FROM `{pages}` " .
+				" FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}` " .
 				" WHERE `ID` = '".(int)$pageid."'"));
 			
 			if (!$page['Path'])
@@ -1793,12 +1859,16 @@ class _posts {
 		$language = $this->selectedLanguage;
 		$page = $this->selectedPage;
 		
-		if (!$row['PageID'])
+		if (!$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])
 			$page = pages::getHome();
 		elseif (!$page)
 			$page = sql::fetch(sql::run(
-				" SELECT `ID`, `Path`, `LanguageID` FROM `{pages}`" .
-				" WHERE `ID` = '".$row['PageID']."'"));
+				" SELECT `ID`, `Path`, `LanguageID` FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE `ID` = '".$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
 		
 		if (!$language && $page['LanguageID'])
 			$language = sql::fetch(sql::run(
@@ -1837,8 +1907,12 @@ class _posts {
 		
 		if (!$page)
 			$page = sql::fetch(sql::run(
-				" SELECT `ID`, `Path`, `LanguageID` FROM `{pages}`" .
-				" WHERE `ID` = '".$row['PageID']."'"));
+				" SELECT `ID`, `Path`, `LanguageID` FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE `ID` = '".$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
 		
 		if (!$language && $page['LanguageID'])
 			$language = sql::fetch(sql::run(
@@ -2132,7 +2206,11 @@ class _posts {
 		
 		if ($arguments)
 			$page = sql::fetch(sql::run(
-				" SELECT `ID` FROM `{pages}` " .
+				" SELECT `ID` FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}` " .
 				" WHERE !`Deactivated`" .
 				($this->selectedLanguageID?
 					" AND `LanguageID` = '".$this->selectedLanguageID."'":
@@ -2157,7 +2235,8 @@ class _posts {
 			" INSERT INTO `{TMPKeywordsCloud}` " .
 			" SELECT `Keyword`, `Counter`, NULL FROM `{postkeywords}`" .
 			($page?
-				" WHERE CONCAT('|', `PageIDs`, '|') LIKE '%|".$page['ID']."|%'":
+				" WHERE CONCAT('|', `".(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')."`, '|')" .
+					" LIKE '%|".$page['ID']."|%'":
 				null) .
 			" ORDER BY `Counter` DESC" .
 			" LIMIT ".$this->keywordsCloudLimit);
@@ -2200,7 +2279,11 @@ class _posts {
 		
 		if ($pagepath)
 			$page = sql::fetch(sql::run(
-				" SELECT `ID` FROM `{pages}` " .
+				" SELECT `ID` FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}` " .
 				" WHERE !`Deactivated`" .
 				($this->selectedLanguageID?
 					" AND `LanguageID` = '".$this->selectedLanguageID."'":
@@ -2295,8 +2378,10 @@ class _posts {
 		if (JCORE_VERSION >= '0.7.1' &&
 			$GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin'])
 			echo
-				"<a href='".SITE_URL."admin/?path=admin/content/pages/" .
-					$row['PageID']."/posts&amp;id=".$row['ID'] .
+				"<a href='".SITE_URL."admin/?path=" .
+					(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems')."/" .
+					$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."/posts&amp;id=" .
+						$row['ID'] .
 					"&amp;edit=1#adminform' " .
 					"class='edit comment' target='_blank'>" .
 					"<span>".
@@ -2341,8 +2426,12 @@ class _posts {
 			$language = null;
 			
 			$page = sql::fetch(sql::run(
-				" SELECT `ID`, `Path`, `LanguageID` FROM `{pages}`" .
-				" WHERE `ID` = '".$post['PageID']."'" .
+				" SELECT `ID`, `Path`, `LanguageID` FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE `ID` = '".$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'" .
 				" AND !`Deactivated`" .
 				" AND (!`ViewableBy` OR " .
 					($GLOBALS['USER']->loginok?
@@ -2597,10 +2686,12 @@ class _posts {
 			" FROM `{posts}`" .
 			" WHERE !`Deactivated`" .
 			" AND `BlockID` = '".(int)$blockid."'" .
-			" AND (`PageID` = '".$this->selectedPageID."'" .
+			" AND (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+				$this->selectedPageID."'" .
 			($homepage['ID'] == $this->selectedPageID?
 				" OR `OnMainPage` ":
-				" OR (`PageID` = '".$homepage['ID']."'" .
+				" OR (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+					$homepage['ID']."'" .
 					" AND `OnMainPage`) ") .
 			" ) " .
 			" ORDER BY `OrderID`, `StartDate`, `ID` DESC" .
@@ -2621,10 +2712,14 @@ class _posts {
 			return false;
 			
 		while ($row = sql::fetch($rows)) {
-			if ($row['PageID'] != $pageid) {
+			if ($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')] != $pageid) {
 				$this->selectedPage = sql::fetch(sql::run(
-					" SELECT * FROM `{pages}` " .
-					" WHERE `ID` = '".$row['PageID']."'"));
+					" SELECT * FROM `{" .
+						(JCORE_VERSION >= '0.8'?
+							'pages':
+							'menuitems') .
+						"}` " .
+					" WHERE `ID` = '".$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
 			
 				if ($this->selectedPage['LanguageID'] && 
 					$this->selectedPage['LanguageID'] != $this->selectedLanguageID)
@@ -2635,7 +2730,7 @@ class _posts {
 						" SELECT * FROM `{languages}` " .
 						" WHERE `ID` = '".$this->selectedPage['LanguageID']."'"));
 				
-				$pageid = $row['PageID'];
+				$pageid = $row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')];
 				$pagelink = $this->generatePageLink($row);
 				$cssclass = $this->generateCSSClass($row);
 			}
@@ -2725,7 +2820,11 @@ class _posts {
 		$this->selectedID = null;
 		
 		$page = sql::fetch(sql::run(
-			" SELECT `ID`, `Path` FROM `{pages}` " .
+			" SELECT `ID`, `Path` FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}` " .
 			" WHERE !`Deactivated`" .
 			($this->selectedLanguageID?
 				" AND `LanguageID` = '".$this->selectedLanguageID."'":
@@ -2750,9 +2849,9 @@ class _posts {
 			return false;
 		
 		$post = sql::fetch(sql::run(
-			" SELECT `ID`, `PageID` FROM `{posts}` " .
+			" SELECT `ID`, `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` FROM `{posts}` " .
 			" WHERE !`Deactivated`" .
-			" AND `PageID` = '".$page['ID']."'" .
+			" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$page['ID']."'" .
 			" AND '".sql::escape($this->arguments)."/' LIKE CONCAT(`Path`,'/%')" .
 			" ORDER BY `OrderID`" .
 			" LIMIT 1"));
@@ -2761,7 +2860,7 @@ class _posts {
 			return true;
 			
 		$this->selectedID = $post['ID'];
-		$this->selectedPageID = $post['PageID'];
+		$this->selectedPageID = $post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')];
 	}
 	
 	function display() {
@@ -2778,7 +2877,11 @@ class _posts {
 		
 		if ($this->selectedPageID) {
 			$this->selectedPage = sql::fetch(sql::run(
-				" SELECT * FROM `{pages}` " .
+				" SELECT * FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}` " .
 				" WHERE `ID` = '".(int)$this->selectedPageID."'"));
 				
 			if ($this->selectedPage['Deactivated']) {
@@ -2874,11 +2977,15 @@ class _posts {
 		$pagelink = null;
 		
 		while ($row = sql::fetch($rows)) {
-			if ($row['PageID'] != $pageid || !$pagelink) {
-				if ($row['PageID'] != $pageid) {
+			if ($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')] != $pageid || !$pagelink) {
+				if ($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')] != $pageid) {
 					$this->selectedPage = sql::fetch(sql::run(
-						" SELECT * FROM `{pages}`" .
-						" WHERE `ID` = '".$row['PageID']."'"));
+						" SELECT * FROM `{" .
+							(JCORE_VERSION >= '0.8'?
+								'pages':
+								'menuitems') .
+							"}`" .
+						" WHERE `ID` = '".$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
 					
 					if ($this->selectedPage['LanguageID'])
 						$this->selectedLanguage = sql::fetch(sql::run(
@@ -2887,7 +2994,7 @@ class _posts {
 					else
 						$this->selectedLanguage = null;
 					
-					$pageid = $row['PageID'];
+					$pageid = $row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')];
 				}
 				
 				$pagelink = $this->generatePageLink($row);

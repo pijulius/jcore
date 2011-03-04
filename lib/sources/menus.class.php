@@ -57,7 +57,8 @@ class _menus {
 			'?path=admin/site/blocks');
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/pages');
+			'?path=' .
+			(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
 	}
 	
 	function setupAdminForm(&$form) {
@@ -183,7 +184,8 @@ class _menus {
 				
 			tooltip::display(
 				__("Menu has been successfully updated.")." " .
-				"<a href='?path=admin/content/pages'>" .
+				"<a href='?path=" .
+					(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems')."'>" .
 					__("View Pages") .
 				"</a>" .
 				" - " .
@@ -201,7 +203,8 @@ class _menus {
 		
 		tooltip::display(
 			__("Menu has been successfully created.")." " .
-			"<a href='?path=admin/content/pages'>" .
+			"<a href='?path=" .
+				(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems')."'>" .
 				__("View Pages") .
 			"</a>" .
 			" - " .
@@ -682,7 +685,11 @@ class _menus {
 			}
 				
 			$menuitem = sql::fetch(sql::run(
-				" SELECT * FROM `{pages}` " .
+				" SELECT * FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}` " .
 				" WHERE !`Deactivated`" .
 				" AND !`Hidden`" .
 				($language?
@@ -698,10 +705,15 @@ class _menus {
 			
 			if ($menuitem) {
 				$submenus = sql::run(
-					" SELECT * FROM `{pages}` " .
+					" SELECT * FROM `{" .
+						(JCORE_VERSION >= '0.8'?
+							'pages':
+							'menuitems') .
+						"}` " .
 					" WHERE !`Deactivated`" .
 					" AND !`Hidden`" .
-					" AND `SubPageOfID` = '".(int)$menuitem['ID']."'" .
+					" AND `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '" .
+						(int)$menuitem['ID']."'" .
 					($language?
 						" AND `LanguageID` = '".(int)$language['ID']."'":
 						null) .

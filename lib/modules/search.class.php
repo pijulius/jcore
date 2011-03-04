@@ -178,7 +178,8 @@ class search extends modules {
 	function setupAdmin() {
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/pages');
+			'?path=' .
+			(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
 		favoriteLinks::add(
 			__('Layout Blocks'), 
 			'?path=admin/site/blocks');

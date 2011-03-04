@@ -66,8 +66,10 @@ class _admin {
 	}
 	
 	function load() {
-		$this->add('Content', 'Pages', 
-			"<a href='".url::uri('ALL')."?path=admin/content/pages' " .
+		$this->add('Content', 
+			(JCORE_VERSION >= '0.8'?'Pages':'MenuItems'), 
+			"<a href='".url::uri('ALL')."?path=" .
+				(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems')."' " .
 				"title='".
 					htmlspecialchars(
 						__("Manage the content (pages) of your site"), 
@@ -76,15 +78,16 @@ class _admin {
 				"<span>".__("Content Management")."</span>" .
 			"</a>");
 		
-		$this->add('Content', 'PostsAtGlance', 
-			"<a href='".url::uri('ALL')."?path=admin/content/postsatglance' " .
-				"title='".
-					htmlspecialchars(
-						__("Quickly create / modify posts"), 
-						ENT_QUOTES).
-				"'>" .
-				"<span>".__("Posts at Glance")."</span>" .
-			"</a>");
+		if (JCORE_VERSION >= '0.3')
+			$this->add('Content', 'PostsAtGlance', 
+				"<a href='".url::uri('ALL')."?path=admin/content/postsatglance' " .
+					"title='".
+						htmlspecialchars(
+							__("Quickly create / modify posts"), 
+							ENT_QUOTES).
+					"'>" .
+					"<span>".__("Posts at Glance")."</span>" .
+				"</a>");
 		
 		$this->add('Content', 'Ads', 
 			"<a href='".url::uri('ALL')."?path=admin/content/ads' " .

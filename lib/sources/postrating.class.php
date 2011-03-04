@@ -15,6 +15,7 @@ class _postRating extends starRating {
 	var $sqlRow = 'PostID';
 	var $sqlOwnerTable = 'posts';
 	var $adminPath = array(
+		'admin/content/menuitems/posts/postrating',
 		'admin/content/pages/posts/postrating',
 		'admin/content/postsatglance/postrating');
 	

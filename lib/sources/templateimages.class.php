@@ -45,7 +45,8 @@ class _templateImages extends fileManager {
 			'?path=admin/site/template/templatejseditor');
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/pages');
+			'?path=' .
+			(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
 		favoriteLinks::add(
 			__('Content Files'), 
 			'?path=admin/content/contentfiles');

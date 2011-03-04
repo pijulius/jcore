@@ -340,7 +340,7 @@ class templateInstaller extends template {
 				continue;
 			}
 			
-			if ($fieldid == 'PageIDs' && $fieldvalue) {
+			if (($fieldid == 'PageIDs' || $fieldid == 'MenuItemIDs') && $fieldvalue) {
 				$homepageids = pages::getHomeIDs();
 				$fieldvalues = explode('|', $fieldvalue);
 				

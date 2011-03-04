@@ -995,7 +995,8 @@ class videoGallery extends modules {
 		
 		favoriteLinks::add(
 			_('Pages / Posts'), 
-			'?path=admin/content/pages');
+			'?path=' .
+			(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
 		favoriteLinks::add(
 			_('Settings'), 
 			'?path=admin/site/settings');

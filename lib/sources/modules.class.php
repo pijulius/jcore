@@ -408,20 +408,30 @@ class _modules {
 			return false;
 		
 		$modulepages = sql::fetch(sql::run(
-			" SELECT GROUP_CONCAT(`PageID` SEPARATOR ',') AS `PageIDs` " .
-			" FROM `{pagemodules}`" .
+			" SELECT GROUP_CONCAT(`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID') . 
+				"` SEPARATOR ',') AS `PageIDs` " .
+			" FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pagemodules':
+					'menuitemmodules') .
+				"}`" .
 			" WHERE `ModuleID` = '".$module['ID']."'" .
 			($moduleitemid && JCORE_VERSION >= '0.3'?
 				" AND (`ModuleItemID` = '".(int)$moduleitemid."' OR !`ModuleItemID`)" .
-					" ORDER BY `ModuleItemID` DESC, `PageID`":
-				" ORDER BY `PageID`") .
+					" ORDER BY `ModuleItemID` DESC," .
+					" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`":
+				" ORDER BY `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`") .
 			" LIMIT 1"));
 			
 		if (!$modulepages['PageIDs'])
 			return false;
 			
 		$page = sql::fetch(sql::run(
-			" SELECT * FROM `{pages}`" .
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
 			" WHERE `ID` IN (".$modulepages['PageIDs'].")" .
 			" AND `LanguageID` = ".(int)$languageid .
 			" ORDER BY `MenuID`, `OrderID`" .

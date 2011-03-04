@@ -195,7 +195,7 @@ class _blocks {
 		
 		$form->add(
 			__('On Page(s)'),
-			'PageIDs',
+			(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs'),
 			FORM_INPUT_TYPE_MULTISELECT);
 		$form->setValueType(FORM_VALUE_TYPE_ARRAY);
 		$form->setStyle('height: 150px;');
@@ -205,7 +205,7 @@ class _blocks {
 		
 		foreach(pages::getTree() as $page)
 			$form->addValue($page['ID'], 
-				($page['SubPageOfID']?
+				($page[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]?
 					str_replace(' ', '&nbsp;', 
 						str_pad('', $page['PathDeepnes']*4, ' ')).
 					"|- ":
@@ -215,8 +215,8 @@ class _blocks {
 		$form->groupValues(array('0'));
 		
 		$form->add(
-			'PageExcept',
-			'PageExcept',
+			'Page Except',
+			(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept'),
 			FORM_INPUT_TYPE_HIDDEN,
 			false,
 			0);
@@ -528,8 +528,8 @@ class _blocks {
 	
 	function displayAdminListItemSelected(&$row) {
 		$pageroute = null;
-		if ($row['PageIDs']) {
-			foreach(explode('|', $row['PageIDs']) as $blockpage) {
+		if ($row[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')]) {
+			foreach(explode('|', $row[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')]) as $blockpage) {
 				if ($blockpage == 'A') {
 					$pageroute .= 
 						"<div>* " .
@@ -545,7 +545,7 @@ class _blocks {
 								"class='comment'":
 								null) .
 							">" . 
-						($page['SubPageOfID']?
+						($page[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]?
 							str_replace(' ', '&nbsp;', 
 								str_pad('', $page['PathDeepnes']*4, ' ')).
 							"|- ":
@@ -568,9 +568,9 @@ class _blocks {
 			}
 		}
 		
-		if ($row['PageIDs'])
+		if ($row[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')])
 			admin::displayItemData(
-				($row['PageExcept']?
+				($row[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')]?
 					__("Display Except on Page"):
 					__("Display Only on Page")),
 				$pageroute);
@@ -856,11 +856,11 @@ class _blocks {
 			}
 			
 			$form->addAdditionalText(
-				'PageIDs',
+				(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs'),
 				" <label>" .
 					"<input type='radio' name='PageExceptRadio' value='0' " .
 						"onclick=\"this.form.PageExcept.value = 0;\" " .
-						(!$form->get('PageExcept')?
+						(!$form->get((JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept'))?
 							"checked='checked'":
 							null) .
 						" /> " .
@@ -869,7 +869,7 @@ class _blocks {
 				" <label>" .
 					"<input type='radio' name='PageExceptRadio' value='1' " .
 						"onclick=\"this.form.PageExcept.value = 1;\" " .
-						($form->get('PageExcept')?
+						($form->get((JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept'))?
 							"checked='checked'":
 							null) .
 						" /> " .
@@ -954,10 +954,10 @@ class _blocks {
 				(int)$values['SubBlockOfID']."'," .
 			" `TypeID` = '".
 				(int)$values['TypeID']."'," .
-			" `PageIDs` = '".
-				sql::escape(implode('|', (array)$values['PageIDs']))."'," .
-			" `PageExcept` = '".
-				(int)$values['PageExcept']."'," .
+			" `".(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')."` = '".
+				sql::escape(implode('|', (array)$values[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')]))."'," .
+			" `".(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')."` = '".
+				(int)$values[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')]."'," .
 			" `LanguageIDs` = '".
 				sql::escape(implode('|', (array)$values['LanguageIDs']))."'," .
 			" `LanguageExcept` = '".
@@ -1072,10 +1072,10 @@ class _blocks {
 				(int)$values['SubBlockOfID']."'," .
 			" `TypeID` = '".
 				(int)$values['TypeID']."'," .
-			" `PageIDs` = '".
-				sql::escape(implode('|', (array)$values['PageIDs']))."'," .
-			" `PageExcept` = '".
-				(int)$values['PageExcept']."'," .
+			" `".(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')."` = '".
+				sql::escape(implode('|', (array)$values[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')]))."'," .
+			" `".(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')."` = '".
+				(int)$values[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')]."'," .
 			" `LanguageIDs` = '".
 				sql::escape(implode('|', (array)$values['LanguageIDs']))."'," .
 			" `LanguageExcept` = '".
@@ -1368,37 +1368,38 @@ class _blocks {
 			
 			if ((!$block['LanguageExcept'] && 
 					!in_array($this->selectedLanguageID, $languageids)) ||
-				($block['PageExcept'] && 
+				($block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')] && 
 					in_array($this->selectedLanguageID, $languageids)))
 			{ 
 					return;
 			}
 		}
 		
-		if ($block['PageIDs']) {
+		if ($block[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')]) {
 			$limitedtoadmin = false;
 			
 			if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN'] && 
-				preg_match('/A(\||$)/', $block['PageIDs'])) 
+				preg_match('/A(\||$)/', $block[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')])) 
 			{
 				$limitedtoadmin = true;
 				
-				if ($block['PageExcept'])
+				if ($block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')])
 					return;
 			}
 			
-			if (!$limitedtoadmin && !(int)$this->selectedPageID && !$block['PageExcept'])
+			if (!$limitedtoadmin && !(int)$this->selectedPageID && 
+				!$block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')])
 				return;
 			
 			$pageparents = pages::getBackTraceTree(
 				(int)$this->selectedPageID, true, 'ID');
 			
-			$pageids = explode('|', $block['PageIDs']);
+			$pageids = explode('|', $block[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')]);
 			
 			foreach($pageparents as $pageparent) {
-				if ((!$block['PageExcept'] && 
+				if ((!$block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')] && 
 						!in_array($pageparent['ID'], $pageids)) ||
-					($block['PageExcept'] && 
+					($block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')] && 
 						in_array($pageparent['ID'], $pageids)))
 				{ 
 					return;

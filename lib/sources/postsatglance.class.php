@@ -27,14 +27,16 @@ class _postsAtGlance extends posts {
 		parent::setupAdminForm($form, $isownerhomepage);
 		
 		$form->edit(
-			'PageID',
+			(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'),
 			__('Post to Page'),
-			'PageID',
+			(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'),
 			FORM_INPUT_TYPE_SELECT,
 			false,
 			$pageid);
 		
-		$form->addValue('PageID', '', '');
+		$form->addValue(
+			(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'), 
+			'', '');
 	}
 	
 	function verifyAdmin(&$form) {
@@ -118,17 +120,17 @@ class _postsAtGlance extends posts {
 	}
 	
 	function displayAdminListItemSelected(&$row, $isownerhomepage = false) {
-		if ($row['PageID']) {
+		if ($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]) {
 			$pageroute = null;
 			
-			foreach(pages::getBackTraceTree($row['PageID']) as $page) {
+			foreach(pages::getBackTraceTree($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]) as $page) {
 				$pageroute .=
 					"<div".
-						($page['ID'] == $row['PageID']?
+						($page['ID'] == $row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]?
 							" class='bold'":
 							null) .
 						">" . 
-					($page['SubPageOfID']?
+					($page[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]?
 						str_replace(' ', '&nbsp;', 
 							str_pad('', $page['PathDeepnes']*4, ' ')).
 						"|- ":
@@ -138,7 +140,7 @@ class _postsAtGlance extends posts {
 			}
 			
 			$isownerhomepage = pages::isHome(
-				$row['PageID'], 
+				$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')], 
 				$page['LanguageID']);
 	
 			admin::displayItemData(
@@ -236,7 +238,7 @@ class _postsAtGlance extends posts {
 						" selected='selected'":
 						null) .
 					">" . 
-				($row['SubPageOfID']?
+				($row[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]?
 					str_replace(' ', '&nbsp;', 
 						str_pad('', $row['PathDeepnes']*4, ' ')).
 					"|- ":
@@ -289,7 +291,11 @@ class _postsAtGlance extends posts {
 		
 		$selectedowner = sql::fetch(sql::run(
 			" SELECT `Title`, `LanguageID` " .
-			" FROM `{pages}` " .
+			" FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}` " .
 			" WHERE `ID` = '".admin::getPathID()."'"));
 			
 		echo
@@ -343,16 +349,18 @@ class _postsAtGlance extends posts {
 		
 		foreach(pages::getTree() as $row)
 			$form->addValue(
-				'PageID',
+				(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'),
 				$row['ID'], 
-				($row['SubPageOfID']?
+				($row[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]?
 					str_replace(' ', '&nbsp;', 
 						str_pad('', $row['PathDeepnes']*4, ' ')).
 					"|- ":
 					null) .
 				$row['Title']);
 		
-		$form->groupValues('PageID', array('0'));
+		$form->groupValues(
+			(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'), 
+			array('0'));
 		
 		$rows = sql::run(
 			" SELECT * FROM `{posts}` " .
@@ -361,7 +369,8 @@ class _postsAtGlance extends posts {
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				null) .
 			($pageid?
-				" AND `PageID` = '".$pageid."'":
+				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+					$pageid."'":
 				null) .
 			($search?
 				sql::search(

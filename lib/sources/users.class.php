@@ -2220,6 +2220,12 @@ class _users {
 											"jQuery(this).closest(\".tipsy\").hide();":
 											"jQuery(this).closest(\".qtip\").qtip(\"hide\");") .
 										"' class='select-link'>") .
+								($multiple && JCORE_VERSION < '0.6'?
+									"&nbsp;+&nbsp;":
+									null) .
+								(!$multiple && JCORE_VERSION < '0.7.1'?
+									"&nbsp;o&nbsp;":
+									null) .
 							"</a>" .
 						"</td>":
 						null) .

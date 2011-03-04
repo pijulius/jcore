@@ -21,7 +21,9 @@ class _pages {
 	var $selectedID;
 	var $selectedIDs = array();
 	var $selectedMenuID;
-	var $adminPath = 'admin/content/pages';
+	var $adminPath = array(
+		'admin/content/menuitems',
+		'admin/content/pages');
 	
 	static $selected = null;
 	
@@ -32,7 +34,11 @@ class _pages {
 	
 	function SQL() {
 		return
-			" SELECT * FROM `{pages}`" .
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
 			" WHERE !`Deactivated`" .
 			" AND !`Hidden`" .
 			" AND `MenuID` = '".(int)$this->selectedMenuID."'" .
@@ -41,7 +47,7 @@ class _pages {
 					(int)languages::$selected['ID']:
 					0) .
 				"'" .
-			" AND !`SubPageOfID`" .
+			" AND !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`" .
 			" AND (!`ViewableBy` OR " .
 				($GLOBALS['USER']->loginok?
 					($GLOBALS['USER']->data['Admin']?
@@ -62,7 +68,11 @@ class _pages {
 			return false;
 		
 		$selected = sql::fetch(sql::run(
-			" SELECT * FROM `{pages}`" .
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
 			" WHERE !`Deactivated`" .
 			" AND `LanguageID` = '".(int)$_GET['languageid']."'" .
 			(SEO_FRIENDLY_LINKS && !(int)$_GET['pageid']?
@@ -107,9 +117,15 @@ class _pages {
 			if (JCORE_VERSION >= '0.6' && $selected['SEOKeywords'])
 				url::setPageKeywords($selected['SEOKeywords']);
 			
+			if (JCORE_VERSION < '0.8')
+				$_GET['menuid'] = $selected['ID'];
+			
 			$_GET['pageid'] = $selected['ID'];
 			return;
 		}
+		
+		if (JCORE_VERSION < '0.8')
+			$_GET['menuid'] = 0;
 		
 		url::addPageTitle(__('Address Not Found'));
 		$_GET['pageid'] = 0;
@@ -119,7 +135,11 @@ class _pages {
 	function countAdminItems() {
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
-			" FROM `{pages}`" .
+			" FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
 			" LIMIT 1"));
 		return $row['Rows'];
 	}
@@ -148,7 +168,7 @@ class _pages {
 		
 		$form->add(
 			__('Sub Page of'),
-			'SubPageOfID',
+			(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID'),
 			FORM_INPUT_TYPE_SELECT);
 		$form->setValueType(FORM_VALUE_TYPE_INT);
 			
@@ -422,7 +442,11 @@ class _pages {
 			
 			foreach($orders as $oid => $ovalue) {
 				sql::run(
-					" UPDATE `{pages}` " .
+					" UPDATE `{" .
+						(JCORE_VERSION >= '0.8'?
+							'pages':
+							'menuitems') .
+						"}` " .
 					" SET `OrderID` = '".(int)$ovalue."'" .
 					" WHERE `ID` = '".(int)$oid."'");
 			}
@@ -451,10 +475,14 @@ class _pages {
 		if (!$form->get('Path')) {
 			$path = '';
 			
-			if ($form->get('SubPageOfID')) {
+			if ($form->get((JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID'))) {
 				$subpageof = sql::fetch(sql::run(
-					" SELECT `Path` FROM `{pages}`" .
-					" WHERE `ID` = ".(int)$form->get('SubPageOfID')));
+					" SELECT `Path` FROM `{" .
+						(JCORE_VERSION >= '0.8'?
+							'pages':
+							'menuitems') .
+						"}`" .
+					" WHERE `ID` = ".(int)$form->get((JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID'))));
 				
 				$path .= $subpageof['Path'].'/';
 			} 
@@ -464,8 +492,8 @@ class _pages {
 			$form->set('Path', $path);
 		}
 				
-		if ($edit && $form->get('SubPageOfID')) {
-			foreach(pages::getBackTraceTree($form->get('SubPageOfID')) as $item) {
+		if ($edit && $form->get((JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID'))) {
+			foreach(pages::getBackTraceTree($form->get((JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID'))) as $item) {
 				if ($item['ID'] == $id) {
 					tooltip::display(
 						__("Page cannot be subpage of itself!"),
@@ -481,7 +509,11 @@ class _pages {
 				return false;
 			
 			$page = sql::fetch(sql::run(
-				" SELECT * FROM `{pages}`" .
+				" SELECT * FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
 				" WHERE `ID` = '".(int)$id."'"));
 			
 			tooltip::display(
@@ -502,7 +534,11 @@ class _pages {
 			return false;
 			
 		$page = sql::fetch(sql::run(
-			" SELECT * FROM `{pages}`" .
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
 			" WHERE `ID` = '".(int)$newid."'"));
 		
 		tooltip::display(
@@ -523,14 +559,18 @@ class _pages {
 	
 	function displayAdminListItems($pageid = 0, $subpageof = 0, $rowpair = false, $language = null) {
 		$rows = sql::run(
-			" SELECT * FROM `{pages}`" .
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
 			" WHERE `MenuID` = '".(int)$pageid."'" .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				null) .
 			((int)$subpageof?
-				" AND `SubPageOfID` = '".(int)$subpageof."'":
-				" AND !`SubPageOfID`") .
+				" AND `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '".(int)$subpageof."'":
+				" AND !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`") .
 			($language?
 				" AND `LanguageID` = '".$language['ID']."'":
 				null) .
@@ -677,9 +717,14 @@ class _pages {
 		
 		$moduleids = sql::fetch(sql::run(
 			" SELECT GROUP_CONCAT(`ModuleID` SEPARATOR ',') AS `ModuleIDs` " .
-			" FROM `{pagemodules}` " .
-			" WHERE `PageID` = '".$row['ID']."'" .
-			" GROUP BY `PageID`" .
+			" FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pagemodules':
+					'menuitemmodules') .
+				"}` " .
+			" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+				$row['ID']."'" .
+			" GROUP BY `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
 			" LIMIT 1"));
 		
 		if ($moduleids) {
@@ -728,7 +773,7 @@ class _pages {
 					null).
 				">" .
 				"<div " .
-					(!$row['SubPageOfID']?
+					(!$row[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]?
 						"class='bold' ":
 						null).
 					">" .
@@ -827,7 +872,11 @@ class _pages {
 			if ($languages) {
 				if (sql::count(
 					" SELECT COUNT(`ID`) AS `Rows` " .
-					" FROM `{pages}` " .
+					" FROM `{" .
+						(JCORE_VERSION >= '0.8'?
+							'pages':
+							'menuitems') .
+						"}` " .
 					" WHERE `MenuID` = '".$row['ID']."' " .
 					($this->userPermissionIDs?
 						" AND `ID` IN (".$this->userPermissionIDs.")":
@@ -931,16 +980,16 @@ class _pages {
 		}
 		
 		foreach(pages::getTree() as $row)
-			$form->addValue('SubPageOfID',
+			$form->addValue((JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID'),
 				$row['ID'], 
-				($row['SubPageOfID']?
+				($row[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]?
 					str_replace(' ', '&nbsp;', 
 						str_pad('', $row['PathDeepnes']*4, ' ')).
 					"|- ":
 					null) .
 				$row['Title']);
 		
-		$form->groupValues('SubPageOfID', array('0'));
+		$form->groupValues((JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID'), array('0'));
 		
 		$rows = sql::run(
 			" SELECT * FROM `{menus}`" .
@@ -968,7 +1017,11 @@ class _pages {
 		{
 			if ($edit && $id && ($verifyok || !$form->submitted())) {
 				$row = sql::fetch(sql::run(
-					" SELECT * FROM `{pages}` " .
+					" SELECT * FROM `{" .
+						(JCORE_VERSION >= '0.8'?
+							'pages':
+							'menuitems') .
+						"}` " .
 					" WHERE `ID` = '".$id."'" .
 					($this->userPermissionIDs?
 						" AND `ID` IN (".$this->userPermissionIDs.")":
@@ -977,8 +1030,13 @@ class _pages {
 				$form->setValues($row);
 				
 				$modules = sql::run(
-					" SELECT * FROM `{pagemodules}`" .
-					" WHERE `PageID` = '".$row['ID']."'");
+					" SELECT * FROM `{" .
+						(JCORE_VERSION >= '0.8'?
+							'pagemodules':
+							'menuitemmodules') .
+						"}`" .
+					" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+						$row['ID']."'");
 				
 				while($module = sql::fetch($modules)) {
 					$form->setValue(
@@ -1013,24 +1071,39 @@ class _pages {
 			
 		if ($values['OrderID'] == '') {
 			$row = sql::fetch(sql::run(
-				" SELECT `OrderID` FROM `{pages}` " .
-				" WHERE `SubPageOfID` = '".(int)$values['SubPageOfID']."'" .
+				" SELECT `OrderID` FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}` " .
+				" WHERE `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '" .
+					(int)$values[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]."'" .
 				" ORDER BY `OrderID` DESC"));
 			
 			$values['OrderID'] = (int)$row['OrderID']+1;
 			
 		} else {
 			sql::run(
-				" UPDATE `{pages}` SET " .
+				" UPDATE `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}` SET " .
 				" `OrderID` = `OrderID` + 1" .
-				" WHERE `SubPageOfID` = '".(int)$values['SubPageOfID']."'" .
+				" WHERE `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '" .
+					(int)$values[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]."'" .
 				" AND `OrderID` >= '".(int)$values['OrderID']."'");
 		}
 		
-		if ((int)$values['SubPageOfID']) {
+		if ((int)$values[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]) {
 			$parentpage = sql::fetch(sql::run(
-				" SELECT * FROM `{pages}`" .
-				" WHERE `ID` = '".(int)$values['SubPageOfID']."'"));
+				" SELECT * FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE `ID` = '" .
+					(int)$values[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]."'"));
 			
 			if ($parentpage['Deactivated'] && !$values['Deactivated'])
 				$values['Deactivated'] = true;
@@ -1046,7 +1119,11 @@ class _pages {
 		}
 		
 		$newid = sql::run(
-			" INSERT INTO `{pages}` SET " .
+			" INSERT INTO `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}` SET " .
 			" `Title` = '".
 				sql::escape($values['Title'])."'," .
 			" `Path` = '".
@@ -1081,8 +1158,8 @@ class _pages {
 					'1':
 					'0').
 				"'," .
-			" `SubPageOfID` = '".
-				(int)$values['SubPageOfID']."'," .
+			" `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '".
+				(int)$values[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]."'," .
 			" `Limit` = '".
 				(int)$values['Limit']."'," .
 			" `OrderID` = '".
@@ -1099,8 +1176,13 @@ class _pages {
 		if (isset($values['Modules']) && is_array($values['Modules'])) {
 			foreach($values['Modules'] as $moduleid) {
 				sql::run(
-					" INSERT INTO `{pagemodules}` SET " .
-					" `PageID` = '".$newid."'," .
+					" INSERT INTO `{" .
+						(JCORE_VERSION >= '0.8'?
+							'pagemodules':
+							'menuitemmodules') .
+						"}` SET " .
+					" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+						$newid."'," .
 					" `ModuleID` = '".(int)$moduleid."'" .
 					(JCORE_VERSION >= '0.3'?
 						", `ModuleItemID` = '".
@@ -1114,7 +1196,11 @@ class _pages {
 		
 		if (!$values['Deactivated'] && $values['ViewableBy'] < 2) {
 			$newpage = sql::fetch(sql::run(
-				" SELECT * FROM `{pages}`" .
+				" SELECT * FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
 				" WHERE `ID` = '".$newid."'"));
 			
 			$url = str_replace('&amp;', '&', $this->generateLink($newpage));
@@ -1151,17 +1237,27 @@ class _pages {
 		$sitemap->load();
 		
 		$page = sql::fetch(sql::run(
-			" SELECT * FROM `{pages}`" .
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
 			" WHERE `ID` = '".$id."'"));
 			
 		$pageurl = str_replace('&amp;', '&', $this->generateLink($page));
 		
-		if ((int)$values['SubPageOfID'] && 
-			(int)$values['SubPageOfID'] != $page['SubPageOfID']) 
+		if ((int)$values[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')] && 
+			(int)$values[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')] != 
+				$page[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]) 
 		{
 			$parentpage = sql::fetch(sql::run(
-				" SELECT * FROM `{pages}`" .
-				" WHERE `ID` = '".(int)$values['SubPageOfID']."'"));
+				" SELECT * FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE `ID` = '" .
+					(int)$values[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]."'"));
 			
 			if ($parentpage['Deactivated'] && !$values['Deactivated'])
 				$values['Deactivated'] = true;
@@ -1177,7 +1273,11 @@ class _pages {
 		}
 		
 		sql::run(
-			" UPDATE `{pages}` SET ".
+			" UPDATE `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}` SET ".
 			" `Title` = '".
 				sql::escape($values['Title'])."'," .
 			" `Path` = '".
@@ -1212,8 +1312,8 @@ class _pages {
 					'1':
 					'0').
 				"'," .
-			" `SubPageOfID` = '".
-				(int)$values['SubPageOfID']."'," .
+			" `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '".
+				(int)$values[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]."'," .
 			" `Limit` = '".
 				(int)$values['Limit']."'," .
 			" `OrderID` = '".
@@ -1229,14 +1329,24 @@ class _pages {
 		}
 		
 		sql::run(
-			" DELETE FROM `{pagemodules}` " .
-			" WHERE `PageID` = '".$id."'");
+			" DELETE FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pagemodules':
+					'menuitemmodules') .
+				"}` " .
+			" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+				$id."'");
 		
 		if (isset($values['Modules']) && is_array($values['Modules'])) {
 			foreach($values['Modules'] as $moduleid) {
 				sql::run(
-					" INSERT INTO `{pagemodules}` SET " .
-					" `PageID` = '".$id."'," .
+					" INSERT INTO `{" .
+						(JCORE_VERSION >= '0.8'?
+							'pagemodules':
+							'menuitemmodules') .
+						"}` SET " .
+					" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+						$id."'," .
 					" `ModuleID` = '".(int)$moduleid."'" .
 					(JCORE_VERSION >= '0.3'?
 						", `ModuleItemID` = '".
@@ -1306,7 +1416,11 @@ class _pages {
 			
 			if ($updatesql)
 				sql::run(
-					" UPDATE `{pages}` SET" .
+					" UPDATE `{" .
+						(JCORE_VERSION >= '0.8'?
+							'pages':
+							'menuitems') .
+						"}` SET" .
 					implode(',', $updatesql) .
 					" WHERE `ID` = '".$row['ID']."'");
 		}
@@ -1328,7 +1442,11 @@ class _pages {
 			
 			if ($updatesql)
 				sql::run(
-					" UPDATE `{pages}` SET" .
+					" UPDATE `{" .
+						(JCORE_VERSION >= '0.8'?
+							'pages':
+							'menuitems') .
+						"}` SET" .
 					implode(',', $updatesql) .
 					" WHERE `ID` = '".$row['ID']."'");
 		}
@@ -1359,22 +1477,36 @@ class _pages {
 		
 		foreach($pageids as $pageid) {
 			$page = sql::fetch(sql::run(
-				" SELECT * FROM `{pages}`" .
+				" SELECT * FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
 				" WHERE `ID` = '".$pageid."'"));
 			
 			$rows = sql::run(
 				" SELECT * FROM `{posts}` " .
-				" WHERE `PageID` = '".$pageid."'");
+				" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+					$pageid."'");
 			
 			while($row = sql::fetch($rows))
 				$posts->delete($row['ID']);
 			
 			sql::run(
-				" DELETE FROM `{pagemodules}` " .
-				" WHERE `PageID` = '".$pageid."'");
+				" DELETE FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pagemodules':
+						'menuitemmodules') .
+					"}` " .
+				" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+					$pageid."'");
 			
 			sql::run(
-				" DELETE FROM `{pages}` " .
+				" DELETE FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}` " .
 				" WHERE `ID` = '".$pageid."'");
 			
 			$url = str_replace('&amp;', '&', $this->generateLink($page));
@@ -1411,7 +1543,11 @@ class _pages {
 		}
 		
 		$rows = sql::run(
-			" SELECT * FROM `{pages}`" .
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
 			" WHERE !`Deactivated`" .
 			" AND `ViewableBy` < 2" .
 			($menuid?
@@ -1423,7 +1559,8 @@ class _pages {
 			$lastpost = sql::fetch(sql::run(
 				" SELECT `TimeStamp` " .
 				" FROM `{posts}` " .
-				" WHERE `PageID` = '".$row['ID']."'" .
+				" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
+					$row['ID']."'" .
 				" AND !`Deactivated`" .
 				" ORDER BY `TimeStamp` DESC" .
 				" LIMIT 1"));
@@ -1487,10 +1624,15 @@ class _pages {
 		&$tree = array('Tree' => array(), 'PathDeepnes' => 0)) 
 	{
 		$rows = sql::run(
-			" SELECT * FROM `{pages}` " .
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}` " .
 			($pageid?
-				" WHERE `SubPageOfID` = '".$pageid."'":
-				" WHERE !`SubPageOfID`") .
+				" WHERE `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '" .
+					$pageid."'":
+				" WHERE !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`") .
 			" ORDER BY " .
 				(menus::$order?
 					" FIELD(`MenuID`, ".menus::$order."),":
@@ -1508,7 +1650,7 @@ class _pages {
 				$tree['Tree'][] = array(
 					'ID' => 0,
 					'Title' => $menu['Title'],
-					'SubPageOfID' => 0,
+					(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID') => 0,
 					'PathDeepnes' => 0);
 			}
 			
@@ -1531,14 +1673,23 @@ class _pages {
 			return array();
 		
 		$row = sql::fetch(sql::run(
-			" SELECT ".$fields." FROM `{pages}` " .
+			" SELECT ".$fields." FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}` " .
 			" WHERE `ID` = '".(int)$id."'"));
 		
 		if (!$row)
 			return array();
 		
-		if (isset($row['SubPageOfID']) && $row['SubPageOfID'])	
-			pages::getBackTraceTree($row['SubPageOfID'], false, $fields, $tree);
+		if (isset($row[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]) && 
+			$row[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')])
+		{	
+			pages::getBackTraceTree(
+				$row[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')], 
+				false, $fields, $tree);
+		}
 		
 		$row['PathDeepnes'] = $tree['PathDeepnes'];
 		$tree['Tree'][] = $row;
@@ -1553,9 +1704,13 @@ class _pages {
 			$languageid = languages::$selected['ID'];
 		
 		return sql::fetch(sql::run(
-			" SELECT * FROM `{pages}` " .
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}` " .
 			" WHERE !`Deactivated`" .
-			" AND !`SubPageOfID`" .
+			" AND !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`" .
 			" AND `LanguageID` = '".(int)$languageid."'" .
 			" ORDER BY " .
 				(menus::$order?
@@ -1595,11 +1750,15 @@ class _pages {
 			$pageid = $this->selectedID;
 		
 		$row = sql::fetch(sql::run(
-			" SELECT `ID`, `SubPageOfID`" .
+			" SELECT `ID`, `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`" .
 				($pageid == $this->selectedID?
 					", `Path`, `MenuID`, `LanguageID`":
 					null) .
-			" FROM `{pages}`" .
+			" FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
 			" WHERE `ID` = '".(int)$pageid."'" .
 			" LIMIT 1"));
 		
@@ -1608,13 +1767,17 @@ class _pages {
 		
 		$this->selectedIDs[] = $row['ID'];
 		
-		if ($row['SubPageOfID'])
-			$this->getSelectedIDs($row['SubPageOfID']);
+		if ($row[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')])
+			$this->getSelectedIDs($row[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]);
 		
 		if ($pageid == $this->selectedID) {
 			$aliaspages = sql::fetch(sql::run(
-				" SELECT `ID`, `SubPageOfID`" .
-				" FROM `{pages}`" .
+				" SELECT `ID`, `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`" .
+				" FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
 				" WHERE '".sql::escape($row['Path'])."/' LIKE CONCAT(`Path`,'/%')" .
 				" AND `MenuID` != '".$row['MenuID']."'" .
 				" AND `LanguageID` = '".$row['LanguageID']."'" .
@@ -1624,8 +1787,8 @@ class _pages {
 			if ($aliaspages) {
 				$this->selectedIDs[] = $aliaspages['ID'];
 				
-				if ($aliaspages['SubPageOfID'])
-					$this->getSelectedIDs($aliaspages['SubPageOfID']);
+				if ($aliaspages[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')])
+					$this->getSelectedIDs($aliaspages[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]);
 			}
 		}
 		
@@ -1659,9 +1822,9 @@ class _pages {
 			return false;
 		
 		$modules = new modules();
-		$modules->sqlTable = 'pagemodules';
-		$modules->sqlRow = 'PageID';
-		$modules->sqlOwnerTable = 'pages';
+		$modules->sqlTable = (JCORE_VERSION >= '0.8'?'pagemodules':'menuitemmodules');
+		$modules->sqlRow = (JCORE_VERSION >= '0.8'?'PageID':'MenuItemID');
+		$modules->sqlOwnerTable = (JCORE_VERSION >= '0.8'?'pages':'menuitems');
 		$modules->selectedOwner = 'Page';
 		$modules->selectedOwnerID = $pageid;
 		$modules->display();

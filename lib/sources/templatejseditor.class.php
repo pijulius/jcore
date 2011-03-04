@@ -34,7 +34,8 @@ class _templateJSEditor extends fileEditor {
 			'?path=admin/site/template/templateimages');
 		favoriteLinks::add(
 			__('Pages / Posts'), 
-			'?path=admin/content/pages');
+			'?path=' .
+			(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
 	}
 	
 	function displayAdminTitle($ownertitle = null) {

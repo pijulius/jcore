@@ -152,7 +152,7 @@ class _ckEditor {
 			if (!$permission['PermissionType'])
 				$permission = userPermissions::check(
 					$GLOBALS['USER']->data['ID'],
-					'admin/content/pages');
+					(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
 			
 			echo 
 				"<html>" .
