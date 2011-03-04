@@ -144,10 +144,17 @@ class _languages {
 			true);
 		$form->setStyle('width: 50px;');
 		
-		if (JCORE_VERSION >= '0.6')
-			$form->setTooltipText(__("e.g. en_UK"));
-		else
-			$form->addAdditionalText(" (".__("e.g. en_UK").")");
+		$form->addAdditionalText(
+			"<a href='".url::uri('request, locales').
+				"&amp;request=".url::path() .
+				"&amp;locales=1' " .
+				"class='select-link ajax-content-link' " .
+				"title='".htmlspecialchars(__("Select Locale"), ENT_QUOTES)."'>" .
+				__("Select Locale") .
+			"</a>" .
+			"<br /><span class='comment'>(" .
+				__("e.g. en_UK") .
+			")</span>");
 		
 		$form->add(
 			__('Additional Options'),
@@ -282,6 +289,89 @@ class _languages {
 		
 		$form->reset();
 		return true;
+	}
+	
+	function displayAdminAvailableLocales() {
+		if (!isset($_GET['ajaxlimit']))
+			echo
+				"<div class='languages-available-locales'>";
+		
+		echo
+				"<div class='form-title'>".__('Available Locales') .
+					"&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</div>" .
+				"<table cellpadding='0' cellspacing='0' class='form-content list'>" .
+					"<thead>" .
+					"<tr>" .
+						"<th>" .
+							"<span class='nowrap'>".
+							__("Select") .
+							"</span>" .
+						"</th>" .
+						"<th>" .
+							"<span class='nowrap'>".
+							__("Locale") .
+							"</span>" .
+						"</th>" .
+					"</tr>" .
+					"</thead>" .
+					"<tbody>";
+		
+		$dirs = array();
+		
+		if ($dh = opendir(SITE_PATH.'locale/')) {
+			while (($file = readdir($dh)) !== false) {
+				if (!is_dir(SITE_PATH.'locale/'.$file) || strpos($file, '.') === 0)
+					continue;
+				
+				$dirs[$file] = $file;
+			}
+		}
+		
+		$paging = new paging(10);
+		
+		$paging->track('ajaxlimit');
+		$paging->ajax = true;
+		$paging->setTotalItems(count($dirs));
+		
+		asort($dirs);
+		$dirs = array_slice($dirs, $paging->getStart(), 10);
+		
+		if (!is_array($dirs))
+			$dirs = array();
+		
+		$i = 1;	
+		foreach($dirs as $dir => $title) {
+			echo
+				"<tr".($i%2?" class='pair'":NULL).">" .
+					"<td align='center'>" .
+						"<a href='javascript://' " .
+							"onclick=\"" .
+								"jQuery('#neweditlanguageform #entryLocale').val('" .
+									htmlspecialchars($dir, ENT_QUOTES)."');" .
+								(JCORE_VERSION >= '0.7'?
+									"jQuery(this).closest('.tipsy').hide();":
+									"jQuery(this).closest('.qtip').qtip('hide');") .
+								"\" " .
+							"class='languages-select-locale select-link'>" .
+						"</a>" .
+					"</td>" .
+					"<td class='auto-width'>" .
+						"<b>".$title."</b> " .
+					"</td>" .
+				"</tr>";
+			
+			$i++;
+		}
+		
+		echo
+					"</tbody>" .
+				"</table>";
+		
+		$paging->display();
+		
+		if (!isset($_GET['ajaxlimit']))
+			echo
+				"</div>";
 	}
 	
 	function displayAdminListHeader() {
@@ -799,6 +889,42 @@ class _languages {
 			" LIMIT 1"));
 		
 		return $row;
+	}
+	
+	function ajaxRequest() {
+		if (!$GLOBALS['USER']->loginok || 
+			!$GLOBALS['USER']->data['Admin']) 
+		{
+			tooltip::display(
+				__("Request can only be accessed by administrators!"),
+				TOOLTIP_ERROR);
+			return true;
+		}
+		
+		$locales = null;
+		
+		if (isset($_GET['locales']))
+			$locales = $_GET['locales'];
+		
+		if ($locales) {
+			$permission = userPermissions::check(
+				$GLOBALS['USER']->data['ID'],
+				$this->adminPath);
+			
+			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
+				$permission['PermissionIDs'])
+			{
+				tooltip::display(
+					__("You do not have permission to access this path!"),
+					TOOLTIP_ERROR);
+				return true;
+			}
+			
+			$this->displayAdminAvailableLocales();
+			return true;
+		}
+		
+		return false;
 	}
 	
 	function displayTitle(&$row) {

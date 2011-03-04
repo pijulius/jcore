@@ -257,7 +257,7 @@ class _rss {
 									"jQuery(this).closest('.tipsy').hide();":
 									"jQuery(this).closest('.qtip').qtip('hide');") .
 								"\" " .
-							"class='user-permissions-select-path select-link'>" .
+							"class='rss-feeds-select-feed select-link'>" .
 						"</a>" .
 					"</td>" .
 					"<td class='auto-width'>" .
