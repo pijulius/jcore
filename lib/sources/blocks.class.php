@@ -118,8 +118,10 @@ class _blocks {
 			BLOCK_TYPE_AD, $this->type2Text(BLOCK_TYPE_AD));
 		$form->addValue(
 			BLOCK_TYPE_MAIN_CONTENT, $this->type2Text(BLOCK_TYPE_MAIN_CONTENT));
-		$form->addValue(
-			BLOCK_TYPE_CONTENT, $this->type2Text(BLOCK_TYPE_CONTENT));
+		
+		if (JCORE_VERSION < '0.8')
+			$form->addValue(
+				BLOCK_TYPE_CONTENT, $this->type2Text(BLOCK_TYPE_CONTENT));
 		
 		$form->add(
 			__('Sub Block of'),
