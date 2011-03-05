@@ -173,24 +173,13 @@ class _massEmail {
 		if (!$form->verify())
 			return false;
 		
-		$fromemail = $form->get('From');
-		preg_match('/(.*?)<(.*)>/', $fromemail, $matches);
-		
-		if (isset($matches[2]))
-			$fromemail = $matches[2];
-		
-		if (!email::verify($fromemail)) {
+		if (!email::verify($form->get('From'), true)) {
 			tooltip::display(
 				__("From email address is not a valid email address!"),
 				TOOLTIP_ERROR);
 			
 			return false;
 		}
-		
-		if (isset($matches[1]))
-			$form->set('From', 
-				preg_replace('/(,|;)/', '', strip_tags($matches[1])) .
-				' <'.$fromemail.'>');
 		
 		$emails = preg_split('/(,|;)/', $form->get('To'));
 		$toemails = array();

@@ -36,8 +36,7 @@ class _email {
 	var $html = false;
 	
 	function __construct() {
-		$this->from = preg_replace('/(-|,|;).*/i', '', strip_tags(PAGE_TITLE)).
-			" <".WEBMASTER_EMAIL.">";
+		$this->from = email::genWebmasterEmail();
 	}
 	
 	static function add($id, $subject, $body, $save = true) {
@@ -70,6 +69,11 @@ class _email {
 			return false;
 		
 		return email::$templates[$id];
+	}
+	
+	static function genWebmasterEmail() {
+		return preg_replace('/(-|,|;).*/i', '', strip_tags(PAGE_TITLE)).
+			" <".WEBMASTER_EMAIL.">";
 	}
 	
 	function load($id) {
@@ -129,18 +133,28 @@ class _email {
 		return $user['ID'];
 	}
 	
-	static function verify($email) {
-		if (!preg_match("/^([a-zA-Z0-9])+([a-zA-Z0-9\._-])*@([a-zA-Z0-9_-])+([a-zA-Z0-9\._-]+)+$/" , $email)) {
-			return false;
+	static function verify($email, $withname = false) {
+		if ($withname && strpos($email, '<') !== false) {
+			preg_match('/(.*)<(.*)>/', $email, $matches);
+			
+			if (isset($matches[2])) {
+				if (preg_match('/(,|;)/', $matches[1]))
+					return false;
+				
+				$email = $matches[2];
+			}
 		}
-	
-		return true;	
+		
+		$user = '[a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+';
+		$domain = '(?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.?)+';
+		$ipv4 = '[0-9]{1,3}(\.[0-9]{1,3}){3}';
+		$ipv6 = '[0-9a-fA-F]{1,4}(\:[0-9a-fA-F]{1,4}){7}';
+
+		return preg_match("/^$user@($domain|(\[($ipv4|$ipv6)\]))$/", $email);
 	}
 	
 	function reset() {
-		$this->from = preg_replace('/(-|,|;).*/i', '', strip_tags(PAGE_TITLE)).
-			" <".WEBMASTER_EMAIL.">";
-		
+		$this->from = email::genWebmasterEmail;
 		$this->to = null;
 		$this->cc = null;
 		$this->bcc = null;

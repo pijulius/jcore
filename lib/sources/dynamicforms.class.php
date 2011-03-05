@@ -25,6 +25,10 @@ class _dynamicForms extends form {
 	var $formID = null;
 	var $sendNotificationEmail = true;
 	var $sendNotificationEmailTo = WEBMASTER_EMAIL;
+	var $sendAutoResponse = false;
+	var $autoResponseFrom = WEBMASTER_EMAIL;
+	var $autoResponseSubject = '';
+	var $autoResponseMessage = '';
 	var $successMessage = null;
 	var $storageSQLTable;
 	var $textsDomain = 'messages';
@@ -34,6 +38,7 @@ class _dynamicForms extends form {
 		parent::__construct($title, $id, $method);
 		$this->formID = $this->id;
 		$this->textsDomain = languages::$selectedTextsDomain;
+		$this->autoResponseFrom = email::genWebmasterEmail();
 	}
 	
 	// ************************************************   Admin Part
@@ -100,6 +105,49 @@ class _dynamicForms extends form {
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
+		
+		if (JCORE_VERSION >= '0.8') {
+			$form->add(
+				__('Auto Response Options'),
+				null,
+				FORM_OPEN_FRAME_CONTAINER);
+			
+			$form->add(
+				__('Send Auto Response'),
+				'SendAutoResponse',
+				FORM_INPUT_TYPE_CHECKBOX,
+				false,
+				1);
+			$form->setValueType(FORM_VALUE_TYPE_BOOL);
+			
+			$form->add(
+				__('From'),
+				'AutoResponseFrom',
+				FORM_INPUT_TYPE_TEXT);
+			$form->setStyle("width: 300px;");
+			$form->setValueType(FORM_VALUE_TYPE_HTML);
+			
+			$form->add(
+				__('Subject'),
+				'AutoResponseSubject',
+				FORM_INPUT_TYPE_TEXT);
+			$form->setStyle("width: 350px;");
+			
+			$form->add(
+				__('Message'),
+				'AutoResponseMessage',
+				FORM_INPUT_TYPE_TEXTAREA);
+			$form->setStyle('width: ' .
+				(JCORE_VERSION >= '0.7'?
+					'90%':
+					'350px') .
+				'; height: 200px;');
+			
+			$form->add(
+				null,
+				null,
+				FORM_CLOSE_FRAME_CONTAINER);
+		}
 		
 		$form->add(
 			__('Storage Options'),
@@ -190,6 +238,16 @@ class _dynamicForms extends form {
 		
 		if (!$form->verify())
 			return false;
+		
+		if (JCORE_VERSION >= '0.8' && $form->get('From') && 
+			!email::verify($form->get('From'), true)) 
+		{
+			tooltip::display(
+				__("From email address is not a valid email address!"),
+				TOOLTIP_ERROR);
+			
+			return false;
+		}
 		
 		if ($edit) {
 			if (!$this->editForm($id, $form->getPostArray()))
@@ -362,6 +420,27 @@ class _dynamicForms extends form {
 				__("Send Email To"),
 				$row['SendNotificationEmailTo']);
 				
+		if (JCORE_VERSION >= '0.8' && $row['SendAutoResponse']) {
+			admin::displayItemData(
+				__("Send Auto Response"),
+				__('Yes'));
+			
+			if ($row['AutoResponseFrom'])
+				admin::displayItemData(
+					__("From"),
+					htmlspecialchars($row['AutoResponseFrom']));
+			
+			if ($row['AutoResponseSubject'])
+				admin::displayItemData(
+					__("Subject"),
+					htmlspecialchars($row['AutoResponseSubject']));
+			
+			if ($row['AutoResponseMessage'])
+				admin::displayItemData(
+					__("Message"),
+					nl2br($row['AutoResponseMessage']));
+		}
+		
 		if ($row['SQLTable'])
 			admin::displayItemData(
 				__("SQL Table"),
@@ -601,6 +680,16 @@ class _dynamicForms extends form {
 				sql::escape($values['Method'])."'," .
 			" `SQLTable` = '".
 				sql::escape($values['SQLTable'])."'," .
+			(JCORE_VERSION >= '0.8'?
+				" `SendAutoResponse` = '".
+					(int)$values['SendAutoResponse']."'," .
+				" `AutoResponseFrom` = '".
+					sql::escape($values['AutoResponseFrom'])."'," .
+				" `AutoResponseSubject` = '".
+					sql::escape($values['AutoResponseSubject'])."'," .
+				" `AutoResponseMessage` = '" .
+					sql::escape($values['AutoResponseMessage'])."',":
+				null) .
 			(JCORE_VERSION >= '0.7'?
 				" `SuccessMessage` = '".
 					sql::escape($values['SuccessMessage'])."'," .
@@ -763,6 +852,16 @@ class _dynamicForms extends form {
 				sql::escape($values['Method'])."'," .
 			" `SQLTable` = '".
 				sql::escape($values['SQLTable'])."'," .
+			(JCORE_VERSION >= '0.8'?
+				" `SendAutoResponse` = '".
+					(int)$values['SendAutoResponse']."'," .
+				" `AutoResponseFrom` = '".
+					sql::escape($values['AutoResponseFrom'])."'," .
+				" `AutoResponseSubject` = '".
+					sql::escape($values['AutoResponseSubject'])."'," .
+				" `AutoResponseMessage` = '" .
+					sql::escape($values['AutoResponseMessage'])."',":
+				null) .
 			(JCORE_VERSION >= '0.7'?
 				" `SuccessMessage` = '".
 					sql::escape($values['SuccessMessage'])."'," .
@@ -919,7 +1018,7 @@ class _dynamicForms extends form {
 						__($element['Title']).": ".
 							$value."\n";
 			
-				if ($element['Type'] == FORM_INPUT_TYPE_EMAIL)
+				if ($element['Type'] == FORM_INPUT_TYPE_EMAIL && $value)
 					$email->from = $value;
 			}
 		}
@@ -927,6 +1026,54 @@ class _dynamicForms extends form {
 		$emailsent = $email->send();
 		unset($email);
 		
+		return $emailsent;
+	}
+	
+	function sendAutoResponseEmail() {
+		$email = new email();
+		$email->from = $this->autoResponseFrom;
+		$email->subject = $this->autoResponseSubject;
+		$email->message = $this->autoResponseMessage;
+		
+		$email->variables = array(
+			'FormTitle' => $this->title); 
+		
+		foreach($this->elements as $elementid => $element) {
+			if (in_array($element['Type'], array(
+					FORM_INPUT_TYPE_TEXT,
+					FORM_INPUT_TYPE_EMAIL,
+					FORM_INPUT_TYPE_CHECKBOX,
+					FORM_INPUT_TYPE_RADIO,
+					FORM_INPUT_TYPE_SELECT,
+					FORM_INPUT_TYPE_TEXTAREA,
+					FORM_INPUT_TYPE_HIDDEN,
+					FORM_INPUT_TYPE_FILE,
+					FORM_INPUT_TYPE_MULTISELECT,
+					FORM_INPUT_TYPE_TIMESTAMP,
+					FORM_INPUT_TYPE_DATE,
+					FORM_INPUT_TYPE_EDITOR,
+					FORM_INPUT_TYPE_RECIPIENT_SELECT
+				)))
+			{
+				if ($element['ValueType'] == FORM_VALUE_TYPE_ARRAY)
+					$value = implode('; ', (array)$this->get($element['Name']));
+				elseif ($element['ValueType'] == FORM_VALUE_TYPE_BOOL)
+					$value = ($this->get($element['Name'])?__("Yes"):__("No"));
+				else
+					$value = $this->get($element['Name']);
+				
+				$email->variables[$element['Name']] = $value;
+				
+				if ($element['Type'] == FORM_INPUT_TYPE_EMAIL && $value)
+					$email->to = $value;
+			}
+		}
+		
+		$emailsent = false;
+		if ($email->to)
+			$emailsent = $email->send();
+		
+		unset($email);
 		return $emailsent;
 	}
 	
@@ -971,6 +1118,9 @@ class _dynamicForms extends form {
 				return false;
 		}
 		
+		if ($this->sendAutoResponse)
+			$this->sendAutoResponseEmail();
+		
 		return true;
 	}
 	
@@ -985,6 +1135,13 @@ class _dynamicForms extends form {
 		$this->method = $form['Method'];
 		$this->storageSQLTable = $form['SQLTable'];
 		$this->sendNotificationEmail = $form['SendNotificationEmail'];
+		
+		if (JCORE_VERSION >= '0.8') {
+			$this->sendAutoResponse = $form['SendAutoResponse'];
+			$this->autoResponseFrom = $form['AutoResponseFrom'];
+			$this->autoResponseSubject = $form['AutoResponseSubject'];
+			$this->autoResponseMessage = $form['AutoResponseMessage'];
+		}
 		
 		if (JCORE_VERSION >= '0.7' && $form['SendNotificationEmailTo'])
 			$this->sendNotificationEmailTo = $form['SendNotificationEmailTo'];
