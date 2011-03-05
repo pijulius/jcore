@@ -2287,9 +2287,19 @@ class shoppingCartTaxes {
 			
 			while($orderformfield = sql::fetch($orderformfields)) {
 				$value = null;
+				$valueindex = $orderformfield['Name'];
 				
-				if (isset($values[$orderformfield['Name']]))
-					$value = $values[$orderformfield['Name']];
+				if ((!isset($values[$valueindex]) || !trim($values[$valueindex])) &&
+					strstr($valueindex, 'Shipping'))
+				{
+					$valueindex = str_replace('Shipping', '', $valueindex);
+				}
+				
+				if (isset($values[$valueindex]) && trim($values[$valueindex]))
+					$value = trim($values[$valueindex]);
+				
+				if (!$value)
+					continue;
 				
 				$fieldquery .= 
 					" OR (`FieldID` = '".$orderformfield['ID']."'" .
