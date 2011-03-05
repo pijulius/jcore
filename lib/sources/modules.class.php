@@ -265,18 +265,37 @@ class _modules {
 			modules::load(strtolower($row['Name']), false, $skipinstalledcheck);
 		}
 		
-		$localmodules = glob(SITE_PATH.'lib/modules/*.php');
+		if (!$skipinstalledcheck)
+			return true;
 		
-		if (!$localmodules || !is_array($localmodules))
+		if (!is_dir(SITE_PATH.'lib/modules'))
 			return false;
 		
-		foreach($localmodules as $module) {
-			preg_match('/.*\/(.*?)\./', $module, $matches);
+		if (!$dh = opendir(SITE_PATH.'lib/modules'))
+			return false;
+		
+		while (($file = readdir($dh)) !== false) {
+			if (strpos($file, '.') === 0)
+				continue;
 			
-			if (isset($matches['1']))
-				modules::load($matches['1'], false, $skipinstalledcheck);
+			if (is_file(SITE_PATH.'lib/modules/'.$file)) {
+				preg_match('/(.*)\.class\.php$/', $file, $matches);
+				
+				if (isset($matches[1]) && $matches[1])
+					modules::load($matches[1], false, $skipinstalledcheck);
+				
+				continue;
+			}
+			
+			if (is_dir(SITE_PATH.'lib/modules/'.$file) &&
+				is_file(SITE_PATH.'lib/modules/'.$file.'/'.$file.'.class.php'))
+			{
+				modules::load($file, false, $skipinstalledcheck);
+				continue;
+			}
 		}
 		
+		closedir($dh);
 		return true;
 	}
 	
@@ -290,7 +309,10 @@ class _modules {
 		if (isset(modules::$loaded[$module]))
 			return true;
 		
-		include_once('lib/modules/'.$module.'.class.php');
+		if (@is_dir(SITE_PATH.'lib/modules/'.$module))
+			include_once('lib/modules/'.$module.'/'.$module.'.class.php');
+		else
+			include_once('lib/modules/'.$module.'.class.php');
 		
 		if (!class_exists($module))
 			return false;
