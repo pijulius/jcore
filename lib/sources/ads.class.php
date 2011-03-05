@@ -35,7 +35,10 @@ class _ads {
 			" AND (`StartDate` IS NULL OR `StartDate` <= CURDATE())" .
 			" AND (`EndDate` IS NULL OR `EndDate` >= CURDATE())" .
 			" AND (`ShowOn` IS NULL OR `ShowOn` LIKE '%".date('w')."%')" .
-			" ORDER BY `OrderID`, `ID`";
+			" ORDER BY" .
+			($this->limit?
+				" RAND()":
+				" `OrderID`, `ID`");
 	}
 	
 	// ************************************************   Admin Part
