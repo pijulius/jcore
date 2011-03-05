@@ -956,7 +956,11 @@ class _languages {
 				(JCORE_VERSION < '0.6'?
 					"id='language".$row['ID']."' ":
 					null) .
-				"class='language ".$row['Path']."'>";
+				"class='language ".$row['Path'] .
+				($row['ID'] == $this->selectedID?
+					" selected":
+					NULL) .
+				"'>";
 		
 		$this->displayTitle($row);
 		
