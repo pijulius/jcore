@@ -189,8 +189,6 @@ class _templateExporter {
 			$form->id.'reset',
 			FORM_INPUT_TYPE_RESET);
 		
-		//print_r(get_headers("http://jcore.net/modules/submit?&request=posts/postattachments&download=1&ajax=1"));
-		
 		$this->verifyAdmin($form);
 		$this->displayAdminForm($form);
 		
@@ -340,6 +338,12 @@ class templateInstaller extends template {
 				continue;
 			}
 			
+			if (($fieldid == 'PageExcept' || $fieldid == 'MenuItemExcept') && $fieldvalue) {
+				$code .= '
+			" `".(JCORE_VERSION >= \'0.8\'?\'PageExcept\':\'MenuItemExcept\')."` = \''.sql::escape($fieldvalue).'\'," .';
+				continue;
+			}
+			
 			if (($fieldid == 'PageIDs' || $fieldid == 'MenuItemIDs') && $fieldvalue) {
 				$homepageids = pages::getHomeIDs();
 				$fieldvalues = explode('|', $fieldvalue);
@@ -348,7 +352,7 @@ class templateInstaller extends template {
 					array_intersect($fieldvalues, $homepageids))))
 				{
 					$code .= '
-			" `'.$fieldid.'` = \'".implode(\'|\', $homepageids)."\'," .';
+			" `".(JCORE_VERSION >= \'0.8\'?\'PageIDs\':\'MenuItemIDs\')."` = \'".implode(\'|\', $homepageids)."\'," .';
 					continue;
 				}
 				
@@ -374,13 +378,13 @@ class templateInstaller extends template {
 				
 				if ($homepageidcodes) {
 					$code .= '
-			" `'.$fieldid.'` = \'".implode(\'|\', array(' .
+			" `".(JCORE_VERSION >= \'0.8\'?\'PageIDs\':\'MenuItemIDs\')."` = \'".implode(\'|\', array(' .
 			implode(',', $homepageidcodes).'))."\'," .';
 					continue;
 				}
 				
 				$code .= '
-			" `'.$fieldid.'` = \''.sql::escape($fieldvalue).'\'," .';
+			" `".(JCORE_VERSION >= \'0.8\'?\'PageIDs\':\'MenuItemIDs\')."` = \''.sql::escape($fieldvalue).'\'," .';
 				continue;
 			}
 			
