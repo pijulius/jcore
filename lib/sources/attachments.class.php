@@ -736,7 +736,7 @@ class _attachments {
 				" `HumanMimeType` = '".
 					sql::escape($values['HumanMimeType'])."'," .
 				" `Location` = '".
-					(!strstr($values['File'], '/')?
+					(strpos($values['File'], '/') === false?
 						$this->subFolder.'/':
 						null) .
 					sql::escape($values['File']).
@@ -781,7 +781,7 @@ class _attachments {
 					sql::escape($values['HumanMimeType'])."'," .
 				" `TimeStamp` = `TimeStamp`" .
 				" WHERE `Location` = '" .
-					(!strstr($values['File'], '/')?
+					(strpos($values['File'], '/') === false?
 						$this->subFolder.'/':
 						null) .
 					sql::escape($values['File']).
@@ -802,7 +802,7 @@ class _attachments {
 				" `HumanMimeType` = '".
 					sql::escape($values['HumanMimeType'])."'," .
 				" `Location` = '".
-					(!strstr($values['File'], '/')?
+					(strpos($values['File'], '/') === false?
 						$this->subFolder.'/':
 						null) .
 					sql::escape($values['File']).

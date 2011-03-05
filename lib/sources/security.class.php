@@ -672,7 +672,7 @@ class _security {
 			(!defined('SECURITY_IMAGE_RANDOM_FONTS') || !SECURITY_IMAGE_RANDOM_FONTS)) 
 		{
 			if (strpos(SECURITY_IMAGE_FONT, '/') !== 0 && 
-				!strstr(SECURITY_IMAGE_FONT, '://'))
+				strpos(SECURITY_IMAGE_FONT, '://') === false)
 			{
 				if (defined('JCORE_PATH'))
 					$ttffont = JCORE_PATH.'lib/'.SECURITY_IMAGE_FONT;

@@ -219,7 +219,7 @@ class _sql {
 		if (!trim($search) || !is_array($fields) || !count($fields))
 			return null;
 			
-		if (strstr($search, ',')) {
+		if (strpos($search, ',') !== false) {
 			$separator = ',';
 			$search = trim($search, ', ');
 		} else {

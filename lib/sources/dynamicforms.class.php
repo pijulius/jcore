@@ -1207,7 +1207,7 @@ class _dynamicForms extends form {
 					}
 					
 					if ($value) {
-						if (strstr($value, '='))
+						if (strpos($value, '=') !== false)
 							list($valuetitle, $value) = array_map('trim', explode('=', current($values)));
 						
 						$defaultvalue = $value;
@@ -1270,7 +1270,7 @@ class _dynamicForms extends form {
 					$presetvalue = true;
 				}
 				
-				if (strstr($value, '='))
+				if (strpos($value, '=') !== false)
 					list($valuetitle, $value) = array_map('trim', explode('=', $value));
 				
 				if ($valuetitle)

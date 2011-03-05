@@ -977,7 +977,7 @@ class _pictures {
 				sql::escape($values['URL'])."'," .
 			($values['File']?
 				" `Location` = '".
-					(!strstr($values['File'], '/')?
+					(strpos($values['File'], '/') === false?
 						$this->subFolder.'/':
 						null) .
 					sql::escape($values['File']).
@@ -1033,7 +1033,7 @@ class _pictures {
 				sql::escape($values['URL'])."'," .
 			($values['File']?
 				" `Location` = '".
-					(!strstr($values['File'], '/')?
+					(strpos($values['File'], '/') === false?
 						$this->subFolder.'/':
 						null) .
 					sql::escape($values['File']).
@@ -1465,18 +1465,18 @@ class _pictures {
 		if (!ini_get('safe_mode') && $timeout)
 			@set_time_limit($timeout);
 		
-		if (strstr($watermarkx, '%'))
+		if (strpos($watermarkx, '%') !== false)
 			$watermarkx = round((int)$watermarkx*$imgwidth/100);
 		else
 			$watermarkx = (int)$watermarkx;
 		
-		if (strstr($watermarky, '%'))
+		if (strpos($watermarky, '%') !== false)
 			$watermarky = round((int)$watermarky*$imgheight/100);
 		else
 			$watermarky = (int)$watermarky;
 		
 		if ($watermarktype == PICTURE_WATERMARK_TYPE_IMAGE) {
-			if (strpos($watermark, '/') !== 0 && !strstr($watermark, '://'))
+			if (strpos($watermark, '/') !== 0 && strpos($watermark, '://') === false)
 				$watermark = SITE_PATH.'template/'.$watermark;
 			
 			$file_data = @getimagesize($watermark);
@@ -1527,7 +1527,7 @@ class _pictures {
 			
 			if (defined('PICTURE_WATERMARK_TEXT_FONT') && PICTURE_WATERMARK_TEXT_FONT) {
 				if (strpos(PICTURE_WATERMARK_TEXT_FONT, '/') !== 0 && 
-					!strstr(PICTURE_WATERMARK_TEXT_FONT, '://'))
+					strpos(PICTURE_WATERMARK_TEXT_FONT, '://') === false)
 				{
 					if (defined('JCORE_PATH'))
 						$ttffont = JCORE_PATH.'lib/'.PICTURE_WATERMARK_TEXT_FONT;
@@ -1711,7 +1711,7 @@ class _pictures {
 	function displayPicture(&$row) {
 		echo
 			"<img src='".
-				(strstr($row['Location'], '://')?
+				(strpos($row['Location'], '://') !== false?
 					$row['Location']:
 					$row['_ThumbnailLocation']).
 					"' " .
@@ -1778,7 +1778,7 @@ class _pictures {
 				"'>" .
 				"<a href='".$row['_Link']."' " .
 					"title='".htmlspecialchars($row['Title'], ENT_QUOTES)."' " .
-					(strstr($row['URL'], '://') && !$this->customLink?
+					(strpos($row['URL'], '://') !== false && !$this->customLink?
 						"target='_blank' ":
 						null) .
 					(!$row['URL'] && !$this->customLink?

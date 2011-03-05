@@ -513,7 +513,7 @@ class _IXR_Client {
             $line = fgets($fp, 4096);
             if (!$gotFirstLine) {
                 // Check line for '200'
-                if (strstr($line, '200') === false) {
+                if (strpos($line, '200') === false) {
                     $this->error = new IXR_Error(-32300, 'transport error - HTTP status code was not 200');
                     return false;
                 }

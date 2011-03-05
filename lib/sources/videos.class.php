@@ -773,7 +773,7 @@ class _videos {
 				"," .
 			($values['File']?
 				" `Location` = '".
-					(!strstr($values['File'], '/')?
+					(strpos($values['File'], '/') === false?
 						$this->subFolder.'/':
 						null) .
 					sql::escape($values['File']).
@@ -781,7 +781,7 @@ class _videos {
 					null) .
 			($values['CapFile']?
 				" `CapLocation` = '".
-					(!strstr($values['CapFile'], '/')?
+					(strpos($values['CapFile'], '/') === false?
 						$this->subFolder.'/':
 						null) .
 					sql::escape($values['CapFile']).
@@ -828,7 +828,7 @@ class _videos {
 				"," .
 			($values['File']?
 				" `Location` = '".
-					(!strstr($values['File'], '/')?
+					(strpos($values['File'], '/') === false?
 						$this->subFolder.'/':
 						null) .
 					sql::escape($values['File']).
@@ -836,7 +836,7 @@ class _videos {
 				null) .
 			($values['CapFile']?
 				" `CapLocation` = '".
-					(!strstr($values['CapFile'], '/')?
+					(strpos($values['CapFile'], '/') === false?
 						$this->subFolder.'/':
 						null) .
 					sql::escape($values['CapFile']).
@@ -893,7 +893,7 @@ class _videos {
 	}
 	
 	function upload($file, $to) {
-		if (strstr($file, '://'))
+		if (strpos($file, '://') !== false)
 			return $file;
 		
 		$videopath = $to.$this->subFolder.'/';
@@ -905,7 +905,7 @@ class _videos {
 	}
 	
 	function uploadCap($file, $to) {
-		if (strstr($file, '://'))
+		if (strpos($file, '://') !== false)
 			return $file;
 		
 		$pictures = new pictures();
@@ -1121,7 +1121,7 @@ class _videos {
 	function displayCap(&$row) {
 		echo
 			"<img src='".
-				(strstr($row['CapLocation'], '://')?
+				(strpos($row['CapLocation'], '://') !== false?
 					$row['CapLocation']:
 					$this->rootURL.$row['CapLocation']).
 					"' " .
@@ -1181,7 +1181,7 @@ class _videos {
 		$parameters = array(
 			'FlashVars' => 'url=' .
 				urlencode(
-					(strstr($row['Location'], '://')?
+					(strpos($row['Location'], '://') !== false?
 						$row['Location']:
 						$this->rootURL.$row['Location'])) .
 				'&autoplay=1');
@@ -1229,7 +1229,7 @@ class _videos {
 				"controls='true' " .
 				"autoplay='true'>" .
 				"<source src='" .
-				(strstr($row['Location'], '://')?
+				(strpos($row['Location'], '://') !== false?
 					$row['Location']:
 					$this->rootURL.$row['Location']) .
 				"' />";
@@ -1325,7 +1325,7 @@ class _videos {
 	}
 	
 	function displayVideo(&$row) {
-		if (strstr($row['Location'], '://'))
+		if (strpos($row['Location'], '://') !== false)
 			return $this->displayRemoteVideo($row);
 		
 		return $this->displayLocalVideo($row);

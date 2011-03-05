@@ -2290,7 +2290,7 @@ class shoppingCartTaxes {
 				$valueindex = $orderformfield['Name'];
 				
 				if ((!isset($values[$valueindex]) || !trim($values[$valueindex])) &&
-					strstr($valueindex, 'Shipping'))
+					strpos($valueindex, 'Shipping') !== false)
 				{
 					$valueindex = str_replace('Shipping', '', $valueindex);
 				}

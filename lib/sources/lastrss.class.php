@@ -203,7 +203,7 @@ class _lastRSS {
             fclose($f);
             
             // Convert myspace to rss
-            if (strstr($rss_url, 'vids.myspace.com'))
+            if (strpos($rss_url, 'vids.myspace.com') !== false)
             	$rss_content = $this->myspace2rss($rss_content);
 
             // Parse document encoding

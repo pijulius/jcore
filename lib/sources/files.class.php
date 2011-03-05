@@ -220,13 +220,13 @@ class _files {
 		$topath = preg_replace('/(.*(\/|\\\)).*/', '\1', $to);
 		$tofilename = preg_replace('/.*(\/|\\\)/', '', $to);
 		
- 		if (strstr($file, '://')) {
+ 		if (strpos($file, '://') !== false) {
 			$filename = preg_replace('/.*(\/|\\\)/', '', $file);
 			
 			if (!$tofilename)
 				$tofilename = preg_replace("/[^A-Za-z0-9._-]/", "", $filename);
  			
- 		} elseif (strstr($file, '/') || strstr($file, '\\')) {
+ 		} elseif (strpos($file, '/') !== false || strpos($file, '\\') !== false) {
 			$filename = preg_replace('/.*(\/|\\\)/', '', $file);
 			
 			if (!$tofilename) {
@@ -307,7 +307,7 @@ class _files {
 			return false;
 		}
 		
- 		if (strstr($file, '://')) {
+ 		if (strpos($file, '://') !== false) {
 			$uploaded = files::save($topath.$tofilename, files::get($file));
  		} else {
 			$uploaded = @move_uploaded_file($file, $topath.$tofilename);
@@ -336,7 +336,7 @@ class _files {
 		$fileinfo = @pathinfo($file);
 		$filemtime = @filemtime($file);
 		
-		$filename = (strstr($_SERVER['HTTP_USER_AGENT'], 'MSIE')) ?
+		$filename = (strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false) ?
 			preg_replace('/\./', '%2e', $fileinfo['basename'], substr_count($fileinfo['basename'], '.') - 1) :
 			$fileinfo['basename'];
 		
@@ -474,7 +474,7 @@ class _files {
  	}
  	
  	static function delete($file) {
- 		if (strstr($file, '://'))
+ 		if (strpos($file, '://') !== false)
  			return false;
  		
  		if (@is_dir($file)) {
@@ -510,7 +510,7 @@ class _files {
  	}
  	
  	static function get($file, $httpheader = null) {
- 		if (strstr($file, '://')) {
+ 		if (strpos($file, '://') !== false) {
  			if (extension_loaded('curl')) {
 				$ch = curl_init();
 				curl_setopt($ch, CURLOPT_URL, $file);

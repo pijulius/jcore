@@ -325,10 +325,10 @@ class shoppingItems {
 			$this->selectedShoppingID = (int)$_GET['shoppingid'];
 		
 		if (isset($_GET['shoppingitems'])) {
-			$this->active = strstr($_GET['shoppingitems'], '1');
-			$this->popular = strstr($_GET['shoppingitems'], '2');
-			$this->discussed = strstr($_GET['shoppingitems'], '3');
-			$this->similar = strstr($_GET['shoppingitems'], '4');
+			$this->active = (strpos($_GET['shoppingitems'], '1') !== false?true:false);
+			$this->popular = (strpos($_GET['shoppingitems'], '2') !== false?true:false);
+			$this->discussed = (strpos($_GET['shoppingitems'], '3') !== false?true:false);
+			$this->similar = (strpos($_GET['shoppingitems'], '4') !== false?true:false);
 		}
 		
 		if (isset($_GET['searchin']) && isset($_GET['search']) && 

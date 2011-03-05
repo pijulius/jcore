@@ -27,44 +27,44 @@ class _css {
 		// browser
 		if(!preg_match('/opera|webtv/i', $ua) && preg_match('/msie\s(\d)/', $ua, $array)) {
 			$b[] = 'ie ie' . $array[1];
-		} else if(strstr($ua, 'firefox/2')) {
+		} else if(strpos($ua, 'firefox/2') !== false) {
 			$b[] = $g . ' ff2';		
-		} else if(strstr($ua, 'firefox/3.5')) {
+		} else if(strpos($ua, 'firefox/3.5') !== false) {
 			$b[] = $g . ' ff3 ff3_5';
-		} else if(strstr($ua, 'firefox/3')) {
+		} else if(strpos($ua, 'firefox/3') !== false) {
 			$b[] = $g . ' ff3';
-		} else if(strstr($ua, 'gecko/')) {
+		} else if(strpos($ua, 'gecko/') !== false) {
 			$b[] = $g;
 		} else if(preg_match('/opera(\s|\/)(\d+)/', $ua, $array)) {
 			$b[] = 'opera opera' . $array[2];
-		} else if(strstr($ua, 'konqueror')) {
+		} else if(strpos($ua, 'konqueror') !== false) {
 			$b[] = 'konqueror';
-		} else if(strstr($ua, 'chrome')) {
+		} else if(strpos($ua, 'chrome') !== false) {
 			$b[] = $w . ' ' . $s . ' chrome';
-		} else if(strstr($ua, 'iron')) {
+		} else if(strpos($ua, 'iron') !== false) {
 			$b[] = $w . ' ' . $s . ' iron';
-		} else if(strstr($ua, 'applewebkit/')) {
+		} else if(strpos($ua, 'applewebkit/') !== false) {
 			$b[] = (preg_match('/version\/(\d+)/i', $ua, $array)) ? $w . ' ' . $s . ' ' . $s . $array[1] : $w . ' ' . $s;
-		} else if(strstr($ua, 'mozilla/')) {
+		} else if(strpos($ua, 'mozilla/') !== false) {
 			$b[] = $g;
 		}
 
 		// platform				
-		if(strstr($ua, 'iphone')) {
+		if(strpos($ua, 'iphone') !== false) {
 			$b[] = 'iphone';		
-		} else if(strstr($ua, 'ipod')) {
+		} else if(strpos($ua, 'ipod') !== false) {
 			$b[] = 'ipod';		
-		} else if(strstr($ua, 'mac')) {
+		} else if(strpos($ua, 'mac') !== false) {
 			$b[] = 'mac';		
-		} else if(strstr($ua, 'darwin')) {
+		} else if(strpos($ua, 'darwin') !== false) {
 			$b[] = 'mac';		
-		} else if(strstr($ua, 'webtv')) {
+		} else if(strpos($ua, 'webtv') !== false) {
 			$b[] = 'webtv';		
-		} else if(strstr($ua, 'win')) {
+		} else if(strpos($ua, 'win') !== false) {
 			$b[] = 'win';		
-		} else if(strstr($ua, 'freebsd')) {
+		} else if(strpos($ua, 'freebsd') !== false) {
 			$b[] = 'freebsd';		
-		} else if(strstr($ua, 'x11') || strstr($ua, 'linux')) {
+		} else if(strpos($ua, 'x11') !== false || strpos($ua, 'linux') !== false) {
 			$b[] = 'linux';		
 		}
 		

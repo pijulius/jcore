@@ -240,7 +240,7 @@ class _url {
 			
 		$url = strip_tags($url);
 		
-		if (strstr($url, " "))
+		if (strpos($url, " ") !== false)
 			$url = substr($url, 0, strpos($url, " "));
 			
 		if ($reverse)
@@ -485,7 +485,7 @@ class _url {
 		$tooltipcontent = 
 			__("Searching for").": ";
 		
-		if (strstr($search, ','))
+		if (strpos($search, ',') !== false)
 			$separator = ',';
 		else
 			$separator = ' ';

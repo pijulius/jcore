@@ -1235,13 +1235,13 @@ class _users {
 		$this->data = null;
 
 		$cookiedomain = url::rootDomain();
-		if (!strstr($cookiedomain, '.'))
+		if (strpos($cookiedomain, '.') === false)
 			$cookiedomain = false;
 		
 		do {
 			setcookie("memberloginid", '', time() - 3600, '/', $cookiedomain);
 			$cookiedomain = preg_replace('/^.*?\./', '', $cookiedomain);
-		} while (strstr($cookiedomain, '.'));
+		} while (strpos($cookiedomain, '.') !== false);
 		
 		unset($_COOKIE['memberloginid']);
 	}
@@ -1377,7 +1377,7 @@ class _users {
 				" WHERE `ID` = '".$record['ID']."'");
 				
 			$cookiedomain = url::rootDomain();
-			if (!strstr($cookiedomain, '.'))
+			if (strpos($cookiedomain, '.') === false)
 				$cookiedomain = false;
 					
 			if ($record['StayLoggedIn']) 
@@ -1443,7 +1443,7 @@ class _users {
 			
 			if ($record['CookieNeedsToBeRefreshed']) {
 				$cookiedomain = url::rootDomain();
-				if (!strstr($cookiedomain, '.'))
+				if (strpos($cookiedomain, '.') === false)
 					$cookiedomain = false;
 					
 				if ($this->data['StayLoggedIn']) 
@@ -1959,7 +1959,7 @@ class _users {
 	function constructUserName($row, $format = null) {
 		$username = $row['UserName'];
 		
-		if (!strstr($format, '%s'))
+		if (strpos($format, '%s') === false)
 			$format .= " %s";
 		
 		if (isset($row['DisplayUserName']) && $row['DisplayUserName'])
@@ -1999,7 +1999,7 @@ class _users {
 	function setupQuickAccountForm(&$form) {
 		$referer = url::referer(true);
 		
-		if(strstr($referer, '?'))
+		if(strpos($referer, '?') !== false)
 			$logoutlink = $referer.'&amp;logout=1';
 		else
 			$logoutlink = $referer.'?logout=1';
@@ -2295,7 +2295,7 @@ class _users {
 		
 		$referer = url::referer(true);
 		
-		if(strstr($referer, '?'))
+		if(strpos($referer, '?') !== false)
 			$requestlink = $referer.'&amp;requestpassword=1';
 		else
 			$requestlink = $referer.'?requestpassword=1';
