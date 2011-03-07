@@ -558,6 +558,9 @@ class _pages {
 	}
 	
 	function displayAdminListItems($pageid = 0, $subpageof = 0, $rowpair = false, $language = null) {
+		if ($this->userPermissionIDs && $subpageof)
+			return false;
+		
 		$rows = sql::run(
 			" SELECT * FROM `{" .
 				(JCORE_VERSION >= '0.8'?
@@ -567,10 +570,9 @@ class _pages {
 			" WHERE `MenuID` = '".(int)$pageid."'" .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
-			((int)$subpageof?
-				" AND `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '".(int)$subpageof."'":
-				" AND !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`") .
+				((int)$subpageof?
+					" AND `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '".(int)$subpageof."'":
+					" AND !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`")) .
 			($language?
 				" AND `LanguageID` = '".$language['ID']."'":
 				null) .
@@ -639,6 +641,14 @@ class _pages {
 	}
 	
 	function displayAdminListLanguages($pageid, $language) {
+		ob_start();
+		$this->displayAdminListItems($pageid, 0, false, $language);
+		$pages = ob_get_contents();
+		ob_end_clean();
+		
+		if (!$pages)
+			return;
+		
 		echo 
 		"<div tabindex='0' class='fc" . 
 			form::fcState('fcl'.$pageid.$language['ID'], true) . 
@@ -649,14 +659,8 @@ class _pages {
 					" (".$language['Path'].")":
 					null) .
 			"</a>" .
-			"<div class='fc-content'>";
-			
-		if (!$this->displayAdminListItems($pageid, 0, false, $language))
-			tooltip::display(
-					__("No pages found."),
-					TOOLTIP_NOTIFICATION);
-		
-		echo
+			"<div class='fc-content'>" .
+				$pages .
 			"</div>" .
 		"</div>";
 	}
@@ -859,15 +863,9 @@ class _pages {
 		echo
 			"<form action='".url::uri('edit, delete')."' method='post'>";
 		
+		$i = 0;
 		while($row = sql::fetch($rows)) {
-			echo 
-				"<div tabindex='0' class='fc" .
-					form::fcState('fcm'.$row['ID'], true) .
-					"'>" .
-					"<a class='fc-title' name='fcm".$row['ID']."'>".
-						$row['Title'] .
-					"</a>" .
-					"<div class='fc-content'>";
+			ob_start();
 			
 			if ($languages) {
 				if (sql::count(
@@ -895,16 +893,34 @@ class _pages {
 					$this->displayAdminListLanguages($row['ID'], $language);
 				
 			} else {	
-				if (!$this->displayAdminListItems($row['ID']))
-					tooltip::display(
-							__("No pages found."),
-							TOOLTIP_NOTIFICATION);
+				$this->displayAdminListItems($row['ID']);
 			}
 			
-			echo
+			$pages = ob_get_contents();
+			ob_end_clean();
+			
+			if (!$pages)
+				continue;
+			
+			echo 
+				"<div tabindex='0' class='fc" .
+					form::fcState('fcm'.$row['ID'], true) .
+					"'>" .
+					"<a class='fc-title' name='fcm".$row['ID']."'>".
+						$row['Title'] .
+					"</a>" .
+					"<div class='fc-content'>" .
+						$pages .
 					"</div>" .
 				"</div>";
+			
+			$i++;
 		}
+		
+		if (!$i)
+			tooltip::display(
+				__("No pages found."),
+				TOOLTIP_NOTIFICATION);
 		
 		echo "<br />";
 		

@@ -5155,16 +5155,15 @@ class shopping extends modules {
 					"</tr>";
 			}
 			
-			$subrows = sql::run(
-				" SELECT * FROM `{shoppings}`" .
-				" WHERE `SubCategoryOfID` = '".$row['ID']."'" .
-				($this->userPermissionIDs?
-					" AND `ID` IN (".$this->userPermissionIDs.")":
-					null) .
-				" ORDER BY `OrderID`, `ID`");
-			
-			if (sql::rows($subrows))
-				$this->displayAdminList($subrows, $i%2);
+			if (!$this->userPermissionIDs) {
+				$subrows = sql::run(
+					" SELECT * FROM `{shoppings}`" .
+					" WHERE `SubCategoryOfID` = '".$row['ID']."'" .
+					" ORDER BY `OrderID`, `ID`");
+				
+				if (sql::rows($subrows))
+					$this->displayAdminList($subrows, $i%2);
+			}
 			
 			$i++;
 		}
@@ -5270,10 +5269,10 @@ class shopping extends modules {
 		
 		$rows = sql::run(
 			" SELECT * FROM `{shoppings}`" .
-			" WHERE !`SubCategoryOfID`" .
+			" WHERE 1" .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
+				" AND !`SubCategoryOfID`") .
 			" ORDER BY `OrderID`, `ID`");
 		
 		if (sql::rows($rows))

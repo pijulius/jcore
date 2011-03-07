@@ -684,22 +684,21 @@ class _blocks {
 					"</tr>";
 			}
 			
-			$subrows = sql::run(
-				" SELECT * FROM `{blocks}`" .
-				" WHERE `SubBlockOfID` = '".$row['ID']."'" .
-				(JCORE_VERSION >= '0.7'?
-					" AND `TemplateID` = '".
-						(template::$selected?
-							(int)template::$selected['ID']:
-							0)."'":
-					null) .
-				($this->userPermissionIDs?
-					" AND `ID` IN (".$this->userPermissionIDs.")":
-					null) .
-				" ORDER BY `OrderID`");
-			
-			if (sql::rows($subrows))
-				$this->displayAdminList($subrows, $i%2);
+			if (!$this->userPermissionIDs) {
+				$subrows = sql::run(
+					" SELECT * FROM `{blocks}`" .
+					" WHERE `SubBlockOfID` = '".$row['ID']."'" .
+					(JCORE_VERSION >= '0.7'?
+						" AND `TemplateID` = '".
+							(template::$selected?
+								(int)template::$selected['ID']:
+								0)."'":
+						null) .
+					" ORDER BY `OrderID`");
+				
+				if (sql::rows($subrows))
+					$this->displayAdminList($subrows, $i%2);
+			}
 			
 			$i++;
 		}
@@ -796,10 +795,9 @@ class _blocks {
 						(int)template::$selected['ID']:
 						0)."'":
 				null) .
-			" AND !`SubBlockOfID`" .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
+				" AND !`SubBlockOfID`") .
 			" ORDER BY `OrderID`");
 		
 		if (sql::rows($rows))

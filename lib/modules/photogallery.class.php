@@ -1819,16 +1819,15 @@ class photoGallery extends modules {
 					"</tr>";
 			}
 			
-			$subrows = sql::run(
-				" SELECT * FROM `{photogalleries}`" .
-				" WHERE `SubGalleryOfID` = '".$row['ID']."'" .
-				($this->userPermissionIDs?
-					" AND `ID` IN (".$this->userPermissionIDs.")":
-					null) .
-				" ORDER BY `OrderID`, `ID`");
-			
-			if (sql::rows($subrows))
-				$this->displayAdminList($subrows, $i%2);
+			if (!$this->userPermissionIDs) {
+				$subrows = sql::run(
+					" SELECT * FROM `{photogalleries}`" .
+					" WHERE `SubGalleryOfID` = '".$row['ID']."'" .
+					" ORDER BY `OrderID`, `ID`");
+				
+				if (sql::rows($subrows))
+					$this->displayAdminList($subrows, $i%2);
+			}
 			
 			$i++;
 		}
@@ -1934,10 +1933,10 @@ class photoGallery extends modules {
 		
 		$rows = sql::run(
 			" SELECT * FROM `{photogalleries}`" .
-			" WHERE !`SubGalleryOfID`" .
+			" WHERE 1" .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
+				" AND !`SubGalleryOfID`") .
 			" ORDER BY `OrderID`, `ID`");
 		
 		if (sql::rows($rows))

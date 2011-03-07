@@ -1127,16 +1127,15 @@ class fileSharing extends modules {
 					"</tr>";
 			}
 			
-			$subrows = sql::run(
-				" SELECT * FROM `{filesharings}`" .
-				" WHERE `SubFolderOfID` = '".$row['ID']."'" .
-				($this->userPermissionIDs?
-					" AND `ID` IN (".$this->userPermissionIDs.")":
-					null) .
-				" ORDER BY `OrderID`, `ID`");
-			
-			if (sql::rows($subrows))
-				$this->displayAdminList($subrows, $i%2);
+			if (!$this->userPermissionIDs) {
+				$subrows = sql::run(
+					" SELECT * FROM `{filesharings}`" .
+					" WHERE `SubFolderOfID` = '".$row['ID']."'" .
+					" ORDER BY `OrderID`, `ID`");
+				
+				if (sql::rows($subrows))
+					$this->displayAdminList($subrows, $i%2);
+			}
 			
 			$i++;
 		}
@@ -1242,10 +1241,10 @@ class fileSharing extends modules {
 		
 		$rows = sql::run(
 			" SELECT * FROM `{filesharings}`" .
-			" WHERE !`SubFolderOfID`" .
+			" WHERE 1" .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
+				" AND !`SubFolderOfID`") .
 			" ORDER BY `OrderID`, `ID`");
 		
 		if (sql::rows($rows))
