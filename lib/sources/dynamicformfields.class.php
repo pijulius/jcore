@@ -893,7 +893,7 @@ class _dynamicFormFields {
 			return false;
 		
 		$row = sql::fetch(sql::run(
-			" SELECT * FROM `dynamicformfields`" .
+			" SELECT * FROM `{dynamicformfields}`" .
 			" WHERE `ID` = '".(int)$id."'"));
 		
 		if (!$row['Protected'] && $this->storageSQLTable && $values['Name'] && 

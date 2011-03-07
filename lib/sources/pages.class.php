@@ -1594,7 +1594,11 @@ class _pages {
 			return pages::$selected;
 		
 		return sql::fetch(sql::run(
-			" SELECT * FROM `pages`" .
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
 			" WHERE `ID` = '".$pageid."'"));
 	}
 	

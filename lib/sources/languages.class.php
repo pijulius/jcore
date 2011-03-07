@@ -942,13 +942,31 @@ class _languages {
 	} 
 	
 	function displayOne(&$row) {
+		$translatedpage = null;
+		
+		if (pages::$selected)
+			$translatedpage = sql::fetch(sql::run(
+				" SELECT `ID`, `Path` FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE `LanguageID` = '".$row['ID']."'" .
+				" AND `Path` = '".pages::$selected['Path']."'"));
+		
 		if (SEO_FRIENDLY_LINKS) {
 			$row['_Link'] = url::site().
-				$row['Path'];
+				$row['Path'].
+				($translatedpage?
+					'/'.$translatedpage['Path']:
+					null);
 		
 		} else {
 			$row['_Link'] = url::site().'index.php' .
-				'?languageid='.$row['ID'];
+				'?languageid='.$row['ID'] .
+				($translatedpage?
+					'&amp;pageid='.$translatedpage['ID']:
+					null);
 		}
 		
 		echo
