@@ -33,12 +33,14 @@ if (get_magic_quotes_gpc()) {
 	$_COOKIE = stripslashes_recursive($_COOKIE);
 }
 
+header('Content-Type: text/html; charset='.PAGE_CHARSET);
+session_start();
+
 if (!isset($GLOBALS['ADMIN']))
 	$GLOBALS['ADMIN'] = false;
 
-header('Content-Type: text/html; charset='.PAGE_CHARSET);
-
-session_start();
+if (!isset($_SESSION['HTTP_REFERER']))
+	$_SESSION['HTTP_REFERER'] = (isset($_SERVER['HTTP_REFERER'])?$_SERVER['HTTP_REFERER']:'');
 
 include_once('lib/url.class.php');
 include_once('lib/users.class.php');

@@ -2471,11 +2471,18 @@ class shoppingCartCheckoutForm extends dynamicForms {
 		$ordervalues['UserID'] = $userid;
 		$ordervalues['PaymentStatus'] = $paymentstatus;
 		$ordervalues['OrderMethod'] = $this->get('ordermethod');
-		$ordervalues['OrderMethodDetails'] = $paymentresult;
 		$ordervalues['Discount'] = $discount;
 		$ordervalues['Fee'] = $fee;
 		$ordervalues['Tax'] = $tax;
 		$ordervalues['Subtotal'] = $subtotal;
+		
+		$ordervalues['OrderMethodDetails'] = 
+			" - ".date('Y-m-d H:i:s')." - \n" .
+			$paymentresult .
+			(isset($_SESSION['HTTP_REFERER']) && $_SESSION['HTTP_REFERER']?
+				"\n\n"._("Order originated from").":\n" .
+				$_SESSION['HTTP_REFERER']:
+				null);
 		
 		$orders = new shoppingOrders();
 		$orderid = $orders->add($ordervalues);

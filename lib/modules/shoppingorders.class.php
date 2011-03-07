@@ -377,15 +377,15 @@ class shoppingOrderMethodPayPal extends form {
 		
 		$orderdetails = $order['OrderMethodDetails'];
 		
-		$orderdetails .= 
-			($orderdetails?"\n\n":null) .
+		$orderdetails = 
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			(!stristr($orderdetails, 'Transaction ID')?
 				"Transaction ID: ".$ordertransactionid."\n" .
 				"Payer Email: ".$orderemail."\n":
 				null) .
 			"Payment Status: ".$paymentstatus."\n" .
-			"Payment Type: ".$paymenttype;
+			"Payment Type: ".$paymenttype .
+			($orderdetails?"\n\n".$orderdetails:null);
 		
 		sql::run(
 			" UPDATE `{shoppingorders}` SET " .
@@ -576,8 +576,7 @@ class shoppingOrderMethodCCBill extends form {
 			
 		$orderdetails = $order['OrderMethodDetails'];
 		
-		$orderdetails .= 
-			($orderdetails?"\n\n":null) .
+		$orderdetails = 
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			(!stristr($orderdetails, 'Transaction ID')?
 				"Transaction ID: ".$ordertransactionid."\n" .
@@ -586,7 +585,8 @@ class shoppingOrderMethodCCBill extends form {
 			"Payment Status: ".
 				($paymentdeclined?
 					"Declined (".$paymentdeclinedmsg.")":
-					"Approved");
+					"Approved") .
+			($orderdetails?"\n\n".$orderdetails:null);
 		
 		sql::run(
 			" UPDATE `{shoppingorders}` SET " .
@@ -773,14 +773,14 @@ class shoppingOrderMethodAlertPay extends form {
 		
 		$orderdetails = $order['OrderMethodDetails'];
 		
-		$orderdetails .= 
-			($orderdetails?"\n\n":null) .
+		$orderdetails = 
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			(!stristr($orderdetails, 'Transaction ID')?
 				"Transaction ID: ".$ordertransactionid."\n" .
 				"Payer Email: ".$orderemail."\n":
 				null) .
-			"Payment Status: ".$paymentstatus;
+			"Payment Status: ".$paymentstatus .
+			($orderdetails?"\n\n".$orderdetails:null);
 		
 		sql::run(
 			" UPDATE `{shoppingorders}` SET " .
@@ -989,14 +989,14 @@ class shoppingOrderMethodAuthorizeDotNet extends form {
 		
 		$orderdetails = $order['OrderMethodDetails'];
 		
-		$orderdetails .= 
-			($orderdetails?"\n\n":null) .
+		$orderdetails = 
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			(!stristr($orderdetails, 'Transaction ID')?
 				"Transaction ID: ".$ordertransactionid."\n" .
 				"Payer Email: ".$orderemail."\n":
 				null) .
-			"Payment Status: ".$paymentstatusmsg." (".$paymentstatus.")";
+			"Payment Status: ".$paymentstatusmsg." (".$paymentstatus.")" .
+			($orderdetails?"\n\n".$orderdetails:null);
 		
 		sql::run(
 			" UPDATE `{shoppingorders}` SET " .
@@ -1223,8 +1223,7 @@ class shoppingOrderMethod2CheckOut extends form {
 		
 		$orderdetails = $order['OrderMethodDetails'];
 		
-		$orderdetails .= 
-			($orderdetails?"\n\n":null) .
+		$orderdetails = 
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			(!stristr($orderdetails, 'Transaction ID')?
 				"Transaction ID: ".$ordertransactionid."\n" .
@@ -1236,7 +1235,8 @@ class shoppingOrderMethod2CheckOut extends form {
 			($fraudstatus?
 				"Fraud Status: ".$fraudstatus."\n":
 				null) .
-			$paymentstatusmsg;
+			$paymentstatusmsg .
+			($orderdetails?"\n\n".$orderdetails:null);
 		
 		sql::run(
 			" UPDATE `{shoppingorders}` SET " .
@@ -1424,8 +1424,7 @@ class shoppingOrderMethodMoneyBookers extends form {
 		
 		$orderdetails = $order['OrderMethodDetails'];
 		
-		$orderdetails .= 
-			($orderdetails?"\n\n":null) .
+		$orderdetails = 
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			(!stristr($orderdetails, 'Transaction ID')?
 				"Transaction ID: ".$ordertransactionid."\n" .
@@ -1434,7 +1433,8 @@ class shoppingOrderMethodMoneyBookers extends form {
 			"Payment Status: " .
 				shoppingOrders::paymentStatus2Text($orderstatus) .
 				" (".$paymentstatus.")\n" .
-			"Payment Type: ".$paymenttype;
+			"Payment Type: ".$paymenttype .
+			($orderdetails?"\n\n".$orderdetails:null);
 		
 		sql::run(
 			" UPDATE `{shoppingorders}` SET " .
@@ -2328,8 +2328,12 @@ class shoppingOrders extends modules {
 				'OrderMethodDetails',
 				FORM_INPUT_TYPE_TEXTAREA);
 			
-			$form->setStyle("width: 300px;");
-		
+			$form->setStyle('width: ' .
+				(JCORE_VERSION >= '0.7'?
+					'90%':
+					'300px') .
+				'; height: 200px;');
+			
 		} else {
 			$form->add(
 				_("Please select the order method you would " .
@@ -4706,8 +4710,11 @@ class shoppingOrders extends modules {
 			"\n"._("Order Method")."\n" .
 			"-----------------------------------------------------------------\n" .
 			$ordermethod['Title']."\n" .
-			$ordermethod['Description'];
-			
+			$ordermethod['Description'] .
+			($emailid == 'ShoppingOrderToWebmaster'?
+				"\n\n".$order['OrderMethodDetails']:
+				null);
+		
 		$email->variables['OrderItems'] .= 
 			_("Items ordered")."\n" .
 			"-----------------------------------------------------------------\n\n";
@@ -5220,9 +5227,6 @@ class shoppingOrders extends modules {
 		if ($row['PaymentStatus'] == SHOPPING_ORDER_PAYMENT_STATUS_PENDING)
 			$this->displayFinalizePayments($row);
 							
-		echo
-				"</div>";
-		
 		if ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin']) {
 			echo
 					"<div class='form-entry preview'>" .
@@ -5230,13 +5234,14 @@ class shoppingOrders extends modules {
 							_("Details").":" .
 						"</div>" .
 						"<div class='form-entry-content bold'>" .
-							nl2br($row['OrderMethodDetails']) .
+							nl2br(url::parseLinks($row['OrderMethodDetails'])) .
 						"</div>" .
 					"</div>" .
 				"</div>";
 		}
 		
 		echo
+				"</div>" .
 			"</div>";
 	}
 	
