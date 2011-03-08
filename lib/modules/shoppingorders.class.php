@@ -106,6 +106,11 @@ shoppingOrderMethods::add(
 	_('Credit Card Payment (MoneyBookers)'),
 	_('An extra step will be required trough MoneyBookers.com'));
  
+shoppingOrderMethods::add(
+	'Ogone',
+	_('Credit Card Payment (Ogone)'),
+	_('An extra step will be required trough Ogone.com'));
+ 
 class shoppingOrderMethodInvoiceCustomer extends form {
 	var $postProcessText = null;
 	var $processResult = null;
@@ -218,6 +223,9 @@ class shoppingOrderMethodPayPal extends form {
 		if (!$order)
 			return false;
 		
+		$orderurl = shoppingOrders::getURL().
+				"&shoppingorderid=".$order['ID'];
+		
 		$grandtotal = number_format($order['Subtotal']+
 			(isset($order['Tax'])?$order['Tax']:0)-
 			$order['Discount']+$order['Fee'], 2, '.', '');
@@ -246,9 +254,9 @@ class shoppingOrderMethodPayPal extends form {
 			"<input type='hidden' name='invoice' value='".$order['OrderID']."' />" .
 			"<input type='hidden' name='currency_code' value='".SHOPPING_CART_ORDER_METHOD_PAYPAL_CURRENCY."' />" . 
 			"<input type='hidden' name='amount' value='".$grandtotal."' />" .
-			"<input type='hidden' name='return' value='".SITE_URL."' />" .
+			"<input type='hidden' name='return' value='".$orderurl."' />" .
 			"<input type='hidden' name='rm' value='1' />" .
-			"<input type='hidden' name='cancel_return' value='".SITE_URL."' />" . 
+			"<input type='hidden' name='cancel_return' value='".$orderurl."' />" . 
 			"<input type='hidden' name='notify_url' value='".SITE_URL."index.php?request=modules/shoppingorders/shoppingordermethodpaypal&ajax=1' />" .
 			$this->postProcessText .
 			"<br /><br />" .
@@ -449,6 +457,9 @@ class shoppingOrderMethodCCBill extends form {
 		if (!$order)
 			return false;
 			
+		$orderurl = shoppingOrders::getURL().
+				"&shoppingorderid=".$order['ID'];
+		
 		$grandtotal = number_format($order['Subtotal']+
 			(isset($order['Tax'])?$order['Tax']:0)-
 			$order['Discount']+$order['Fee'], 2, '.', '');
@@ -645,6 +656,9 @@ class shoppingOrderMethodAlertPay extends form {
 		if (!$order)
 			return false;
 			
+		$orderurl = shoppingOrders::getURL().
+				"&shoppingorderid=".$order['ID'];
+		
 		$grandtotal = number_format($order['Subtotal']+
 			(isset($order['Tax'])?$order['Tax']:0)-
 			$order['Discount']+$order['Fee'], 2, '.', '');
@@ -672,8 +686,8 @@ class shoppingOrderMethodAlertPay extends form {
 			"<input type='hidden' name='ap_quantity' value='1' />" .
 			"<input type='hidden' name='ap_description' value='".htmlspecialchars(implode('; ', $items), ENT_QUOTES)."' />" .
 			"<input type='hidden' name='ap_amount' value='".$grandtotal."' />" .
-			"<input type='hidden' name='ap_returnurl' value='".SITE_URL."' />" .
-			"<input type='hidden' name='ap_cancelurl' value='".SITE_URL."' />" .
+			"<input type='hidden' name='ap_returnurl' value='".$orderurl."' />" .
+			"<input type='hidden' name='ap_cancelurl' value='".$orderurl."' />" .
 			"<input type='hidden' name='apc_1' value='0' />" .
 			"<input type='hidden' name='apc_2' value='0' />" .
 			"<input type='hidden' name='apc_3' value='0' />" .
@@ -844,6 +858,9 @@ class shoppingOrderMethodAuthorizeDotNet extends form {
 		if (!$order)
 			return false;
 		
+		$orderurl = shoppingOrders::getURL().
+				"&shoppingorderid=".$order['ID'];
+		
 		$grandtotal = number_format($order['Subtotal']+
 			(isset($order['Tax'])?$order['Tax']:0)-
 			$order['Discount']+$order['Fee'], 2, '.', '');
@@ -887,7 +904,7 @@ class shoppingOrderMethodAuthorizeDotNet extends form {
 			"<input type='hidden' name='x_test_request' value='false' />" .
 			"<input type='hidden' name='x_method' value='cc' />" .
 			"<input type='hidden' name='x_relay_response' value='false' />" .
-			"<input type='hidden' name='x_receipt_link_url' value='".SITE_URL."' />" .
+			"<input type='hidden' name='x_receipt_link_url' value='".$orderurl."' />" .
 			"<input type='hidden' name='x_receipt_link_text' value='Back to ".htmlspecialchars(PAGE_TITLE, ENT_QUOTES)."' />" .
 			"<input type='hidden' name='x_receipt_link_method' value='link' />" .
 			$this->postProcessText .
@@ -1060,6 +1077,9 @@ class shoppingOrderMethod2CheckOut extends form {
 		if (!$order)
 			return false;
 		
+		$orderurl = shoppingOrders::getURL().
+				"&shoppingorderid=".$order['ID'];
+		
 		$grandtotal = number_format($order['Subtotal']+
 			(isset($order['Tax'])?$order['Tax']:0)-
 			$order['Discount']+$order['Fee'], 2, '.', '');
@@ -1089,7 +1109,7 @@ class shoppingOrderMethod2CheckOut extends form {
 			"<input type='hidden' name='c_description' value='".htmlspecialchars(implode('; ', $items), ENT_QUOTES)."' />" . 
 			"<input type='hidden' name='c_price' value='".$grandtotal."' />" . 
 			//"<input type='hidden' name='x_receipt_link_url' value='".SITE_URL."index.php?request=modules/shoppingorders/shoppingordermethod2checkout&ajax=1' />" .
-			"<input type='hidden' name='return_url' value='".SITE_URL."' />" .
+			"<input type='hidden' name='return_url' value='".$orderurl."' />" .
 			$this->postProcessText .
 			"<br /><br />" .
 			"<input type='submit' name='submitorder' value='".
@@ -1299,6 +1319,9 @@ class shoppingOrderMethodMoneyBookers extends form {
 		if (!$order)
 			return false;
 		
+		$orderurl = shoppingOrders::getURL().
+				"&shoppingorderid=".$order['ID'];
+		
 		$grandtotal = number_format($order['Subtotal']+
 			(isset($order['Tax'])?$order['Tax']:0)-
 			$order['Discount']+$order['Fee'], 2, '.', '');
@@ -1325,8 +1348,8 @@ class shoppingOrderMethodMoneyBookers extends form {
 			"<input type='hidden' name='detail1_text' value='".htmlspecialchars(implode('; ', $items), ENT_QUOTES)."' />" . 
 			"<input type='hidden' name='currency' value='".SHOPPING_CART_ORDER_METHOD_MONEYBOOKERS_CURRENCY."' />" . 
 			"<input type='hidden' name='amount' value='".$grandtotal."' />" .
-			"<input type='hidden' name='cancel_url' value='".SITE_URL."' />" .
-			"<input type='hidden' name='return_url' value='".SITE_URL."' />" . 
+			"<input type='hidden' name='cancel_url' value='".$orderurl."' />" .
+			"<input type='hidden' name='return_url' value='".$orderurl."' />" . 
 			"<input type='hidden' name='status_url' value='".SITE_URL."index.php?request=modules/shoppingorders/shoppingordermethodpaypal&ajax=1' />" .
 			$this->postProcessText .
 			"<br /><br />" .
@@ -1468,6 +1491,378 @@ class shoppingOrderMethodMoneyBookers extends form {
 	}
 }
 
+class shoppingOrderMethodOgone extends form {
+	var $postProcessText = null;
+	var $processResult = null;
+	var $ajaxRequest = null;
+	
+	function __construct() {
+		parent::__construct(
+			_('Ogone'), 'ogone');
+		
+		$this->postProcessText = 			
+			_("Your order has been successfully created but your payment has not been processed yet. " .
+				"To finalize your payments please click on the button below.");
+	}
+	
+	function process() {
+		$this->processResult = 
+			_("User redirected to ogone, payment is being processed.");
+		
+		return SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
+	}
+	
+	function postProcess($orderid) {
+		$order = sql::fetch(sql::run(
+			" SELECT * FROM `{shoppingorders}`" .
+			" WHERE `ID` = '".$orderid."'"));
+		
+		if (!$order)
+			return false;
+		
+		$orderurl = shoppingOrders::getURL().
+				"&shoppingorderid=".$order['ID'];
+		
+		$grandtotal = number_format($order['Subtotal']+
+			(isset($order['Tax'])?$order['Tax']:0)-
+			$order['Discount']+$order['Fee'], 2, '.', '');
+		
+		$items = array();
+		$orderitems = sql::run(
+			" SELECT * FROM `{shoppingorderitems}`" .
+			" WHERE `ShoppingOrderID` = '".$order['ID']."'");
+		
+		while($orderitem = sql::fetch($orderitems)) {
+			$item = sql::fetch(sql::run(
+				" SELECT `RefNumber` FROM `{shoppingitems}`" .
+				" WHERE `ID` = '".$orderitem['ShoppingItemID']."'"));
+			
+			$items[] = $item['RefNumber'];
+		}
+		
+		$arguments =
+			array(
+				'AMOUNT' => $grandtotal*100,
+				'BACKURL' => $orderurl,
+				'BGCOLOR' => SHOPPING_CART_ORDER_METHOD_OGONE_PAGE_BG_COLOR,
+				'BUTTONBGCOLOR' => SHOPPING_CART_ORDER_METHOD_OGONE_PAGE_BUTTON_BG_COLOR,
+				'BUTTONTXTCOLOR' => SHOPPING_CART_ORDER_METHOD_OGONE_PAGE_BUTTON_TEXT_COLOR,
+				'CATALOGURL' => $orderurl,
+				'COM' => implode('; ', $items),
+				'CURRENCY' => SHOPPING_CART_ORDER_METHOD_OGONE_CURRENCY,
+				'FONTTYPE' => SHOPPING_CART_ORDER_METHOD_OGONE_PAGE_FONT_TYPE,
+				'HOMEURL' => $orderurl,
+				'LANGUAGE' => '',
+				'LOGO' => SHOPPING_CART_ORDER_METHOD_OGONE_PAGE_LOGO,
+				'ORDERID' => $order['OrderID'],
+				'PSPID' => SHOPPING_CART_ORDER_METHOD_OGONE_PSPID,
+				'TBLBGCOLOR' => SHOPPING_CART_ORDER_METHOD_OGONE_PAGE_TABLE_BG_COLOR,
+				'TBLTXTCOLOR' => SHOPPING_CART_ORDER_METHOD_OGONE_PAGE_TABLE_TEXT_COLOR,
+				'TITLE' => SHOPPING_CART_ORDER_METHOD_OGONE_PAGE_TITLE,
+				'TP' => SHOPPING_CART_ORDER_METHOD_OGONE_DYNAMIC_TEMPLATE_URL,
+				'TXTCOLOR' => SHOPPING_CART_ORDER_METHOD_OGONE_PAGE_TEXT_COLOR);
+		
+		contentCodes::replaceDefinitions($arguments['TITLE']);
+		
+		if (languages::$selected)
+			$arguments['LANGUAGE'] = languages::$selected['Locale'];
+		
+		$sha1_signature = '';
+		$htmlfields = '';
+			
+		foreach ($arguments as $key => $value) {
+			if (strlen($value) == 0)
+				continue;
+			
+			$sha1_signature .= $key.'='.$value.SHOPPING_CART_ORDER_METHOD_OGONE_SHA_IN_PASS_PHRASE;
+			$htmlfields .= "<input type='hidden' name='".$key."' " .
+				"value='".htmlspecialchars($value, ENT_QUOTES)."' />";
+		}
+		
+		tooltip::display(
+			//"<form action='https://secure.ogone.com/ncol/test/orderstandard.asp' method='post' id='shoppingordermethodogoneform'>" .
+			"<form action='https://secure.ogone.com/ncol/prod/orderstandard.asp' method='post' id='shoppingordermethodogoneform'>" .
+			$htmlfields .
+			"<input type='hidden' name='SHASign' value='".sha1($sha1_signature)."' />" .
+			$this->postProcessText .
+			"<br /><br />" .
+			"<input type='submit' name='submitorder' value='".
+				htmlspecialchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
+				"class='button submit' />" .
+			"</form>", 
+			TOOLTIP_NOTIFICATION);
+		
+		return true;
+	}
+	
+	function ipnProcess() {
+		if (!isset($_POST['PAYID']) || !isset($_POST['SHASIGN']) ||
+			!$_POST['PAYID'] || !$_POST['SHASIGN'])
+			exit("Invalid IPN request!");
+		
+		$arguments = 
+			array(
+				'AAVADDRESS' => (isset($_POST['AAVADDRESS'])?$_POST['AAVADDRESS']:null),
+				'AAVCHECK' => (isset($_POST['AAVCHECK'])?$_POST['AAVCHECK']:null),
+				'AAVZIP' => (isset($_POST['AAVZIP'])?$_POST['AAVZIP']:null),
+				'ACCEPTANCE' => (isset($_POST['ACCEPTANCE'])?$_POST['ACCEPTANCE']:null),
+				'AMOUNT' => (isset($_POST['amount'])?$_POST['amount']:null),
+				'BIN' => (isset($_POST['BIN'])?$_POST['BIN']:null),
+				'BRAND' => (isset($_POST['BRAND'])?$_POST['BRAND']:null),
+				'CARDNO' => (isset($_POST['CARDNO'])?$_POST['CARDNO']:null),
+				'CCCTY'=> (isset($_POST['CCCTY'])?$_POST['CCCTY']:null),
+				'CN' => (isset($_POST['CN'])?$_POST['CN']:null),
+				'COMPLUS' => (isset($_POST['COMPLUS'])?$_POST['COMPLUS']:null),
+				'CURRENCY' => (isset($_POST['currency'])?$_POST['currency']:null),
+				'CVCCHECK' => (isset($_POST['CVCCheck'])?$_POST['CVCCheck']:null),
+				'ECI' => (isset($_POST['ECI'])?$_POST['ECI']:null),
+				'ED' => (isset($_POST['ED'])?$_POST['ED']:null),
+				'IP' => (isset($_POST['IP'])?$_POST['IP']:null),
+				'IPCTY' => (isset($_POST['IPCTY'])?$_POST['IPCTY']:null),
+				'NCERROR' => (isset($_POST['NCERROR'])?$_POST['NCERROR']:null),
+				'ORDERID' => (isset($_POST['orderID'])?$_POST['orderID']:null),
+				'PAYID' => (isset($_POST['PAYID'])?$_POST['PAYID']:null),
+				'PM' => (isset($_POST['PM'])?$_POST['PM']:null),
+				'STATUS' => (isset($_POST['STATUS'])?$_POST['STATUS']:null),
+				'TRXDATE' => (isset($_POST['TRXDATE'])?$_POST['TRXDATE']:null),
+				'VC' => (isset($_POST['VC'])?$_POST['VC']:null));
+		
+		$sha1key = '';
+		foreach ($arguments as $key => $value) {
+			if (strlen($value) == 0)
+				continue;
+			
+			$sha1key .= $key.'='.$value.SHOPPING_CART_ORDER_METHOD_OGONE_SHA_OUT_PASS_PHRASE;
+		}
+		
+		$sha1key = sha1($sha1key);
+		$grandtotal = $_POST['amount'];
+		$ordernumber = $_POST['orderID'];
+		$ordertransactionid = $_POST['PAYID'];
+		$paymentmethod = $_POST['PM'];
+		$paymentstatus = $_POST['STATUS'];
+		
+		switch($_POST['STATUS']) {
+			case 0:
+				$paymentstatusmsg = 'Incomplete or invalid';
+				break;
+			case 1:
+				$paymentstatusmsg = 'Cancelled by client';
+				break;
+			case 2:
+				$paymentstatusmsg = 'Authorization refused';
+				break;
+			case 4:
+				$paymentstatusmsg = 'Order stored';
+				break;
+			case 41:
+				$paymentstatusmsg = 'Waiting client payment';
+				break;
+			case 5:
+				$paymentstatusmsg = 'Authorized';
+				break;
+			case 51:
+				$paymentstatusmsg = 'Authorization waiting';
+				break;
+			case 52:
+				$paymentstatusmsg = 'Authorization not known';
+				break;
+			case 59:
+				$paymentstatusmsg = 'Author. to get manually';
+				break;
+			case 6:
+				$paymentstatusmsg = 'Authorized and canceled';
+				break;
+			case 61:
+				$paymentstatusmsg = 'Author. deletion waiting';
+				break;
+			case 62:
+				$paymentstatusmsg = 'Author. deletion uncertain';
+				break;
+			case 63:
+				$paymentstatusmsg = 'Author. deletion refused';
+				break;
+			case 7:
+				$paymentstatusmsg = 'Payment deleted';
+				break;
+			case 71:
+				$paymentstatusmsg = 'Payment deletion pending';
+				break;
+			case 72:
+				$paymentstatusmsg = 'Payment deletion uncertain';
+				break;
+			case 73:
+				$paymentstatusmsg = 'Payment deletion refused';
+				break;
+			case 74:
+				$paymentstatusmsg = 'Payment deleted (not accepted)';
+				break;
+			case 75:
+				$paymentstatusmsg = 'Deletion processed by merchant';
+				break;
+			case 8:
+				$paymentstatusmsg = 'Refund';
+				break;
+			case 81:
+				$paymentstatusmsg = 'Refund pending';
+				break;
+			case 82:
+				$paymentstatusmsg = 'Refund uncertain';
+				break;
+			case 83:
+				$paymentstatusmsg = 'Refund refused';
+				break;
+			case 84:
+				$paymentstatusmsg = 'Payment declined by the acquirer';
+				break;
+			case 85:
+				$paymentstatusmsg = 'Refund processed by merchant';
+				break;
+			case 9:
+				$paymentstatusmsg = 'Payment requested';
+				break;
+			case 91:
+				$paymentstatusmsg = 'Payment processing';
+				break;
+			case 92:
+				$paymentstatusmsg = 'Payment uncertain';
+				break;
+			case 93:
+				$paymentstatusmsg = 'Payment refused';
+				break;
+			case 94:
+				$paymentstatusmsg = 'Refund declined by the acquirer';
+				break;
+			case 95:
+				$paymentstatusmsg = 'Payment processed by merchant';
+				break;
+			case 97:
+			case 98:
+			case 99:
+				$paymentstatusmsg = 'Being processed';
+				break;
+			default:
+				$paymentstatusmsg = 'Unknown';
+				break;
+		}
+		
+		$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
+		
+		if ($paymentstatus == 5) {
+			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PAID;
+			
+		} elseif (in_array($paymentstatus, array(1, 6, 7, 8))) {
+			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_CANCELLED;
+			
+		} elseif (in_array($paymentstatus, array(2))) {
+			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_FAILED;
+			
+		} elseif (in_array($paymentstatus, array(4, 41, 51, 52, 59, 61, 62, 63, 71, 72, 73, 74, 75, 81, 82, 83, 84, 85, 9, 91, 92, 93, 94, 95, 97, 98, 99))) {
+			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PROCESSING;
+		}
+		
+		// These are used for debugging
+		$postgetarguments = "GET arguments:\n";
+		foreach($_GET as $key => $value) {
+			$postgetarguments .= $key."=".$value."\n";
+   		}
+		
+		$postgetarguments .= "\nPOST arguments:\n";
+		foreach($_POST as $key => $value) {
+			$postgetarguments .= $key."=".$value."\n";
+   		}
+   		
+		$email = new email();
+		$email->load('WebmasterWarning');
+	
+		$email->to = WEBMASTER_EMAIL;
+	
+		$email->variables = array(
+			'Warning' => $postgetarguments.
+				"\nProcessing Order Payment\n"); 
+		
+		if (!$grandtotal) {
+			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";	
+			$email->send();
+	
+			exit("FAILED: No Grand Total returned!");
+		}
+	
+		$order = sql::fetch(sql::run(
+			" SELECT * FROM `{shoppingorders}`" .
+			" WHERE `OrderID` = '".sql::escape($ordernumber)."'"));
+		
+		if (!$order) {
+			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";	
+			$email->send();
+			
+			exit("FAILED: Order Number not found!");
+		}
+		
+		$ordertotal = number_format($order['Subtotal']+
+				(isset($order['Tax'])?$order['Tax']:0)-
+				$order['Discount']+$order['Fee'], 2, '.', '');
+		
+		if ($grandtotal != $ordertotal) {
+			$email->variables['Warning'] .= "FAILED: Grand Total returned (".
+				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";	
+			$email->send();
+			
+			exit("FAILED: Grand Total returned (".$grandtotal.") doesn't mach " .
+				" Order's total (".$ordertotal.")!");
+		}
+		
+		if(strtoupper($sha1key) != strtoupper($_POST['SHASIGN'])) {
+			$email->variables['Warning'] .= "FAILED: Not an Ogone request!\n";	
+			$email->send();
+			
+			exit("Not an Ogone request!");
+		}
+		
+		$orderdetails = $order['OrderMethodDetails'];
+		
+		$orderdetails = 
+			" - ".date('Y-m-d H:i:s')." - \n" .
+			(!stristr($orderdetails, 'Transaction ID')?
+				"Transaction ID: ".$ordertransactionid."\n":
+				null) .
+			"Payment Status: ".$paymentstatusmsg." (".$paymentstatus.")\n" .
+			"Payment Method: ".$paymentmethod .
+			($orderdetails?"\n\n".$orderdetails:null);
+		
+		sql::run(
+			" UPDATE `{shoppingorders}` SET " .
+			" `PaymentStatus` = '".
+				$orderstatus."', " .
+			" `OrderMethodDetails` = '".
+				sql::escape($orderdetails)."', " .
+			($orderstatus == SHOPPING_ORDER_PAYMENT_STATUS_PAID?
+				" `TimeStamp` = NOW()":
+				" `TimeStamp` = `TimeStamp`") .
+			" WHERE `ID` = '".$order['ID']."'");
+		
+		shoppingOrders::sendNotificationEmails($order['ID']);
+		
+		if ($orderstatus == SHOPPING_ORDER_PAYMENT_STATUS_PAID ||
+			$orderstatus == SHOPPING_ORDER_PAYMENT_STATUS_PROCESSING)
+			users::activate($order['UserID']);
+		
+		exit("OK: Order successfully updated!");
+	}
+	
+	function verify() {
+		return true;
+	}
+	
+	function setUp() {
+	}
+	
+	function ajaxRequest() {
+		$this->ipnProcess();
+		return true;
+	}
+}
+
 class shoppingOrderMethods {
 	static function add($id, $title, $description = null) {
 		if (!$id)
@@ -1497,7 +1892,8 @@ class shoppingOrderMethods {
 					'alertpay',
 					'authorizedotnet',
 					'2checkout',
-					'moneybookers'))))
+					'moneybookers',
+					'ogone'))))
 			return false;
 		
 		languages::load('shopping');
@@ -2002,7 +2398,23 @@ class shoppingOrders extends modules {
 				" ('Shopping_Cart_Order_Method_MoneyBookers_Enabled', '1', 3, ".($nextorderid+7).")," .
 				" ('Shopping_Cart_Order_Method_MoneyBookers_ID', 'me@pijulius.com', 1, ".($nextorderid+7).")," .
 				" ('Shopping_Cart_Order_Method_MoneyBookers_Secret_Word', 'secret', 1, ".($nextorderid+7).")," .
-				" ('Shopping_Cart_Order_Method_MoneyBookers_Currency', 'USD', 1, ".($nextorderid+7).");");
+				" ('Shopping_Cart_Order_Method_MoneyBookers_Currency', 'USD', 1, ".($nextorderid+7).")," .
+				" ('Shopping_Cart_Order_Method_Ogone', '', 0, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_Enabled', '1', 3, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_PSPID', 'pijulius', 1, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_Currency', 'USD', 1, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_SHA_IN_Pass_Phrase', '1234567890qwertyuiop', 1, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_SHA_OUT_Pass_Phrase', '0987654321poiuytrewq', 1, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_Page_Title', 'Checkout for \"%PAGE_TITLE%\"', 1, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_Page_BG_Color', '#4e84c4', 10, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_Page_Text_Color', '#FFFFFF', 10, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_Page_Table_BG_Color', '#FFFFFF', 10, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_Page_Table_Text_Color', '#000000', 10, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_Page_Button_BG_Color', '#00467F', 10, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_Page_Button_Text_Color', '#FFFFFF', 10, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_Page_Font_Type', 'Verdana', 1, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_Page_Logo', '', 1, ".($nextorderid+8).")," .
+				" ('Shopping_Cart_Order_Method_Ogone_Dynamic_Template_URL', '', 1, ".($nextorderid+8).");");
 			
 			if (sql::display())
 				return false;
