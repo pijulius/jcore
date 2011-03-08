@@ -14,6 +14,11 @@ define('SETTINGS_TYPE_NUMBER', 2);
 define('SETTINGS_TYPE_CHECKBOX', 3);
 define('SETTINGS_TYPE_TEXTAREA', 4);
 define('SETTINGS_TYPE_HIDDEN', 5);
+define('SETTINGS_TYPE_SELECT', 6);
+define('SETTINGS_TYPE_DATE', 7);
+define('SETTINGS_TYPE_TIMESTAMP', 8);
+define('SETTINGS_TYPE_PASSWORD', 9);
+define('SETTINGS_TYPE_COLOR', 10);
 
 include_once('lib/languages.class.php');
 include_once('lib/sql.class.php');
@@ -225,7 +230,20 @@ class _settings {
 				
 					} else {
 						echo 
-							"<input type='text' name='settings[".$setting['ID']."]' " .
+							"<input type='" .
+								($setting['TypeID'] == SETTINGS_TYPE_PASSWORD?
+									"password":
+									"text") .
+								"' name='settings[".$setting['ID']."]' " .
+								($setting['TypeID'] == SETTINGS_TYPE_COLOR?
+									"class='color-input' ":
+									null) .
+								($setting['TypeID'] == SETTINGS_TYPE_DATE?
+									"class='calendar-input' ":
+									null) .
+								($setting['TypeID'] == SETTINGS_TYPE_TIMESTAMP?
+									"class='calendar-input timestamp' ":
+									null) .
 								"value='".htmlspecialchars($setting['Value'], ENT_QUOTES)."' " .
 								"size='".$inputlength."' " .
 								($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
