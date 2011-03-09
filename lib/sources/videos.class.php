@@ -1332,7 +1332,8 @@ class _videos {
 	}
 	
 	function displaySelected(&$row) {
-		$this->incViews($row);
+		if (!security::isBot())
+			$this->incViews($row);
 		
 		if (!$row['Location'])
 			return;

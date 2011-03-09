@@ -896,11 +896,12 @@ class _attachments {
 		session_write_close();
 		files::display($file, true);
 		
-		sql::run(
-			" UPDATE `{" .$this->sqlTable."}` SET " .
-			" `TimeStamp` = `TimeStamp`," .
-			" `Downloads` = `Downloads`+1" .
-			" WHERE `ID` = '".(int)$id."'");
+		if (!security::isBot())
+			sql::run(
+				" UPDATE `{" .$this->sqlTable."}` SET " .
+				" `TimeStamp` = `TimeStamp`," .
+				" `Downloads` = `Downloads`+1" .
+				" WHERE `ID` = '".(int)$id."'");
 		
 		return true;
 	}

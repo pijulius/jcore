@@ -1673,7 +1673,7 @@ class _pictures {
 		session_write_close();
 		files::display($file, $force);
 		
-		if (JCORE_VERSION >= '0.5' && !$force)
+		if (JCORE_VERSION >= '0.5' && !$force && !security::isBot())
 			$this->incViews($row);
 		
 		return true;

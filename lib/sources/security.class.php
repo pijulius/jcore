@@ -25,6 +25,25 @@ class _security {
 		'TimesNewRomanBold.ttf',
 		'VeraSansBold.ttf');
 	
+	static $bots = array(
+		'Googlebot',
+		'Mediapartners-Google',
+		'Adsbot-Google',
+		'MSNBot',
+		'Slurp',
+		'YahooSeeker',
+		'Teoma',
+		'BaiDuSpider',
+		'WISENutbot',
+		'Scooter',
+		'FAST-WebCrawler',
+		'Ask Jeeves',
+		'Speedy Spider',
+		'SurveyBot',
+		'IBM_Planetwide',
+		'GigaBot',
+		'ia_archiver');
+	
 	var $ajaxRequest = null;
 	var $adminPath = 'admin/site/security';
 	
@@ -879,6 +898,21 @@ class _security {
 		}
 		
     	return $salt.sha1($salt.$text);
+	}
+	
+	static function isBot($useragent = null) {
+		if (!$useragent)
+			$useragent = $_SERVER['HTTP_USER_AGENT'];
+		
+		if (!is_array(security::$bots))
+			return false;
+		
+		foreach(security::$bots as $bot) {
+			if (strpos($useragent, $bot) !== false)
+				return $bot;
+		}
+		
+		return false;
 	}
 }
 
