@@ -1433,7 +1433,7 @@ class photoGallery extends modules {
 			tooltip::display(
 				_("Gallery has been successfully updated.")." " .
 				(modules::getOwnerURL('photoGallery')?
-					"<a href='".photoGallery::getURL().
+					"<a href='".photoGallery::getURL($id).
 						"&amp;photogalleryid=".$id."' target='_blank'>" .
 						_("View Gallery") .
 					"</a>" .

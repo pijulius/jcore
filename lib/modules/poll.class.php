@@ -1036,7 +1036,7 @@ class poll extends modules {
 			tooltip::display(
 				_("Poll has been successfully updated.")." " .
 				(modules::getOwnerURL('poll')?
-					"<a href='".poll::getURL().
+					"<a href='".poll::getURL($id).
 						"&amp;pollid=".$id."' target='_blank'>" .
 						_("View Poll") .
 					"</a>" .

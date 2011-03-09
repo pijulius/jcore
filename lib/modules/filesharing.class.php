@@ -831,7 +831,7 @@ class fileSharing extends modules {
 			tooltip::display(
 				_("Folder has been successfully updated.")." " .
 				(modules::getOwnerURL('fileSharing')?
-					"<a href='".fileSharing::getURL().
+					"<a href='".fileSharing::getURL($id).
 						"&amp;filesharingid=".$id."' target='_blank'>" .
 						_("View Folder") .
 					"</a>" .

@@ -1609,7 +1609,7 @@ class shoppingItems {
 			tooltip::display(
 				_("Item has been successfully updated.")." " .
 				(modules::getOwnerURL('shopping')?
-					"<a href='".shopping::getURL().
+					"<a href='".shopping::getURL($id).
 						"&amp;shoppingid=".admin::getPathID()."&amp;shoppingitemid=".$id."' target='_blank'>" .
 						_("View Item") .
 					"</a>" .
@@ -4873,7 +4873,7 @@ class shopping extends modules {
 			tooltip::display(
 				_("Category has been successfully updated.")." " .
 				(modules::getOwnerURL('shopping')?
-					"<a href='".shopping::getURL().
+					"<a href='".shopping::getURL($id).
 						"&amp;shoppingid=".$id."' target='_blank'>" .
 						_("View Category") .
 					"</a>" .

@@ -1483,7 +1483,7 @@ class videoGallery extends modules {
 			tooltip::display(
 				_("Gallery has been successfully updated.")." " .
 				(modules::getOwnerURL('videoGallery')?
-					"<a href='".videoGallery::getURL().
+					"<a href='".videoGallery::getURL($id).
 						"&amp;videogalleryid=".$id."' target='_blank'>" .
 						_("View Gallery") .
 					"</a>" .
