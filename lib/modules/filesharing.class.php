@@ -209,14 +209,16 @@ class fileSharingIcons extends pictures {
 }
 
 class fileSharing extends modules {
-	static $uriVariables = 'filesharingid, filesharingattachmentslimit, filesharingrating, rate';
+	static $uriVariables = 'filesharingid, filesharinglimit, filesharingattachmentslimit, filesharingrating, rate, ajax, request';
 	var $searchable = true;
 	var $limit = 0;
+	var $limitFolders = 0;
 	var $selectedID;
 	var $search = null;
 	var $ignorePaging = false;
 	var $showPaging = true;
 	var $attachmentsPath;
+	var $ajaxPaging = AJAX_PAGING;
 	var $ajaxRequest = null;
 	var $adminPath = 'admin/modules/filesharing';
 	
@@ -252,7 +254,7 @@ class fileSharing extends modules {
 				((int)$this->selectedID?
 					" AND `SubFolderOfID` = '".(int)$this->selectedID."'":
 					" AND !`SubFolderOfID`")) .
-			" ORDER BY `OrderID`, `ID`";
+			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`";
 	}
 	
 	function installSQL() {
@@ -1131,7 +1133,7 @@ class fileSharing extends modules {
 				$subrows = sql::run(
 					" SELECT * FROM `{filesharings}`" .
 					" WHERE `SubFolderOfID` = '".$row['ID']."'" .
-					" ORDER BY `OrderID`, `ID`");
+					" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
 				
 				if (sql::rows($subrows))
 					$this->displayAdminList($subrows, $i%2);
@@ -1245,7 +1247,7 @@ class fileSharing extends modules {
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				" AND !`SubFolderOfID`") .
-			" ORDER BY `OrderID`, `ID`");
+			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
 		
 		if (sql::rows($rows))
 			$this->displayAdminList($rows);
@@ -1623,7 +1625,7 @@ class fileSharing extends modules {
 			($folderid?
 				" WHERE `SubFolderOfID` = '".$folderid."'":
 				" WHERE !`SubFolderOfID`") .
-			" ORDER BY `OrderID`, `ID`");
+			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
 		
 		while($row = sql::fetch($rows)) {
 			$row['PathDeepnes'] = $tree['PathDeepnes'];
@@ -1721,7 +1723,8 @@ class fileSharing extends modules {
 			return true;
 		}
 		
-		return false;
+		$this->display();
+		return true;
 	}
 	
 	function displayLogin() {
@@ -1823,27 +1826,12 @@ class fileSharing extends modules {
 			"</p>";
 	}
 	
-	function displaySubFolders(&$row) {
-		$folders = sql::run(
-			$this->SQL());
-			
-		if (sql::rows($folders)) {
-			echo
-				"<div class='file-sharing-folders'>";
-			
-			while ($folder = sql::fetch($folders))
-				$this->displayOne($folder);
-			
-			echo
-				"</div>";
-		}
-	}
-	
 	function displayAttachments(&$row) {
 		$attachments = new fileSharingAttachments();
 		
 		$attachments->ignorePaging = $this->ignorePaging;
 		$attachments->showPaging = $this->showPaging;
+		$attachments->ajaxPaging = $this->ajaxPaging;
 		$attachments->selectedOwnerID = $row['ID'];
 		$attachments->limit = $row['Limit'];
 		
@@ -2028,7 +2016,7 @@ class fileSharing extends modules {
 			"</div>" .
 			"<div class='clear-both'></div>";
 		
-		$this->displaySubFolders($row);
+		$this->displayFolders();
 		
 		if ($row && $row['Attachments'])
 			$this->displayAttachments($row);
@@ -2067,7 +2055,7 @@ class fileSharing extends modules {
 			((int)$this->selectedID?
 				" AND `ID` = '".(int)$this->selectedID."'":
 				" AND `Path` LIKE '".sql::escape($this->arguments)."'") .
-			" ORDER BY `OrderID`, `ID`" .
+			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`" .
 			" LIMIT 1"));
 		
 		if (!$folder)
@@ -2100,10 +2088,52 @@ class fileSharing extends modules {
 		return $itemsfound;
 	}
 	
+	function displayFolders() {
+		$paging = new paging($this->limitFolders);
+		
+		if ($this->ajaxPaging) {
+			$paging->ajax = true;
+			$paging->otherArgs = "&amp;request=modules/filesharing";
+		}
+		
+		$limitarg = strtolower(get_class($this)).'limit';
+		$paging->track($limitarg);
+		
+		$folders = sql::run(
+			$this->SQL() .
+			" LIMIT ".$paging->limit);
+		
+		if (!sql::rows($folders))
+			return false;
+		
+		$paging->setTotalItems(sql::count());
+		
+		if (!$this->ajaxRequest)
+			echo
+				"<div class='file-sharing-folders'>";
+		
+		while ($folder = sql::fetch($folders))
+			$this->displayOne($folder);
+		
+		echo
+			"<div class='clear-both'></div>";
+		
+		$paging->display();
+		
+		if (!$this->ajaxRequest)
+			echo
+				"</div>";
+		
+		return true;
+	}
+	
 	function display() {
 		if ($this->displayArguments())
 			return true;
 		
+		if (!$this->limitFolders && $this->owner['Limit'])
+			$this->limitFolders = $this->owner['Limit'];
+			
 		if ((int)$this->selectedID) {
 			$row = sql::fetch(sql::run(
 				" SELECT * FROM `{filesharings}`" .
@@ -2114,28 +2144,15 @@ class fileSharing extends modules {
 			return $this->displaySelected($row);
 		}
 		
-		if (!$this->limit && $this->owner['Limit'])
-			$this->limit = $this->owner['Limit'];
-			
 		if ($this->search)
 			return $this->displaySearch();
 		
-		$rows = sql::run(
-			$this->SQL());
-			
-		$items = sql::rows($rows);
-		if (!$items)
-			return false;
-			
 		echo 
-			"<div class='file-sharing'>" .
-				"<div class='file-sharing-folders'>";
-			
-		while($row = sql::fetch($rows))
-			$this->displayOne($row);
+			"<div class='file-sharing'>";
+		
+		$items = $this->displayFolders();
 		
 		echo 
-				"</div>" .
 			"</div>";
 			
 		return $items;

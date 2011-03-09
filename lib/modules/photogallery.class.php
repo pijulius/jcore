@@ -631,9 +631,10 @@ class photoGalleryIcons extends pictures {
 }
 
 class photoGallery extends modules {
-	static $uriVariables = 'photogalleryid, photogallerypictureslimit, photogallerypicasapictureslimit, photogalleryrating, rate';
+	static $uriVariables = 'photogalleryid, photogallerylimit, photogallerypictureslimit, photogallerypicasapictureslimit, photogalleryrating, rate, ajax, request';
 	var $searchable = true;
 	var $limit = 0;
+	var $limitGalleries = 0;
 	var $selectedID;
 	var $search = null;
 	var $ignorePaging = false;
@@ -674,7 +675,7 @@ class photoGallery extends modules {
 			((int)$this->selectedID?
 				" AND `SubGalleryOfID` = '".(int)$this->selectedID."'":
 				" AND !`SubGalleryOfID`") .
-			" ORDER BY `OrderID`, `ID`";
+			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`";
 	}
 	
 	function installSQL() {
@@ -1823,7 +1824,7 @@ class photoGallery extends modules {
 				$subrows = sql::run(
 					" SELECT * FROM `{photogalleries}`" .
 					" WHERE `SubGalleryOfID` = '".$row['ID']."'" .
-					" ORDER BY `OrderID`, `ID`");
+					" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
 				
 				if (sql::rows($subrows))
 					$this->displayAdminList($subrows, $i%2);
@@ -1937,7 +1938,7 @@ class photoGallery extends modules {
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				" AND !`SubGalleryOfID`") .
-			" ORDER BY `OrderID`, `ID`");
+			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
 		
 		if (sql::rows($rows))
 			$this->displayAdminList($rows);
@@ -2438,7 +2439,7 @@ class photoGallery extends modules {
 			($galleryid?
 				" WHERE `SubGalleryOfID` = '".$galleryid."'":
 				" WHERE !`SubGalleryOfID`") .
-			" ORDER BY `OrderID`, `ID`");
+			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
 		
 		while($row = sql::fetch($rows)) {
 			$row['PathDeepnes'] = $tree['PathDeepnes'];
@@ -2536,7 +2537,8 @@ class photoGallery extends modules {
 			return true;
 		}
 		
-		return false;
+		$this->display();
+		return true;
 	}
 	
 	function displayLogin() {
@@ -2667,22 +2669,6 @@ class photoGallery extends modules {
 		
 		echo
 			"</p>";
-	}
-	
-	function displaySubGalleries(&$row) {
-		$galleries = sql::run(
-			$this->SQL());
-			
-		if (sql::rows($galleries)) {
-			echo
-				"<div class='photogallery-folders'>";
-			
-			while ($gallery = sql::fetch($galleries))
-				$this->displayOne($gallery);
-			
-			echo
-				"</div>";
-		}
 	}
 	
 	function displayPictures(&$row) {
@@ -2889,7 +2875,7 @@ class photoGallery extends modules {
 				"</div>" .
 				"<div class='clear-both'></div>";
 		
-		$this->displaySubGalleries($row);
+		$this->displayGalleries();
 		$this->displayPictures($row);
 			
 		echo 
@@ -2937,7 +2923,7 @@ class photoGallery extends modules {
 			((int)$this->selectedID?
 				" AND `ID` = '".(int)$this->selectedID."'":
 				" AND `Path` LIKE '".sql::escape($this->arguments)."'") .
-			" ORDER BY `OrderID`, `ID`" .
+			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`" .
 			" LIMIT 1"));
 		
 		if (!$gallery)
@@ -2971,9 +2957,51 @@ class photoGallery extends modules {
 		return $itemsfound;
 	}
 	
+	function displayGalleries() {
+		$paging = new paging($this->limitGalleries);
+		
+		if ($this->ajaxPaging) {
+			$paging->ajax = true;
+			$paging->otherArgs = "&amp;request=modules/photogallery";
+		}
+		
+		$limitarg = strtolower(get_class($this)).'limit';
+		$paging->track($limitarg);
+		
+		$galleries = sql::run(
+			$this->SQL() .
+			" LIMIT ".$paging->limit);
+		
+		if (!sql::rows($galleries))
+			return false;
+		
+		$paging->setTotalItems(sql::count());
+		
+		if (!$this->ajaxRequest)
+			echo
+				"<div class='photogallery-folders'>";
+		
+		while ($gallery = sql::fetch($galleries))
+			$this->displayOne($gallery);
+		
+		echo
+			"<div class='clear-both'></div>";
+		
+		$paging->display();
+		
+		if (!$this->ajaxRequest)
+			echo
+				"</div>";
+		
+		return true;
+	}
+	
 	function display() {
 		if ($this->displayArguments())
 			return true;
+		
+		if (!$this->limitGalleries && $this->owner['Limit'])
+			$this->limitGalleries = $this->owner['Limit'];
 		
 		if ((int)$this->selectedID) {
 			$row = sql::fetch(sql::run(
@@ -2985,28 +3013,15 @@ class photoGallery extends modules {
 			return $this->displaySelected($row);
 		}
 		
-		if (!$this->limit && $this->owner['Limit'])
-			$this->limit = $this->owner['Limit'];
-		
 		if ($this->search)
 			return $this->displaySearch();
 		
-		$rows = sql::run(
-			$this->SQL());
-			
-		$items = sql::rows($rows);
-		if (!$items)
-			return false;
-			
 		echo 
-			"<div class='photogallery'>" .
-				"<div class='photogallery-folders'>";
-			
-		while($row = sql::fetch($rows))
-			$this->displayOne($row);
+			"<div class='photogallery'>";
+		
+		$items = $this->displayGalleries();
 		
 		echo 
-				"</div>" .
 			"</div>";
 			
 		return $items;
