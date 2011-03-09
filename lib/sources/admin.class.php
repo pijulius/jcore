@@ -554,7 +554,14 @@ class _admin {
 				
 			$this->displayHeader();
 			
-			$item->displayAdmin();
+			if (isset($expitems[count($expitems)-2]) && 
+				$expitems[count($expitems)-2] == 'modules' && !modules::installed($class)) 
+			{
+				$item->displayInstall();
+			} else {
+				$item->displayAdmin();
+			}
+			
 			unset($item);
 			
 			$this->displayFooter();
