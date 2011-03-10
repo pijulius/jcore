@@ -69,7 +69,7 @@ blockquote {
 }
 
 code {
-	display: block;
+	display: inline-block;
 	border: 1px dotted #e0e0e0;
 	background: #fafafa;
 	padding: 10px 15px;
