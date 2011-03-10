@@ -608,8 +608,8 @@ class _blocks {
 		admin::displayItemData(
 			"<hr />");
 		admin::displayItemData(
-			"<code>" .
-				nl2br(htmlspecialchars($row['Content'])).
+			"<code style='max-height: none;'>" .
+				nl2br(htmlspecialchars($row['Content'])) .
 			"</code>");
 	}
 	
