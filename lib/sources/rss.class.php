@@ -221,16 +221,19 @@ class _rss {
 					"</thead>" .
 					"<tbody>";
 		
+		$dir = SITE_PATH.'rss/';
 		$files = array();
 		
-		if ($dh = opendir(SITE_PATH.'rss/')) {
+		if (is_dir($dir) && $dh = opendir($dir)) {
 			while (($file = readdir($dh)) !== false) {
-				if (!is_file(SITE_PATH.'rss/'.$file) || $file == 'index.html')
+				if (!is_file($dir.'/'.$file) || $file == 'index.html')
 					continue;
 				
 				$files[$file] = ucwords(str_replace('-', ' / ', 
 					preg_replace('/\..*?$/', '', $file)));
 			}
+			
+			closedir($dh);
 		}
 		
 		$paging = new paging(10);

@@ -171,14 +171,6 @@ class _dynamicForms extends form {
 			null,
 			FORM_OPEN_FRAME_CONTAINER);
 		
-		$form->add(
-			__('Method'),
-			'Method',
-			FORM_INPUT_TYPE_SELECT);
-			
-		$form->addValue('post', 'POST');
-		$form->addValue('get', 'GET');
-		
 		if (JCORE_VERSION >= '0.7') {
 			$form->add(
 				__('Success Message'),
@@ -190,6 +182,34 @@ class _dynamicForms extends form {
 					'300px') .
 					'; height: 100px;');
 		}
+		
+		if (JCORE_VERSION >= '0.8') {
+			$form->add(
+				__('Locale File'),
+				'LocaleFile',
+				FORM_INPUT_TYPE_TEXT);
+			$form->setStyle('width: 150px;');
+			
+			$form->addAdditionalText(
+				"<a href='".url::uri('request, localefiles').
+					"&amp;request=".url::path() .
+					"&amp;localefiles=1' " .
+					"class='select-link ajax-content-link' " .
+					"title='".htmlspecialchars(__("Select File"), ENT_QUOTES)."'>" .
+					__("Select File") .
+				"</a>" .
+				"<br /><span class='comment'>(" .
+					__("e.g. messages") .
+				")</span>");
+		}
+		
+		$form->add(
+			__('Method'),
+			'Method',
+			FORM_INPUT_TYPE_SELECT);
+			
+		$form->addValue('post', 'POST');
+		$form->addValue('get', 'GET');
 		
 		$form->add(
 			null,
@@ -239,6 +259,10 @@ class _dynamicForms extends form {
 		if (!$form->verify())
 			return false;
 		
+		if (JCORE_VERSION >= '0.8' && $form->get('LocaleFile'))
+			$form->setValue('LocaleFile', 
+				preg_replace('/\.mo$/', '', $form->get('LocaleFile')));
+		
 		if (JCORE_VERSION >= '0.8' && $form->get('From') && 
 			!email::verify($form->get('From'), true)) 
 		{
@@ -276,6 +300,104 @@ class _dynamicForms extends form {
 		
 		$form->reset();
 		return true;
+	}
+	
+	function displayAdminAvailableLocaleFiles() {
+		if (!isset($_GET['ajaxlimit']))
+			echo
+				"<div class='languages-available-locale-files'>";
+		
+		echo
+				"<div class='form-title'>".__('Available Locale Files') .
+					"&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</div>" .
+				"<table cellpadding='0' cellspacing='0' class='form-content list'>" .
+					"<thead>" .
+					"<tr>" .
+						"<th>" .
+							"<span class='nowrap'>".
+							__("Select") .
+							"</span>" .
+						"</th>" .
+						"<th>" .
+							"<span class='nowrap'>".
+							__("File") .
+							"</span>" .
+						"</th>" .
+						"<th>" .
+							"<span class='nowrap'>".
+							__("Locale") .
+							"</span>" .
+						"</th>" .
+					"</tr>" .
+					"</thead>" .
+					"<tbody>";
+		
+		$locale = 
+			(languages::$selected?
+				languages::$selected['Locale']:
+				DEFAULT_LOCALE);
+		$dir = SITE_PATH.'locale/'.$locale.'/LC_MESSAGES';
+		$files = array();
+		
+		if (is_dir($dir) && $dh = opendir($dir)) {
+			while (($file = readdir($dh)) !== false) {
+				if (!is_file($dir.'/'.$file) || !preg_match('/^(.*)\.mo$/', $file, $matches))
+					continue;
+				
+				$files[$matches[1]] = $file;
+			}
+			
+			closedir($dh);
+		}
+		
+		$paging = new paging(10);
+		
+		$paging->track('ajaxlimit');
+		$paging->ajax = true;
+		$paging->setTotalItems(count($files));
+		
+		asort($files);
+		$files = array_slice($files, $paging->getStart(), 10);
+		
+		if (!is_array($files))
+			$files = array();
+		
+		$i = 1;	
+		foreach($files as $file => $title) {
+			echo
+				"<tr".($i%2?" class='pair'":NULL).">" .
+					"<td align='center'>" .
+						"<a href='javascript://' " .
+							"onclick=\"" .
+								"jQuery('#neweditformform #entryLocaleFile').val('" .
+									htmlspecialchars($file, ENT_QUOTES)."');" .
+								(JCORE_VERSION >= '0.7'?
+									"jQuery(this).closest('.tipsy').hide();":
+									"jQuery(this).closest('.qtip').qtip('hide');") .
+								"\" " .
+							"class='languages-select-locale-file select-link'>" .
+						"</a>" .
+					"</td>" .
+					"<td class='auto-width'>" .
+						"<b>".$title."</b> " .
+					"</td>" .
+					"<td>" .
+						$locale .
+					"</td>" .
+				"</tr>";
+			
+			$i++;
+		}
+		
+		echo
+					"</tbody>" .
+				"</table>";
+		
+		$paging->display();
+		
+		if (!isset($_GET['ajaxlimit']))
+			echo
+				"</div>";
 	}
 	
 	function displayAdminListHeader() {
@@ -445,7 +567,12 @@ class _dynamicForms extends form {
 			admin::displayItemData(
 				__("SQL Table"),
 				$row['SQLTable']);
-			
+		
+		if (JCORE_VERSION >= '0.8' && $row['LocaleFile'])	
+			admin::displayItemData(
+				__("Locale File"),
+				$row['LocaleFile']);
+		
 		admin::displayItemData(
 			__("Method"),
 			$row['Method']);
@@ -527,9 +654,10 @@ class _dynamicForms extends form {
 	
 	function displayAdminDescription() {
 		echo "<p>".
-			__("To implement a form in your post just add the following code " .
+			str_replace('<code>', '<code style="padding: 0; margin: 0;">',
+				__("To implement a form in your post just add the following code " .
 				"<code>{forms}formid{/forms}</code> " .
-				"to your content where <i>formid</i> is your form's id, for e.g. contact.") .
+				"to your content where <i>formid</i> is your form's id, for e.g. contact.")) .
 			"</p>";
 	}
 	
@@ -688,7 +816,9 @@ class _dynamicForms extends form {
 				" `AutoResponseSubject` = '".
 					sql::escape($values['AutoResponseSubject'])."'," .
 				" `AutoResponseMessage` = '" .
-					sql::escape($values['AutoResponseMessage'])."',":
+					sql::escape($values['AutoResponseMessage'])."'," .
+				" `LocaleFile` = '" .
+					sql::escape($values['LocaleFile'])."',":
 				null) .
 			(JCORE_VERSION >= '0.7'?
 				" `SuccessMessage` = '".
@@ -860,7 +990,9 @@ class _dynamicForms extends form {
 				" `AutoResponseSubject` = '".
 					sql::escape($values['AutoResponseSubject'])."'," .
 				" `AutoResponseMessage` = '" .
-					sql::escape($values['AutoResponseMessage'])."',":
+					sql::escape($values['AutoResponseMessage'])."'," .
+				" `LocaleFile` = '" .
+					sql::escape($values['LocaleFile'])."',":
 				null) .
 			(JCORE_VERSION >= '0.7'?
 				" `SuccessMessage` = '".
@@ -1130,7 +1262,15 @@ class _dynamicForms extends form {
 		$form = sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicforms}`" .
 			" WHERE `FormID` = '".sql::escape($this->formID)."'"));
-			
+		
+		if (!$form)
+			return false;
+		
+		if (JCORE_VERSION >= '0.8' && $form['LocaleFile']) {
+			languages::bind($form['LocaleFile']);
+			$this->textsDomain = $form['LocaleFile'];
+		}
+		
 		$this->title = __($form['Title'], $this->textsDomain);
 		$this->method = $form['Method'];
 		$this->storageSQLTable = $form['SQLTable'];
@@ -1308,7 +1448,6 @@ class _dynamicForms extends form {
 	
 	static function displayPreview($formid) {
 		$form = new dynamicForms($formid);
-		$form->textsDomain = 'messages';
 		$form->preview = true;
 		$form->ignorePageBreaks = true;
 		$form->load();
@@ -1338,6 +1477,42 @@ class _dynamicForms extends form {
 			return null;
 		
 		return explode('|', $fields['Fields']);
+	}
+	
+	function ajaxRequest() {
+		if (!$GLOBALS['USER']->loginok || 
+			!$GLOBALS['USER']->data['Admin']) 
+		{
+			tooltip::display(
+				__("Request can only be accessed by administrators!"),
+				TOOLTIP_ERROR);
+			return true;
+		}
+		
+		$localefiles = null;
+		
+		if (isset($_GET['localefiles']))
+			$localefiles = $_GET['localefiles'];
+		
+		if ($localefiles) {
+			$permission = userPermissions::check(
+				$GLOBALS['USER']->data['ID'],
+				$this->adminPath);
+			
+			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
+				$permission['PermissionIDs'])
+			{
+				tooltip::display(
+					__("You do not have permission to access this path!"),
+					TOOLTIP_ERROR);
+				return true;
+			}
+			
+			$this->displayAdminAvailableLocaleFiles();
+			return true;
+		}
+		
+		return false;
 	}
 }
 

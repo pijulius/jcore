@@ -317,15 +317,18 @@ class _languages {
 					"</thead>" .
 					"<tbody>";
 		
+		$dir = SITE_PATH.'locale/';
 		$dirs = array();
 		
-		if ($dh = opendir(SITE_PATH.'locale/')) {
+		if (is_dir($dir) && $dh = opendir($dir)) {
 			while (($file = readdir($dh)) !== false) {
-				if (!is_dir(SITE_PATH.'locale/'.$file) || strpos($file, '.') === 0)
+				if (!is_dir($dir.'/'.$file) || strpos($file, '.') === 0)
 					continue;
 				
 				$dirs[$file] = $file;
 			}
+			
+			closedir($dh);
 		}
 		
 		$paging = new paging(10);
