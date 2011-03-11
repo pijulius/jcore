@@ -1116,19 +1116,24 @@ class _comments {
 		$negativeratings = (int)$negativeratings['Rows'];
 		$positiveratings = (int)$positiveratings['Rows'];
 		
-		$rating = $this->defaultRating+
-			($positiveratings-$negativeratings);
-		
-		if ($rating < 1)
-			$rating = 1;
+		if (JCORE_VERSION >= '0.8') {
+			$rating = $positiveratings-$negativeratings;
 			
-		if ($rating > 10)
-			$rating = 10;
+		} else {
+			$rating = $this->defaultRating+
+				($positiveratings-$negativeratings);
 			
+			if ($rating < 1)
+				$rating = 1;
+				
+			if ($rating > 10)
+				$rating = 10;
+		}
+				
 		sql::run(
 			" UPDATE `{".$this->sqlTable . "}`" .
 			" SET `TimeStamp` = `TimeStamp`," .
-			" `Rating` = ".(int)$rating .
+			" `Rating` = ".(float)$rating .
 			" WHERE `ID` = '".$id."'");
 		
 		tooltip::display(
@@ -1505,7 +1510,11 @@ class _comments {
 	}
 	
 	function displayRating(&$row) {
-		$visiblerating = $row['Rating']-$this->defaultRating;
+		if (JCORE_VERSION >= '0.8')
+			$visiblerating = $row['Rating'];
+		else
+			$visiblerating = $row['Rating']-$this->defaultRating;
+		
 		if ($visiblerating > 0)
 			$visiblerating = "+".$visiblerating;
 		
@@ -1635,12 +1644,25 @@ class _comments {
 				$row['_User']['Email'] = $row['Email'];
 		}
 		
-		if (!$row['Rating'])
-			$row['Rating'] = $this->defaultRating;
+		if (JCORE_VERSION >= '0.8') {
+			$rating = $this->defaultRating+$row['Rating'];
+			
+			if ($rating > 10)
+				$rating = 10;
+			
+			if ($rating < 1)
+				$rating = 1;
+			
+		} elseif ($row['Rating']) {
+			$rating = $row['Rating'];
+			
+		} else {
+			$rating = $this->defaultRating;
+		}
 		
-		echo
+		echo 
 			"<a name='comment".$row['ID']."'></a>" .
-			"<div class='comment-entry comment-rating-".$row['Rating'] .
+			"<div class='comment-entry comment-rating-".$rating .
 				(isset($row['_User']['Admin']) && $row['_User']['Admin']?
 					" site-owner":
 					null) .

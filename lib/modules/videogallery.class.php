@@ -795,7 +795,7 @@ class videoGallery extends modules {
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP," .
 			" `IP` bigint(20) NOT NULL default '0'," .
 			" `SubCommentOfID` int(10) unsigned NOT NULL default '0'," .
-			" `Rating` tinyint(1) unsigned NOT NULL default '0'," .
+			" `Rating` smallint(6) NOT NULL default '0'," .
 			" `Pending` TINYINT( 1 ) UNSIGNED NOT NULL DEFAULT  '0'," .
 			" PRIMARY KEY  (`ID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
