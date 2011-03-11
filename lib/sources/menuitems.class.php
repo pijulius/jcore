@@ -127,7 +127,7 @@ class _menuItems extends pages {
 				null) .
 				" " .
 				"class='menu" .
-					(in_array($row['ID'], $this->selectedIDs)?
+					(is_array($this->selectedIDs) && in_array($row['ID'], $this->selectedIDs)?
 						" selected":
 						NULL) .
 					(isset($row['_CSSClass'])?

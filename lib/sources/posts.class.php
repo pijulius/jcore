@@ -24,6 +24,7 @@ class _posts {
 	var $arguments;
 	var $selectedID;
 	var $selectedPageID;
+	var $aliasPageIDs = null;
 	var $selectedLanguageID;
 	var $selectedBlockID;
 	var $selectedPage;
@@ -104,6 +105,11 @@ class _posts {
 				($page?
 					" AND (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 						$page['ID']."'" .
+					(is_array($this->aliasPageIDs) && count($this->aliasPageIDs)?
+						" OR `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` IN (" .
+							implode(',', $this->aliasPageIDs) .
+							")":
+						null) .
 					(JCORE_VERSION >= '0.8' && trim($page['PostKeywords'])?
 						" OR (1" .
 							sql::search($page['PostKeywords'].',', array('Keywords'), 'OR') .

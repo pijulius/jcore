@@ -19,7 +19,8 @@ define('PAGE_ADMINS_ONLY', 3);
 class _pages {
 	var $arguments = '';
 	var $selectedID;
-	var $selectedIDs = array();
+	var $selectedIDs = null;
+	var $aliasIDs = null;
 	var $selectedMenuID;
 	var $adminPath = array(
 		'admin/content/menuitems',
@@ -67,24 +68,42 @@ class _pages {
 		if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN'])
 			return false;
 		
-		$selected = sql::fetch(sql::run(
-			" SELECT * FROM `{" .
-				(JCORE_VERSION >= '0.8'?
-					'pages':
-					'menuitems') .
-				"}`" .
-			" WHERE !`Deactivated`" .
-			" AND `LanguageID` = '".(int)$_GET['languageid']."'" .
-			(SEO_FRIENDLY_LINKS && !(int)$_GET['pageid']?
-				" AND '".sql::escape(url::path())."/' LIKE CONCAT(`Path`,'/%')":
-				" AND `ID` = '".(int)$_GET['pageid']."'") .
-			" ORDER BY `Path` DESC," .
-				(menus::$order?
-					" FIELD(`MenuID`, ".menus::$order."),":
-					" `MenuID`,") .
-				" `OrderID`" .
-			" LIMIT 1"));
+		$path = null;
+		$selected = null;
+		
+		if ((int)$_GET['pageid']) {
+			$page = sql::fetch(sql::run(
+				" SELECT `Path` FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE `ID` = '".(int)$_GET['pageid']."'"));
 			
+			if ($page)
+				$path = $page['Path'];
+			
+		} else {
+			$path = url::path();
+		}
+		
+		if ($path)
+			$selected = sql::fetch(sql::run(
+				" SELECT * FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE !`Deactivated`" .
+				" AND `LanguageID` = '".(int)$_GET['languageid']."'" .
+				" AND '".sql::escape($path)."/' LIKE CONCAT(`Path`,'/%')" .
+				" ORDER BY `Path` DESC," .
+					(menus::$order?
+						" FIELD(`MenuID`, ".menus::$order."),":
+						" `MenuID`,") .
+					" `OrderID`" .
+				" LIMIT 1"));
+		
 		if (!$selected && 
 			((SEO_FRIENDLY_LINKS && !url::path()) || 
 			(!SEO_FRIENDLY_LINKS && !(int)$_GET['pageid'])))
@@ -1915,6 +1934,35 @@ class _pages {
 		return $this->selectedIDs;
 	}
 	
+	function getAliasIDs($pageid = null) {
+		if (!$pageid)
+			$pageid = $this->selectedID;
+		
+		$page = $this->get($pageid);
+		
+		if (!$page)
+			return false;
+		
+		$pages = sql::fetch(sql::run(
+			" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS `IDs`" .
+			" FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
+			" WHERE `Path` = '".sql::escape($page['Path'])."'" .
+			" AND `LanguageID` = '".(int)$page['LanguageID']."'" .
+			" AND `ID` != '".(int)$pageid."'" .
+			" GROUP BY `LanguageID`" .
+			" LIMIT 1"));
+		
+		if (!$pages)
+			return false;
+		
+		$this->aliasIDs = explode(',', $pages['IDs']);
+		return $this->aliasIDs;
+	}
+	
 	function generateLink(&$row) {
 		$language = languages::$selected;
 		
@@ -2045,6 +2093,7 @@ class _pages {
 		
 		$posts = new posts();
 		$posts->selectedPageID = $this->selectedID;
+		$posts->aliasPageIDs = $this->getAliasIDs();
 		$items = $posts->display();
 		
 		if (JCORE_VERSION >= '0.7' && !$items && !$posts->search)
