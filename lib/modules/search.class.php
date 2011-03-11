@@ -53,6 +53,9 @@ class search extends modules {
 			"CREATE TABLE IF NOT EXISTS `{searches}` (" .
 			" `Keyword` varchar(100) NOT NULL default ''," .
 			" `Counter` mediumint(8) unsigned NOT NULL default '0'," .
+			(JCORE_VERSION >= '0.8'?
+				" `LastSearchedIn` varchar(255) NOT NULL default '',":
+				null) .
 			" KEY `Counter` (`Counter`)" .
 			" ) ENGINE=MyISAM;");
 		
@@ -361,6 +364,9 @@ class search extends modules {
 		sql::run(
 			" UPDATE `{searches}` " .
 			" SET `Counter` = `Counter`+1" .
+			(JCORE_VERSION >= '0.8'?
+				", `LastSearchedIn` = '".sql::escape($this->searchIn)."'":
+				null) .
 			" WHERE `Keyword` LIKE '".sql::escape($this->search)."'");
 			
 		if (sql::affected()) {
@@ -370,6 +376,9 @@ class search extends modules {
 		sql::run(
 			" INSERT INTO `{searches}` SET " .
 			" `Keyword` = '".sql::escape($this->search)."'," .
+			(JCORE_VERSION >= '0.8'?
+				" `LastSearchedIn` = '".sql::escape($this->searchIn)."',":
+				null) .
 			" `Counter` = 1");
 	}
 	
@@ -444,8 +453,11 @@ class search extends modules {
 	function displayKeywordsCloudLink(&$row) {
 		echo 
 			"<a href='".$this->searchURL."&amp;search=".
-				htmlspecialchars($row['Keyword'], ENT_QUOTES)."' " .
-				"style='font-size: ".$row['_FontPercent']."%;'>" .
+				htmlspecialchars($row['Keyword'], ENT_QUOTES) .
+				(isset($row['LastSearchedIn']) && $row['LastSearchedIn']?
+					"&amp;searchin=".$row['LastSearchedIn']:
+					null) .
+				"' style='font-size: ".$row['_FontPercent']."%;'>" .
 				$row['Keyword'] .
 			"</a> ";
 	}
@@ -465,13 +477,20 @@ class search extends modules {
 			" CREATE TEMPORARY TABLE `{TMPSearches}` " .
 			" (`Keyword` varchar(100) NOT NULL default ''," .
 			"  `Counter` mediumint(8) unsigned NOT NULL default '0'," .
+			(JCORE_VERSION >= '0.8'?
+				"  `LastSearchedIn` varchar(255) NOT NULL default '',":
+				null) .
 			"  `ID` tinyint(2) unsigned NOT NULL auto_increment," .
 			" PRIMARY KEY  (`ID`)" .
 			")");
 			
 		sql::run(
 			" INSERT INTO `{TMPSearches}` " .
-			" SELECT *, NULL FROM `{searches}`" .
+			" SELECT `Keyword`, `Counter`," .
+				(JCORE_VERSION >= '0.8'?
+					" `LastSearchedIn`,":
+					null) .
+				" NULL FROM `{searches}`" .
 			" ORDER BY `Counter` DESC" .
 			" LIMIT ".$this->keywordsLimit);
 			
