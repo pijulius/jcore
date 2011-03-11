@@ -761,11 +761,13 @@ class _languages {
 	
 	// ************************************************   Client Part
 	static function get($id = 0) {
-		if ($id) {
+		if ($id && $id == languages::$selected['ID'])
+			return languages::$selected;
+		
+		if ($id)
 			return sql::fetch(sql::run(
 				" SELECT * FROM `{languages}`" .
 				" WHERE `ID` = '".(int)$id."'"));
-		}
 		
 		$rows = sql::run(
 			" SELECT * FROM `{languages}` " .

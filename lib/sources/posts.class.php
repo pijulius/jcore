@@ -2022,19 +2022,6 @@ class _posts {
 		echo $row['Title'];
 	}
 	
-	function displayPageTitle() {
-		echo
-				"<h1 class='post-title'>";
-		
-		$this->displaySelectedTitle($this->selectedPage);
-		
-		echo
-				"</h1>" .
-				"<div class='post-content place-holder'>" .
-					"<p></p>" .
-				"</div>";
-	}
-	
 	function displayDetails(&$row) {
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
@@ -2756,19 +2743,6 @@ class _posts {
 		return $total;
 	}
 	
-	function displayLogin() {
-		tooltip::display(
-			__("This area is limited to members only. " .
-				"Please login below."),
-			TOOLTIP_NOTIFICATION);
-		
-		$GLOBALS['USER']->displayLogin();
-	}
-	
-	function displayModules() {
-		pages::displayModules($this->selectedPageID);
-	}
-	
 	function displayArguments() {
 		if (!$this->arguments)
 			return false;
@@ -2870,45 +2844,15 @@ class _posts {
 		if ($this->selectedBlockID)
 			return $this->displayBlockPosts($this->selectedBlockID);
 		
-		if (!$this->selectedPageID && !isset($this->arguments)) {
-			url::displayError();
+		if (!$this->selectedPageID && !isset($this->arguments))
 			return false;
-		}
 		
 		if ($this->selectedPageID) {
-			$this->selectedPage = sql::fetch(sql::run(
-				" SELECT * FROM `{" .
-					(JCORE_VERSION >= '0.8'?
-						'pages':
-						'menuitems') .
-					"}` " .
-				" WHERE `ID` = '".(int)$this->selectedPageID."'"));
-				
-			if ($this->selectedPage['Deactivated']) {
-				tooltip::display(
-					__("This page has been deactivated."),
-					TOOLTIP_NOTIFICATION);
-				return false;
-			}
-			
-			if ($this->selectedPage['ViewableBy'] > PAGE_GUESTS_ONLY && 
-				!$GLOBALS['USER']->loginok) 
-			{
-				if (JCORE_VERSION >= '0.7')
-					$this->displayPageTitle();
-				
-				$this->displayLogin();
-				return true;
-			}
-			
-			if ($this->selectedPage['LanguageID'] && 
-				$this->selectedPage['LanguageID'] != $this->selectedLanguageID)
-				return false;
+			$this->selectedPage = pages::get($this->selectedPageID);
 			
 			if ($this->selectedPage['LanguageID'])	
-				$this->selectedLanguage = sql::fetch(sql::run(
-					" SELECT * FROM `{languages}` " .
-					" WHERE `ID` = '".$this->selectedPage['LanguageID']."'"));
+				$this->selectedLanguage = languages::get(
+					$this->selectedPage['LanguageID']);
 			
 			if (!$this->limit)
 				$this->limit = $this->selectedPage['Limit'];
@@ -2966,9 +2910,6 @@ class _posts {
 			echo
 				"<div class='posts'>";
 		
-		if (JCORE_VERSION >= '0.7' && !$paging->items && !$this->search && $this->selectedPage)
-			$this->displayPageTitle();
-		
 		$i = 1;
 		$total = sql::rows($rows);
 		$pageid = $this->selectedPageID;
@@ -2979,18 +2920,12 @@ class _posts {
 		while ($row = sql::fetch($rows)) {
 			if ($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')] != $pageid || !$pagelink) {
 				if ($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')] != $pageid) {
-					$this->selectedPage = sql::fetch(sql::run(
-						" SELECT * FROM `{" .
-							(JCORE_VERSION >= '0.8'?
-								'pages':
-								'menuitems') .
-							"}`" .
-						" WHERE `ID` = '".$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
+					$this->selectedPage = pages::get(
+						$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]);
 					
 					if ($this->selectedPage['LanguageID'])
-						$this->selectedLanguage = sql::fetch(sql::run(
-							" SELECT * FROM `{languages}`" .
-							" WHERE `ID` = '".$this->selectedPage['LanguageID']."'"));
+						$this->selectedLanguage = languages::get(
+							$this->selectedPage['LanguageID']);
 					else
 						$this->selectedLanguage = null;
 					
@@ -3022,9 +2957,6 @@ class _posts {
 		
 		if (!$this->selectedID && !$this->randomize && $this->showPaging)
 			$paging->display();
-		
-		if (!$this->search)
-			$this->displayModules();
 		
 		if (!$this->ajaxRequest)
 			echo

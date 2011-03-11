@@ -286,6 +286,36 @@ class _pages {
 				FORM_CLOSE_FRAME_CONTAINER);
 		}
 		
+		if (JCORE_VERSION >= '0.8') {
+			$dforms = dynamicForms::getForm(null, false);
+			
+			if (sql::rows($dforms)) {
+				$form->add(
+					__('Dynamic Forms'),
+					null,
+					FORM_OPEN_FRAME_CONTAINER);
+			
+				$form->add(
+					__('Display Form(s)'),
+					'DynamicForms',
+					FORM_INPUT_TYPE_CHECKBOX,
+					false);
+				$form->setValueType(FORM_VALUE_TYPE_ARRAY);
+				
+				while($dform = sql::fetch($dforms)) {
+					$form->addValue(
+						$dform['ID'],
+						__($dform['Title'])." <span class='comment'>(" .
+							$dform['FormID'].")</span><br />");
+				}
+				
+				$form->add(
+					null,
+					null,
+					FORM_CLOSE_FRAME_CONTAINER);
+			}
+		}
+		
 		$form->add(
 			__('Display Options'),
 			null,
@@ -753,6 +783,36 @@ class _pages {
 				"</ul>";
 		}
 		
+		if (JCORE_VERSION >= '0.8') {
+			$dformids = sql::fetch(sql::run(
+				" SELECT GROUP_CONCAT(`FormID` SEPARATOR ',') AS `FormIDs` " .
+				" FROM `{pageforms}` " .
+				" WHERE `PageID` = '".$row['ID']."'" .
+				" GROUP BY `PageID`" .
+				" LIMIT 1"));
+			
+			if ($dformids) {
+				$dforms = sql::run(
+					" SELECT * FROM `{dynamicforms}`" .
+					" WHERE `ID` IN (".$dformids['FormIDs'].")" .
+					" ORDER BY `FormID`, `ID`");
+				
+				$tooltiptxt .=
+					"<b>".__("Dynamic Forms")."</b>" .
+					"<ul>";
+			
+				while($dform = sql::fetch($dforms))
+					$tooltiptxt .= 
+						"<li><b>" .
+							$dform['Title'] .
+							"</b> (".$dform['FormID'].")" .
+						"</li>";
+				
+				$tooltiptxt .= 
+					"</ul>";
+			}
+		}
+		
 		echo 
 			"<td>" .
 				"<input type='text' name='orders[".$row['ID']."]' " .
@@ -1064,6 +1124,18 @@ class _pages {
 								'ModulesItem['.$module['ModuleID'].']', 
 								$module['ModuleItemID']);
 				}
+				
+				if (JCORE_VERSION >= '0.8') {
+					$dform = sql::fetch(sql::run(
+						" SELECT GROUP_CONCAT(`FormID` SEPARATOR ',') AS `FormIDs`" .
+						" FROM `{pageforms}`" .
+						" WHERE `PageID` = '".$row['ID']."'"));
+					
+					if ($dform['FormIDs'])
+						$form->setValue(
+							'DynamicForms', 
+							explode(',', $dform['FormIDs']));
+				}
 			}
 			
 			echo
@@ -1207,6 +1279,15 @@ class _pages {
 								0) .
 							"'":
 						null));
+			}
+		}
+		
+		if (isset($values['DynamicForms']) && is_array($values['DynamicForms'])) {
+			foreach($values['DynamicForms'] as $dformid) {
+				sql::run(
+					" INSERT INTO `{pageforms}` SET " .
+					" `PageID` = '".$newid."'," .
+					" `FormID` = '".(int)$dformid."'");
 			}
 		}
 		
@@ -1374,6 +1455,20 @@ class _pages {
 			}
 		}
 		
+		if (JCORE_VERSION >= '0.8')
+			sql::run(
+				" DELETE FROM `{pageforms}` " .
+				" WHERE `PageID` = '".$id."'");
+		
+		if (isset($values['DynamicForms']) && is_array($values['DynamicForms'])) {
+			foreach($values['DynamicForms'] as $dformid) {
+				sql::run(
+					" INSERT INTO `{pageforms}` SET " .
+					" `PageID` = '".$id."'," .
+					" `FormID` = '".(int)$dformid."'");
+			}
+		}
+		
 		if ((!$page['Deactivated'] && $values['Deactivated']) ||
 			($page['ViewableBy'] < $values['ViewableBy'] && $values['ViewableBy'] > 1))
 			$sitemap->delete($pageurl);
@@ -1516,6 +1611,11 @@ class _pages {
 					"}` " .
 				" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 					$pageid."'");
+			
+			if (JCORE_VERSION >= '0.8')
+				sql::run(
+					" DELETE FROM `{pageforms}` " .
+					" WHERE `PageID` = '".$pageid."'");
 			
 			sql::run(
 				" DELETE FROM `{" .
@@ -1849,6 +1949,116 @@ class _pages {
 		$modules->selectedOwnerID = $pageid;
 		$modules->display();
 		unset($modules);
+	}
+	
+	static function displayForms($pageid) {
+		if (!$pageid)
+			return false;
+		
+		$dformids = sql::fetch(sql::run(
+			" SELECT GROUP_CONCAT(`FormID` SEPARATOR ',') AS `FormIDs`" .
+			" FROM `{pageforms}`" .
+			" WHERE `PageID` = '".(int)$pageid."'" .
+			" GROUP BY `PageID`" .
+			" LIMIT 1"));
+		
+		if (!$dformids)
+			return false;
+		
+		$dforms = sql::run(
+			" SELECT `FormID` FROM `{dynamicforms}`" .
+			" WHERE `ID` IN (".$dformids['FormIDs'].")" .
+			" ORDER BY `FormID`, `ID`");
+		
+		while($dform = sql::fetch($dforms)) {
+			$form = new dynamicForms($dform['FormID']);
+			$form->load();
+			$form->verify();
+			$form->display();
+			unset($form);
+		}
+		
+		return true;
+	}
+	
+	function displayLogin() {
+		tooltip::display(
+			__("This area is limited to members only. " .
+				"Please login below."),
+			TOOLTIP_NOTIFICATION);
+		
+		$GLOBALS['USER']->displayLogin();
+	}
+	
+	function displayTitle(&$row) {
+		echo $row['Title'];
+	}
+	
+	function displayContent(&$row) {
+		echo "<p></p>";
+	}
+	
+	function displaySelected(&$row) {
+		echo
+			"<div class='post page'>" .
+				"<h1 class='post-title page'>";
+		
+		$this->displayTitle($row);
+		
+		echo
+				"</h1>" .
+				"<div class='post-content page'>";
+		
+		$this->displayContent($row);
+		
+		echo
+				"</div>" .
+			"</div>";
+	}
+	
+	function display() {
+		if (!$this->selectedID) {
+			url::displayError();
+			return false;
+		}
+		
+		$page = pages::get($this->selectedID);
+		
+		if ($page['Deactivated']) {
+			tooltip::display(
+				__("This page has been deactivated."),
+				TOOLTIP_NOTIFICATION);
+			return false;
+		}
+		
+		if ($page['LanguageID'] && languages::$selected &&
+			$page['LanguageID'] != languages::$selected['ID'])
+			return false;
+		
+		if ($page['ViewableBy'] > PAGE_GUESTS_ONLY && !$GLOBALS['USER']->loginok) {
+			if (JCORE_VERSION >= '0.7')
+				$this->displaySelected($page);
+			
+			$this->displayLogin();
+			return true;
+		}
+		
+		$posts = new posts();
+		$posts->selectedPageID = $this->selectedID;
+		$items = $posts->display();
+		
+		if (JCORE_VERSION >= '0.7' && !$items && !$posts->search)
+			$this->displaySelected($page);
+		
+		if (!$posts->search) {
+			$this->displayModules($this->selectedID);
+			
+			if (JCORE_VERSION >= '0.8')
+				$this->displayForms($this->selectedID);
+		}
+		
+		unset($posts);
+		return true;
 	}
 }
 

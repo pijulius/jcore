@@ -713,7 +713,7 @@ class _dynamicForms extends form {
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				null) .
-			" ORDER BY `Title`");
+			" ORDER BY `FormID`, `ID`");
 			
 		if (sql::rows($rows))
 			$this->displayAdminList($rows);
@@ -1049,6 +1049,11 @@ class _dynamicForms extends form {
 			
 		while($row = sql::fetch($rows))
 			$dynamicformfields->delete($row['ID']);
+		
+		if (JCORE_VERSION >= '0.8')
+			sql::run(
+				" DELETE FROM `{pageforms}` " .
+				" WHERE `FormID` = '".$id."'");
 		
 		sql::run(
 			" DELETE FROM `{dynamicforms}` " .
@@ -1444,6 +1449,23 @@ class _dynamicForms extends form {
 		
 		if (count($presetvalues) && !$this->submitted())
 			$this->setValues($presetvalues);
+	}
+	
+	static function getForm($id = null, $protected = true) {
+		if (!$id)
+			return sql::run(
+				" SELECT * FROM `{dynamicforms}`" .
+				(!$protected?
+					" WHERE !`Protected`":
+					null) .
+				" ORDER BY `FormID`, `ID`");
+		
+		return sql::fetch(sql::run(
+			" SELECT * FROM `{dynamicforms}`" .
+			" WHERE `ID` = '".(int)$id."'" .
+			(!$protected?
+				" AND !`Protected`":
+				null)));
 	}
 	
 	static function displayPreview($formid) {

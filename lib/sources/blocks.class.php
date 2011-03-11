@@ -1323,9 +1323,9 @@ class _blocks {
 					break;
 				}
 				
-				$posts = new posts();
-				$posts->display();
-				unset($posts);
+				$pages = new pages();
+				$pages->display();
+				unset($pages);
 				break;
 				
 			case BLOCK_TYPE_CONTENT:
