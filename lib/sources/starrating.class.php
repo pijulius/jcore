@@ -29,8 +29,8 @@ class _starRating {
 	function verify() {
 		$rate = null;
 		
-		if (isset($_GET['rate']))
-			$rate = (int)$_GET['rate'];
+		if (isset($_POST['rate']))
+			$rate = (int)$_POST['rate'];
 		
 		if (!$this->selectedOwnerID || !$rate)
 			return;
@@ -124,27 +124,15 @@ class _starRating {
 			" WHERE `".$this->sqlRow."` = '".$this->selectedOwnerID."'" .
 			" LIMIT 1"));
 		
-		$utime = microtime(true);
-		
-		for ($i = 1; $i <= 10; $i++) {
-			echo
-				"<a class='star-rating' " .
-					"title='" .
-						htmlspecialchars(sprintf(__("Your vote: %s (votes: %s, average: %s out of %s)"),
-							$i, $ratings['Total'], $owner['Rating'], 10), ENT_QUOTES) .
-						"' " .
-					"name='".strtolower(get_class($this)).$this->selectedOwnerID.$utime."' " .
-					"href='".url::uri(strtolower(get_class($this)).', rate').
-						"&amp;request=".$this->uriRequest .
-						"&amp;".strtolower($this->sqlRow)."=".$this->selectedOwnerID .
-						"&amp;rate=".$i."'" .
-					($i == $owner['Rating']?
-						(JCORE_VERSION <= '0.2'?
-							" checked='checked'":
-							" rel='checked'"):
-						null) .
-					"></a>";
-		}
+		echo
+			"<div class='star-rating' title='" .
+				htmlspecialchars(sprintf(__("Your vote: %s (votes: %s, average: %s out of %s)"),
+					'0', $ratings['Total'], $owner['Rating'], 10), ENT_QUOTES)."' " .
+				"data='".$owner['Rating']."' " .
+				"data-url='".url::uri(strtolower(get_class($this)).', rate, request, ajax').
+					"&amp;request=".$this->uriRequest .
+					"&amp;".strtolower($this->sqlRow)."=".$this->selectedOwnerID."" .
+					"&amp;ajax=1'></div>";
 	}
 }
 
