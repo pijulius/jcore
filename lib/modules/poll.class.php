@@ -1991,6 +1991,8 @@ class poll extends modules {
 			TOOLTIP_SUCCESS);
 		
 		if ($this->ajaxRequest) {
+			$poll['Votes'] += $votes;
+			
 			echo
 				"<script type='text/javascript'>";
 			
