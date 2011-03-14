@@ -343,7 +343,7 @@ class pollAnswers {
 	
 	function displayOne(&$row) {
 		echo 
-			"<div class='poll-answer" .
+			"<div class='poll-answer poll-answer".$row['ID'] .
 				($row['_CSSClass']?
 					" ".$row['_CSSClass']:
 					null) .
@@ -1989,6 +1989,35 @@ class poll extends modules {
 		tooltip::display(
 			_("Thank you for your vote."),
 			TOOLTIP_SUCCESS);
+		
+		if ($this->ajaxRequest) {
+			echo
+				"<script type='text/javascript'>";
+			
+			$answers = sql::run(
+				" SELECT `ID`, `Votes` FROM `{pollanswers}`" .
+				" WHERE `PollID` = '".$poll['ID']."'");
+			
+			while($answer = sql::fetch($answers)) {
+				$percentage = 0;
+				
+				if ($poll['Votes'])
+					$percentage = round($answer['Votes']*100/$poll['Votes']);
+				
+				echo
+					"jQuery('.poll-answer".$answer['ID']."').each(function() {" .
+						"var jthis = jQuery(this);" .
+						"jthis.find('.poll-answer-progressbar-value').animate({'width': '" .
+							$percentage."%'}, 'slow').find('span').text('" .
+							$percentage."%');" .
+						"jthis.find('.poll-answer-title span').text('" .
+							"(".sprintf(_("%s votes"), $answer['Votes']).")');" .
+					"});";
+			}
+			
+			echo
+				"</script>";
+		}
 		
 		return true;
 	}
