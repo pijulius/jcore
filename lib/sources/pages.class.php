@@ -1363,10 +1363,7 @@ class _pages {
 			
 		$pageurl = str_replace('&amp;', '&', $this->generateLink($page));
 		
-		if ((int)$values[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')] && 
-			(int)$values[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')] != 
-				$page[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]) 
-		{
+		if ((int)$values[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]) {
 			$parentpage = sql::fetch(sql::run(
 				" SELECT * FROM `{" .
 					(JCORE_VERSION >= '0.8'?
