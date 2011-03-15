@@ -264,7 +264,7 @@ class _posts {
 				"</a>");
 			
 			$form->insert(
-				'OnMainPage',
+				'BlockID',
 				(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'),
 				(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'),
 				FORM_INPUT_TYPE_HIDDEN,
