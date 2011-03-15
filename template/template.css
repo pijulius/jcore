@@ -1413,37 +1413,18 @@ td.ui-datepicker-other-month {
 
 
 .star-rating {
-	float: left;
-	width: 16px;
+	width: 80px;
 	height: 16px;
-	cursor: pointer;
-	display: block;
-	overflow: hidden;
 }
 
-.star-rating a {
-	background: url("http://icons.jcore.net/16/star_1.png") no-repeat 0px 0px;
-	display: block;
-	width: 16px;
-	height: 16px;
-	-moz-opacity: 0.3;
-	-webkit-opacity: 0.3;
-	opacity: 0.3;
-	filter: alpha(opacity = 30);
+.star-rating-default {
+	background: url("http://icons.jcore.net/16/star_1a.png") 100% 0 repeat-x;
 }
 
-.star-rating-on a,
-.star-rating-hover a
-{
-	-moz-opacity: 1.0;
-	-webkit-opacity: 1.0;
-	opacity: 1.0;
-	filter: none;
+.star-rating-average {
+	background: url("http://icons.jcore.net/16/star_1.png") repeat-x;
 }
 
-.star-rating-readonly a {
-	cursor: default;
-}
 
 
 /*
