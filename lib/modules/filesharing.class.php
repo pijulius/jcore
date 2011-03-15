@@ -4,10 +4,10 @@
  * 
  *  Name: File Sharing Module
  *  URI: http://jcore.net
- *  Description: Implements a directory like structure to share files.
+ *  Description: Implements a directory like structure to share files. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
  *  Version: 0.8
- *  Tags: file sharing module, gpl
+ *  Tags: file sharing module, gpl, lgpl, mpl
  * 
  ****************************************************************************/
 

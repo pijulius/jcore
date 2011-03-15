@@ -4,10 +4,10 @@
  * 
  *  Name: Shopping Module
  *  URI: http://jcore.net
- *  Description: Sell items in a folder/category like structure.
+ *  Description: Sell items in a folder/category like structure. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
  *  Version: 0.8
- *  Tags: shopping module, gpl
+ *  Tags: shopping module, gpl, lgpl, mpl
  * 
  ****************************************************************************/
  
