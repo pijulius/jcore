@@ -286,7 +286,7 @@ class _template {
 					"</div>" .
 					"<div class='template-description'>" .
 						"<p>" .
-							$row['_Description'] .
+							url::parseLinks($row['_Description']) .
 						"</p>" .
 					"</div>" .
 					($row['_Tags']?
