@@ -184,13 +184,13 @@ class _url {
 	}
 
 	static function uri($notincludeargs = null, $inverse = false) {
-		$uri = parse_url($_SERVER['REQUEST_URI']);
-		
 		if (!$notincludeargs)
 			return str_replace('&', '&amp;', $_SERVER['REQUEST_URI']).
-				(!isset($uri['query'])?
+				(strpos($_SERVER['REQUEST_URI'], '?') === false?
 					'?':
 					null);
+		
+		$uri = parse_url($_SERVER['REQUEST_URI']);
 		
 		if ($notincludeargs == 'ALL')
 			return (isset($uri['path'])?$uri['path']:'');
