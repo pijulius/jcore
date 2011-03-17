@@ -3863,7 +3863,7 @@ class shoppingCart extends modules {
 			
 			if (JCORE_VERSION >= '0.7' && $options) {
 				foreach($options as $optionid => $priceid) {
-					if (!$optionid || !$priceid)
+					if (!$optionid)
 						continue;
 					
 					$option = sql::fetch(sql::run(
@@ -3874,6 +3874,25 @@ class shoppingCart extends modules {
 					if (!$option) {
 						tooltip::display(
 							_("Item option cannot be found!"),
+							TOOLTIP_ERROR);
+						return false;
+					}
+					
+					if (!$option['Required'] && !$priceid)
+						continue;
+					
+					if ($option['Required'] && !$priceid) {
+						tooltip::display(
+							__("Field(s) marked with an asterisk (*) is/are required.")." " .
+							sprintf(_("Item option \"%s\" is required for \"%s\"!"),
+								$option['Title'], $item['Title']). " " .
+							"<a href='" .
+								($this->referrer?
+									urldecode($this->referrer):
+									$this->shoppingURL) .
+									"'>" .
+								__("Go Back") .
+							"</a>",
 							TOOLTIP_ERROR);
 						return false;
 					}
