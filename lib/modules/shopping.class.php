@@ -892,7 +892,7 @@ class shoppingItems {
 						"</th>" .
 						"<th>" .
 							"<span class='nowrap" .
-								(!isset($option['Title']) || $option['Title']?
+								(!isset($option['Title']) || !$option['Title']?
 									" red":
 									null) .
 								"'>".
