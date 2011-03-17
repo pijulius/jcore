@@ -2781,10 +2781,19 @@ class shoppingItems {
 						$newpriceid = sql::run(
 							" INSERT INTO `{shoppingitemoptionprices}` SET" .
 							" `OptionID` = '".(int)$newid."'," .
-							" `Title` = '".sql::escape($price['Title'])."'," .
-							" `Price` = '".sql::escape($price['Price'])."'," .
+							" `Title` = '" .
+								(isset($price['Title'])?
+									sql::escape($price['Title']):
+									null)."'," .
+							" `Price` = '" .
+								(isset($price['Price'])?
+									sql::escape($price['Price']):
+									null)."'," .
 							" `PriceType` = '".(int)$price['PriceType']."'," .
-							" `OrderID` = '".(int)$price['OrderID']."'");
+							" `OrderID` = '" .
+								(isset($price['OrderID'])?
+									(int)$price['OrderID']:
+									0)."'");
 						
 						if (!$newpriceid) {
 							tooltip::display(
