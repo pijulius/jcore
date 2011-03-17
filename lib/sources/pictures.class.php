@@ -1283,9 +1283,9 @@ class _pictures {
 		$img_width = $file_data[0];
 		$img_height = $file_data[1];
 		
-		if (((int)$thumb_width && !(int)$thumb_height && $img_width < (int)$thumb_width) || 
-			((int)$thumb_height && !(int)$thumb_width && $img_height < (int)$thumb_height) ||
-			($img_width < (int)$thumb_width && $img_height < (int)$thumb_height)) 
+		if (((int)$thumb_width && !(int)$thumb_height && $img_width <= (int)$thumb_width) || 
+			((int)$thumb_height && !(int)$thumb_width && $img_height <= (int)$thumb_height) ||
+			($img_width <= (int)$thumb_width && $img_height <= (int)$thumb_height)) 
 		{
 			if ($save_image) {
 				if ($image != $save_image)
