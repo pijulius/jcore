@@ -819,7 +819,8 @@ class shoppingItems {
 			FORM_INPUT_TYPE_COLOR,
 			FORM_INPUT_TYPE_TEL,
 			FORM_INPUT_TYPE_RANGE,
-			FORM_INPUT_TYPE_NUMBER);
+			FORM_INPUT_TYPE_NUMBER,
+			FORM_STATIC_TEXT);
 		
 		$multioptiontypes = array(
 			FORM_INPUT_TYPE_CHECKBOX,
@@ -891,7 +892,7 @@ class shoppingItems {
 						"</th>" .
 						"<th>" .
 							"<span class='nowrap" .
-								(!$option['Title']?
+								(!isset($option['Title']) || $option['Title']?
 									" red":
 									null) .
 								"'>".
@@ -919,13 +920,21 @@ class shoppingItems {
 					"<tr>" .
 						"<td>" .
 							"<input type='text' name='CustomOptions[".$optionid."][OrderID]' " .
-								"value='".$option['OrderID']."' " .
+								"value='" .
+									(isset($option['OrderID'])?
+										$option['OrderID']:
+										null) .
+									"' " .
 								"class='order-id-entry' tabindex='1' />" .
 						"</td>" .
 						"<td class='auto-width'>" .
 							"<input type='text' name='CustomOptions[".$optionid."][Title]' " .
 								"class='text-entry' " .
-								"value='".htmlspecialchars($option['Title'], ENT_QUOTES)."' style='width: 170px;' />" .
+								"value='" .
+									(isset($option['Title'])?
+										htmlspecialchars($option['Title'], ENT_QUOTES):
+										null) .
+									"' style='width: 170px;' />" .
 						"</td>" .
 						"<td>" .
 							"<select name='CustomOptions[".$optionid."][TypeID]' " .
@@ -961,7 +970,8 @@ class shoppingItems {
 						"<td valign='top'></td>" .
 						"<td colspan='4'>" .
 							"<div class='shopping-item-option-prices'" .
-								(in_array($option['TypeID'], $multioptiontypes)?
+								(in_array($option['TypeID'], $multioptiontypes) ||
+								 $option['TypeID'] == FORM_STATIC_TEXT?
 									" style='display: none;'":
 									null) .
 								">" .
@@ -1248,7 +1258,10 @@ class shoppingItems {
 					"jQuery.jCore.modules.shopping = {" .
 						"admin: {" .
 							"itemWatchOptionType: function(typeselect) {" .
-								"if (typeselect.value == 3 || typeselect.value == 4 || typeselect.value == 5 || typeselect.value == 15) {" .
+								"if (typeselect.value == 18) {" .
+									"jQuery(typeselect).parent().parent().parent().find('.shopping-item-option-multi-prices').hide();" .
+									"jQuery(typeselect).parent().parent().parent().find('.shopping-item-option-prices').hide();" .
+								"} else if (typeselect.value == 3 || typeselect.value == 4 || typeselect.value == 5 || typeselect.value == 15) {" .
 									"jQuery(typeselect).parent().parent().parent().find('.shopping-item-option-multi-prices').show();" .
 									"jQuery(typeselect).parent().parent().parent().find('.shopping-item-option-prices').hide();" .
 								"} else {" .
@@ -1387,6 +1400,7 @@ class shoppingItems {
 										"<option value=\'26\'>".form::type2Text(26)."</option>" .
 										"<option value=\'28\'>".form::type2Text(28)."</option>" .
 										"<option value=\'29\'>".form::type2Text(29)."</option>" .
+										"<option value=\'18\'>".form::type2Text(18)."</option>" .
 									"</select>" .
 								"</td>" .
 								"<td align=\'center\'>" .
@@ -1847,6 +1861,11 @@ class shoppingItems {
 			
 			$customoptions = null;
 			while($option = sql::fetch($options)) {
+				if ($option['TypeID'] == FORM_STATIC_TEXT) {
+					$customoptions .= "<p>".$option['Title']. "</p>";
+					continue;
+				}
+				
 				$customoptions .=
 					$option['Title'] .
 					($option['Required']?
@@ -2602,7 +2621,11 @@ class shoppingItems {
 								(isset($values['CustomOptions'][$option['ID']]['Price'][$priceid]['MaxCharacters'])?
 									(int)$values['CustomOptions'][$option['ID']]['Price'][$priceid]['MaxCharacters']:
 									0)."'," .
-							" `Price` = '".sql::escape($values['CustomOptions'][$option['ID']]['Price'][$priceid]['Price'])."'," .
+							" `Price` = '" .
+								(isset($values['CustomOptions'][$option['ID']]['Price'][$priceid]['Price'])?
+									sql::escape($values['CustomOptions'][$option['ID']]['Price'][$priceid]['Price']):
+									0) .
+								"'," .
 							" `PriceType` = '".(int)$values['CustomOptions'][$option['ID']]['Price'][$priceid]['PriceType']."'");
 						
 						if (!$newpriceid) {
@@ -2733,7 +2756,11 @@ class shoppingItems {
 								(isset($option['Price'][$priceid]['MaxCharacters'])?
 									(int)$option['Price'][$priceid]['MaxCharacters']:
 									0)."'," .
-							" `Price` = '".sql::escape($option['Price'][$priceid]['Price'])."'," .
+							" `Price` = '" .
+								(isset($option['Price'][$priceid]['Price'])?
+									sql::escape($option['Price'][$priceid]['Price']):
+									0) .
+								"'," .
 							" `PriceType` = '".(int)$option['Price'][$priceid]['PriceType']."'");
 						
 						if (!$newpriceid) {
