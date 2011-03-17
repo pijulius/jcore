@@ -655,7 +655,7 @@ class _form {
 			if (is_array($value))
 				$strippedarray[$key] = form::parseArray($value);
 			else
-				$strippedarray[$key] = trim(strip_tags($value));
+				$strippedarray[$key] = form::parseString($value);
 		}
 			
 		return $strippedarray;
