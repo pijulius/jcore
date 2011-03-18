@@ -902,6 +902,17 @@ class _languages {
 		return $row;
 	}
 	
+	static function getSelected() {
+		return languages::$selected;
+	}
+	
+	static function getSelectedID () {
+		if (!languages::$selected)
+			return 0;
+		
+		return languages::$selected['ID'];
+	}
+	
 	function ajaxRequest() {
 		if (!$GLOBALS['USER']->loginok || 
 			!$GLOBALS['USER']->data['Admin']) 

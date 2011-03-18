@@ -1862,6 +1862,17 @@ class _posts {
 		return $teaser;
 	}
 	
+	static function getSelected() {
+		return posts::$selected;
+	}
+	
+	static function getSelectedID () {
+		if (!posts::$selected)
+			return 0;
+		
+		return posts::$selected['ID'];
+	}
+	
 	function generateLink(&$row) {
 		$language = $this->selectedLanguage;
 		$page = $this->selectedPage;

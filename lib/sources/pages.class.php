@@ -1882,6 +1882,17 @@ class _pages {
 		return $pageids;
 	}
 	
+	static function getSelected() {
+		return pages::$selected;
+	}
+	
+	static function getSelectedID () {
+		if (!pages::$selected)
+			return 0;
+		
+		return pages::$selected['ID'];
+	}
+	
 	function getSelectedIDs($pageid = null) {
 		if (!$pageid)
 			$pageid = $this->selectedID;

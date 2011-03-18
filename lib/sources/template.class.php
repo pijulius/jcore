@@ -1030,6 +1030,17 @@ class _template {
 	}
 	
 	// ************************************************   Client Part
+	static function getSelected() {
+		return template::$selected;
+	}
+	
+	static function getSelectedID () {
+		if (!template::$selected)
+			return 0;
+		
+		return template::$selected['ID'];
+	}
+	
 	static function parseData($data) {
 		$variables = array(
 			'Name', 'URI', 'Description', 
