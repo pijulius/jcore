@@ -22,6 +22,32 @@ define('MENU_ADMINS_ONLY', 3);
 class _menuItems extends pages {
 	var $adminPath = 'admin/content/menuitems';
 	
+	function SQL() {
+		return
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
+			" WHERE !`Deactivated`" .
+			" AND !`Hidden`" .
+			" AND `MenuID` = '".(int)$this->selectedMenuID."'" .
+			" AND `LanguageID` = '".
+				(languages::$selected?
+					(int)languages::$selected['ID']:
+					0) .
+				"'" .
+			" AND !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`" .
+			" AND (!`ViewableBy` OR " .
+				($GLOBALS['USER']->loginok?
+					($GLOBALS['USER']->data['Admin']?
+						" `ViewableBy` IN (2, 3)":
+						" `ViewableBy` = 2"):
+					" `ViewableBy` = 1") .
+			" )" .
+			" ORDER BY `OrderID`";		
+	}
+	
 	static function isMainMenu($id, $languageid = 0) {
 		return pages::isHome($id, $languageid);
 	}
