@@ -126,9 +126,9 @@ class _postsAtGlance extends posts {
 			
 			foreach(pages::getBackTraceTree($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]) as $page) {
 				$pageroute .=
-					"<div".
-						($page['ID'] == $row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]?
-							" class='bold'":
+					"<div ".
+						($page['ID'] != $row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]?
+							"class='comment'":
 							null) .
 						">" . 
 					($page[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]?
