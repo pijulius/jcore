@@ -248,8 +248,17 @@ class templateInstaller extends template {
 	var $templateID = 0;
 	
 	function installSQL() {
-		$homepageids = pages::getHomeIDs();
-		$languageids = languages::getIDs();
+		$languageids = array();
+		$homepageids = array();
+		
+		if (JCORE_VERSION >= \'0.8\') {
+			$languageids = (array)languages::getIDs();
+			$homepageids = (array)pages::getHomeIDs();
+		} else {
+			$mainmenu = menuItems::getMainMenu();
+			if ($mainmenu)
+				$homepageids = array($mainmenu[\'ID\']);
+		}
 		
 		'.$blockqueries.'return true;
 	}
