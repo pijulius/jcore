@@ -58,6 +58,13 @@ class _languages {
 		if (!isset($_GET['languageid']))
 			$_GET['languageid'] = 0;
 		
+		if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN']) {
+			//We always set the default for admin so you can have it in different 
+			//language independent of the default language set for the website
+			languages::setDefault();
+			return false;
+		}
+		
 		$selected = sql::fetch(sql::run(
 			" SELECT * FROM `{languages}`" .
 			" WHERE 1 " .
@@ -86,11 +93,7 @@ class _languages {
 		}
 		
 		//We set a default language so you can translate a site without languages too
-		if (defined('DEFAULT_LOCALE') && DEFAULT_LOCALE)
-			languages::set(DEFAULT_LOCALE);
-		else 
-			languages::set('en_US');
-		
+		languages::setDefault();
 		$_GET['languageid'] = 0;
 	}
 	
@@ -871,6 +874,13 @@ class _languages {
 			return T_textdomain($file);
 		
 		return textdomain($file);
+	}
+	
+	static function setDefault() {
+		if (defined('DEFAULT_LOCALE') && DEFAULT_LOCALE)
+			return languages::set(DEFAULT_LOCALE);
+		
+		return languages::set('en_US');
 	}
 	
 	static function unsetText() {
