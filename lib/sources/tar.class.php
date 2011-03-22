@@ -545,7 +545,7 @@ class _tar
     function pushFile($filename, $filecontents, $options = null)
     {
     	if (!isset($options['mode']))
-        	$options["mode"] = 0755;
+        	$options["mode"] = 0644;
         
     	if (!isset($options['mtime']))
         	$options["mtime"] = time();
