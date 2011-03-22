@@ -316,13 +316,21 @@ class templateInstaller extends template {
 				continue;
 			
 			if (@is_dir($this->rootPath.'/'.$template.'/'.$file)) {
-				$tar->pushDirectory(trim($dir.'/'.$file, '/'));
+				$tar->pushDirectory(
+					trim($dir.'/'.$file, '/'),
+					array(
+						'mode' => fileperms($this->rootPath.'/'.$template.'/'.$file),
+						'mtime' => filemtime($this->rootPath.'/'.$template.'/'.$file)));
+					
 				$this->pushTemplateDir($tar, $template.'/'.$file, $dir.'/'.$file);
 				continue;
 			}
 			
 			$tar->pushFile(trim($dir.'/'.$file, '/'), 
-				files::get($this->rootPath.$template.'/'.$file));
+				files::get($this->rootPath.$template.'/'.$file),
+				array(
+					'mode' => fileperms($this->rootPath.$template.'/'.$file),
+					'mtime' => filemtime($this->rootPath.'/'.$template.'/'.$file)));
 		}
 		
 		closedir($dh);
