@@ -1150,12 +1150,15 @@ class _posts {
 			return false;
 		
 		if ($values['OrderID'] == '') {
+			$pageids = pages::getAliasIDs((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]);
+			$pageids[] = (int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')];
+			
 			sql::run(
 				" UPDATE `{posts}` SET " .
 				" `OrderID` = `OrderID` + 1," .
 				" `TimeStamp` = `TimeStamp`" .
-				" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
-					(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'");
+				" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` IN (" .
+					implode(',', $pageids).")");
 			
 			$values['OrderID'] = 1;
 			
