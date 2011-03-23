@@ -223,8 +223,8 @@ class _url {
 		$https = url::https();
 		$url = 'http'.($https?'s':null).'://'.$_SERVER['SERVER_NAME'];
 		
-		if (($_SERVER['SERVER_PORT'] != '80' && !$https) ||
-			($_SERVER['SERVER_PORT'] != '443' && $https))
+		if (($_SERVER['SERVER_PORT'] != 80 && !$https) ||
+			($_SERVER['SERVER_PORT'] != 443 && $https))
 			$url .= ':'.$_SERVER['SERVER_PORT'];
 		
 		$url .= url::uri($args);

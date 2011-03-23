@@ -12,6 +12,42 @@
 date_default_timezone_set(PAGE_TIMEZONE);
 sql::setTimeZone();
 
+$sitehost = strtolower(@parse_url(SITE_URL, PHP_URL_HOST));
+$currenthost = strtolower($_SERVER['SERVER_NAME']);
+
+if ($sitehost && $sitehost != $currenthost &&
+	($sitehost == 'www.'.$currenthost || 'www.'.$sitehost == $currenthost))
+{
+	$https = false;
+	if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'])
+		$https = true;
+	
+	$redirecturl = 
+		'http'.($https?'s':null) .
+		'://' .
+		(isset($_SERVER['PHP_AUTH_USER']) && $_SERVER['PHP_AUTH_USER']?
+			$_SERVER['PHP_AUTH_USER']:
+			null) .
+		(isset($_SERVER['PHP_AUTH_PW']) && $_SERVER['PHP_AUTH_PW']?
+			':'.$_SERVER['PHP_AUTH_PW']:
+			null) .
+		((isset($_SERVER['PHP_AUTH_USER']) && $_SERVER['PHP_AUTH_USER']) ||
+		 (isset($_SERVER['PHP_AUTH_PW']) && $_SERVER['PHP_AUTH_PW'])?
+			'@':
+			null) .
+		$sitehost .
+		(($_SERVER['SERVER_PORT'] != 80 && !$https) ||
+		 ($_SERVER['SERVER_PORT'] != 443 && $https)?
+			':'.$_SERVER['SERVER_PORT']:
+			null) .
+		$_SERVER['REQUEST_URI'];
+	
+	header('HTTP/1.1 301 Moved Permanently');
+	header('Location: '.$redirecturl);
+	
+	exit();
+}
+
 if (((defined('MAINTENANCE_SUSPEND_WEBSITE') && MAINTENANCE_SUSPEND_WEBSITE) ||
 	(defined('MAINTENANCE_WEBSITE_SUSPENDED') && MAINTENANCE_WEBSITE_SUSPENDED)) &&
 	!preg_match('/admin\//', $_SERVER['PHP_SELF']) && !isset($_GET['ajax']))
