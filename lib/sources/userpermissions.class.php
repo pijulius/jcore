@@ -690,7 +690,8 @@ class _userPermissions {
 		if (!$haspermissions)
 			return array(
 				'PermissionType' => USER_PERMISSION_TYPE_WRITE,
-				'PermissionIDs' => null);
+				'PermissionIDs' => null,
+				'PermissionIDTypes' => null);
 		
 		$permissions = sql::run(
 			" SELECT `PermissionTypeID`, `Path` " .
@@ -716,16 +717,23 @@ class _userPermissions {
 		
 		$permissiontype = 0;
 		$permissionids = null;
+		$permissionidtypes = null;
 		
 		while($permission = sql::fetch($permissions)) {
-			preg_match('/'.str_replace('/', '\/', $path).'\/([0-9]*?)(\/|$)/i',
+			preg_match('/'.preg_quote($path, '/').'\/([0-9]*?)((\/.*$)|$)/i',
 				$permission['Path'], $matches);
 			
-			if (!$permissiontype)
-				$permissiontype = $permission['PermissionTypeID'];
+			if (!$permissiontype || $permissiontype >= $permission['PermissionTypeID']) {
+				if (isset($matches[3]) && $matches[3])
+					$permissiontype = USER_PERMISSION_TYPE_READ;
+				else
+					$permissiontype = $permission['PermissionTypeID'];
+			}
 			
-			if (isset($matches[1]) && (int)$matches[1])
+			if (isset($matches[1]) && (int)$matches[1]) {
 				$permissionids[] = (int)$matches[1];
+				$permissionidtypes[(int)$matches[1]] = $permission['PermissionTypeID'];
+			}
 		}
 		
 		if ($permissionids)
@@ -733,7 +741,8 @@ class _userPermissions {
 		
 		return array(
 			'PermissionType' => (int)$permissiontype,
-			'PermissionIDs' => $permissionids);
+			'PermissionIDs' => $permissionids,
+			'PermissionIDTypes' => $permissionidtypes);
 	}
 	
 	function ajaxRequest() {
