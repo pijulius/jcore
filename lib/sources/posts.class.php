@@ -131,7 +131,8 @@ class _posts {
 				(JCORE_VERSION >= '0.8' && $page && trim($page['PostKeywords'])?
 					" `TimeStamp` DESC,":
 					null) .
-				" `OrderID`, `StartDate`, `ID` DESC");
+				" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = 0," .
+				" `OnMainPage` DESC, `OrderID`, `StartDate`, `ID` DESC");
 	}
 	
 	static function populate() {
