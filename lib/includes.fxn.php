@@ -13,7 +13,10 @@ date_default_timezone_set(PAGE_TIMEZONE);
 sql::setTimeZone();
 
 $sitehost = strtolower(@parse_url(SITE_URL, PHP_URL_HOST));
-$currenthost = strtolower($_SERVER['SERVER_NAME']);
+$currenthost = strtolower(
+	(isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST']?
+		$_SERVER['HTTP_HOST']:
+		$_SERVER['SERVER_NAME']));
 
 if ($sitehost && $sitehost != $currenthost &&
 	($sitehost == 'www.'.$currenthost || 'www.'.$sitehost == $currenthost))

@@ -221,7 +221,10 @@ class _url {
 	
 	static function get($args = null) {
 		$https = url::https();
-		$url = 'http'.($https?'s':null).'://'.$_SERVER['SERVER_NAME'];
+		$url = 'http'.($https?'s':null).'://'.
+			(isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST']?
+				$_SERVER['HTTP_HOST']:
+				$_SERVER['SERVER_NAME']);
 		
 		if (($_SERVER['SERVER_PORT'] != 80 && !$https) ||
 			($_SERVER['SERVER_PORT'] != 443 && $https))
@@ -586,6 +589,10 @@ class _url {
 				
 			case 'server':
 				echo $_SERVER['SERVER_NAME'];
+				break;
+				
+			case 'host':
+				echo $_SERVER['HTTP_HOST'];
 				break;
 				
 			case 'sessionid':
