@@ -108,7 +108,7 @@ class _url {
 	}
 	
 	static function site() {
-		if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'])
+		if (url::https())
 			return str_replace('http://', 'https://', SITE_URL);
 		
 		return SITE_URL;
@@ -117,7 +117,7 @@ class _url {
 	static function jCore() {
 		$url = (defined('JCORE_URL')?JCORE_URL:SITE_URL);
 		
-		if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'])
+		if (url::https())
 			return str_replace('http://', 'https://', $url);
 		
 		return $url;
@@ -220,11 +220,7 @@ class _url {
 	}
 	
 	static function get($args = null) {
-		$https = false;
-		
-		if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'])
-			$https = true;
-		
+		$https = url::https();
 		$url = 'http'.($https?'s':null).'://'.$_SERVER['SERVER_NAME'];
 		
 		if (($_SERVER['SERVER_PORT'] != '80' && !$https) ||
@@ -252,6 +248,13 @@ class _url {
 				return "http://".$url;
 		
 		return $url;
+	}
+	
+	static function https() {
+		if (!isset($_SERVER['HTTPS']) || !$_SERVER['HTTPS'])
+			return false;
+		
+		return true;
 	}
 	
 	static function parse($url) {
