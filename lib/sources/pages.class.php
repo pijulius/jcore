@@ -21,7 +21,6 @@ class _pages {
 	var $arguments = '';
 	var $selectedID;
 	var $selectedIDs = null;
-	var $aliasIDs = null;
 	var $selectedMenuID;
 	var $adminPath = array(
 		'admin/content/menuitems',
@@ -1867,6 +1866,34 @@ class _pages {
 		return pages::$selected['ID'];
 	}
 	
+	static function getAliasIDs($pageid = null) {
+		if (!$pageid)
+			return false;
+		
+		$page = pages::get($pageid);
+		
+		if (!$page)
+			return false;
+		
+		$pages = sql::fetch(sql::run(
+			" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS `IDs`" .
+			" FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
+			" WHERE `Path` = '".sql::escape($page['Path'])."'" .
+			" AND `LanguageID` = '".(int)$page['LanguageID']."'" .
+			" AND `ID` != '".(int)$pageid."'" .
+			" GROUP BY `LanguageID`" .
+			" LIMIT 1"));
+		
+		if (!$pages)
+			return false;
+		
+		return explode(',', $pages['IDs']);
+	}
+	
 	function getSelectedIDs($pageid = null) {
 		if (!$pageid)
 			$pageid = $this->selectedID;
@@ -1915,35 +1942,6 @@ class _pages {
 		}
 		
 		return $this->selectedIDs;
-	}
-	
-	function getAliasIDs($pageid = null) {
-		if (!$pageid)
-			$pageid = $this->selectedID;
-		
-		$page = $this->get($pageid);
-		
-		if (!$page)
-			return false;
-		
-		$pages = sql::fetch(sql::run(
-			" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS `IDs`" .
-			" FROM `{" .
-				(JCORE_VERSION >= '0.8'?
-					'pages':
-					'menuitems') .
-				"}`" .
-			" WHERE `Path` = '".sql::escape($page['Path'])."'" .
-			" AND `LanguageID` = '".(int)$page['LanguageID']."'" .
-			" AND `ID` != '".(int)$pageid."'" .
-			" GROUP BY `LanguageID`" .
-			" LIMIT 1"));
-		
-		if (!$pages)
-			return false;
-		
-		$this->aliasIDs = explode(',', $pages['IDs']);
-		return $this->aliasIDs;
 	}
 	
 	function generateLink(&$row) {
@@ -2076,7 +2074,7 @@ class _pages {
 		
 		$posts = new posts();
 		$posts->selectedPageID = $this->selectedID;
-		$posts->aliasPageIDs = $this->getAliasIDs();
+		$posts->aliasPageIDs = pages::getAliasIDs($this->selectedID);
 		$items = $posts->display();
 		
 		if (JCORE_VERSION >= '0.7' && !$items && !$posts->search)
