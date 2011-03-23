@@ -364,6 +364,10 @@ class _admin {
 			$GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin'] &&
 			(!defined('ADMIN_FAVORITE_LINKS_ENABLED') || ADMIN_FAVORITE_LINKS_ENABLED))
 		{
+			favoriteLinks::add(
+				__('New Post'), 
+				'?path=admin/content/postsatglance#adminform');
+			
 			$links = new favoriteLinks();
 			$links->display();
 			unset($links);
