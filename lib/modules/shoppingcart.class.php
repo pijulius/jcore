@@ -4313,7 +4313,7 @@ class shoppingCart extends modules {
 						$cartitems .
 					"</span>" .
 					"<span class='shopping-cart-info-text-items'>") .
-				"</span>" .
+				" </span>" .
 				"<span class='shopping-cart-info-grand-total'>";
 		
 		shoppingCart::displayPrice($grandtotal);
