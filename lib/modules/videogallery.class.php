@@ -1900,9 +1900,6 @@ class videoGallery extends modules {
 	}
 	
 	function displayAdmin() {
-		if (modules::displayAdmin())
-			return;
-		
 		$edit = null;
 		$id = null;
 		

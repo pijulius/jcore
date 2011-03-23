@@ -322,9 +322,6 @@ class search extends modules {
 	}
 	
 	function displayAdmin() {
-		if (modules::displayAdmin())
-			return;
-		
 		$this->displayAdminTitle();
 		
 		if (JCORE_VERSION <= '0.4') {

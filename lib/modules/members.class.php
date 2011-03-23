@@ -340,9 +340,6 @@ class members extends modules {
 	}
 	
 	function displayAdmin() {
-		if (modules::displayAdmin())
-			return;
-		
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
 		

@@ -4766,9 +4766,6 @@ class shoppingOrders extends modules {
 	}
 	
 	function displayAdmin() {
-		if (modules::displayAdmin())
-			return;
-		
 		$this->displayAdminDashboard();
 	}
 	

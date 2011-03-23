@@ -1377,9 +1377,6 @@ class poll extends modules {
 	}
 	
 	function displayAdmin() {
-		if (modules::displayAdmin())
-			return;
-		
 		$search = null;
 		$edit = null;
 		$id = null;

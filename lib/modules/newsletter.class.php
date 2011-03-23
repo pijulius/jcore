@@ -2607,9 +2607,6 @@ class newsletter extends modules {
 	}
 	
 	function displayAdmin() {
-		if (modules::displayAdmin())
-			return;
-		
 		$this->displayAdminDescription();
 		
 		echo

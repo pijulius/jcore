@@ -506,6 +506,7 @@ class _admin {
 			return;
 		}
 		
+		$installmodule = false;
 		$expitems = array();
 		$path = url::path();
 		
@@ -517,6 +518,16 @@ class _admin {
 			$class = preg_replace('/[^a-zA-Z0-9\_\-]/', '', 
 				$expitems[count($expitems)-1]);
 				
+			if (isset($expitems[1]) && isset($expitems[2]) &&
+				$expitems[1] == 'modules' && !modules::installed($expitems[2]))
+			{
+				$class = preg_replace('/[^a-zA-Z0-9\_\-]/', '', 
+					$expitems[2]);
+				
+				$installmodule = true;
+				url::setPath('admin/modules/'.$class);
+			}
+			
 			if (!class_exists($class) || !method_exists($class,'displayAdmin')) {
 				$this->displayHeader();
 		
@@ -555,13 +566,10 @@ class _admin {
 				
 			$this->displayHeader();
 			
-			if (isset($expitems[count($expitems)-2]) && 
-				$expitems[count($expitems)-2] == 'modules' && !modules::installed($class)) 
-			{
+			if ($installmodule) 
 				$item->displayInstall();
-			} else {
+			else
 				$item->displayAdmin();
-			}
 			
 			unset($item);
 			

@@ -3607,9 +3607,6 @@ class shoppingCart extends modules {
 	}
 	
 	function displayAdmin() {
-		if (modules::displayAdmin())
-			return;
-		
 		//$this->displayAdminTitle();
 		$this->displayAdminDescription();
 		
