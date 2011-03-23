@@ -1511,9 +1511,11 @@ class _comments {
 	}
 	
 	function displayRating(&$row) {
+		$visiblerating = 0;
+		
 		if (JCORE_VERSION >= '0.8')
 			$visiblerating = $row['Rating'];
-		else
+		elseif ($row['Rating'])
 			$visiblerating = $row['Rating']-$this->defaultRating;
 		
 		if ($visiblerating > 0)
