@@ -210,7 +210,7 @@ class _postsHandling {
 					"href='?path=" .
 					($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]?
 						(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems') .
-							$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."/posts":
+							"/".$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."/posts":
 						"admin/content/postsatglance") .
 					"&amp;search=".urlencode($row['Title']) .
 					"&amp;id=".$row['ID'].
