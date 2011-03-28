@@ -5645,8 +5645,7 @@ class shoppingOrders extends modules {
 						"<div class='form-entry-content bold'>" .
 							nl2br(url::parseLinks($row['OrderMethodDetails'])) .
 						"</div>" .
-					"</div>" .
-				"</div>";
+					"</div>";
 		}
 		
 		echo
