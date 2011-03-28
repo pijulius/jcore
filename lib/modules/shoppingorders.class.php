@@ -244,6 +244,7 @@ class shoppingOrderMethodPayPal extends form {
 		}
 		
 		tooltip::display(
+			//"<form action='https://www.sandbox.paypal.com/cgi-bin/webscr' method='post' id='shoppingordermethodpaypalform'>" .
 			"<form action='https://www.paypal.com/cgi-bin/webscr' method='post' id='shoppingordermethodpaypalform'>" .
 			"<input type='hidden' name='business' value='".SHOPPING_CART_ORDER_METHOD_PAYPAL_ID."' />" .
 			"<input type='hidden' name='cmd' value='_xclick' />" .
@@ -255,7 +256,6 @@ class shoppingOrderMethodPayPal extends form {
 			"<input type='hidden' name='currency_code' value='".SHOPPING_CART_ORDER_METHOD_PAYPAL_CURRENCY."' />" . 
 			"<input type='hidden' name='amount' value='".$grandtotal."' />" .
 			"<input type='hidden' name='return' value='".$orderurl."' />" .
-			"<input type='hidden' name='rm' value='1' />" .
 			"<input type='hidden' name='cancel_return' value='".$orderurl."' />" . 
 			"<input type='hidden' name='notify_url' value='".SITE_URL."index.php?request=modules/shoppingorders/shoppingordermethodpaypal&ajax=1' />" .
 			$this->postProcessText .
