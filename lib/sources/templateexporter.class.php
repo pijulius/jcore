@@ -283,16 +283,16 @@ class templateInstaller extends template {
 			$tar->pushFile($templatedir.'/template.jpg', 
 				$this->createPreviewImage($details['Name']));
 		
-		dirs::create(SITE_PATH.'sitefiles/template/');
+		dirs::create(SITE_PATH.'sitefiles/var/templates/');
 		$filename = $templatedir.'-'.$details['Version'].'.tar'.($gzip?'.gz':null);
-		$result = $tar->toTar(SITE_PATH.'sitefiles/template/'.$filename, $gzip);
+		$result = $tar->toTar(SITE_PATH.'sitefiles/var/templates/'.$filename, $gzip);
 		unset($tar);
 		
 		if (!$result) {
 			tooltip::display(
 				__("File couldn't be saved!")." " .
 				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
-					SITE_PATH.'sitefiles/template/'),
+					SITE_PATH.'sitefiles/var/templates/'),
 				TOOLTIP_ERROR);
 			return false;
 		}
@@ -518,7 +518,7 @@ class templateInstaller extends template {
 	}
 	
 	function download($filename) {
-		$file = SITE_PATH.'sitefiles/template/'.$filename;
+		$file = SITE_PATH.'sitefiles/var/templates/'.$filename;
 		
 		if (!is_file($file)) {
 			tooltip::display(
