@@ -887,15 +887,17 @@ class _security {
 			security::randomChars();		
 	}
 	
-	static function salt() {
-		return substr(md5(uniqid(rand(), true)), 0, SECURITY_SALT_LENGTH);
+	static function salt($length = SECURITY_SALT_LENGTH) {
+		return substr(md5(uniqid(rand(), true)), 0, $length);
 	}
 	
 	static function text2Hash($text, $salt = null) {
     	if ($salt === null) {
 			$salt = security::salt();
-		} else {
+		} elseif (strlen($salt) > SECURITY_SALT_LENGTH) {
 			$salt = substr($salt, 0, SECURITY_SALT_LENGTH);
+		} elseif (strlen($salt) < SECURITY_SALT_LENGTH) {
+			$salt = $salt.security::salt(SECURITY_SALT_LENGTH - strlen($salt));
 		}
 		
     	return $salt.sha1($salt.$text);

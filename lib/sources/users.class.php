@@ -1311,7 +1311,7 @@ class _users {
 			}
 			
 			if (!$record || $record['Password'] != 
-				security::text2Hash($password, substr($record['Password'], 0, 7)))
+				security::text2Hash($password, $record['Password']))
 			{
 				$bfprotection->add($member, $_SERVER['REMOTE_ADDR']);
 				
