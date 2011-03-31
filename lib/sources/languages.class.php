@@ -335,6 +335,21 @@ class _languages {
 			closedir($dh);
 		}
 		
+		if (defined('JCORE_PATH') && JCORE_PATH) {
+			$dir = JCORE_PATH.'locale/';
+			
+			if (is_dir($dir) && $dh = opendir($dir)) {
+				while (($file = readdir($dh)) !== false) {
+					if (!is_dir($dir.'/'.$file) || strpos($file, '.') === 0)
+						continue;
+					
+					$dirs[$file] = $file;
+				}
+				
+				closedir($dh);
+			}
+		}
+		
 		$paging = new paging(10);
 		
 		$paging->track('ajaxlimit');
@@ -817,12 +832,25 @@ class _languages {
 		if (!$file)
 			return false;
 		
+		if (MANUAL_GETTEXT)
+			$locale = T_setlocale(LC_ALL, 0);
+		else
+			$locale = setlocale(LC_ALL, 0);
+		
+		$localedir = substr($locale.'.', 0, strpos($locale, '.'));
+		
+		if (defined('JCORE_PATH') && JCORE_PATH && 
+			!@is_dir(SITE_PATH.'locale/'.$localedir))
+			$localedir = JCORE_PATH.'locale';
+		else
+			$localedir = SITE_PATH.'locale';
+		
 		if (MANUAL_GETTEXT) {
-			$result = T_bindtextdomain($file, SITE_PATH."locale");
+			$result = T_bindtextdomain($file, $localedir);
 			T_bind_textdomain_codeset($file, PAGE_CHARSET);
 			
 		} else {
-			$result = bindtextdomain($file, SITE_PATH."locale");
+			$result = bindtextdomain($file, $localedir);
 			bind_textdomain_codeset($file, PAGE_CHARSET);
 		}
 		
