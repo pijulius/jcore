@@ -66,7 +66,29 @@ class _admin {
 			admin::$sections[$section]['Items'][$itemid] = $item;
 	}
 	
-	function load() {
+	static function path($level= 0) {
+		return url::path($level);
+	}
+	
+	static function getPathID($level = 0) {
+		return url::getPathID($level);
+	}
+	
+	function checkPath($adminpath) {
+		// We return ok if the path is not set for compatibility reasons
+		if (!$adminpath)
+			return true;
+			
+		$curpath = trim(preg_replace('/\/[0-9]+/', '', $this->path()), '/');
+		
+		if ((is_array($adminpath) && in_array($curpath, $adminpath)) ||
+			$curpath == $adminpath)
+			return true;
+		
+		return false;
+	}
+	
+	function setup() {
 		$this->add('Content', 
 			(JCORE_VERSION >= '0.8'?'Pages':'MenuItems'), 
 			"<a href='".url::uri('ALL')."?path=" .
@@ -303,28 +325,6 @@ class _admin {
 		modules::loadAdmin();
 	}
 	
-	static function path($level= 0) {
-		return url::path($level);
-	}
-	
-	static function getPathID($level = 0) {
-		return url::getPathID($level);
-	}
-	
-	function checkPath($adminpath) {
-		// We return ok if the path is not set for compatibility reasons
-		if (!$adminpath)
-			return true;
-			
-		$curpath = trim(preg_replace('/\/[0-9]+/', '', $this->path()), '/');
-		
-		if ((is_array($adminpath) && in_array($curpath, $adminpath)) ||
-			$curpath == $adminpath)
-			return true;
-		
-		return false;
-	}
-	
 	static function displayCSSLinks() {
 		if (defined('JCORE_URL'))
 			echo
@@ -460,7 +460,7 @@ class _admin {
 	}
 	
 	function display() {
-		$this->load();
+		$this->setup();
 		
 		if (!$GLOBALS['USER']->loginok) {
 			$this->displayHeader();
