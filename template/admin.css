@@ -293,6 +293,24 @@
 	background: url("http://icons.jcore.net/16/user.png") no-repeat;
 }
 
+.counter.important {
+	background-image: url("http://icons.jcore.net/16/counter_bgr_red.png");
+	color: #fff;
+}
+
+.counter.important > span {
+	background-image: url("http://icons.jcore.net/16/counter_bgl_red.png");
+}
+
+.counter.notification {
+	background-image: url("http://icons.jcore.net/16/counter_bgr_blue.png");
+	color: #fff;
+}
+
+.counter.notification > span {
+	background-image: url("http://icons.jcore.net/16/counter_bgl_blue.png");
+}
+
 .mass-email-users-search span {
 	display: block;
 	white-space: nowrap;

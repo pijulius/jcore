@@ -3544,16 +3544,12 @@ class shoppingCart extends modules {
 					"</span>" .
 				"</a>" .
 			"</div>" .
-			"<div class='admin-section-item as-shopping-cart-discounts'>" .
-				($discounts?
-					"<span class='counter'>" .
-						"<span>" .
-							"<span>" .
-							(int)$discounts .
-							"</span>" .
-						"</span>" .
-					"</span>":
-					null) .
+			"<div class='admin-section-item as-shopping-cart-discounts'>";
+		
+		if ($discounts)
+			counter::display((int)$discounts);
+		
+		echo
 				"<a href='".url::uri('ALL') .
 					"?path=".admin::path()."/shoppingcartdiscounts' " .
 					"title='".htmlspecialchars(_("Set global or user discounts"), ENT_QUOTES).
@@ -3563,16 +3559,12 @@ class shoppingCart extends modules {
 					"</span>" .
 				"</a>" .
 			"</div>" .
-			"<div class='admin-section-item as-shopping-cart-fees'>" .
-				($fees?
-					"<span class='counter'>" .
-						"<span>" .
-							"<span>" .
-							(int)$fees .
-							"</span>" .
-						"</span>" .
-					"</span>":
-					null) .
+			"<div class='admin-section-item as-shopping-cart-fees'>";
+		
+		if ($fees)
+			counter::display((int)$fees);
+		
+		echo
 				"<a href='".url::uri('ALL') .
 					"?path=".admin::path()."/shoppingcartfees' " .
 					"title='".htmlspecialchars(_("Set global or local fees"), ENT_QUOTES).
@@ -3583,18 +3575,14 @@ class shoppingCart extends modules {
 				"</a>" .
 			"</div>";
 		
-		if (JCORE_VERSION >= '0.7')
+		if (JCORE_VERSION >= '0.7') {
 			echo
-				"<div class='admin-section-item as-shopping-cart-taxes'>" .
-					($taxes?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								(int)$taxes .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+				"<div class='admin-section-item as-shopping-cart-taxes'>";
+			
+			if ($taxes)
+				counter::display((int)$taxes);
+			
+			echo
 					"<a href='".url::uri('ALL') .
 						"?path=".admin::path()."/shoppingcarttaxes' " .
 						"title='".htmlspecialchars(_("Set and manage taxes"), ENT_QUOTES).
@@ -3604,6 +3592,7 @@ class shoppingCart extends modules {
 						"</span>" .
 					"</a>" .
 				"</div>";
+		}
 	}
 	
 	function displayAdmin() {

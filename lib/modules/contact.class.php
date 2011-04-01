@@ -139,16 +139,11 @@ class contact extends modules {
 					"title='".htmlspecialchars(__("Fields"), ENT_QUOTES) .
 					" (".$fields['Rows'].")' " .
 					"href='".url::uri('ALL') .
-					"?path=admin/content/dynamicforms/".$row['ID']."/dynamicformfields'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $fields['Rows']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$fields['Rows']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=admin/content/dynamicforms/".$row['ID']."/dynamicformfields'>";
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $fields['Rows'])
+			counter::display($fields['Rows']);
+		
+		echo
 				"</a>" .
 			"</td>";
 	}

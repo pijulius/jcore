@@ -158,16 +158,12 @@ class _userGroups {
 					" (".$users['Rows'].")' " .
 					"href='".url::uri('ALL') .
 					"?path=admin/members/users" .
-					"&amp;searchgroupid=".$row['ID']."'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $users['Rows']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$users['Rows']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"&amp;searchgroupid=".$row['ID']."'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $users['Rows'])
+			counter::display($users['Rows']);
+		
+		echo
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
@@ -175,16 +171,12 @@ class _userGroups {
 					"title='".htmlspecialchars(__("Permissions"), ENT_QUOTES) .
 					" (".$permissions['Rows'].")' " .
 					"href='".url::uri('ALL') .
-					"?path=".admin::path()."/".$row['ID']."/usergrouppermissions'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $permissions['Rows']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$permissions['Rows']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=".admin::path()."/".$row['ID']."/usergrouppermissions'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $permissions['Rows'])
+			counter::display($permissions['Rows']);
+		
+		echo
 				"</a>" .
 			"</td>";
 	}

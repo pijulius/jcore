@@ -590,16 +590,12 @@ class _users {
 					"title='".htmlspecialchars(__("Permissions"), ENT_QUOTES) .
 					" (".$permissions['Rows'].")' " .
 					"href='".url::uri('ALL') .
-					"?path=".admin::path()."/".$row['ID']."/userpermissions'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $permissions['Rows']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$permissions['Rows']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=".admin::path()."/".$row['ID']."/userpermissions'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $permissions['Rows'])
+			counter::display($permissions['Rows']);
+		
+		echo
 				"</a>" .
 			"</td>";
 	}

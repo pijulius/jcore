@@ -442,16 +442,13 @@ class _admin {
 			}
 			
 			echo "<div class='admin-section-item " .
-						"as-".strtolower($sectionid)."-".strtolower($itemid)."'>" .
-					($itemscount?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								(int)$itemscount .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+						"as-".strtolower($sectionid)."-".strtolower($itemid)."'>";
+			
+			if ($itemscount && (!is_array($itemscount) || 
+				(isset($itemscount['Rows']) && $itemscount['Rows'])))
+				counter::display($itemscount);
+			
+			echo
 					$item .
 				"</div>";
 		}

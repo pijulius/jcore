@@ -3744,16 +3744,12 @@ class shoppingOrders extends modules {
 					"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
 						" (".$row['Comments'].")' " .
 					"href='".url::uri('ALL') .
-					"?path=".admin::path()."/".$row['ID']."/shoppingordercomments'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$row['Comments']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=".admin::path()."/".$row['ID']."/shoppingordercomments'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments'])
+			counter::display($row['Comments']);
+		
+		echo
 				"</a>" .
 			"</td>";
 	}
@@ -4094,16 +4090,12 @@ class shoppingOrders extends modules {
 		}
 			
 		echo
-			"<div class='admin-section-item as-modules-shoppingorders as-shopping-new-orders'>" .
-				($new?
-					"<span class='counter'>" .
-						"<span>" .
-							"<span>" .
-							(int)$new .
-							"</span>" .
-						"</span>" .
-					"</span>":
-					null) .
+			"<div class='admin-section-item as-modules-shoppingorders as-shopping-new-orders'>";
+		
+		if ($new)
+			counter::display((int)$new);
+		
+		echo
 				"<a href='".url::uri('ALL') .
 					"?path=".admin::path()."/shoppingneworders' " .
 					"title='".htmlspecialchars(_("Handle pending and processing orders"), ENT_QUOTES).
@@ -4113,16 +4105,12 @@ class shoppingOrders extends modules {
 					"</span>" .
 				"</a>" .
 			"</div>" .
-			"<div class='admin-section-item as-modules-shoppingorders as-shopping-processed-orders'>" .
-				($processed?
-					"<span class='counter'>" .
-						"<span>" .
-							"<span>" .
-							(int)$processed .
-							"</span>" .
-						"</span>" .
-					"</span>":
-					null) .
+			"<div class='admin-section-item as-modules-shoppingorders as-shopping-processed-orders'>";
+		
+		if ($processed)
+			counter::display((int)$processed);
+		
+		echo
 				"<a href='".url::uri('ALL') .
 					"?path=".admin::path()."/shoppingprocessedorders' " .
 					"title='".htmlspecialchars(_("Lookup and update processed orders"), ENT_QUOTES).
@@ -4425,16 +4413,12 @@ class shoppingOrders extends modules {
 							SHOPPING_ORDER_STATUS_PROCESSING))?
 							"shoppingneworders":
 							"shoppingprocessedorders") .
-						"/".$row['ID']."/shoppingordercomments' target='_blank'>" .
-						(ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments']?
-							"<span class='counter'>" .
-								"<span>" .
-									"<span>" .
-									$row['Comments']."" .
-									"</span>" .
-								"</span>" .
-							"</span>":
-							null) .
+						"/".$row['ID']."/shoppingordercomments' target='_blank'>";
+			
+			if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments'])
+				counter::display($row['Comments']);
+			
+			echo
 					"</a>" .
 				"</td>";
 			
@@ -4583,16 +4567,12 @@ class shoppingOrders extends modules {
 						"href='?path=admin/modules/shopping/" .
 							$row['ShoppingID']."/shoppingitems/" .
 							$row['ID']."/shoppingitemcomments' " .
-						"target='_blank'>" .
-						(ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments']?
-							"<span class='counter'>" .
-								"<span>" .
-									"<span>" .
-									$row['Comments']."" .
-									"</span>" .
-								"</span>" .
-							"</span>":
-							null) .
+						"target='_blank'>";
+			
+			if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments'])
+				counter::display($row['Comments']);
+			
+			echo
 					"</a>" .
 				"</td>";
 			
@@ -4729,16 +4709,12 @@ class shoppingOrders extends modules {
 						"href='?path=admin/modules/shopping/" .
 							$row['ShoppingID']."/shoppingitems/" .
 							$row['ID']."/shoppingitemcomments' " .
-						"target='_blank'>" .
-						(ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments']?
-							"<span class='counter'>" .
-								"<span>" .
-									"<span>" .
-									$row['Comments']."" .
-									"</span>" .
-								"</span>" .
-							"</span>":
-							null) .
+						"target='_blank'>";
+			
+			if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments'])
+				counter::display($row['Comments']);
+			
+			echo
 					"</a>" .
 				"</td>";
 			
@@ -5863,16 +5839,12 @@ class shoppingOrders extends modules {
 				"<a class='shopping-order-comments-link' " .
 					"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
 						" (".$row['Comments'].")' " .
-					"href='".$row['_Link']."#comments'>" .
-						(JCORE_VERSION >= '0.5' && $row['Comments']?
-							"<span class='counter'>" .
-								"<span>" .
-									"<span>" .
-									$row['Comments']."" .
-									"</span>" .
-								"</span>" .
-							"</span>":
-							null) .
+					"href='".$row['_Link']."#comments'>";
+		
+		if (JCORE_VERSION >= '0.5' && $row['Comments'])
+			counter::display($row['Comments']);
+		
+		echo
 				"</a>" .
 			"</td>";
 	}

@@ -872,16 +872,12 @@ class _pages {
 						null) .
 						"' " .
 					"href='".url::uri('id, edit, delete, path') .
-					"&amp;path=".admin::path()."/".$row['ID']."/posts'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $row['Posts']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$row['Posts']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"&amp;path=".admin::path()."/".$row['ID']."/posts'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Posts'])
+			counter::display($row['Posts']);
+		
+		echo
 				"</a>" .
 			"</td>";
 	}

@@ -460,30 +460,30 @@ class _dynamicForms extends form {
 		}
 			
 		echo
-			"<td align='center'>" .
-				($row['SQLTable'] && (JCORE_VERSION >= '0.7' || !$row['Protected'])?
-					"<a class='admin-link db' " .
-						"title='".htmlspecialchars(__("Browse Data"), ENT_QUOTES) .
-						(JCORE_VERSION >= '0.5'?
-							" (".$dbitems['Rows'].")":
-							null) .
-							"' " .
-						"href='".url::uri('ALL') .
-							(JCORE_VERSION >= '0.7' && $row['BrowseDataURL']?
-								$row['BrowseDataURL']:
-								"?path=".admin::path()."/".$row['ID']."/dynamicformdata") .
-							"'>" .
-						(ADMIN_ITEMS_COUNTER_ENABLED && $dbitems['Rows']?
-							"<span class='counter'>" .
-								"<span>" .
-									"<span>" .
-									$dbitems['Rows']."" .
-									"</span>" .
-								"</span>" .
-							"</span>":
-							null) .
-					"</a>":
-					null) .
+			"<td align='center'>";
+		
+		if ($row['SQLTable'] && (JCORE_VERSION >= '0.7' || !$row['Protected'])) {
+			echo
+				"<a class='admin-link db' " .
+					"title='".htmlspecialchars(__("Browse Data"), ENT_QUOTES) .
+					(JCORE_VERSION >= '0.5'?
+						" (".$dbitems['Rows'].")":
+						null) .
+						"' " .
+					"href='".url::uri('ALL') .
+						(JCORE_VERSION >= '0.7' && $row['BrowseDataURL']?
+							$row['BrowseDataURL']:
+							"?path=".admin::path()."/".$row['ID']."/dynamicformdata") .
+						"'>";
+			
+			if (ADMIN_ITEMS_COUNTER_ENABLED && $dbitems['Rows'])
+				counter::display($dbitems['Rows']);
+			
+			echo
+				"</a>";
+		}
+		
+		echo
 			"</td>" .
 			"<td align='center'>" .
 				"<a class='admin-link fields' " .
@@ -493,16 +493,12 @@ class _dynamicForms extends form {
 						null) .
 						"' " .
 					"href='".url::uri('ALL') .
-					"?path=".admin::path()."/".$row['ID']."/dynamicformfields'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $fields['Rows']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$fields['Rows']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=".admin::path()."/".$row['ID']."/dynamicformfields'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $fields['Rows'])
+			counter::display($fields['Rows']);
+		
+		echo
 				"</a>" .
 			"</td>";
 	}

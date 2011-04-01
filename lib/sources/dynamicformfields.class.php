@@ -473,16 +473,12 @@ class _dynamicFormFields {
 							null) .
 							"' " .
 						"href='".url::uri('ALL') .
-						"?path=".admin::path()."/".$row['ID']."/dynamicformfieldvalues'>" .
-						(ADMIN_ITEMS_COUNTER_ENABLED && $values['Rows']?
-							"<span class='counter'>" .
-								"<span>" .
-									"<span>" .
-									$values['Rows']."" .
-									"</span>" .
-								"</span>" .
-							"</span>":
-							null) .
+						"?path=".admin::path()."/".$row['ID']."/dynamicformfieldvalues'>";
+			
+			if (ADMIN_ITEMS_COUNTER_ENABLED && $values['Rows'])
+				counter::display($values['Rows']);
+			
+			echo
 					"</a>" .
 				"</td>";
 		}

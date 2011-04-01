@@ -289,16 +289,12 @@ class newsletterLists {
 					"title='".htmlspecialchars(_("Members"), ENT_QUOTES) .
 					" (".$members['Rows'].")' " .
 					"href='?path=admin/modules/newsletter/newslettersubscriptions" .
-						"&searchlistid=".$row['ID']."'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $members['Rows']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$members['Rows']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+						"&searchlistid=".$row['ID']."'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $members['Rows'])
+			counter::display($members['Rows']);
+		
+		echo
 				"</a>" .
 			"</td>";
 	}
@@ -2544,16 +2540,12 @@ class newsletter extends modules {
 		}
 			
 		echo
-			"<div class='admin-section-item as-modules-newsletter-emails'>" .
-				($emails?
-					"<span class='counter'>" .
-						"<span>" .
-							"<span>" .
-							(int)$emails .
-							"</span>" .
-						"</span>" .
-					"</span>":
-					null) .
+			"<div class='admin-section-item as-modules-newsletter-emails'>";
+		
+		if ($emails)
+			counter::display((int)$emails);
+		
+		echo
 				"<a href='".url::uri('ALL') .
 					"?path=".admin::path()."/newsletteremails' " .
 					"title='".htmlspecialchars(_("Send and View sent " .
@@ -2564,16 +2556,12 @@ class newsletter extends modules {
 					"</span>" .
 				"</a>" .
 			"</div>" .
-			"<div class='admin-section-item as-modules-newsletter-subscriptions'>" .
-				($subscriptions?
-					"<span class='counter'>" .
-						"<span>" .
-							"<span>" .
-							(int)$subscriptions .
-							"</span>" .
-						"</span>" .
-					"</span>":
-					null) .
+			"<div class='admin-section-item as-modules-newsletter-subscriptions'>";
+		
+		if ($subscriptions)
+			counter::display((int)$subscriptions);
+		
+		echo
 				"<a href='".url::uri('ALL') .
 					"?path=".admin::path()."/newslettersubscriptions' " .
 					"title='".htmlspecialchars(_("Import, Edit and Delete " .
@@ -2584,16 +2572,12 @@ class newsletter extends modules {
 					"</span>" .
 				"</a>" .
 			"</div>" .
-			"<div class='admin-section-item as-modules-newsletter-lists'>" .
-				($lists?
-					"<span class='counter'>" .
-						"<span>" .
-							"<span>" .
-							(int)$lists .
-							"</span>" .
-						"</span>" .
-					"</span>":
-					null) .
+			"<div class='admin-section-item as-modules-newsletter-lists'>";
+		
+		if ($lists)
+			counter::display((int)$lists);
+		
+		echo
 				"<a href='".url::uri('ALL') .
 					"?path=".admin::path()."/newsletterlists' " .
 					"title='".htmlspecialchars(_("Create, Modify and " .

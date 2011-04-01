@@ -1589,16 +1589,12 @@ class videoGallery extends modules {
 					"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
 						" (".$row['Comments'].")' " .
 					"href='".url::uri('ALL') .
-					"?path=".admin::path()."/".$row['ID']."/videogallerycomments'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$row['Comments']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=".admin::path()."/".$row['ID']."/videogallerycomments'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments'])
+			counter::display($row['Comments']);
+		
+		echo
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
@@ -1617,38 +1613,31 @@ class videoGallery extends modules {
 		}
 		
 		echo
-					">" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $row['Videos']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$row['Videos']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					">";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Videos'])
+			counter::display($row['Videos']);
+		
+		echo
 				"</a>" .
 			"</td>";
 		
-		if (JCORE_VERSION >= '0.6')
+		if (JCORE_VERSION >= '0.6') {
 			echo
 				"<td align='center'>" .
 					"<a class='admin-link icons' " .
 						"title='".htmlspecialchars(_("Icons"), ENT_QUOTES) .
 							" (".$row['Icons'].")' " .
 						"href='".url::uri('ALL') .
-						"?path=".admin::path()."/".$row['ID']."/videogalleryicons'>" .
-						(ADMIN_ITEMS_COUNTER_ENABLED && $row['Icons']?
-							"<span class='counter'>" .
-								"<span>" .
-									"<span>" .
-									$row['Icons']."" .
-									"</span>" .
-								"</span>" .
-							"</span>":
-							null) .
+						"?path=".admin::path()."/".$row['ID']."/videogalleryicons'>";
+			
+			if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Icons'])
+				counter::display($row['Icons']);
+			
+			echo
 					"</a>" .
 				"</td>";
+		}
 	}
 	
 	function displayAdminListItemFunctions(&$row) {

@@ -1726,16 +1726,12 @@ class shoppingItems {
 					"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
 						" (".$row['Comments'].")' " .
 					"href='".url::uri('ALL') .
-					"?path=".admin::path()."/".$row['ID']."/shoppingitemcomments'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$row['Comments']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=".admin::path()."/".$row['ID']."/shoppingitemcomments'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments'])
+			counter::display($row['Comments']);
+		
+		echo
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
@@ -1743,16 +1739,12 @@ class shoppingItems {
 					"title='".htmlspecialchars(__("Attachments"), ENT_QUOTES) .
 						" (".$row['Attachments'].")' " .
 					"href='".url::uri('ALL') .
-					"?path=".admin::path()."/".$row['ID']."/shoppingitemattachments'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $row['Attachments']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$row['Attachments']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=".admin::path()."/".$row['ID']."/shoppingitemattachments'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Attachments'])
+			counter::display($row['Attachments']);
+		
+		echo
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
@@ -1760,38 +1752,31 @@ class shoppingItems {
 					"title='".htmlspecialchars(__("Pictures"), ENT_QUOTES) .
 						" (".$row['Pictures'].")' " .
 					"href='".url::uri('ALL') .
-					"?path=".admin::path()."/".$row['ID']."/shoppingitempictures'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $row['Pictures']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$row['Pictures']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=".admin::path()."/".$row['ID']."/shoppingitempictures'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Pictures'])
+			counter::display($row['Pictures']);
+		
+		echo
 				"</a>" .
 			"</td>";
 			
-		if ($digitalgoods)
+		if ($digitalgoods) {
 			echo
 				"<td align='center'>" .
 					"<a class='admin-link digital-goods' " .
 						"title='".htmlspecialchars(_("Digital Goods"), ENT_QUOTES) .
 							" (".$row['DigitalGoods'].")' " .
 						"href='".url::uri('ALL') .
-						"?path=".admin::path()."/".$row['ID']."/shoppingitemdigitalgoods'>" .
-						(ADMIN_ITEMS_COUNTER_ENABLED && $row['DigitalGoods']?
-							"<span class='counter'>" .
-								"<span>" .
-									"<span>" .
-									$row['DigitalGoods']."" .
-									"</span>" .
-								"</span>" .
-							"</span>":
-							null) .
+						"?path=".admin::path()."/".$row['ID']."/shoppingitemdigitalgoods'>";
+			
+			if (ADMIN_ITEMS_COUNTER_ENABLED && $row['DigitalGoods'])
+				counter::display($row['DigitalGoods']);
+			
+			echo
 					"</a>" .
 				"</td>";
+		}
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
@@ -5013,38 +4998,31 @@ class shopping extends modules {
 					"title='".htmlspecialchars(_("Items"), ENT_QUOTES) .
 						" (".$row['Items'].")' " .
 					"href='".url::uri('ALL') .
-					"?path=".admin::path()."/".$row['ID']."/shoppingitems'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $row['Items']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$row['Items']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=".admin::path()."/".$row['ID']."/shoppingitems'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Items'])
+			counter::display($row['Items']);
+		
+		echo
 				"</a>" .
 			"</td>";
 		
-		if (JCORE_VERSION >= '0.6')
+		if (JCORE_VERSION >= '0.6') {
 			echo
 				"<td align='center'>" .
 					"<a class='admin-link icons' " .
 						"title='".htmlspecialchars(_("Icons"), ENT_QUOTES) .
 							" (".$row['Icons'].")' " .
 						"href='".url::uri('ALL') .
-						"?path=".admin::path()."/".$row['ID']."/shoppingicons'>" .
-						(ADMIN_ITEMS_COUNTER_ENABLED && $row['Icons']?
-							"<span class='counter'>" .
-								"<span>" .
-									"<span>" .
-									$row['Icons']."" .
-									"</span>" .
-								"</span>" .
-							"</span>":
-							null) .
+						"?path=".admin::path()."/".$row['ID']."/shoppingicons'>";
+			
+			if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Icons'])
+				counter::display($row['Icons']);
+			
+			echo
 					"</a>" .
 				"</td>";
+		}
 	}
 	
 	function displayAdminListItemFunctions(&$row) {

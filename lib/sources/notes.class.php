@@ -210,16 +210,12 @@ class _notes {
 					"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
 						" (".$row['Comments'].")' " .
 					"href='".url::uri('ALL') .
-					"?path=".admin::path()."/".$row['ID']."/notecomments'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$row['Comments']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=".admin::path()."/".$row['ID']."/notecomments'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments'])
+			counter::display($row['Comments']);
+		
+		echo
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
@@ -227,16 +223,12 @@ class _notes {
 					"title='".htmlspecialchars(__("Attachments"), ENT_QUOTES) .
 						" (".$row['Attachments'].")' " .
 					"href='".url::uri('ALL') .
-					"?path=".admin::path()."/".$row['ID']."/noteattachments'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $row['Attachments']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$row['Attachments']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=".admin::path()."/".$row['ID']."/noteattachments'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Attachments'])
+			counter::display($row['Attachments']);
+		
+		echo
 				"</a>" .
 			"</td>";
 	}

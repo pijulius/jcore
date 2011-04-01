@@ -829,16 +829,12 @@ class _posts {
 					"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
 						" (".$row['Comments'].")' " .
 					"href='".url::uri('ALL') .
-					"?path=".admin::path()."/".$row['ID']."/postcomments'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$row['Comments']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=".admin::path()."/".$row['ID']."/postcomments'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments'])
+			counter::display($row['Comments']);
+		
+		echo
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
@@ -846,16 +842,12 @@ class _posts {
 					"title='".htmlspecialchars(__("Attachments"), ENT_QUOTES) .
 						" (".$row['Attachments'].")' " .
 					"href='".url::uri('ALL') .
-					"?path=".admin::path()."/".$row['ID']."/postattachments'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $row['Attachments']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$row['Attachments']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=".admin::path()."/".$row['ID']."/postattachments'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Attachments'])
+			counter::display($row['Attachments']);
+		
+		echo
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
@@ -863,16 +855,12 @@ class _posts {
 					"title='".htmlspecialchars(__("Pictures"), ENT_QUOTES) .
 						" (".$row['Pictures'].")' " .
 					"href='".url::uri('ALL') .
-					"?path=".admin::path()."/".$row['ID']."/postpictures'>" .
-					(ADMIN_ITEMS_COUNTER_ENABLED && $row['Pictures']?
-						"<span class='counter'>" .
-							"<span>" .
-								"<span>" .
-								$row['Pictures']."" .
-								"</span>" .
-							"</span>" .
-						"</span>":
-						null) .
+					"?path=".admin::path()."/".$row['ID']."/postpictures'>";
+		
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Pictures'])
+			counter::display($row['Pictures']);
+		
+		echo
 				"</a>" .
 			"</td>";
 	}

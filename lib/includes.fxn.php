@@ -92,6 +92,7 @@ include_once('lib/rss.class.php');
 include_once('lib/css.class.php');
 include_once('lib/jquery.class.php');
 include_once('lib/requests.class.php');
+include_once('lib/counter.class.php');
 include_once('lib/favoritelinks.class.php');
 include_once('lib/notificationemails.class.php');
 include_once('lib/gdata.class.php');
