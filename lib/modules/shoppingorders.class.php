@@ -2056,54 +2056,6 @@ class shoppingOrderItems {
 	}
 }
 
-class shoppingNewOrders extends shoppingOrders {
-	var $adminPath = 'admin/modules/shoppingorders/shoppingneworders';
-	
-	function displayAdminTitle($ownertitle = null) {
-		admin::displayTitle(
-			_('Shopping Orders'),
-			_('New and Processing Orders'));
-	}
-	
-	function displayAdminListSearch($ordertypes = null) {
-		parent::displayAdminListSearch(array(
-			SHOPPING_ORDER_STATUS_NEW,
-			SHOPPING_ORDER_STATUS_PROCESSING));
-	}
-	
-	function displayAdmin() {
-		parent::displayAdminOrders(array(
-			SHOPPING_ORDER_STATUS_NEW,
-			SHOPPING_ORDER_STATUS_PROCESSING));
-	}
-}
-
-class shoppingProcessedOrders extends shoppingOrders {
-	var $adminPath = 'admin/modules/shoppingorders/shoppingprocessedorders';
-	
-	function displayAdminTitle($ownertitle = null) {
-		admin::displayTitle(
-			_('Shopping Orders'),
-			_('Processed Orders'));
-	}
-	
-	function displayAdminListSearch($ordertypes = null) {
-		parent::displayAdminListSearch(array(
-			SHOPPING_ORDER_STATUS_ACCEPTED,
-			SHOPPING_ORDER_STATUS_CANCELLED,
-			SHOPPING_ORDER_STATUS_DELIVERED,
-			SHOPPING_ORDER_STATUS_REJECTED));
-	}
-	
-	function displayAdmin() {
-		parent::displayAdminOrders(array(
-			SHOPPING_ORDER_STATUS_ACCEPTED,
-			SHOPPING_ORDER_STATUS_CANCELLED,
-			SHOPPING_ORDER_STATUS_DELIVERED,
-			SHOPPING_ORDER_STATUS_REJECTED));
-	}
-}
-
 class shoppingOrders extends modules {
 	var $selectedID;
 	var $limit = 20;
@@ -5985,6 +5937,54 @@ class shoppingOrders extends modules {
 		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //shopping-orders
+	}
+}
+
+class shoppingNewOrders extends shoppingOrders {
+	var $adminPath = 'admin/modules/shoppingorders/shoppingneworders';
+	
+	function displayAdminTitle($ownertitle = null) {
+		admin::displayTitle(
+			_('Shopping Orders'),
+			_('New and Processing Orders'));
+	}
+	
+	function displayAdminListSearch($ordertypes = null) {
+		parent::displayAdminListSearch(array(
+			SHOPPING_ORDER_STATUS_NEW,
+			SHOPPING_ORDER_STATUS_PROCESSING));
+	}
+	
+	function displayAdmin() {
+		parent::displayAdminOrders(array(
+			SHOPPING_ORDER_STATUS_NEW,
+			SHOPPING_ORDER_STATUS_PROCESSING));
+	}
+}
+
+class shoppingProcessedOrders extends shoppingOrders {
+	var $adminPath = 'admin/modules/shoppingorders/shoppingprocessedorders';
+	
+	function displayAdminTitle($ownertitle = null) {
+		admin::displayTitle(
+			_('Shopping Orders'),
+			_('Processed Orders'));
+	}
+	
+	function displayAdminListSearch($ordertypes = null) {
+		parent::displayAdminListSearch(array(
+			SHOPPING_ORDER_STATUS_ACCEPTED,
+			SHOPPING_ORDER_STATUS_CANCELLED,
+			SHOPPING_ORDER_STATUS_DELIVERED,
+			SHOPPING_ORDER_STATUS_REJECTED));
+	}
+	
+	function displayAdmin() {
+		parent::displayAdminOrders(array(
+			SHOPPING_ORDER_STATUS_ACCEPTED,
+			SHOPPING_ORDER_STATUS_CANCELLED,
+			SHOPPING_ORDER_STATUS_DELIVERED,
+			SHOPPING_ORDER_STATUS_REJECTED));
 	}
 }
 
