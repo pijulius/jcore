@@ -225,7 +225,7 @@ class _userPermissions {
 				"<tr>";
 		
 		$admin = new admin();
-		$admin->load();
+		$admin->setup();
 		unset($admin);
 		
 		$column = 1;
