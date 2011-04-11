@@ -155,7 +155,7 @@ class _email {
 	}
 	
 	function reset() {
-		$this->from = email::genWebmasterEmail;
+		$this->from = email::genWebmasterEmail();
 		$this->to = null;
 		$this->cc = null;
 		$this->bcc = null;
