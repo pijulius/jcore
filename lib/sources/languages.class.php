@@ -37,6 +37,7 @@ class _languages {
 	static $selected = null;
 	static $textsDomains = array();
 	static $selectedTextsDomain = 'messages';
+	static $selectedLocale = '';
 	
 	function __construct() {
 		if (isset($_GET['languageid']))
@@ -806,22 +807,22 @@ class _languages {
 		if (!$locale)
 			return false;
 		
-		$locale = $locale.'.'.PAGE_CHARSET;
+		languages::$selectedLocale = $locale;
 		putenv('LC_ALL='.$locale);
 		
 		if (MANUAL_GETTEXT) {
-			T_setlocale(LC_ALL, $locale);
+			T_setlocale(LC_ALL, $locale.'.'.PAGE_CHARSET, $locale);
 			
 		} else {
 			# there is a problem with Turkish locales in PHP 5 but fixed in PHP 6
 			if (substr($locale, 0, 2) == 'tr' && phpversion() < '6.0') {
-				setlocale(LC_COLLATE, $locale);
-				setlocale(LC_MONETARY, $locale);
-				setlocale(LC_TIME, $locale);
-				setlocale(LC_MESSAGES, $locale);
+				setlocale(LC_COLLATE, $locale.'.'.PAGE_CHARSET, $locale);
+				setlocale(LC_MONETARY, $locale.'.'.PAGE_CHARSET, $locale);
+				setlocale(LC_TIME, $locale.'.'.PAGE_CHARSET, $locale);
+				setlocale(LC_MESSAGES, $locale.'.'.PAGE_CHARSET, $locale);
 				
 			} else {
-				setlocale(LC_ALL, $locale);
+				setlocale(LC_ALL, $locale.'.'.PAGE_CHARSET, $locale);
 			}
 		}
 		
@@ -832,12 +833,8 @@ class _languages {
 		if (!$file)
 			return false;
 		
-		if (MANUAL_GETTEXT)
-			$locale = T_setlocale(LC_ALL, 0);
-		else
-			$locale = setlocale(LC_ALL, 0);
-		
-		$localedir = substr($locale.'.', 0, strpos($locale, '.'));
+		$localedir = substr(languages::$selectedLocale.'.', 0, 
+			strpos(languages::$selectedLocale.'.', '.'));
 		
 		if (defined('JCORE_PATH') && JCORE_PATH && 
 			!@is_dir(SITE_PATH.'locale/'.$localedir))
