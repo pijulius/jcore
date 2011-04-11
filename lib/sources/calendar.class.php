@@ -16,7 +16,7 @@ if (!defined('PAGE_TIME_FORMAT'))
 	define('PAGE_TIME_FORMAT', '%H:%M:%S %Z');
 
 if (!defined('PAGE_FIRST_WEEKDAY'))
-	define('PAGE_FIRST_WEEKDAY', 1);
+	define('PAGE_FIRST_WEEKDAY', 'Sunday');
 
 class _calendar {
 	var $arguments = '';
@@ -58,6 +58,9 @@ class _calendar {
 	}
 	
 	static function day2Int($day) {
+		if (is_numeric($day))
+			return $day;
+		
 		return date("w", strtotime($day));
 	}
 	

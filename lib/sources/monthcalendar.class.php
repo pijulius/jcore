@@ -25,7 +25,9 @@ class _monthCalendar {
 	function __construct() {
 		$this->time = time();
 		$this->uriRequest = strtolower(get_class($this));
-		$this->firstWeekDay = calendar::day2Int(PAGE_FIRST_WEEKDAY);
+		
+		if (defined('PAGE_FIRST_WEEKDAY'))
+			$this->firstWeekDay = calendar::day2Int(PAGE_FIRST_WEEKDAY);
 		
 		if (!$this->variable)
 			$this->variable = strtolower(get_class($this)).'time';
