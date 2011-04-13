@@ -1307,7 +1307,7 @@ class _form {
 				FORM_INPUT_TYPE_REVIEW))) 
 			{
 				if ($element['ValueType'] == FORM_VALUE_TYPE_ARRAY) {
-					foreach($element['Value'] as $value)
+					foreach((array)$element['Value'] as $value)
 						echo 
 							"<input type='hidden' name='".$element['Name']."[]' " .
 								"value='".htmlspecialchars($value, ENT_QUOTES)."' />";
@@ -1897,7 +1897,7 @@ class _form {
 				
 				if ($element['Type'] == FORM_INPUT_TYPE_REVIEW) {
 					if ($element['ValueType'] == FORM_VALUE_TYPE_ARRAY)
-						echo nl2br(implode('; ', $element['Value']));
+						echo nl2br(implode('; ', (array)$element['Value']));
 					elseif ($element['ValueType'] == FORM_VALUE_TYPE_BOOL)
 						echo ($element['Value']?__("Yes"):__("No"));
 					else

@@ -1065,7 +1065,8 @@ class _dynamicForms extends form {
 		if (!$data || !is_array($data))
 			return false;
 		
-		$this->load(false);
+		if (!count($this->elements))
+			$this->load(false);
 		
 		if (!$this->storageSQLTable)
 			return false;
@@ -1082,7 +1083,8 @@ class _dynamicForms extends form {
 		if (!$id || !$data || !is_array($data))
 			return false;
 		
-		$this->load(false);
+		if (!count($this->elements))
+			$this->load(false);
 		
 		if (!$this->storageSQLTable)
 			return false;
