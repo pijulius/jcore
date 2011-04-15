@@ -26,7 +26,7 @@ define('BLOCK_ADMINS_ONLY', 3);
 
 class _blocks {
 	var $cachingInProgress = false;
-	var $arguments = '';
+	var $arguments = null;
 	var $selectedLanguageID;
 	var $selectedPageID;
 	var $ignoreCache4BlockIDs = array();
@@ -256,7 +256,9 @@ class _blocks {
 			$form->setValueType(FORM_VALUE_TYPE_BOOL);
 			
 			$form->addAdditionalText(
-				__("(cache the content of this block including all sub blocks)"));
+				"<span class='comment'>" .
+				__("(cache the content of this block including all sub blocks)") .
+				"</span>");
 			
 			$form->add(
 				__('Only for Guests'),
@@ -267,7 +269,9 @@ class _blocks {
 			$form->setValueType(FORM_VALUE_TYPE_BOOL);
 			
 			$form->addAdditionalText(
-				__("(don't use caching for logged in users)"));
+				"<span class='comment'>" .
+				__("(don't use caching for logged in users)") .
+				"</span>");
 			
 			$form->add(
 				__('Refresh Time'),
@@ -279,7 +283,9 @@ class _blocks {
 			$form->setStyle('width: 50px;');
 			
 			$form->addAdditionalText(
-				__("(cache refresh time interval in minutes)"));
+				"<span class='comment'>" .
+				__("(cache refresh time interval in minutes)") .
+				"</span>");
 			
 			$form->add(
 				__('Refresh Now'),

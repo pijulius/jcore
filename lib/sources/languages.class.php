@@ -30,7 +30,7 @@ function __($message, $domain = null) {
 }
 
 class _languages {
-	var $arguments = '';
+	var $arguments = null;
 	var $selectedID;
 	var $adminPath = 'admin/site/languages';
 	

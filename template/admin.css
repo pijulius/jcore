@@ -122,6 +122,10 @@
 	background-image: url("http://icons.jcore.net/32/stock_people.png");
 }
 
+.admin-link.menu-items {
+	background-image: url("http://icons.jcore.net/32/alacarte.png");
+}
+
 .admin-favorite-links {
 	float: right;
 	position: relative;

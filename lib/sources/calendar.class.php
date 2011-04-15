@@ -19,7 +19,7 @@ if (!defined('PAGE_FIRST_WEEKDAY'))
 	define('PAGE_FIRST_WEEKDAY', 'Sunday');
 
 class _calendar {
-	var $arguments = '';
+	var $arguments = null;
 	
 	static function time2unix($datetime = null) {
 		if (is_int($datetime))

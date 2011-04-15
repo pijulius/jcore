@@ -291,7 +291,7 @@ class shoppingItemPictures extends pictures {
 class shoppingItems {
 	static $uriVariables = 'ajax, request, shoppingid, shoppingitemid, shoppingitemslimit, shoppingitemattachmentslimit, shoppingitempictureslimit, shoppingitemrating, rate';
 	var $searchable = true;
-	var $arguments;
+	var $arguments = null;
 	var $selectedID;
 	var $selectedShoppingID;
 	var $selectedShoppingIDs;

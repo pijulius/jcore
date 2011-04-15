@@ -18,10 +18,8 @@ define('PAGE_USERS_ONLY', 2);
 define('PAGE_ADMINS_ONLY', 3);
 
 class _pages {
-	var $arguments = '';
+	var $arguments = null;
 	var $selectedID;
-	var $selectedIDs = null;
-	var $selectedMenuID;
 	var $adminPath = array(
 		'admin/content/menuitems',
 		'admin/content/pages');
@@ -34,7 +32,8 @@ class _pages {
 	}
 	
 	static function populate() {
-		menus::getOrder();
+		if (JCORE_VERSION < '0.9')
+			menus::getOrder();
 		
 		if (!isset($_GET['pageid']))
 			$_GET['pageid'] = 0;
@@ -72,9 +71,11 @@ class _pages {
 				" AND `LanguageID` = '".(int)$_GET['languageid']."'" .
 				" AND '".sql::escape($path)."/' LIKE CONCAT(`Path`,'/%')" .
 				" ORDER BY `Path` DESC," .
-					(menus::$order?
-						" FIELD(`MenuID`, ".menus::$order."),":
-						" `MenuID`,") .
+					(JCORE_VERSION < '0.9'?
+						(menus::$order?
+							" FIELD(`MenuID`, ".menus::$order."),":
+							" `MenuID`,"):
+						null) .
 					" `OrderID`" .
 				" LIMIT 1"));
 		
@@ -167,21 +168,23 @@ class _pages {
 			
 		$form->addValue('', '');
 		
-		$form->add(
-			__('Menu Block'),
-			'MenuID',
-			FORM_INPUT_TYPE_SELECT);
-		$form->setValueType(FORM_VALUE_TYPE_INT);
+		if (JCORE_VERSION < '0.9') {
+			$form->add(
+				__('Menu Block'),
+				'MenuID',
+				FORM_INPUT_TYPE_SELECT);
+			$form->setValueType(FORM_VALUE_TYPE_INT);
 			
-		$rows = sql::run(
-			" SELECT * FROM `{menus}`" .
-			" ORDER BY" .
-			(JCORE_VERSION >= '0.7'?
-				" `OrderID`,":
-				null) .
-			" `ID`");
-		while($row = sql::fetch($rows))
-			$form->addValue($row['ID'], $row['Title']);
+			$rows = sql::run(
+				" SELECT * FROM `{menus}`" .
+				" ORDER BY" .
+				(JCORE_VERSION >= '0.7'?
+					" `OrderID`,":
+					null) .
+				" `ID`");
+			while($row = sql::fetch($rows))
+				$form->addValue($row['ID'], $row['Title']);
+		}
 		
 		if ($languages = languages::get()) {
 			$form->add(
@@ -320,13 +323,15 @@ class _pages {
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 200px;');
 		
-		$form->add(
-			__('Link to URL'),
-			'Link',
-			FORM_INPUT_TYPE_TEXT);
-		$form->setStyle('width: 300px;');
-		$form->setValueType(FORM_VALUE_TYPE_URL);
-		$form->setTooltipText(__("e.g. http://domain.com"));
+		if (JCORE_VERSION < '0.9') {
+			$form->add(
+				__('Link to URL'),
+				'Link',
+				FORM_INPUT_TYPE_TEXT);
+			$form->setStyle('width: 300px;');
+			$form->setValueType(FORM_VALUE_TYPE_URL);
+			$form->setTooltipText(__("e.g. http://domain.com"));
+		}
 		
 		if (JCORE_VERSION >= '0.8') {
 			$form->add(
@@ -335,30 +340,52 @@ class _pages {
 				FORM_INPUT_TYPE_TEXT);
 			$form->setStyle('width: 250px;');
 			$form->setTooltipText(__("e.g. oranges, lemons, limes"));
+			$form->addAdditionalText(
+				"<br /><span class='comment'>" .
+				__("(automatically show posts with these keywords)") .
+				"</span>");
 		}
 		
-		$form->add(
-			__('Viewable by'),
-			'ViewableBy',
-			FORM_INPUT_TYPE_SELECT);
-		$form->setValueType(FORM_VALUE_TYPE_INT);
+		if (JCORE_VERSION >= '0.9') {
+			$form->add(
+				__('Accessible by'),
+				'AccessibleBy',
+				FORM_INPUT_TYPE_SELECT);
+			$form->setValueType(FORM_VALUE_TYPE_INT);
+				
+			$form->addValue(
+				PAGE_EVERYONE, $this->access2Text(PAGE_EVERYONE));
+			$form->addValue(
+				PAGE_USERS_ONLY, $this->access2Text(PAGE_USERS_ONLY));
+			$form->addValue(
+				PAGE_ADMINS_ONLY, $this->access2Text(PAGE_ADMINS_ONLY));
 			
-		$form->addValue(
-			PAGE_EVERYONE, $this->access2Text(PAGE_EVERYONE));
-		$form->addValue(
-			PAGE_GUESTS_ONLY, $this->access2Text(PAGE_GUESTS_ONLY));
-		$form->addValue(
-			PAGE_USERS_ONLY, $this->access2Text(PAGE_USERS_ONLY));
-		$form->addValue(
-			PAGE_ADMINS_ONLY, $this->access2Text(PAGE_ADMINS_ONLY));
+		} else {
+			$form->add(
+				__('Viewable by'),
+				'ViewableBy',
+				FORM_INPUT_TYPE_SELECT);
+			$form->setValueType(FORM_VALUE_TYPE_INT);
+				
+			$form->addValue(
+				PAGE_EVERYONE, $this->access2Text(PAGE_EVERYONE));
+			$form->addValue(
+				PAGE_GUESTS_ONLY, $this->access2Text(PAGE_GUESTS_ONLY));
+			$form->addValue(
+				PAGE_USERS_ONLY, $this->access2Text(PAGE_USERS_ONLY));
+			$form->addValue(
+				PAGE_ADMINS_ONLY, $this->access2Text(PAGE_ADMINS_ONLY));
+		}
 		
-		$form->add(
-			__('Hidden'),
-			'Hidden',
-			FORM_INPUT_TYPE_CHECKBOX,
-			false,
-			'1');
-		$form->setValueType(FORM_VALUE_TYPE_BOOL);
+		if (JCORE_VERSION < '0.9') {
+			$form->add(
+				__('Hidden'),
+				'Hidden',
+				FORM_INPUT_TYPE_CHECKBOX,
+				false,
+				'1');
+			$form->setValueType(FORM_VALUE_TYPE_BOOL);
+		}
 			
 		$form->add(
 			null,
@@ -464,6 +491,19 @@ class _pages {
 				return false;
 			
 			foreach($orders as $oid => $ovalue) {
+				if (JCORE_VERSION >= '0.9') {
+					$page = sql::fetch(sql::run(
+						" SELECT `OrderID` FROM `{pages}`" .
+						" WHERE `ID` = '".(int)$oid."'"));
+					
+					if ($page)
+						sql::run(
+							" UPDATE `{menuitems}` " .
+							" SET `OrderID` = '".(int)$ovalue."'" .
+							" WHERE `PageID` = '".(int)$oid."'" .
+							" AND `OrderID` = '".$page['OrderID']."'");
+				}
+				
 				sql::run(
 					" UPDATE `{" .
 						(JCORE_VERSION >= '0.8'?
@@ -525,6 +565,28 @@ class _pages {
 					return false;
 				}
 			}
+		}
+			
+		if (JCORE_VERSION >= '0.9' && $duplicatepage = sql::fetch(sql::run(
+			" SELECT * FROM `{pages}`" .
+			" WHERE `Path` = '".sql::escape($form->get('Path'))."'" .
+			" AND `LanguageID` = '".(int)$form->get('LanguageID')."'" .
+			($edit?" AND `ID` != '".(int)$id."'":null)))) 
+		{
+			tooltip::display(
+				sprintf(__("A page with the path \"%s\" already exists!"),
+					$form->get('Path'))." " .
+				"<a href='".$this->generateLink($duplicatepage)."' target='_blank'>" .
+					__("View Page") .
+				"</a>" .
+				" - " .
+				"<a href='".url::uri('id, edit, delete') .
+					"&amp;id=".$duplicatepage['ID']."&amp;edit=1#adminform'>" .
+					__("Edit") .
+				"</a>",
+				TOOLTIP_ERROR);
+			
+			return false;
 		}
 			
 		if ($edit) {
@@ -590,7 +652,10 @@ class _pages {
 					'pages':
 					'menuitems') .
 				"}`" .
-			" WHERE `MenuID` = '".(int)$pageid."'" .
+			" WHERE 1" .
+			(JCORE_VERSION < '0.9'?
+				" AND `MenuID` = '".(int)$pageid."'":
+				null) .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				((int)$subpageof?
@@ -670,7 +735,7 @@ class _pages {
 		ob_end_clean();
 		
 		if (!$pages)
-			return;
+			return false;
 		
 		echo 
 		"<div tabindex='0' class='fc" . 
@@ -686,6 +751,8 @@ class _pages {
 				$pages .
 			"</div>" .
 		"</div>";
+		
+		return true;
 	}
 	
 	function displayAdminListHeader() {
@@ -693,11 +760,20 @@ class _pages {
 			"<th><span class='nowrap'>".
 				__("Order")."</span></th>" .
 			"<th><span class='nowrap'>".
-				__("Title / Path / Link")."</span></th>" .
-			"<th style='text-align: right;'><span class='nowrap'>".
-				__("Hidden")."</span></th>" .
-			"<th style='text-align: right;'><span class='nowrap'>".
-				__("Viewable by")."</span></th>" .
+				__("Title / Path / Link")."</span></th>";
+		
+		if (JCORE_VERSION >= '0.9')
+			echo
+				"<th style='text-align: right;'><span class='nowrap'>".
+					__("Accessible by")."</span></th>";
+		else
+			echo
+				"<th style='text-align: right;'><span class='nowrap'>".
+					__("Hidden")."</span></th>" .
+				"<th style='text-align: right;'><span class='nowrap'>".
+					__("Viewable by")."</span></th>";
+		
+		echo
 			"<th style='text-align: right;'><span class='nowrap'>".
 				__("Limit")."</span></th>";
 	}
@@ -837,24 +913,36 @@ class _pages {
 				$row['Title'] .
 				"</div>" .
 				"<div class='comment' style='padding-left: 10px;'>" .
-				($row['Link']?
+				(JCORE_VERSION < '0.9' && $row['Link']?
 					"<a href='".url::generateLink($row['Link']) .
 						"' target='_blank'>":
 					null) .
 				$row['Path'] .
-				($row['Link']?
+				(JCORE_VERSION < '0.9' && $row['Link']?
 					"</a>":
 					null) .
 				"</div>" .
-			"</td>" .
-			"<td style='text-align: right;'>" .
-				($row['Hidden']?__('Yes'):'&nbsp;').
-			"</td>" .
-			"<td style='text-align: right;'>" .
-				($row['ViewableBy']?
-					$this->access2Text($row['ViewableBy']):
-					null) .
-			"</td>" .
+			"</td>";
+		
+		if (JCORE_VERSION >= '0.9')
+			echo
+				"<td style='text-align: right;'>" .
+					($row['AccessibleBy']?
+						$this->access2Text($row['AccessibleBy']):
+						null) .
+				"</td>";
+		else
+			echo
+				"<td style='text-align: right;'>" .
+					($row['Hidden']?__('Yes'):'&nbsp;').
+				"</td>" .
+				"<td style='text-align: right;'>" .
+					($row['ViewableBy']?
+						$this->access2Text($row['ViewableBy']):
+						null) .
+				"</td>";
+		
+		echo
 			"<td style='text-align: right;'>" .
 				($row['Limit']?
 					$row['Limit']:
@@ -908,14 +996,32 @@ class _pages {
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
 	}
 	
-	function displayAdminList(&$rows, &$languages) {
+	function displayAdminList(&$rows, &$languages = null) {
 		echo
 			"<form action='".url::uri('edit, delete')."' method='post'>";
 		
-		$i = 0;
+		$pagesfound = false;
+		
+		if (JCORE_VERSION >= '0.9') {
+			if (sql::rows($rows)) {
+				$language['ID'] = 0;
+				$language['Title'] = __('No Language Defined');
+				$pagesfound = $this->displayAdminListLanguages(0, $language);
+				
+			} else {
+				$pagesfound = $this->displayAdminListItems(0);
+			}
+		}
+				
 		while($row = sql::fetch($rows)) {
-			ob_start();
+			if (JCORE_VERSION >= '0.9') {
+				if ($this->displayAdminListLanguages(0, $row))
+					$pagesfound = true;
+				
+				continue;
+			}
 			
+			ob_start();
 			if ($languages) {
 				if (sql::count(
 					" SELECT COUNT(`ID`) AS `Rows` " .
@@ -924,7 +1030,10 @@ class _pages {
 							'pages':
 							'menuitems') .
 						"}` " .
-					" WHERE `MenuID` = '".$row['ID']."' " .
+					" WHERE 1" .
+					(JCORE_VERSION < '0.9'?
+						" AND `MenuID` = '".$row['ID']."' ":
+						null) .
 					($this->userPermissionIDs?
 						" AND `ID` IN (".$this->userPermissionIDs.")":
 						null) .
@@ -963,17 +1072,17 @@ class _pages {
 					"</div>" .
 				"</div>";
 			
-			$i++;
+			$pagesfound = true;
 		}
 		
-		if (!$i)
+		if (!$pagesfound)
 			tooltip::display(
 				__("No pages found."),
 				TOOLTIP_NOTIFICATION);
+		else
+			echo "<br />";
 		
-		echo "<br />";
-		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($pagesfound && $this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -1056,29 +1165,35 @@ class _pages {
 		
 		$form->groupValues((JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID'), array('0'));
 		
-		$rows = sql::run(
-			" SELECT * FROM `{menus}`" .
-			" ORDER BY" .
-			(JCORE_VERSION >= '0.7'?
-				" `OrderID`,":
-				null) .
-			" `ID`");
-		
-		$languages = languages::get();
-		
-		if (sql::rows($rows))
-			$this->displayAdminList($rows, $languages); 
-		else
-			tooltip::display(
-					__("No menu blocks found.")." " .
-					__("Please go to Admin -> Site Layout and Functionality -> Menu Blocks " .
-						"and create at least one menu block to put pages in."),
-					TOOLTIP_NOTIFICATION);
+		if (JCORE_VERSION >= '0.9') {
+			$languages = languages::get();
+			$this->displayAdminList($languages);
+			
+		} else {
+			$rows = sql::run(
+				" SELECT * FROM `{menus}`" .
+				" ORDER BY" .
+				(JCORE_VERSION >= '0.7'?
+					" `OrderID`,":
+					null) .
+				" `ID`");
+			
+			$languages = languages::get();
+			
+			if (sql::rows($rows))
+				$this->displayAdminList($rows, $languages); 
+			else
+				tooltip::display(
+						__("No menu blocks found.")." " .
+						__("Please go to Admin -> Site Layout and Functionality -> Menu Blocks " .
+							"and create at least one menu block to put pages in."),
+						TOOLTIP_NOTIFICATION);
+		}
 		
 		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
 			(!$this->userPermissionIDs || ($edit && 
 				in_array($id, explode(',', $this->userPermissionIDs)))) &&
-			sql::rows($rows))
+			(JCORE_VERSION >= '0.9' || sql::rows($rows)))
 		{
 			if ($edit && $id && ($verifyok || !$form->submitted())) {
 				$row = sql::fetch(sql::run(
@@ -1185,14 +1300,21 @@ class _pages {
 			if ($parentpage['Deactivated'] && !$values['Deactivated'])
 				$values['Deactivated'] = true;
 			
-			if ($parentpage['Hidden'] && !$values['Hidden'])
-				$values['Hidden'] = true;
-			
-			if ($parentpage['ViewableBy'] && !$values['ViewableBy'])
-				$values['ViewableBy'] = (int)$parentpage['ViewableBy'];
+			if (JCORE_VERSION >= '0.9') {
+				if ($parentpage['AccessibleBy'] && !$values['AccessibleBy'])
+					$values['AccessibleBy'] = (int)$parentpage['AccessibleBy'];
+			} else {
+				if ($parentpage['ViewableBy'] && !$values['ViewableBy'])
+					$values['ViewableBy'] = (int)$parentpage['ViewableBy'];
+				
+				if ($parentpage['Hidden'] && !$values['Hidden'])
+					$values['Hidden'] = true;
+			}
 			
 			$values['LanguageID'] = $parentpage['LanguageID'];
-			$values['MenuID'] = $parentpage['MenuID'];
+			
+			if (JCORE_VERSION < '0.9')
+				$values['MenuID'] = $parentpage['MenuID'];
 		}
 		
 		$newid = sql::run(
@@ -1205,10 +1327,12 @@ class _pages {
 				sql::escape($values['Title'])."'," .
 			" `Path` = '".
 				sql::escape($values['Path'])."'," .
-			" `Link` = '".
-				sql::escape($values['Link'])."'," .
-			" `MenuID` = '".
-				(int)$values['MenuID']."'," .
+			(JCORE_VERSION < '0.9'?
+				" `Link` = '".
+					sql::escape($values['Link'])."'," .
+				" `MenuID` = '".
+					(int)$values['MenuID']."',":
+				null) .
 			" `LanguageID` = '".
 				(int)$values['LanguageID']."'," .
 			(JCORE_VERSION >= '0.6'?
@@ -1223,18 +1347,23 @@ class _pages {
 				" `PostKeywords` = '".
 					sql::escape($values['PostKeywords'])."',":
 				null) .
-			" `ViewableBy` = '".
-				(int)$values['ViewableBy']."'," .
+			(JCORE_VERSION >= '0.9'?
+				" `AccessibleBy` = '".
+					(int)$values['AccessibleBy']."',":
+				" `ViewableBy` = '".
+					(int)$values['ViewableBy']."',") .
 			" `Deactivated` = '".
 				($values['Deactivated']?
 					'1':
 					'0').
 				"'," .
-			" `Hidden` = '".
-				($values['Hidden']?
-					'1':
-					'0').
-				"'," .
+			(JCORE_VERSION < '0.9'?
+				" `Hidden` = '".
+					($values['Hidden']?
+						'1':
+						'0').
+					"',":
+				null) .
 			" `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '".
 				(int)$values[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]."'," .
 			" `Limit` = '".
@@ -1248,6 +1377,53 @@ class _pages {
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
+		}
+		
+		if (JCORE_VERSION >= '0.9') {
+			$menus = sql::run(
+				" SELECT * FROM `{menus}`" .
+				" WHERE `IncludeNewPages`");
+			
+			$menuitems = new menuItems();
+			
+			while($menu = sql::fetch($menus)) {
+				if (!$values['SubPageOfID']) {
+					$menuitems->add(array(
+						'Title' => $values['Title'],
+						'Path' => $values['Path'],
+						'LanguageID' => $values['LanguageID'],
+						'Deactivated' => $values['Deactivated'],
+						'OrderID' => $values['OrderID'],
+						'MenuID' => $menu['ID'],
+						'PageID' => $newid,
+						'SubMenuItemOfID' => 0,
+						'ViewableBy' => MENU_EVERYONE,
+						'Link' => ''));
+					
+					continue;
+				}
+				
+				$items = sql::run(
+					" SELECT * FROM `{menuitems}`" .
+					" WHERE `MenuID` = '".$menu['ID']."'" .
+					" AND `PageID` = '".(int)$values['SubPageOfID']."'");
+				
+				while($item = sql::fetch($items)) {
+					$menuitems->add(array(
+						'Title' => $values['Title'],
+						'Path' => $values['Path'],
+						'LanguageID' => $values['LanguageID'],
+						'Deactivated' => $values['Deactivated'],
+						'OrderID' => $values['OrderID'],
+						'MenuID' => $menu['ID'],
+						'PageID' => $newid,
+						'SubMenuItemOfID' => $item['ID'],
+						'ViewableBy' => MENU_EVERYONE,
+						'Link' => ''));
+				}
+			}
+			
+			unset($menuitems);
 		}
 		
 		if (isset($values['Modules']) && is_array($values['Modules'])) {
@@ -1280,7 +1456,9 @@ class _pages {
 			}
 		}
 		
-		if (!$values['Deactivated'] && $values['ViewableBy'] < 2) {
+		if (!$values['Deactivated'] && 
+			(JCORE_VERSION >= '0.9' || $values['ViewableBy'] < 2)) 
+		{
 			$newpage = sql::fetch(sql::run(
 				" SELECT * FROM `{" .
 					(JCORE_VERSION >= '0.8'?
@@ -1328,7 +1506,7 @@ class _pages {
 					'pages':
 					'menuitems') .
 				"}`" .
-			" WHERE `ID` = '".$id."'"));
+			" WHERE `ID` = '".(int)$id."'"));
 			
 		$pageurl = str_replace('&amp;', '&', $this->generateLink($page));
 		
@@ -1345,14 +1523,22 @@ class _pages {
 			if ($parentpage['Deactivated'] && !$values['Deactivated'])
 				$values['Deactivated'] = true;
 			
-			if ($parentpage['Hidden'] && !$values['Hidden'])
-				$values['Hidden'] = true;
-			
-			if ($parentpage['ViewableBy'] && !$values['ViewableBy'])
-				$values['ViewableBy'] = (int)$parentpage['ViewableBy'];
+			if (JCORE_VERSION >= '0.9') {
+				if ($parentpage['AccessibleBy'] && !$values['AccessibleBy'])
+					$values['AccessibleBy'] = (int)$parentpage['AccessibleBy'];
+				
+			} else {
+				if ($parentpage['ViewableBy'] && !$values['ViewableBy'])
+					$values['ViewableBy'] = (int)$parentpage['ViewableBy'];
+				
+				if ($parentpage['Hidden'] && !$values['Hidden'])
+					$values['Hidden'] = true;
+			}
 			
 			$values['LanguageID'] = $parentpage['LanguageID'];
-			$values['MenuID'] = $parentpage['MenuID'];
+			
+			if (JCORE_VERSION < '0.9')
+				$values['MenuID'] = $parentpage['MenuID'];
 		}
 		
 		sql::run(
@@ -1365,10 +1551,12 @@ class _pages {
 				sql::escape($values['Title'])."'," .
 			" `Path` = '".
 				sql::escape($values['Path'])."'," .
-			" `Link` = '".
-				sql::escape($values['Link'])."'," .
-			" `MenuID` = '".
-				(int)$values['MenuID']."'," .
+			(JCORE_VERSION < '0.9'?
+				" `Link` = '".
+					sql::escape($values['Link'])."'," .
+				" `MenuID` = '".
+					(int)$values['MenuID']."',":
+				null) .
 			" `LanguageID` = '".
 				(int)$values['LanguageID']."'," .
 			(JCORE_VERSION >= '0.6'?
@@ -1383,25 +1571,30 @@ class _pages {
 				" `PostKeywords` = '".
 					sql::escape($values['PostKeywords'])."',":
 				null) .
-			" `ViewableBy` = '".
-				(int)$values['ViewableBy']."'," .
+			(JCORE_VERSION >= '0.9'?
+				" `AccessibleBy` = '".
+					(int)$values['AccessibleBy']."',":
+				" `ViewableBy` = '".
+					(int)$values['ViewableBy']."',") .
 			" `Deactivated` = '".
 				($values['Deactivated']?
 					'1':
 					'0').
 				"'," .
-			" `Hidden` = '".
-				($values['Hidden']?
-					'1':
-					'0').
-				"'," .
+			(JCORE_VERSION < '0.9'?
+				" `Hidden` = '".
+					($values['Hidden']?
+						'1':
+						'0').
+					"',":
+				null) .
 			" `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '".
 				(int)$values[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]."'," .
 			" `Limit` = '".
 				(int)$values['Limit']."'," .
 			" `OrderID` = '".
 				(int)$values['OrderID']."'" .
-			" WHERE `ID` = '".$id."'");
+			" WHERE `ID` = '".(int)$id."'");
 		
 		if (sql::affected() == -1) {
 			tooltip::display(
@@ -1411,6 +1604,52 @@ class _pages {
 			return false;
 		}
 		
+		if (JCORE_VERSION >= '0.9') {
+			$items = sql::run(
+				" SELECT * FROM `{menuitems}`" .
+				" WHERE `PageID` = '".(int)$id."'");
+			
+			$menuitems = new menuItems();
+			
+			while($item = sql::fetch($items)) {
+				if ($page['SubPageOfID'] != $values['SubPageOfID']) {
+					$parentitem = sql::fetch(sql::run(
+						" SELECT `ID` FROM `{menuitems}`" .
+						" WHERE `PageID` = '".(int)$values['SubPageOfID']."'" .
+						" AND `MenuID` = '".$item['MenuID']."'" .
+						" ORDER BY `OrderID`, `ID`" .
+						" LIMIT 1"));
+					
+					if ($parentitem)
+						$item['SubMenuItemOfID'] = $parentitem['ID'];
+					else
+						$item['SubMenuItemOfID'] = 0;
+				}
+				
+				$menuitems->edit(
+					$item['ID'],
+					array(
+						'Title' =>
+							($item['Title'] == $page['Title']? 
+								$values['Title']:
+								$item['Title']),
+						'OrderID' =>
+							($item['OrderID'] == $page['OrderID']? 
+								$values['OrderID']:
+								$item['OrderID']),
+						'Path' => $values['Path'],
+						'LanguageID' => $values['LanguageID'],
+						'Deactivated' => $values['Deactivated'],
+						'MenuID' => $item['MenuID'],
+						'PageID' => $item['PageID'],
+						'SubMenuItemOfID' => $item['SubMenuItemOfID'],
+						'ViewableBy' => $item['ViewableBy'],
+						'Link' => $item['Link']));
+			}
+			
+			unset($menuitems);
+		}
+			
 		sql::run(
 			" DELETE FROM `{" .
 				(JCORE_VERSION >= '0.8'?
@@ -1455,26 +1694,17 @@ class _pages {
 			}
 		}
 		
-		if ((!$page['Deactivated'] && $values['Deactivated']) ||
-			($page['ViewableBy'] < $values['ViewableBy'] && $values['ViewableBy'] > 1))
+		if ((!$page['Deactivated'] && $values['Deactivated']) || (JCORE_VERSION < '0.9' &&
+			$page['ViewableBy'] < $values['ViewableBy'] && $values['ViewableBy'] > 1))
 			$sitemap->delete($pageurl);
 		
-		if (($page['Deactivated'] && !$values['Deactivated']) ||
-			($page['ViewableBy'] > $values['ViewableBy'] && $values['ViewableBy'] < 2))
+		if (($page['Deactivated'] && !$values['Deactivated']) || (JCORE_VERSION < '0.9' &&
+			$page['ViewableBy'] > $values['ViewableBy'] && $values['ViewableBy'] < 2))
 			$sitemap->add(array('Link' => $pageurl));
 			
 		foreach(pages::getTree((int)$id) as $row) {
 			$updatesql = null;
 			$url = str_replace('&amp;', '&', $this->generateLink($row));
-			
-			if (($page['Hidden'] && !$values['Hidden']) ||
-				(!$page['Hidden'] && $values['Hidden'])) 
-			{
-				if (!$row['Hidden'] && $values['Hidden'])
-					$updatesql[] = " `Hidden` = 1";
-				if ($row['Hidden'] && !$values['Hidden'])
-					$updatesql[] = " `Hidden` = 0";
-			}
 			
 			if (($page['Deactivated'] && !$values['Deactivated']) ||
 				(!$page['Deactivated'] && $values['Deactivated'])) 
@@ -1489,25 +1719,36 @@ class _pages {
 				$row['LanguageID'] != $values['LanguageID'])
 				$updatesql[] = " `LanguageID` = ".(int)$values['LanguageID'];
 			
-			if ($page['MenuID'] != $values['MenuID'] &&
-				$row['MenuID'] != $values['MenuID'])
-				$updatesql[] = " `MenuID` = ".(int)$values['MenuID'];
-			
-			if ($page['ViewableBy'] != $values['ViewableBy'] &&
-				$row['ViewableBy'] != $values['ViewableBy'])
-				$updatesql[] = " `ViewableBy` = '".(int)$values['ViewableBy']."'";
+			if (JCORE_VERSION < '0.9') {
+				if ($page['MenuID'] != $values['MenuID'] &&
+					$row['MenuID'] != $values['MenuID'])
+					$updatesql[] = " `MenuID` = ".(int)$values['MenuID'];
+				
+				if (($page['Hidden'] && !$values['Hidden']) ||
+					(!$page['Hidden'] && $values['Hidden'])) 
+				{
+					if (!$row['Hidden'] && $values['Hidden'])
+						$updatesql[] = " `Hidden` = 1";
+					if ($row['Hidden'] && !$values['Hidden'])
+						$updatesql[] = " `Hidden` = 0";
+				}
+				
+				if ($page['ViewableBy'] != $values['ViewableBy'] &&
+					$row['ViewableBy'] != $values['ViewableBy'])
+					$updatesql[] = " `ViewableBy` = '".(int)$values['ViewableBy']."'";
+			}
 			
 			if (((($page['Deactivated'] && !$values['Deactivated']) ||
 				(!$page['Deactivated'] && $values['Deactivated'])) &&
 				 !$row['Deactivated'] && $values['Deactivated']) ||
-				($page['ViewableBy'] != $values['ViewableBy'] &&
+				(JCORE_VERSION < '0.9' && $page['ViewableBy'] != $values['ViewableBy'] &&
 				 $row['ViewableBy'] < $values['ViewableBy'] && $values['ViewableBy'] > 1))
 				$sitemap->delete($url);
 			
 			if (((($page['Deactivated'] && !$values['Deactivated']) ||
 				(!$page['Deactivated'] && $values['Deactivated'])) &&
 				 $row['Deactivated'] && !$values['Deactivated']) || 
-				($page['ViewableBy'] != $values['ViewableBy'] &&
+				(JCORE_VERSION < '0.9' && $page['ViewableBy'] != $values['ViewableBy'] &&
 				 $row['ViewableBy'] > $values['ViewableBy'] && $values['ViewableBy'] < 2))
 				$sitemap->add(array('Link' => $url));
 			
@@ -1526,15 +1767,19 @@ class _pages {
 			$updatesql = null;
 			$url = str_replace('&amp;', '&', $this->generateLink($row));
 			
-			if ($row['Hidden'] && !$values['Hidden'])
-				$updatesql[] = " `Hidden` = 0";
 			if ($row['Deactivated'] && !$values['Deactivated'])
 				$updatesql[] = " `Deactivated` = 0";
-			if ($row['ViewableBy'] > $values['ViewableBy'])
-				$updatesql[] = " `ViewableBy` = '".(int)$values['ViewableBy']."'";
 			
-			if (($row['Deactivated'] && !$values['Deactivated']) ||
-				($row['ViewableBy'] > $values['ViewableBy'] && $values['ViewableBy'] < 2))
+			if (JCORE_VERSION < '0.9') {
+				if ($row['Hidden'] && !$values['Hidden'])
+					$updatesql[] = " `Hidden` = 0";
+				
+				if ($row['ViewableBy'] > $values['ViewableBy'])
+					$updatesql[] = " `ViewableBy` = '".(int)$values['ViewableBy']."'";
+			}
+			
+			if (($row['Deactivated'] && !$values['Deactivated']) || (JCORE_VERSION < '0.9' &&
+				$row['ViewableBy'] > $values['ViewableBy'] && $values['ViewableBy'] < 2))
 				$sitemap->add(array('Link' => $url));
 			
 			if ($updatesql)
@@ -1611,6 +1856,19 @@ class _pages {
 					"}` " .
 				" WHERE `ID` = '".$pageid."'");
 			
+			if (JCORE_VERSION >= '0.9') {
+				$menuitems = new menuItems();
+				
+				$items = sql::run(
+					" SELECT * FROM `{menuitems}`" .
+					" WHERE `PageID` = '".$pageid."'");
+				
+				while($item = sql::fetch($items))
+					$menuitems->delete($item['ID']);
+				
+				unset($menuitems);
+			}
+			
 			$url = str_replace('&amp;', '&', $this->generateLink($page));
 			$sitemap->delete($url);
 		}
@@ -1628,41 +1886,28 @@ class _pages {
 		return true;
 	}
 	
-	function updateSitemap($menuid = null) {
+	function updateSitemap() {
 		$sitemap = new sitemap();
 		
-		if ($menuid) {
-			$menu = sql::fetch(sql::run(
-				" SELECT `Title`, `Name` " .
-				" FROM `{menus}` " .
-				" WHERE `ID` = '".(int)$menuid."'"));
-			
-			if (!$menu['Name'])
-				return false;
-			
-			$sitemap->file = SITE_PATH.'sitemap-'.preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '',
-					str_replace('/', '-', $menu['Name'])).'.xml';
-		}
-		
 		$rows = sql::run(
-			" SELECT * FROM `{" .
+			" SELECT *, GROUP_CONCAT(DISTINCT `ID` SEPARATOR ',') AS `IDs` FROM `{" .
 				(JCORE_VERSION >= '0.8'?
 					'pages':
 					'menuitems') .
 				"}`" .
 			" WHERE !`Deactivated`" .
-			" AND `ViewableBy` < 2" .
-			($menuid?
-				" AND `MenuID` = '".(int)$menuid."'":
+			(JCORE_VERSION < '0.9'?
+				" AND `ViewableBy` < 2":
 				null) .
-			" ORDER BY `MenuID`, `OrderID`");
-			
+			" GROUP BY `Path`" .
+			" ORDER BY `OrderID`, `ID`");
+		
 		while($row = sql::fetch($rows)) {
 			$lastpost = sql::fetch(sql::run(
 				" SELECT `TimeStamp` " .
 				" FROM `{posts}` " .
-				" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
-					$row['ID']."'" .
+				" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` IN (" .
+					$row['IDs'].")" .
 				" AND !`Deactivated`" .
 				" ORDER BY `TimeStamp` DESC" .
 				" LIMIT 1"));
@@ -1740,24 +1985,48 @@ class _pages {
 					$pageid."'":
 				" WHERE !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`") .
 			" ORDER BY " .
-				(menus::$order?
-					" FIELD(`MenuID`, ".menus::$order."),":
-					" `MenuID`,") .
+				(JCORE_VERSION < '0.9'?
+					(menus::$order?
+						" FIELD(`MenuID`, ".menus::$order."),":
+						" `MenuID`,"):
+					null) .
 				" `LanguageID`, `OrderID`");
+		
+		$arelanguages = false;
 		
 		while($row = sql::fetch($rows)) {
 			$last = end($tree['Tree']);
 			
-			if ($row['MenuID'] && (!$last || $last['MenuID'] != $row['MenuID'])) {
-				$menu = sql::fetch(sql::run(
-					" SELECT `Title` FROM `{menus}`" .
-					" WHERE `ID` = '".$row['MenuID']."'"));
+			if (JCORE_VERSION >= '0.9') {
+				if (!$last || $last['LanguageID'] != $row['LanguageID']) {
+					$language = null;
+					
+					if ($row['LanguageID'])
+						$language = languages::get($row['LanguageID']);
+					
+					if ($language)
+						$tree['Tree'][] = array(
+							'ID' => 0,
+							'Title' => $language['Title'],
+							'SubPageOfID' => 0,
+							'PathDeepnes' => 0);
+					
+					if (!$last['LanguageID'] && $row['LanguageID'])
+						$arelanguages = true;
+				}
 				
-				$tree['Tree'][] = array(
-					'ID' => 0,
-					'Title' => $menu['Title'],
-					(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID') => 0,
-					'PathDeepnes' => 0);
+			} else {
+				if ($row['MenuID'] && (!$last || $last['MenuID'] != $row['MenuID'])) {
+					$menu = sql::fetch(sql::run(
+						" SELECT `Title` FROM `{menus}`" .
+						" WHERE `ID` = '".$row['MenuID']."'"));
+					
+					$tree['Tree'][] = array(
+						'ID' => 0,
+						'Title' => $menu['Title'],
+						(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID') => 0,
+						'PathDeepnes' => 0);
+				}
 			}
 			
 			$row['PathDeepnes'] = $tree['PathDeepnes'];
@@ -1767,6 +2036,13 @@ class _pages {
 			pages::getTree($row['ID'], false, $tree);
 			$tree['PathDeepnes']--;
 		}
+		
+		if ($arelanguages)
+			array_unshift($tree['Tree'], array(
+				'ID' => 0,
+				'Title' => __('No Language Defined'),
+				'SubPageOfID' => 0,
+				'PathDeepnes' => 0));
 		
 		if ($firstcall)
 			return $tree['Tree'];
@@ -1819,9 +2095,11 @@ class _pages {
 			" AND !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`" .
 			" AND `LanguageID` = '".(int)$languageid."'" .
 			" ORDER BY " .
-				(menus::$order?
-					" FIELD(`MenuID`, ".menus::$order."),":
-					" `MenuID`,") .
+				(JCORE_VERSION < '0.9'?
+					(menus::$order?
+						" FIELD(`MenuID`, ".menus::$order."),":
+						" `MenuID`,"):
+					null) .
 				" `OrderID`" .
 			" LIMIT 1"));
 	}
@@ -1862,6 +2140,7 @@ class _pages {
 		return pages::$selected['ID'];
 	}
 	
+	// DEPRECATED! Since 0.9 there are no more alias pages allowed!
 	static function getAliasIDs($pageid = null) {
 		if (!$pageid)
 			return false;
@@ -1888,56 +2167,6 @@ class _pages {
 			return false;
 		
 		return explode(',', $pages['IDs']);
-	}
-	
-	function getSelectedIDs($pageid = null) {
-		if (!$pageid)
-			$pageid = $this->selectedID;
-		
-		$row = sql::fetch(sql::run(
-			" SELECT `ID`, `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`" .
-				($pageid == $this->selectedID?
-					", `Path`, `MenuID`, `LanguageID`":
-					null) .
-			" FROM `{" .
-				(JCORE_VERSION >= '0.8'?
-					'pages':
-					'menuitems') .
-				"}`" .
-			" WHERE `ID` = '".(int)$pageid."'" .
-			" LIMIT 1"));
-		
-		if (!$row)
-			return false;
-		
-		$this->selectedIDs[] = $row['ID'];
-		
-		if ($row[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')])
-			$this->getSelectedIDs($row[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]);
-		
-		if ($pageid == $this->selectedID) {
-			$aliaspages = sql::fetch(sql::run(
-				" SELECT `ID`, `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`" .
-				" FROM `{" .
-					(JCORE_VERSION >= '0.8'?
-						'pages':
-						'menuitems') .
-					"}`" .
-				" WHERE '".sql::escape($row['Path'])."/' LIKE CONCAT(`Path`,'/%')" .
-				" AND `MenuID` != '".$row['MenuID']."'" .
-				" AND `LanguageID` = '".$row['LanguageID']."'" .
-				" AND !`Deactivated`" .
-				" ORDER BY `Path` DESC"));
-			
-			if ($aliaspages) {
-				$this->selectedIDs[] = $aliaspages['ID'];
-				
-				if ($aliaspages[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')])
-					$this->getSelectedIDs($aliaspages[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]);
-			}
-		}
-		
-		return $this->selectedIDs;
 	}
 	
 	function generateLink(&$row) {
@@ -2041,7 +2270,60 @@ class _pages {
 			"</div>";
 	}
 	
+	function displayArguments() {
+		if (!isset($this->arguments))
+			return false;
+		
+		if (!$this->arguments)
+			return true;
+		
+		$page = null;
+		$argtype = null;
+		
+		if (preg_match('/(^|\/)(url|[A-Z][A-Za-z0-9_\-]+?)($|\/)/', $this->arguments, $matches)) {
+			$this->arguments = preg_replace('/(^|\/)(url|[A-Z][A-Za-z0-9_\-]+?)($|\/)/', '\3', $this->arguments);
+			$argtype = $matches[2];
+		}
+		
+		if (preg_match('/(^|\/)selected($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)selected($|\/)/', '\2', $this->arguments);
+			$page = pages::$selected;
+			
+		} else {
+			$page = sql::fetch(sql::run(
+				" SELECT * FROM `{pages}` " .
+				" WHERE !`Deactivated`" .
+				(languages::$selected?
+					" AND `LanguageID` = '".languages::$selected['ID']."'":
+					null) .
+				" AND '".sql::escape($this->arguments)."/' LIKE CONCAT(`Path`,'/%')" .
+				" ORDER BY `Path` DESC, `OrderID`" .
+				" LIMIT 1"));
+		}
+		
+		if (!$page)
+			return true;
+		
+		if ($argtype) {
+			if ($argtype == 'url')
+				echo $this->generateLink($page);
+			else if (isset($page[$argtype])) 
+				echo $page[$argtype];
+			
+			return true;
+		}
+		
+		if ($page['ID'] == $this->selectedID)
+			return true;
+		
+		$this->selectedID = $page['ID'];
+		return false;
+	}
+	
 	function display() {
+		if ($this->displayArguments())
+			return true;
+		
 		if (!$this->selectedID) {
 			url::displayError();
 			return false;
@@ -2060,17 +2342,39 @@ class _pages {
 			$page['LanguageID'] != languages::$selected['ID'])
 			return false;
 		
-		if ($page['ViewableBy'] > PAGE_GUESTS_ONLY && !$GLOBALS['USER']->loginok) {
-			if (JCORE_VERSION >= '0.7')
+		if (JCORE_VERSION >= '0.9') {
+			if (($page['AccessibleBy'] > PAGE_GUESTS_ONLY && !$GLOBALS['USER']->loginok) ||
+				($page['AccessibleBy'] > PAGE_USERS_ONLY && $GLOBALS['USER']->loginok && 
+				 !$GLOBALS['USER']->data['Admin'])) 
+			{
 				$this->displaySelected($page);
+				
+				if (!$GLOBALS['USER']->loginok)
+					$this->displayLogin();
+				else
+					tooltip::display(
+						__("You do not have permission to access this page!"),
+						TOOLTIP_NOTIFICATION);
+				
+				return true;
+			}
 			
-			$this->displayLogin();
-			return true;
+		} else {
+			if ($page['ViewableBy'] > PAGE_GUESTS_ONLY && !$GLOBALS['USER']->loginok) {
+				if (JCORE_VERSION >= '0.7')
+					$this->displaySelected($page);
+				
+				$this->displayLogin();
+				return true;
+			}
 		}
 		
 		$posts = new posts();
 		$posts->selectedPageID = $this->selectedID;
-		$posts->aliasPageIDs = pages::getAliasIDs($this->selectedID);
+		
+		if (JCORE_VERSION < '0.9')
+			$posts->aliasPageIDs = pages::getAliasIDs($this->selectedID);
+		
 		$items = $posts->display();
 		
 		if (JCORE_VERSION >= '0.7' && !$items && !$posts->search)

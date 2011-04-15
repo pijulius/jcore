@@ -88,6 +88,16 @@ class _contentCodes {
 				unset($menus);
 				break;
 				
+			case 'pages':
+				if ($this->ignoreCodes && in_array('pages', $this->ignoreCodes))
+					break;
+				
+				$pages = new pages();
+				$pages->arguments = $arguments;
+				$pages->display();
+				unset($pages);
+				break;
+				
 			case 'posts':
 				if ($this->ignoreCodes && in_array('posts', $this->ignoreCodes))
 					break;

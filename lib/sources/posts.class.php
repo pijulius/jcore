@@ -22,10 +22,9 @@ include_once('lib/postscalendar.class.php');
 include_once('lib/postsform.class.php');
 
 class _posts {
-	var $arguments;
+	var $arguments = null;
 	var $selectedID;
 	var $selectedPageID;
-	var $aliasPageIDs = null;
 	var $selectedLanguageID;
 	var $selectedBlockID;
 	var $selectedPage;
@@ -42,6 +41,9 @@ class _posts {
 		'admin/content/menuitems/posts',
 		'admin/content/pages/posts',
 		'admin/content/postsatglance');
+	
+	// DEPRECATED! Since 0.9 there are no more alias pages allowed!
+	var $aliasPageIDs = null;
 	
 	static $selected = null;
 	
@@ -106,7 +108,7 @@ class _posts {
 				($page?
 					" AND (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 						$page['ID']."'" .
-					(is_array($this->aliasPageIDs) && count($this->aliasPageIDs)?
+					(JCORE_VERSION < '0.9' && is_array($this->aliasPageIDs) && count($this->aliasPageIDs)?
 						" OR `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` IN (" .
 							implode(',', $this->aliasPageIDs) .
 							")":
@@ -2097,7 +2099,7 @@ class _posts {
 		
 		if ($this->search)
 			$codes->ignoreCodes = array(
-				'menus', 'posts', 'blocks', 'modules', 'forms');
+				'languages', 'menus', 'pages', 'posts', 'blocks', 'modules', 'forms');
 		
 		$codes->display($row['Content']);
 		unset($codes);
@@ -2214,9 +2216,11 @@ class _posts {
 					null) .
 				" AND '".sql::escape($arguments)."/' LIKE CONCAT(`Path`,'/%')" .
 				" ORDER BY `Path` DESC," .
-					(menus::$order?
-						" FIELD(`MenuID`, ".menus::$order."),":
-						" `MenuID`,") .
+					(JCORE_VERSION < '0.9'?
+						(menus::$order?
+							" FIELD(`MenuID`, ".menus::$order."),":
+							" `MenuID`,"):
+						null) .
 					" `OrderID`" .
 				" LIMIT 1"));
 		
@@ -2287,9 +2291,11 @@ class _posts {
 					null) .
 				" AND '".sql::escape($pagepath)."/' LIKE CONCAT(`Path`,'/%')" .
 				" ORDER BY `Path` DESC," .
-					(menus::$order?
-						" FIELD(`MenuID`, ".menus::$order."),":
-						" `MenuID`,") .
+					(JCORE_VERSION < '0.9'?
+						(menus::$order?
+							" FIELD(`MenuID`, ".menus::$order."),":
+							" `MenuID`,"):
+						null) .
 					" `OrderID`" .
 				" LIMIT 1"));
 		
@@ -2815,9 +2821,11 @@ class _posts {
 				null) .
 			" AND '".sql::escape($this->arguments)."/' LIKE CONCAT(`Path`,'/%')" .
 			" ORDER BY `Path` DESC," .
-				(menus::$order?
-					" FIELD(`MenuID`, ".menus::$order."),":
-					" `MenuID`,") .
+				(JCORE_VERSION < '0.9'?
+					(menus::$order?
+						" FIELD(`MenuID`, ".menus::$order."),":
+						" `MenuID`,"):
+					null) .
 				" `OrderID`" .
 			" LIMIT 1"));
 		

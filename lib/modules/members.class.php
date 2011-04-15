@@ -480,12 +480,12 @@ class members extends modules {
 			return;
 		}
 		
-		if ($this->owner['ViewableBy'] == PAGE_GUESTS_ONLY) {
-			$this->displayRegistration();
+		if ($this->owner[(JCORE_VERSION >= '0.9'?'AccessibleBy':'ViewableBy')] > PAGE_GUESTS_ONLY) {
+			$this->displayAccount();
 			return;
 		}
 		
-		$this->displayAccount();
+		$this->displayRegistration();
 	}
 }
  

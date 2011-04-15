@@ -12,7 +12,7 @@
 include_once('lib/menuitems.class.php'); 
 
 class _menus {
-	var $arguments = '';
+	var $arguments = null;
 	var $limit = 0;
 	var $selectedLanguageID;
 	var $selectedBlockID;
@@ -99,6 +99,20 @@ class _menus {
 			__('Additional Options'),
 			null,
 			FORM_OPEN_FRAME_CONTAINER);
+		
+		if (JCORE_VERSION >= '0.9') {
+			$form->add(
+				__('Include New Pages'),
+				'IncludeNewPages',
+				FORM_INPUT_TYPE_CHECKBOX,
+				false,
+				1);
+			$form->setValueType(FORM_VALUE_TYPE_BOOL);
+			$form->addAdditionalText(
+				"<span class='comment'>" .
+				__("(automatically add new pages)") .
+				"</span>");
+		}
 		
 		$form->add(
 			__('Name'),
@@ -227,12 +241,23 @@ class _menus {
 		
 		echo
 			"<th><span class='nowrap'>".
-				__("Title / Name")."</span></th>" .
+				__("Title / Name")."</span></th>";
+		
+		if (JCORE_VERSION >= '0.9')
+			echo
+				"<th><span class='nowrap'>".
+					__("New Pages")."</span></th>";
+		
+		echo
 			"<th><span class='nowrap'>".
 				__("In Block")."</span></th>";
 	}
 	
 	function displayAdminListHeaderOptions() {
+		if (JCORE_VERSION >= '0.9')
+			echo
+				"<th><span class='nowrap'>".
+					__("Menu Items")."</span></th>";
 	}
 	
 	function displayAdminListHeaderFunctions() {
@@ -275,13 +300,46 @@ class _menus {
 				"<div class='comment' style='padding-left: 10px;'>" .
 					$row['Name'] .
 				"</div>" .
-			"</td>" .
+			"</td>";
+		
+		if (JCORE_VERSION >= '0.9')
+			echo
+				"<td style='text-align: right;'>" .
+					($row['IncludeNewPages']?__('Yes'):'&nbsp;').
+				"</td>";
+		
+		echo
 			"<td>" .
 				$blockroute .
 			"</td>";
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		if (JCORE_VERSION >= '0.9') {
+			$items = sql::fetch(sql::run(
+				" SELECT COUNT(*) AS `Rows`" .
+				" FROM `{menuitems}`" .
+				" WHERE `MenuID` = '".$row['ID']."'" .
+				" LIMIT 1"));
+			
+			echo
+				"<td align='center'>" .
+					"<a class='admin-link menu-items' " .
+						"title='".htmlspecialchars(__("Menu Items"), ENT_QUOTES) .
+						(JCORE_VERSION >= '0.5'?
+							" (".$items['Rows'].")":
+							null) .
+							"' " .
+						"href='".url::uri('ALL') .
+						"?path=".admin::path()."/".$row['ID']."/menuitems'>";
+			
+			if (ADMIN_ITEMS_COUNTER_ENABLED && $items['Rows'])
+				counter::display($items['Rows']);
+			
+			echo
+					"</a>" .
+				"</td>";
+		}
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
@@ -500,6 +558,10 @@ class _menus {
 				" `OrderID` = '".
 					(int)$values['OrderID']."',":
 				null) .
+			(JCORE_VERSION >= '0.9'?
+				" `IncludeNewPages` = '".
+					(int)$values['IncludeNewPages']."',":
+				null) .
 			" `BlockID` = '".
 				(int)$values['BlockID']."'");
 			
@@ -531,6 +593,10 @@ class _menus {
 				" `OrderID` = '".
 					(int)$values['OrderID']."',":
 				null) .
+			(JCORE_VERSION >= '0.9'?
+				" `IncludeNewPages` = '".
+					(int)$values['IncludeNewPages']."',":
+				null) .
 			" `BlockID` = '".
 				(int)$values['BlockID']."'" .
 			" WHERE `ID` = '".(int)$id."'");
@@ -550,15 +616,14 @@ class _menus {
 		if (!$id)
 			return false;
 		
-		/*
-		 * We do not delete any pages and their contents as we want to 
-		 * keep a backup just for sure.
-		 * In the future this may change but for now it is as it is.
-		 */
-		
 		sql::run(
 			" DELETE FROM `{menus}` " .
 			" WHERE `ID` = '".(int)$id."'");
+		
+		if (JCORE_VERSION >= '0.9')
+			sql::run(
+				" DELETE FROM `{menuitems}`" .
+				" WHERE `MenuID` = '".(int)$id."'");
 		
 		return true;
 	}
@@ -587,7 +652,7 @@ class _menus {
 		
 		if ($menuitem) {
 			$menuitems->selectedMenuID = $row['ID'];
-			$menuitems->getSelectedMenuIDs();
+			$menuitems->getSelectedIDs();
 			$menuitems->displayOne($menuitem, $language);
 			
 		} else {
@@ -631,11 +696,11 @@ class _menus {
 			return false;
 		
 		if (preg_match('/(^|\/)selected($|\/)/', $this->arguments)) {
-			if (menuItems::$selected) {
+			if (pages::$selected) {
 				if (SEO_FRIENDLY_LINKS)
-					echo menuItems::$selected['Path'];
+					echo pages::$selected['Path'];
 				else
-					echo menuItems::$selected['ID'];
+					echo pages::$selected['ID'];
 			}
 			
 			return true;

@@ -24,7 +24,7 @@ class _modules {
 	static $loaded = array();
 	
 	var $owner;
-	var $arguments;
+	var $arguments = null;
 	var $sqlTable;
 	var $sqlRow;
 	var $sqlOwnerTable;
@@ -457,7 +457,11 @@ class _modules {
 				"}`" .
 			" WHERE `ID` IN (".$modulepages['PageIDs'].")" .
 			" AND `LanguageID` = ".(int)$languageid .
-			" ORDER BY `MenuID`, `OrderID`" .
+			" ORDER BY " .
+				(JCORE_VERSION < '0.9'?
+					" `MenuID`,":
+					null) .
+				" `OrderID`" .
 			" LIMIT 1"));
 		
 		if (!$page)
