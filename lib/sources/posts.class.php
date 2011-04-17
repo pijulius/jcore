@@ -80,7 +80,7 @@ class _posts {
 					"}`" .
 				" WHERE `Deactivated`" .
 				(!$GLOBALS['USER']->loginok?
-					" OR `ViewableBy` > 1":
+					" OR `".(JCORE_VERSION >= '0.9'?'AccessibleBy':'ViewableBy')."` > 1":
 					null)));
 			
 			if (isset($pageids['PageIDs']) && $pageids['PageIDs'])
@@ -2436,12 +2436,20 @@ class _posts {
 					"}`" .
 				" WHERE `ID` = '".$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'" .
 				" AND !`Deactivated`" .
-				" AND (!`ViewableBy` OR " .
-					($GLOBALS['USER']->loginok?
-						($GLOBALS['USER']->data['Admin']?
-							" `ViewableBy` IN (2, 3)":
-							" `ViewableBy` = 2"):
-						" `ViewableBy` = 1") .
+				" AND (" .
+				(JCORE_VERSION >= '0.9'?
+					"!`AccessibleBy` OR " .
+						($GLOBALS['USER']->loginok?
+							($GLOBALS['USER']->data['Admin']?
+								" `AccessibleBy` IN (2, 3)":
+								" `AccessibleBy` = 2"):
+							" `AccessibleBy` = 1"):
+					"!`ViewableBy` OR " .
+						($GLOBALS['USER']->loginok?
+							($GLOBALS['USER']->data['Admin']?
+								" `ViewableBy` IN (2, 3)":
+								" `ViewableBy` = 2"):
+							" `ViewableBy` = 1")) .
 				" )"));
 			
 			if (!$page)
