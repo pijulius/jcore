@@ -1236,7 +1236,7 @@ class _users {
 			$cookiedomain = false;
 		
 		do {
-			setcookie("memberloginid", '', time() - 3600, '/', $cookiedomain);
+			setcookie("memberloginid", '', time() - 3600, '/', $cookiedomain, false, true);
 			$cookiedomain = preg_replace('/^.*?\./', '', $cookiedomain);
 		} while (strpos($cookiedomain, '.') !== false);
 		
@@ -1381,12 +1381,12 @@ class _users {
 				setcookie ("memberloginid", sha1(session_id().time() .
 					$record['ID'].$record['Email'] .
 					$record['TimeStamp'].$record['LastVisitTimeStamp']), 
-					time()+7*24*60*60, '/', $cookiedomain);
+					time()+7*24*60*60, '/', $cookiedomain, false, true);
 			else 
 				setcookie ("memberloginid", sha1(session_id().time() .
 					$record['ID'].$record['Email'] .
 					$record['TimeStamp'].$record['LastVisitTimeStamp']), 
-					0, '/', $cookiedomain);
+					0, '/', $cookiedomain, false, true);
 			
 			header("Location: ".str_replace('&amp;', '&', url::uri('login, requestpassword')));
 			exit();
@@ -1445,10 +1445,10 @@ class _users {
 					
 				if ($this->data['StayLoggedIn']) 
 					setcookie ("memberloginid", $_COOKIE['memberloginid'], 
-						time()+7*24*60*60, '/', $cookiedomain);
+						time()+7*24*60*60, '/', $cookiedomain, false, true);
 				else 
 					setcookie ("memberloginid", $_COOKIE['memberloginid'], 
-						0, '/', $cookiedomain);
+						0, '/', $cookiedomain, false, true);
 			}
 			
 			return true;
