@@ -1613,17 +1613,22 @@ class _pages {
 			
 			while($item = sql::fetch($items)) {
 				if ($page['SubPageOfID'] != $values['SubPageOfID']) {
-					$parentitem = sql::fetch(sql::run(
-						" SELECT `ID` FROM `{menuitems}`" .
-						" WHERE `PageID` = '".(int)$values['SubPageOfID']."'" .
-						" AND `MenuID` = '".$item['MenuID']."'" .
-						" ORDER BY `OrderID`, `ID`" .
-						" LIMIT 1"));
-					
-					if ($parentitem)
-						$item['SubMenuItemOfID'] = $parentitem['ID'];
-					else
+					if ($values['SubPageOfID']) {
+						$parentitem = sql::fetch(sql::run(
+							" SELECT `ID` FROM `{menuitems}`" .
+							" WHERE `PageID` = '".(int)$values['SubPageOfID']."'" .
+							" AND `MenuID` = '".$item['MenuID']."'" .
+							" ORDER BY `OrderID`, `ID`" .
+							" LIMIT 1"));
+						
+						if ($parentitem)
+							$item['SubMenuItemOfID'] = $parentitem['ID'];
+						else
+							$item['SubMenuItemOfID'] = 0;
+						
+					} else {
 						$item['SubMenuItemOfID'] = 0;
+					}
 				}
 				
 				$menuitems->edit(
