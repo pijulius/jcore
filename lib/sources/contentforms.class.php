@@ -25,7 +25,7 @@ class _contentForms extends dynamicForms {
 		
 		if ($this->successMessage) {
 			tooltip::display(
-				__($this->successMessage),
+				__($this->successMessage, $this->textsDomain),
 				TOOLTIP_SUCCESS);
 			return true;
 		}
