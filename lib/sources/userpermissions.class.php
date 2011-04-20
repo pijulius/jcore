@@ -228,20 +228,37 @@ class _userPermissions {
 		$admin->setup();
 		unset($admin);
 		
-		$column = 1;
-		foreach(array('Content', 'Members', 'Modules', 'Site') as $sectionid) {
+		$column = 0;
+		$columnitems = 0;
+		$sections = array('Content', 'Members', 'Modules', 'Site');
+		
+		$totalitems = 0;
+		foreach(admin::$sections as $sectionid => $section) {
+			$totalitems += count($section['Items']);
+			
+			if (!in_array($sectionid, $sections))
+				$sections[] = $sectionid;
+		}
+		
+		foreach($sections as $sectionid) {
 			$section = admin::$sections[$sectionid];
 			
 			if (!count($section['Items']))
 				continue;
 			
-			if ($column == 1 || count($section['Items']) > 10) {
-				if ($column > 1)
+			if ($column == 0 || ($column < 3 && 
+				($columnitems >= ceil($totalitems/3) || 
+				$columnitems+count($section['Items']) >= ceil($totalitems/3)+ceil(($totalitems/3)/2)))) 
+			{
+				if ($column)
 					echo
 						"</td>";
 				
 				echo
 					"<td valign='top'>";
+				
+				$column++;
+				$columnitems = 0;
 				
 			} else {
 				echo
@@ -297,7 +314,7 @@ class _userPermissions {
 					"</tbody>" .
 				"</table>";
 			
-			$column++;
+			$columnitems += count($section['Items']);
 		}		
 		
 		echo
