@@ -979,15 +979,15 @@ class _menuItems {
 	}
 	
 	static function isMainMenu($id, $languageid = 0) {
-		return $this->isHome($id, $languageid);
+		return pages::isHome($id, $languageid);
 	}
 	
 	static function getMainMenu($languageid = null) {
-		return $this->getHome($languageid);
+		return pages::getHome($languageid);
 	}
 	
 	static function getMainMenuIDs() {
-		return $this->getHomeIDs();
+		return pages::getHomeIDs();
 	}
 	
 	static function getTree($menuid = 0, $submenuof = 0, $firstcall = true, 
