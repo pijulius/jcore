@@ -71,6 +71,18 @@ class _menuItems {
 	}
 	
 	// ************************************************   Admin Part
+	function countAdminItems() {
+		$row = sql::fetch(sql::run(
+			" SELECT COUNT(*) AS `Rows`" .
+			" FROM `{" .
+				(JCORE_VERSION == '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
+			" LIMIT 1"));
+		return $row['Rows'];
+	}
+	
 	function setupAdmin() {
 		if (JCORE_VERSION < '0.9') {
 			$pages = new pages();
