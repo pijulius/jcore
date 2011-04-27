@@ -20,7 +20,7 @@ class _counter {
 				$type = $items['Type'];
 			
 			if (isset($items['Rows']))
-				$items = (int)$items['Rows'];
+				$items = $items['Rows'];
 			else
 				$items = 0;
 		}
@@ -33,7 +33,7 @@ class _counter {
 					"'>" .
 					"<span>" .
 						"<span>" .
-						(int)$items .
+							$items .
 						"</span>" .
 					"</span>" .
 				"</span>";
