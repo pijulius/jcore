@@ -42,10 +42,10 @@ unset($settings);
 
 if (defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE) {
 	if (defined('JCORE_PATH'))
-		set_include_path(str_replace(SITE_PATH, 
+		set_include_path(preg_replace('/'.preg_quote(SITE_PATH, '/').'/', 
 			SITE_PATH.PATH_SEPARATOR.SITE_PATH.'template/'.
 			preg_replace('/[^a-zA-Z0-9\@\.\_\- ]/', '', WEBSITE_TEMPLATE), 
-			get_include_path()));
+			get_include_path(), 1));
 	else
 		set_include_path(SITE_PATH.'template/'.
 			preg_replace('/[^a-zA-Z0-9\@\.\_\- ]/', '', WEBSITE_TEMPLATE) .
