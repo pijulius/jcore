@@ -474,6 +474,19 @@ class _files {
  		return file_exists($file);
  	}
  	
+ 	static function isWritable($file) {
+ 		if (!$file)
+ 			return false;
+ 		
+ 		if (@is_file($file))
+ 			return @is_writable($file);
+ 		
+ 		if (@is_dir($file))
+ 			return false;
+ 		
+ 		return dirs::isWritable(substr($file, 0, strrpos($file, '/')));
+ 	}
+ 	
  	static function delete($file) {
  		if (strpos($file, '://') !== false)
  			return false;
@@ -578,20 +591,22 @@ class _files {
  	
  	static function save($file, $data = null, $debug = false) {
  		if ($debug)
- 			echo "<p>".
- 				sprintf(__("Writing file %s"), $file)." ";
+ 			echo sprintf(__("Writing file %s"), $file)." ... ";
  		
  		$result = @files::create($file, $data);
  		
  		if (!$result) {
  			if ($debug)
- 				echo "[".strtoupper(__("Error"))."]</p>";
+ 				echo "<b class='red'>" .
+ 					strtoupper(__("Error")) .
+					"</b>" .
+					" (".__("not writable").")<br />";
  			
  			return false;
  		}
  		
  		if ($debug)
-			echo "[".strtoupper(__("Success"))."]</p>";
+			echo "<b>".strtoupper(__("Ok"))."</b><br />";
 		
  		return $result;
  	}

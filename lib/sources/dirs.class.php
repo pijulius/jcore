@@ -14,6 +14,19 @@ class _dirs {
  		return is_dir($dir);
  	}
  	
+ 	static function isWritable($dir) {
+ 		if (!$dir)
+ 			return false;
+ 		
+ 		if (@is_dir($dir))
+ 			return @is_writable($dir);
+ 		
+ 		if (@is_file($dir))
+ 			return false;
+ 		
+ 		return dirs::isWritable(substr($dir, 0, strrpos($dir, '/')));
+ 	}
+ 	
  	static function delete($dir) {
  		return files::delete($dir);
  	}
