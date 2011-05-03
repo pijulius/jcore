@@ -472,10 +472,9 @@ class _userPermissions {
 	}
 	
 	function displayAdmin() {
-		$userpermission = userPermissions::check($GLOBALS['USER']->data['ID'], 
-			'admin/members/users');
-		
-		if ($GLOBALS['USER']->data['ID'] == admin::getPathID()) {
+		if ($this->sqlTable == 'userpermissions' && 
+			$GLOBALS['USER']->data['ID'] == admin::getPathID()) 
+		{
 			tooltip::display(
 				__("You are not allowed to modify your own permissions!"),
 				TOOLTIP_NOTIFICATION);
