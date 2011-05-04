@@ -16,6 +16,7 @@ if (!defined('SQL_PREFIX'))
 
 class _sql {
 	static $link = null;
+	static $quiet = false;
 	static $lastQuery = null;
 	
 	static function setTimeZone() {
@@ -123,7 +124,7 @@ class _sql {
 			tooltip::display(
 				"Query took: $time seconds<br />" .
 				"MySQL error: ". sql::error() . "<br /><br />" .
-				$query,
+				htmlspecialchars($query),
 				TOOLTIP_NOTIFICATION);
 		}
 		
@@ -346,7 +347,7 @@ class _sql {
 	static function displayError() {
 		$error = sql::error();
 		
-		if (!$error)
+		if (!$error || sql::$quiet)
 			return false;
 		
 		if (isset($GLOBALS['USER']) && 
@@ -372,7 +373,7 @@ class _sql {
 				__("SQL Error:"). " " .
 				$error .
 				"<br /><br />" .
-				sql::$lastQuery,
+				htmlspecialchars(sql::$lastQuery),
 				TOOLTIP_ERROR);
 			
 			tooltip::display(
@@ -393,14 +394,29 @@ class _sql {
 	}
 	
 	static function display($quiet = false) {
-		if (!$quiet)
-			echo 
-				"<p class='sql-query'>" .
-					"<code>".
-					sql::lastQuery()." " .
-					sprintf(__("(affected rows: %s)"), sql::affected()).
-					"</code>" .
-				"</p>";
+		if ($quiet)
+			return sql::error();
+		
+		echo 
+			"<p class='sql-query'>" .
+				"<code>".
+					htmlspecialchars(sql::lastQuery())." " .
+				"</code><br />";
+		
+		if (sql::error())
+			echo "<b class='red'>" .
+					strtoupper(__("Error")) .
+				"</b> " .
+				"(".sql::error().")";
+		else
+			echo "<b>" .
+					strtoupper(__("Ok")) .
+				"</b> " .
+				sprintf(__("(affected rows: %s)"), sql::affected());
+		
+		echo
+				"</br>" .
+			"</p>";
 		
 		return sql::error();
 	}

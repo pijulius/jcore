@@ -80,16 +80,8 @@ class contact extends modules {
 			"	background-image: url(\"http://icons.jcore.net/48/contact-form.png\");\n" .
 			"}\n";
 		
-		if (!files::save(SITE_PATH.'template/modules/css/contact.css', $css, true)) {
-			tooltip::display(
-				__("Could NOT write css file.")." " .
-				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
-					"template/modules/css/"),
-				TOOLTIP_ERROR);
-			return false;
-		}
-		
-		return true;
+		return 
+			files::save(SITE_PATH.'template/modules/css/contact.css', $css, true);
 	}
 	
 	// ************************************************   Admin Part

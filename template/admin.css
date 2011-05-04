@@ -272,6 +272,10 @@
 	background-image: url("http://icons.jcore.net/48/text-x-opml+xml.png");
 }
 
+.as-site-updates a {
+	background-image: url("http://icons.jcore.net/48/system-software-update.png");
+}
+
 .as-members-users a {
 	background-image: url("http://icons.jcore.net/48/emesene.png");
 }

@@ -45,7 +45,7 @@ class _modules {
 		ob_start();
 		
 		$obcontent = null;
-		$success = $this->installFiles();
+		$successfiles = $this->installFiles();
 		$obcontent = ob_get_contents();
 		
 		ob_end_clean();
@@ -53,25 +53,24 @@ class _modules {
 		$this->displayInstallResults(
 			__("Installing files"),
 			$obcontent,
-			$success);
-		
-		if (!$success)
-			return false;
+			$successfiles);
 		
 		ob_start();
+		sql::$quiet = true;
 		
 		$obcontent = null;
-		$success = $this->installSQL();
+		$successsql = $this->installSQL();
 		$obcontent = ob_get_contents();
 		
+		sql::$quiet = false;
 		ob_end_clean();
 		
 		$this->displayInstallResults(
 			__("Running SQL Queries"),
 			$obcontent,
-			$success);
+			$successsql);
 		
-		if (!$success)
+		if (!$successfiles || !$successsql)
 			return false;
 		
 		ob_start();
@@ -300,7 +299,7 @@ class _modules {
 		return true;
 	}
 	
-	static function load($module, $quite = false, $skipinstalledcheck = false) {
+	static function load($module, $quiet = false, $skipinstalledcheck = false) {
 		if (!$module)
 			return false;
 		
@@ -321,7 +320,7 @@ class _modules {
 		if (!$skipinstalledcheck && !modules::installed($module))
 			return false;
 		
-		if ($quite)
+		if ($quiet)
 			return true;
 		
 		if (JCORE_VERSION <= '0.2')

@@ -31,6 +31,7 @@ include_once('lib/templatecsseditor.class.php');
 include_once('lib/templatejseditor.class.php');
 include_once('lib/templateimages.class.php');
 include_once('lib/templateexporter.class.php');
+include_once('lib/updates.class.php');
 
 if (JCORE_VERSION < '0.7')
 	include_once('lib/dynamicformfieldvalues.class.php');
@@ -278,6 +279,18 @@ class _admin {
 							ENT_QUOTES).
 					"'>" .
 					"<span>".__("XML Sitemap")."</span>" .
+				"</a>");
+		}
+		
+		if (JCORE_VERSION >= '0.6') {
+			$this->add('Site', 'Updates', 
+				"<a href='".url::uri('ALL')."?path=admin/site/updates' " .
+					"title='".
+						htmlspecialchars(
+							__("Install and check for updates"), 
+							ENT_QUOTES).
+					"'>" .
+					"<span>".__("Update Manager")."</span>" .
 				"</a>");
 		}
 		
