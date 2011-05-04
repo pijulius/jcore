@@ -709,12 +709,29 @@ class _userPermissions {
 				'PermissionIDs' => null,
 				'PermissionIDTypes' => null);
 		
+		$pathregexp = null;
+		$pathqueries = null;
+		
+		if (is_array($path)) {
+			foreach($path as $pth) {
+				$pathregexp[] = preg_quote($pth, '/');
+				
+				$pathqueries[] = 
+					" '".sql::escape($pth)."/' LIKE CONCAT(`Path`, '/%')" .
+					" OR CONCAT(`Path`, '/') LIKE '".sql::escape($pth)."/%'";
+			}
+		}
+		
 		$permissions = sql::run(
 			" SELECT `PermissionTypeID`, `Path` " .
 			" FROM `{userpermissions}`" .
 			" WHERE `UserID` = '".(int)$userid."'" .
-			" AND ('".sql::escape($path)."/' LIKE CONCAT(`Path`, '/%')" .
-			" 	OR CONCAT(`Path`, '/') LIKE '".sql::escape($path)."/%')" .
+			" AND (" .
+			($pathqueries?
+				implode(' OR ', $pathqueries):
+				" '".sql::escape($path)."/' LIKE CONCAT(`Path`, '/%')" .
+				" OR CONCAT(`Path`, '/') LIKE '".sql::escape($path)."/%'") .
+			" )" .
 			" ORDER BY `Path`");
 		
 		if (JCORE_VERSION >= '0.8' && !sql::rows($permissions)) {
@@ -726,8 +743,12 @@ class _userPermissions {
 					" SELECT `PermissionTypeID`, `Path` " .
 					" FROM `{usergrouppermissions}`" .
 					" WHERE `GroupID` = '".(int)$user['GroupID']."'" .
-					" AND ('".sql::escape($path)."/' LIKE CONCAT(`Path`, '/%')" .
-					" 	OR CONCAT(`Path`, '/') LIKE '".sql::escape($path)."/%')" .
+					" AND (" .
+					($pathqueries?
+						implode(' OR ', $pathqueries):
+						" '".sql::escape($path)."/' LIKE CONCAT(`Path`, '/%')" .
+						" OR CONCAT(`Path`, '/') LIKE '".sql::escape($path)."/%'") .
+					" )" .
 					" ORDER BY `Path`");
 		}
 		
@@ -736,7 +757,11 @@ class _userPermissions {
 		$permissionidtypes = null;
 		
 		while($permission = sql::fetch($permissions)) {
-			preg_match('/'.preg_quote($path, '/').'\/([0-9]*?)((\/.*$)|$)/i',
+			preg_match('/' .
+				($pathregexp?
+					implode('|', $pathregexp):
+					preg_quote($path, '/')) .
+				'\/([0-9]*?)((\/.*$)|$)/i',
 				$permission['Path'], $matches);
 			
 			if (!$permissiontype || $permissiontype >= $permission['PermissionTypeID']) {
