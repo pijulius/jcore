@@ -9,11 +9,17 @@
  *  For licensing, see LICENSE or http://jcore.net/license
  ****************************************************************************/
 
-if (!extension_loaded('gettext')) {
-	define('MANUAL_GETTEXT', true);
+define('PHP_GETTEXT', extension_loaded('gettext'));
+
+if (!PHP_GETTEXT || (defined('MANUAL_GETTEXT') && MANUAL_GETTEXT)) {
+	if (!defined('MANUAL_GETTEXT'))
+		define('MANUAL_GETTEXT', true);
+	
 	include_once('lib/gettext/gettext.inc');
+	
 } else {
-	define('MANUAL_GETTEXT', false);
+	if (!defined('MANUAL_GETTEXT'))
+		define('MANUAL_GETTEXT', false);
 }
 
 function __($message, $domain = null) {
@@ -23,7 +29,7 @@ function __($message, $domain = null) {
 	if (!$domain)
 		$domain = 'messages';
 	
-	if (MANUAL_GETTEXT)
+	if (MANUAL_GETTEXT || !PHP_GETTEXT)
 		return T_dgettext($domain, $message);
 	
 	return dgettext($domain, $message);
@@ -810,7 +816,7 @@ class _languages {
 		languages::$selectedLocale = $locale;
 		putenv('LC_ALL='.$locale);
 		
-		if (MANUAL_GETTEXT) {
+		if (MANUAL_GETTEXT || !PHP_GETTEXT) {
 			T_setlocale(LC_ALL, $locale.'.'.PAGE_CHARSET, $locale);
 			
 		} else {
@@ -842,7 +848,7 @@ class _languages {
 		else
 			$localedir = SITE_PATH.'locale';
 		
-		if (MANUAL_GETTEXT) {
+		if (MANUAL_GETTEXT || !PHP_GETTEXT) {
 			$result = T_bindtextdomain($file, $localedir);
 			T_bind_textdomain_codeset($file, PAGE_CHARSET);
 			
@@ -895,7 +901,7 @@ class _languages {
 		
 		languages::$selectedTextsDomain = $file;
 		
-		if (MANUAL_GETTEXT)
+		if (MANUAL_GETTEXT || !PHP_GETTEXT)
 			return T_textdomain($file);
 		
 		return textdomain($file);

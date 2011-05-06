@@ -21,7 +21,6 @@ define('SETTINGS_TYPE_TIMESTAMP', 8);
 define('SETTINGS_TYPE_PASSWORD', 9);
 define('SETTINGS_TYPE_COLOR', 10);
 
-include_once('lib/languages.class.php');
 include_once('lib/sql.class.php');
  
 class _settings {
@@ -33,7 +32,8 @@ class _settings {
 		if ($table)
 			$this->sqlTable = $table;
 		
-		$this->textsDomain = languages::$selectedTextsDomain;
+		if (class_exists('languages'))
+			$this->textsDomain = languages::$selectedTextsDomain;
 	}
 	
 	// ************************************************   Admin Part
