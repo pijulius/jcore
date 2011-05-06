@@ -1504,7 +1504,11 @@ class _form {
 				FORM_INPUT_TYPE_NUMBER)))
 			{
 				echo
-						"<div class='form-entry-title" .
+						"<" .
+						(JCORE_VERSION >= '0.9'?
+							"label":
+							"div") .
+							" for='entry".$element['EntryID']."' class='form-entry-title" .
 							(isset($element['VerifyResult']) && $element['VerifyResult']?
 								" red":
 								null) .
@@ -1524,7 +1528,11 @@ class _form {
 							(isset($element['AdditionalTitle']) && $element['AdditionalTitle']?
 								$element['AdditionalTitle']:
 								null).
-						"</div>" .
+						"</" .
+						(JCORE_VERSION >= '0.9'?
+							"label":
+							"div") .
+						">" .
 						"<div class='form-entry-content" .
 							($element['Type'] == FORM_INPUT_TYPE_REVIEW?
 								" bold":

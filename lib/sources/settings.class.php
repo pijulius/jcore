@@ -177,12 +177,12 @@ class _settings {
 				echo
 					"<tr>" .
 						"<td style='width: 1px; text-align: right; vertical-align: middle; padding: 0px 10px 5px 0px;'>" .
-						"<span style='white-space: nowrap;'>";
+						"<label for='settings".$setting['ID']."' style='white-space: nowrap;'>";
 				
 				$this->displayAdminItemTitle($setting['ID'], $row['ID']);
 				
 				echo
-						":</span>" .
+						":</label>" .
 						"</td>" .
 						"<td class='auto-width' style='padding: 0px 10px 5px 0px;'>";
 						
@@ -197,7 +197,7 @@ class _settings {
 								($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
 									"readonly='readonly' ":
 									null) .
-								">".
+								" id='settings".$setting['ID']."'>".
 								htmlspecialchars($setting['Value'], ENT_QUOTES) .
 							"</textarea>";
 				
@@ -205,19 +205,19 @@ class _settings {
 						echo 
 							"<input type='hidden' name='settings[".$setting['ID']."]' " .
 								"value='".(int)$setting['Value']."' " .
-								"id='settings".$setting['ID']."' />" .
+								"id='hsettings".$setting['ID']."' />" .
 							"<input type='checkbox' ".
 								((int)$setting['Value']?
 									"checked='checked' ":
 									null).
 							" onchange='if(this.checked) " .
-								"document.getElementById(\"settings".$setting['ID']."\").value=\"1\"; " .
+								"document.getElementById(\"hsettings".$setting['ID']."\").value=\"1\"; " .
 								"else " .
-								"document.getElementById(\"settings".$setting['ID']."\").value=\"0\";' " .
+								"document.getElementById(\"hsettings".$setting['ID']."\").value=\"0\";' " .
 							($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
 								"disabled='disabled' ":
 								null) .
-							"/>";
+							"id='settings".$setting['ID']."' />";
 				
 					} elseif ($setting['TypeID'] == SETTINGS_TYPE_NUMBER) {
 						echo 
@@ -227,7 +227,7 @@ class _settings {
 								($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
 									"readonly='readonly' ":
 									null) .
-								"/>";
+								"id='settings".$setting['ID']."' />";
 				
 					} else {
 						echo 
@@ -250,7 +250,7 @@ class _settings {
 								($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
 									"readonly='readonly' ":
 									null) .
-								"/>";
+								"id='settings".$setting['ID']."' />";
 					}
 					
 					echo

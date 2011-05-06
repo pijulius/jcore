@@ -537,6 +537,7 @@ input.button:hover {
 	text-align: right;
 	width: 120px;
 	padding: 5px 10px 10px 0;
+	white-space: normal;
 }
 
 .form-entry.preview .form-entry-title {
