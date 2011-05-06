@@ -2382,9 +2382,12 @@ class _posts {
 			$GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin'])
 			echo
 				"<a href='".SITE_URL."admin/?path=" .
-					(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems')."/" .
-					$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."/posts&amp;id=" .
-						$row['ID'] .
+					(JCORE_VERSION >= '0.3'?
+						"admin/content/postsatglance":
+						(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems')."/" .
+						$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."/posts") .
+						"&amp;id=".$row['ID'] .
+						"&amp;search=".urlencode($row['Title']) .
 					"&amp;edit=1#adminform' " .
 					"class='edit comment' target='_blank'>" .
 					"<span>".
