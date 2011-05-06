@@ -66,7 +66,9 @@ class _monthCalendar {
 		echo
 			"<div class='calendar-navigation'>";
 		
+		$this->displayPrevYearButton($time);
 		$this->displayPrevButton($time);
+		$this->displayNextYearButton($time);
 		$this->displayNextButton($time);
 		
 		echo
@@ -87,6 +89,17 @@ class _monthCalendar {
 			date($this->timeFormat, $time);
 	}
 	
+	function displayPrevYearButton($time) {
+		echo
+			"<a class='calendar-prev more ajax-content-link' href='" .
+				url::uri($this->variable.', request') .
+				"&amp;".$this->variable."=".strtotime('-1 year', $time) .
+				"&amp;request=".$this->uriRequest."' " .
+				"target='.month-calendar.".$this->cssClass."'>" .
+				"<span>&lt;&lt;</span>" .
+			"</a>";
+	}
+	
 	function displayPrevButton($time) {
 		echo
 			"<a class='calendar-prev ajax-content-link' href='" .
@@ -95,6 +108,17 @@ class _monthCalendar {
 				"&amp;request=".$this->uriRequest."' " .
 				"target='.month-calendar.".$this->cssClass."'>" .
 				"<span>&lt;</span>" .
+			"</a>";
+	}
+	
+	function displayNextYearButton($time) {
+		echo
+			"<a class='calendar-next more ajax-content-link' href='" .
+				url::uri($this->variable.', request') .
+				"&amp;".$this->variable."=".strtotime('+1 year', $time) .
+				"&amp;request=".$this->uriRequest."' " .
+				"target='.month-calendar.".$this->cssClass."'>" .
+				"<span>&gt;&gt;</span>" .
 			"</a>";
 	}
 	

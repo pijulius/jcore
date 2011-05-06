@@ -64,7 +64,9 @@ class _weekCalendar {
 		echo
 			"<div class='calendar-title'>";
 		
+		$this->displayPrevMonthButton($time);
 		$this->displayPrevButton($time);
+		$this->displayNextMonthButton($time);
 		$this->displayNextButton($time);
 		
 		echo
@@ -85,6 +87,17 @@ class _weekCalendar {
 			date($this->timeFormat, $time);
 	}
 	
+	function displayPrevMonthButton($time) {
+		echo
+			"<a class='calendar-prev more ajax-content-link' href='" .
+				url::uri($this->variable.', request') .
+				"&amp;".$this->variable."=".strtotime('-1 month', $time) .
+				"&amp;request=".$this->uriRequest."' " .
+				"target='.week-calendar.".$this->cssClass."'>" .
+				"<span>&lt;&lt;</span>" .
+			"</a>";
+	}
+	
 	function displayPrevButton($time) {
 		echo
 			"<a class='calendar-prev ajax-content-link' href='" .
@@ -93,6 +106,17 @@ class _weekCalendar {
 				"&amp;request=".$this->uriRequest."' " .
 				"target='.week-calendar.".$this->cssClass."'>" .
 				"<span>&lt;</span>" .
+			"</a>";
+	}
+	
+	function displayNextMonthButton($time) {
+		echo
+			"<a class='calendar-next more ajax-content-link' href='" .
+				url::uri($this->variable.', request') .
+				"&amp;".$this->variable."=".strtotime('+1 month', $time) .
+				"&amp;request=".$this->uriRequest."' " .
+				"target='.week-calendar.".$this->cssClass."'>" .
+				"<span>&gt;&gt;</span>" .
 			"</a>";
 	}
 	
