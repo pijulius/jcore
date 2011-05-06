@@ -1711,6 +1711,12 @@ class _comments {
 		$this->displaySubComments($row);
 	}
 	
+	function displayTitle() {
+		echo
+			__("Comments") .
+			" (".$this->countItems().")";
+	}
+	
 	function displayForm(&$form) {
 		$form->display();
 	}
@@ -1804,9 +1810,9 @@ class _comments {
 			$this->SQL());
 		
 		echo 
-			"<h3 class='comments-title'>" .
-				__("Comments") .
-				" (".$this->countItems().")" .
+			"<h3 class='comments-title'>";
+		$this->displayTitle();
+		echo
 			"</h3>";
 		
 		if (!sql::rows($rows)) {
