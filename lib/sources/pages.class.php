@@ -2086,12 +2086,12 @@ class _pages {
 			return $tree['Tree'];
 	}
 	
-	static function getHome($languageid = null) {
+	static function getHome($languageid = null, $fields = '*') {
 		if (!isset($languageid) && languages::$selected)
 			$languageid = languages::$selected['ID'];
 		
 		return sql::fetch(sql::run(
-			" SELECT * FROM `{" .
+			" SELECT ".$fields." FROM `{" .
 				(JCORE_VERSION >= '0.8'?
 					'pages':
 					'menuitems') .
@@ -2107,6 +2107,18 @@ class _pages {
 					null) .
 				" `OrderID`" .
 			" LIMIT 1"));
+	}
+	
+	static function getHomeID($languageid = null) {
+		if (!isset($languageid) && languages::$selected)
+			$languageid = languages::$selected['ID'];
+		
+		$page = pages::getHome($languageid, '`ID`');
+		
+		if (!$page)
+			return 0;
+		
+		return $page['ID'];
 	}
 	
 	static function getHomeIDs() {
