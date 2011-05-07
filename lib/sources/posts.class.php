@@ -120,8 +120,8 @@ class _posts {
 						null) .
 					($homepage['ID'] == $page['ID']?
 						" OR `OnMainPage` OR !`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` ":
-						" OR (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$homepage['ID']."'" .
-							" AND `OnMainPage`) ") .
+						" OR ((`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$homepage['ID']."'" .
+							" OR !`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`) AND `OnMainPage`) ") .
 					" ) ":
 					null)) .
 			" ORDER BY" .
@@ -190,7 +190,7 @@ class _posts {
 			SITE_URL);
 	}
 	
-	function setupAdminForm(&$form, $isownerhomepage = false) {
+	function setupAdminForm(&$form) {
 		$edit = null;
 		
 		if (isset($_GET['edit']))
@@ -225,12 +225,6 @@ class _posts {
 				
 				$form->disableValues('BlockID', $disabledblocks);
 			}
-			
-			$form->edit(
-				'OnMainPage',
-				($isownerhomepage?
-					__('Display on All pages'):
-					__('Display on Main page')));
 			
 			if ($edit) {
 				$form->insert(
@@ -402,9 +396,7 @@ class _posts {
 		$form->disableValues($disabledblocks);
 		
 		$form->add(
-			($isownerhomepage?
-				__('Display on All pages'):
-				__('Display on Main page')),
+			__('Display on Main page'),
 			'OnMainPage',
 			FORM_INPUT_TYPE_CHECKBOX,
 			false,
@@ -676,7 +668,7 @@ class _posts {
 		return true;
 	}
 	
-	function displayAdminListItemSelected(&$row, $isownerhomepage = null) {
+	function displayAdminListItemSelected(&$row) {
 		$blockroute = null;
 		
 		admin::displayItemData(
@@ -707,7 +699,7 @@ class _posts {
 		
 		if ($row['OnMainPage'])
 			admin::displayItemData(
-				($isownerhomepage?
+				(pages::isHome($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])?
 					__("Display on All pages"):
 					__("Display on Main page")),
 				__("Yes"));
@@ -771,7 +763,7 @@ class _posts {
 			$this->displayCustomFields($row);
 	}
 	
-	function displayAdminListHeader($isownerhomepage = false) {
+	function displayAdminListHeader() {
 		echo
 			"<th><span class='nowrap'>".
 				__("Order")."</span></th>" .
@@ -908,7 +900,7 @@ class _posts {
 				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
 	}
 	
-	function displayAdminList(&$rows, $isownerhomepage = false) {
+	function displayAdminList(&$rows) {
 		$id = null;
 		
 		if (isset($_GET['id']))
@@ -923,7 +915,7 @@ class _posts {
 				"<thead>" .
 				"<tr>";
 				
-		$this->displayAdminListHeader($isownerhomepage);
+		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
 		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
@@ -954,7 +946,7 @@ class _posts {
 						"<td class='auto-width' colspan='10'>" .
 							"<div class='admin-content-preview'>";
 				
-				$this->displayAdminListItemSelected($row, $isownerhomepage);
+				$this->displayAdminListItemSelected($row);
 				
 				echo
 							"</div>" .
@@ -1028,9 +1020,6 @@ class _posts {
 				"}` " .
 			" WHERE `ID` = '".admin::getPathID()."'"));
 			
-		$isownerhomepage = pages::isHome(
-			admin::getPathID(), $selectedowner['LanguageID']);
-		
 		echo
 			"<div style='float: right;'>" .
 				"<form action='".url::uri('ALL')."' method='get'>";
@@ -1056,7 +1045,7 @@ class _posts {
 		if (!$edit)
 			$form->action = url::uri('id, delete, limit');
 					
-		$this->setupAdminForm($form, $isownerhomepage);
+		$this->setupAdminForm($form);
 		$form->addSubmitButtons();
 		
 		if ($edit) {
@@ -1098,7 +1087,7 @@ class _posts {
 		$paging->setTotalItems(sql::count());
 				
 		if ($paging->items)
-			$this->displayAdminList($rows, $isownerhomepage);
+			$this->displayAdminList($rows);
 		else
 			tooltip::display(
 				__("No posts found."),
@@ -1110,13 +1099,18 @@ class _posts {
 			(!$this->userPermissionIDs || ($edit && 
 				in_array($id, explode(',', $this->userPermissionIDs)))))
 		{
+			if (pages::isHome(admin::getPathID()))
+				$form->edit(
+					'OnMainPage',
+					__('Display on All pages'));
+			
 			if ($edit && $id && ($verifyok || !$form->submitted())) {
 				$row = sql::fetch(sql::run(
 					" SELECT * FROM `{posts}`" .
 					" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 						admin::getPathID()."'" .
 					" AND `ID` = '".$id."'"));
-		
+				
 				$form->setValues($row);
 				
 				$user = $GLOBALS['USER']->get($row['UserID']);
@@ -2703,16 +2697,17 @@ class _posts {
 			" AND (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 				$this->selectedPageID."'" .
 			($homepage['ID'] == $this->selectedPageID?
-				" OR `OnMainPage` ":
-				" OR (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
-					$homepage['ID']."'" .
-					" AND `OnMainPage`) ") .
+				" OR `OnMainPage` OR !`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` ":
+				" OR ((`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$homepage['ID']."'" .
+					" OR !`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`) AND `OnMainPage`) ") .
 			" ) " .
-			" ORDER BY `OrderID`, `StartDate`, `ID` DESC" .
+			" ORDER BY" .
+			" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = 0," .
+			" `OnMainPage` DESC, `OrderID`, `StartDate`, `ID` DESC" .
 			($this->limit?
 				" LIMIT ".$this->limit:
 				null));
-	
+		
 		$this->selectedID = null;
 		
 		$i = 1;

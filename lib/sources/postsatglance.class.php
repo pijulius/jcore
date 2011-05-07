@@ -19,13 +19,13 @@ class _postsAtGlance extends posts {
 		return $row['Rows'];
 	}
 	
-	function setupAdminForm(&$form, $isownerhomepage = false) {
+	function setupAdminForm(&$form) {
 		$pageid = null;
 		
 		if (isset($_GET['searchpageid']))
 			$pageid = (int)$_GET['searchpageid'];
 		
-		parent::setupAdminForm($form, $isownerhomepage);
+		parent::setupAdminForm($form);
 		
 		$form->edit(
 			(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'),
@@ -107,7 +107,7 @@ class _postsAtGlance extends posts {
 		return parent::verifyAdmin($form);
 	}
 	
-	function displayAdminListHeader($isownerhomepage = false) {
+	function displayAdminListHeader() {
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' alt='.list' " .
@@ -120,7 +120,7 @@ class _postsAtGlance extends posts {
 				__("Title / Created on")."</span></th>";
 	}
 	
-	function displayAdminListItemSelected(&$row, $isownerhomepage = false) {
+	function displayAdminListItemSelected(&$row) {
 		if ($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]) {
 			$pageroute = null;
 			
@@ -140,16 +140,12 @@ class _postsAtGlance extends posts {
 					"</div>";
 			}
 			
-			$isownerhomepage = pages::isHome(
-				$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')], 
-				$page['LanguageID']);
-	
 			admin::displayItemData(
 				__("Page"),
 				$pageroute);
 		}
 		
-		parent::displayAdminListItemSelected($row, $isownerhomepage);
+		parent::displayAdminListItemSelected($row);
 	}
 	
 	function displayAdminListItem(&$row) {
@@ -290,15 +286,6 @@ class _postsAtGlance extends posts {
 			$id = null;
 		}
 		
-		$selectedowner = sql::fetch(sql::run(
-			" SELECT `Title`, `LanguageID` " .
-			" FROM `{" .
-				(JCORE_VERSION >= '0.8'?
-					'pages':
-					'menuitems') .
-				"}` " .
-			" WHERE `ID` = '".admin::getPathID()."'"));
-			
 		echo
 			"<div style='float: right;'>" .
 				"<form action='".url::uri('ALL')."' method='get'>";
@@ -309,7 +296,7 @@ class _postsAtGlance extends posts {
 				"</form>" .
 			"</div>";
 		
-		$this->displayAdminTitle($selectedowner['Title']);
+		$this->displayAdminTitle();
 		$this->displayAdminDescription();
 			
 		echo
@@ -400,11 +387,17 @@ class _postsAtGlance extends posts {
 			(!$this->userPermissionIDs || ($edit && 
 				in_array($id, explode(',', $this->userPermissionIDs)))))
 		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
+			if ($id)
 				$row = sql::fetch(sql::run(
 					" SELECT * FROM `{posts}`" .
 					" WHERE `ID` = '".$id."'"));
-		
+			
+			if (!$id || pages::isHome($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]))
+				$form->edit(
+					'OnMainPage',
+					__('Display on All pages'));
+			
+			if ($edit && $id && ($verifyok || !$form->submitted())) {
 				$form->setValues($row);
 				
 				$user = $GLOBALS['USER']->get($row['UserID']);

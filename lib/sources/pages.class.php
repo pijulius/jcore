@@ -1968,11 +1968,19 @@ class _pages {
 	}
 	
 	static function isHome($id, $languageid = 0) {
-		$homepage = pages::getHome($languageid);
-		
-		if ($homepage['ID'] == $id)
+		if (!$id)
 			return true;
-			
+		
+		$homeids = array();
+		
+		if (!$languageid)
+			$homeids = pages::getHomeIDs();
+		else
+			$homeids[] = pages::getHomeID($languageid);
+		
+		if (in_array($id, $homeids))
+			return true;
+		
 		return false;
 	}
 	
