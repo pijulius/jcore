@@ -48,7 +48,7 @@ class _starRating {
 			" SELECT `TimeStamp` FROM `{".$this->sqlTable."}`" .
 			" WHERE `".$this->sqlRow."` = '".$this->selectedOwnerID."'" .
 			($this->guestRating?
-				" AND `IP` = '".ip2long($_SERVER['REMOTE_ADDR'])."'" .
+				" AND `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'" .
 				" AND `TimeStamp` > DATE_SUB(NOW(), INTERVAL 1 DAY)":
 				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'")));
 			
@@ -69,7 +69,7 @@ class _starRating {
 					(int)$GLOBALS['USER']->data['ID']."',":
 				null) .
 			" `IP` = '".
-				ip2long($_SERVER['REMOTE_ADDR'])."'," .
+				security::ip2long($_SERVER['REMOTE_ADDR'])."'," .
 			" `TimeStamp` = NOW()");
 		
 		if (!sql::affected()) {

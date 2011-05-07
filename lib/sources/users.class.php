@@ -665,7 +665,7 @@ class _users {
 		if ($row['IP'])
 			admin::displayItemData(
 				__("From IP"),
-				long2ip($row['IP']));
+				security::long2ip($row['IP']));
 		
 		if ($row['Suspended'])
 			admin::displayItemData(
@@ -1346,7 +1346,7 @@ class _users {
 					$record['ID'].$record['Email'] .
 					$record['TimeStamp'].$record['LastVisitTimeStamp']))."', " .
 				" `UserID` = '".$record['ID']."'," .
-				" `FromIP` = '".ip2long($_SERVER['REMOTE_ADDR'])."'," .
+				" `FromIP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'," .
 				($record['StayLoggedIn']?
 					" `KeepIt` = 1, ":
 					NULL) .
@@ -1369,7 +1369,7 @@ class _users {
 						0) .
 					"'," .
 				" `LastVisitTimeStamp` = NOW()," .
-				" `IP` = '".ip2long($_SERVER['REMOTE_ADDR'])."'," .
+				" `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'," .
 				" `TimeStamp` = `TimeStamp`" .
 				" WHERE `ID` = '".$record['ID']."'");
 				
@@ -1409,7 +1409,7 @@ class _users {
 			$this->data = $this->get($record['UserID']);
 			
 			if ((!isset($this->data['SkipIPCheck']) || !$this->data['SkipIPCheck']) && 
-				$record['FromIP'] != ip2long($_SERVER['REMOTE_ADDR'])) 
+				$record['FromIP'] != security::ip2long($_SERVER['REMOTE_ADDR'])) 
 			{
 				$this->reset();
 				return false;
@@ -1536,7 +1536,7 @@ class _users {
 		$requests = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows` FROM `{userrequests}`" .
 			" WHERE `UserID` = '".$values['UserID']."'" .
-			" AND `FromIP` = '".ip2long($_SERVER['REMOTE_ADDR'])."'" .
+			" AND `FromIP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'" .
 			" LIMIT 1"));
 		
 		if ($requests['Rows'] >= BRUTE_FORCE_MAXIMUM_FAILURE_ATTEMPTS) {
@@ -1564,7 +1564,7 @@ class _users {
 					"',":
 				null) .
 			" `RequestID` = '".$newrequestid."'," .
-			" `FromIP` = '".ip2long($_SERVER['REMOTE_ADDR'])."'");
+			" `FromIP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'");
 			
 		if (sql::affected() == -1) {
 			tooltip::display(
@@ -1585,7 +1585,7 @@ class _users {
 		return sql::fetch(sql::run(
 			" SELECT * FROM `{userrequests}` " .
 			" WHERE BINARY `RequestID` = '".sql::escape($requestid)."'" .
-			" AND `FromIP` = '".ip2long($_SERVER['REMOTE_ADDR'])."'" .
+			" AND `FromIP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'" .
 			" LIMIT 1"));
 	}
 	
@@ -1679,7 +1679,7 @@ class _users {
 		$record = sql::fetch(sql::run(
 			" SELECT * FROM `{userlogins}`" .
 			" WHERE BINARY `SessionID` = '".sql::escape($_COOKIE['memberloginid'])."'" .
-			" AND `FromIP` = '".ip2long($_SERVER['REMOTE_ADDR'])."'" .
+			" AND `FromIP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'" .
 			" LIMIT 1"));
 					
 		if (!$record)

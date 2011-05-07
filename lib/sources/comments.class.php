@@ -96,12 +96,12 @@ class _comments {
 				  MODERATED_COMMENTS_PENDING_MINUTES?
 					" AND (`TimeStamp` <= DATE_SUB(NOW(), INTERVAL " .
 						(int)MODERATED_COMMENTS_PENDING_MINUTES." MINUTE)" .
-					" OR `IP` = '".ip2long($_SERVER['REMOTE_ADDR'])."')":
+					" OR `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."')":
 					null) .
 				 (defined('MODERATED_COMMENTS_BY_APPROVAL') && 
 				  MODERATED_COMMENTS_BY_APPROVAL?
 					" AND (!`Pending`" .
-					" OR `IP` = '".ip2long($_SERVER['REMOTE_ADDR'])."')":
+					" OR `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."')":
 					null):
 				null) .
 			" ORDER BY `ID`";
@@ -448,7 +448,7 @@ class _comments {
 		$this->displayIsPending($row);
 		
 		echo
-				" (".long2ip($row['IP']).")" .
+				" (".security::long2ip($row['IP']).")" .
 				"</div>" .
 				"</div>" .
 			"</td>";
@@ -807,7 +807,7 @@ class _comments {
 			 (!$GLOBALS['USER']->loginok || !$GLOBALS['USER']->data['Admin'])?
 				" `Pending` = 1,":
 				null) .
-			" `IP` = '".ip2long($_SERVER['REMOTE_ADDR'])."'," .
+			" `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'," .
 			" `TimeStamp` = NOW()");
 			
 		if (!$newid) {
@@ -1080,7 +1080,7 @@ class _comments {
 			" SELECT `TimeStamp` FROM `{".$this->sqlTable."ratings}`" .
 			" WHERE `CommentID` = '".$id."'" .
 			($this->guestComments?
-				" AND `IP` = '".ip2long($_SERVER['REMOTE_ADDR'])."'" .
+				" AND `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'" .
 				" AND `TimeStamp` > DATE_SUB(NOW(), INTERVAL 1 DAY)":
 				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'")));
 			
@@ -1095,7 +1095,7 @@ class _comments {
 		sql::run(
 			" INSERT INTO `{".$this->sqlTable."ratings}`" .
 			" SET `CommentID` = '".$id."'," .
-			" `IP` = '".ip2long($_SERVER['REMOTE_ADDR'])."'," .
+			" `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'," .
 			" `TimeStamp` = NOW()," .
 			($GLOBALS['USER']->loginok?
 				" `UserID` = '".(int)$GLOBALS['USER']->data['ID']."',":
@@ -1585,7 +1585,7 @@ class _comments {
 	
 	function displayIP(&$row) {
 		echo
-			" (".long2ip($row['IP']).")";
+			" (".security::long2ip($row['IP']).")";
 	}
 	
 	function displayDetails(&$row) {

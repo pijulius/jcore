@@ -128,7 +128,7 @@ class _security {
 			
 			tooltip::display(
 				sprintf(__("IP \"%s\" has been successfully removed from the list."),
-					long2ip($ip)),
+					security::long2ip($ip)),
 				TOOLTIP_SUCCESS);
 			
 			return true;
@@ -171,7 +171,7 @@ class _security {
 		echo
 			"<td>" .
 				"<span class='nowrap bold'>" .
-				long2ip($row['IP']) .
+				security::long2ip($row['IP']) .
 				"</span>" .
 			"</td>" .
 			"<td class='auto-width'>" .
@@ -916,6 +916,65 @@ class _security {
 		}
 		
 		return false;
+	}
+	
+	static function isIPv6($ip) {
+		if (strpos($ip, ':') !== false)
+			return true;
+		
+		return false;
+	}
+	
+	static function ip2long($ip) {
+		if (!$ip)
+			return 0;
+		
+		if (security::isIPv6($ip)) {
+			if (strpos($ip, '.') !== false)
+				return ip2long(substr($ip, strrpos($ip, ':')+1));
+			
+			$ip_n = inet_pton($ip);
+			$ipv6long = null;
+			$bits = 15;
+			
+			while ($bits >= 0) {
+				$bin = sprintf("%08b",(ord($ip_n[$bits])));
+				$ipv6long = $bin.$ipv6long;
+				$bits--;
+			}
+			
+			return gmp_strval(gmp_init($ipv6long,2),10);
+		}
+		
+		return ip2long($ip);
+	}
+	
+	static function long2ip($long) {
+		if (!$long)
+			return '';
+		
+		if ($long > 4294967295) {
+			$bin = gmp_strval(gmp_init($long,10),2);
+			if (strlen($bin) < 128) {
+				$pad = 128 - strlen($bin);
+				
+				for ($i = 1; $i <= $pad; $i++)
+					$bin = "0".$bin;
+			}
+			
+			$ipv6 = null;
+			$bits = 0;
+			
+			while ($bits <= 7) {
+				$bin_part = substr($bin,($bits*16),16);
+				$ipv6 .= dechex(bindec($bin_part)).":";
+				$bits++;
+			}
+			
+			return inet_ntop(inet_pton(substr($ipv6,0,-1)));
+		}
+		
+		return long2ip($long);
 	}
 }
 

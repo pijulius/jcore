@@ -42,25 +42,25 @@ class _BFProtection {
 		return sql::run(
 			" INSERT INTO `{bfprotection}` SET" .
 			" `Username` = '".sql::escape($user)."'," .
-			" `IP` = '".ip2long($ip)."'," .
+			" `IP` = '".security::ip2long($ip)."'," .
 			" `TimeStamp` = NOW()");
 	}
 	
 	function clear($ip) {
 		sql::run(
 			" DELETE FROM `{bfprotection}` " .
-			" WHERE `IP` = '".ip2long($ip)."'");
+			" WHERE `IP` = '".security::ip2long($ip)."'");
 	}
 	
 	function banIP($ip, $minutes) {
 		$usernames = sql::fetch(sql::run(
 			" SELECT GROUP_CONCAT(DISTINCT `Username` SEPARATOR ', ') AS `Usernames`" .
 			" FROM `{bfprotection}` " .
-			" WHERE `IP` = '".ip2long($ip)."'"));
+			" WHERE `IP` = '".security::ip2long($ip)."'"));
 		
 		$oldban = sql::fetch(sql::run(
 			" SELECT `IP` FROM `{bfprotectionbans}`" .
-			" WHERE `IP` = '".ip2long($ip)."'"));
+			" WHERE `IP` = '".security::ip2long($ip)."'"));
 		
 		if (isset($oldban['IP'])) {
 			sql::run(
@@ -74,7 +74,7 @@ class _BFProtection {
 		
 		sql::run(
 			" INSERT INTO `{bfprotectionbans}` SET" .
-			" `IP` = '".ip2long($ip)."'," .
+			" `IP` = '".security::ip2long($ip)."'," .
 			" `EndTimeStamp` = DATE_ADD(NOW(), INTERVAL ".(int)$minutes." MINUTE)," .
 			" `Usernames` = '".$usernames['Usernames']."'");
 		
@@ -125,7 +125,7 @@ class _BFProtection {
 				
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(`IP`) AS `Rows` FROM `{bfprotection}`" .
-			" WHERE `IP` = '".ip2long($ip)."'"));
+			" WHERE `IP` = '".security::ip2long($ip)."'"));
 			
 		$this->failureAttempts = (int)$row['Rows'];
 		return $this->failureAttempts;
@@ -137,7 +137,7 @@ class _BFProtection {
 		
 		$row = sql::fetch(sql::run(
 			" SELECT `IP` FROM `{bfprotectionbans}`" .
-			" WHERE `IP` = '".ip2long($_SERVER['REMOTE_ADDR'])."'" .
+			" WHERE `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'" .
 			" AND (UNIX_TIMESTAMP(`EndTimeStamp`) - UNIX_TIMESTAMP(NOW()))/60 > ".
 				(int)$this->protectionTimeMinutes));
 			

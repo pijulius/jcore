@@ -521,7 +521,7 @@ class poll extends modules {
 			" `AnswerID` mediumint(8) unsigned NOT NULL default '0'," .
 			" `GuestAnswer` varchar(100) NOT NULL default ''," .
 			" `UserID` mediumint(8) unsigned NOT NULL default '1'," .
-			" `IP` bigint(20) NOT NULL default '0'," .
+			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" PRIMARY KEY  (`ID`)," .
 			" KEY `PollID` (`PollID`, `AnswerID`)," .
@@ -540,7 +540,7 @@ class poll extends modules {
 			" `UserID` mediumint(8) unsigned NOT NULL default '0'," .
 			" `Comment` text NULL," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP," .
-			" `IP` bigint(20) NOT NULL default '0'," .
+			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `SubCommentOfID` int(10) unsigned NOT NULL default '0'," .
 			" `Rating` smallint(6) NOT NULL default '0'," .
 			" `Pending` TINYINT( 1 ) UNSIGNED NOT NULL DEFAULT  '0'," .
@@ -557,7 +557,7 @@ class poll extends modules {
 			" CREATE TABLE IF NOT EXISTS `{pollcommentsratings}` (" .
 			" `CommentID` int(10) unsigned NOT NULL default '0'," .
 			" `UserID` mediumint(8) unsigned NOT NULL default '0'," .
-			" `IP` bigint(20) NOT NULL default '0'," .
+			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" `Rating` tinyint(1) NOT NULL default '0'," .
 			" KEY `CommentID` (`CommentID`,`UserID`,`IP`,`TimeStamp`)," .
@@ -1904,7 +1904,7 @@ class poll extends modules {
 				null) .
 			($GLOBALS['USER']->loginok?
 				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
-				" AND `IP` = '".ip2long($_SERVER['REMOTE_ADDR'])."'")));
+				" AND `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'")));
 			
 		if ($row) {
 			tooltip::display(
@@ -1931,7 +1931,7 @@ class poll extends modules {
 				" `PollID` = '".$poll['ID']."'," .
 				" `AnswerID` = '".$answerid."'," .
 				" `IP` = '".
-					ip2long($_SERVER['REMOTE_ADDR'])."'," .
+					security::ip2long($_SERVER['REMOTE_ADDR'])."'," .
 				($GLOBALS['USER']->loginok?
 					" `UserID` = '".
 						(int)$GLOBALS['USER']->data['ID']."',":

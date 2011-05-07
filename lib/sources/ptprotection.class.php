@@ -40,6 +40,10 @@ class _PTProtection {
 			" FROM `{userlogins}` " .
 			" WHERE `UserID` = '".(int)$userid."'"));
 		
+		$humanreadableips = explode(', ', $ips['IPs']);
+		foreach($humanreadableips as $key => $humanreadableip)
+			$humanreadableips[$key] = security::long2ip($humanreadableip);
+		
 		// Delete old bans so the new one gets the latest
 		sql::run(
 			" DELETE FROM `{ptprotectionbans}` " .
@@ -49,16 +53,12 @@ class _PTProtection {
 			" INSERT INTO `{ptprotectionbans}` SET" .
 			" `UserID` = '".(int)$userid."'," .
 			" `EndTimeStamp` = DATE_ADD(NOW(), INTERVAL ".(int)$minutes." MINUTE)," .
-			" `IPs` = '".$ips['IPs']."'");
+			" `IPs` = '".implode(', ', $humanreadableips)."'");
 		
 		if ($this->emailNotification) {
 			$user = sql::fetch(sql::run(
 				" SELECT `UserName` FROM `{users}`" .
 				" WHERE `ID` = '".(int)$userid."'"));
-				
-			$humanreadableips = explode(', ', $ips['IPs']);
-			foreach($humanreadableips as $key => $humanreadableip)
-				$humanreadableips[$key] = long2ip($humanreadableip);
 				
 			$email = new email();
 			

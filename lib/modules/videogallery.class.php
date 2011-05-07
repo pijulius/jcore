@@ -793,7 +793,7 @@ class videoGallery extends modules {
 			" `UserID` mediumint(8) unsigned NOT NULL default '0'," .
 			" `Comment` text NULL," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP," .
-			" `IP` bigint(20) NOT NULL default '0'," .
+			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `SubCommentOfID` int(10) unsigned NOT NULL default '0'," .
 			" `Rating` smallint(6) NOT NULL default '0'," .
 			" `Pending` TINYINT( 1 ) UNSIGNED NOT NULL DEFAULT  '0'," .
@@ -810,7 +810,7 @@ class videoGallery extends modules {
 			" CREATE TABLE IF NOT EXISTS `{videogallerycommentsratings}` (" .
 			" `CommentID` int(10) unsigned NOT NULL default '0'," .
 			" `UserID` mediumint(8) unsigned NOT NULL default '0'," .
-			" `IP` bigint(20) NOT NULL default '0'," .
+			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" `Rating` tinyint(1) NOT NULL default '0'," .
 			" KEY `CommentID` (`CommentID`,`UserID`,`IP`,`TimeStamp`)," .
@@ -843,7 +843,7 @@ class videoGallery extends modules {
 			" CREATE TABLE IF NOT EXISTS `{videogalleryratings}` (" .
 			" `VideoGalleryID` smallint(5) unsigned NOT NULL default '0'," .
 			" `UserID` mediumint(8) unsigned NOT NULL default '0'," .
-			" `IP` bigint(20) NOT NULL default '0'," .
+			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" `Rating` tinyint(1) NOT NULL default '0'," .
 			" KEY `Rating` (`Rating`)," .

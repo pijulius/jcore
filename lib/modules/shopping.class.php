@@ -196,7 +196,7 @@ class shoppingItemDigitalGoods extends attachments {
 			" `ShoppingOrderID` = '".$this->selectedOwnerOrderID."'," .
 			" `ShoppingItemID` = '".$item['ID']."'," .
 			" `ShoppingItemDigitalGoodID` = '".$id."'," .
-			" `IP` = '".ip2long($_SERVER['REMOTE_ADDR'])."'," .
+			" `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'," .
 			" `StartTimeStamp` = NOW()," .
 			" `FinishTimeStamp` = NULL");
 		
@@ -4241,7 +4241,7 @@ class shopping extends modules {
 			" `UserID` mediumint(8) unsigned NOT NULL default '0'," .
 			" `Comment` text NULL," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP," .
-			" `IP` bigint(20) NOT NULL default '0'," .
+			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `SubCommentOfID` int(10) unsigned NOT NULL default '0'," .
 			" `Rating` smallint(6) NOT NULL default '0'," .
 			" `Pending` TINYINT( 1 ) UNSIGNED NOT NULL DEFAULT  '0'," .
@@ -4258,7 +4258,7 @@ class shopping extends modules {
 			" CREATE TABLE IF NOT EXISTS `{shoppingitemcommentsratings}` (" .
 			" `CommentID` int(10) unsigned NOT NULL default '0'," .
 			" `UserID` mediumint(8) unsigned NOT NULL default '0'," .
-			" `IP` bigint(20) NOT NULL default '0'," .
+			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" `Rating` tinyint(1) NOT NULL default '0'," .
 			" KEY `CommentID` (`CommentID`,`UserID`,`IP`,`TimeStamp`)," .
@@ -4332,7 +4332,7 @@ class shopping extends modules {
 			" CREATE TABLE IF NOT EXISTS `{shoppingitemratings}` (" .
 			" `ShoppingItemID` mediumint(8) unsigned NOT NULL default '0'," .
 			" `UserID` mediumint(8) unsigned NOT NULL default '0'," .
-			" `IP` bigint(20) NOT NULL default '0'," .
+			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" `Rating` tinyint(1) NOT NULL default '0'," .
 			" KEY `Rating` (`Rating`)," .

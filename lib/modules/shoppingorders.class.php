@@ -2233,7 +2233,7 @@ class shoppingOrders extends modules {
 			" `UserID` mediumint(8) unsigned NOT NULL default '0'," .
 			" `Comment` text NULL," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP," .
-			" `IP` bigint(20) NOT NULL default '0'," .
+			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `SubCommentOfID` int(10) unsigned NOT NULL default '0'," .
 			" `Rating` smallint(6) NOT NULL default '0'," .
 			" `Pending` TINYINT( 1 ) UNSIGNED NOT NULL DEFAULT  '0'," .
@@ -2250,7 +2250,7 @@ class shoppingOrders extends modules {
 			" CREATE TABLE IF NOT EXISTS `{shoppingordercommentsratings}` (" .
 			" `CommentID` int(10) unsigned NOT NULL default '0'," .
 			" `UserID` mediumint(8) unsigned NOT NULL default '0'," .
-			" `IP` bigint(20) NOT NULL default '0'," .
+			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" `Rating` tinyint(1) NOT NULL default '0'," .
 			" KEY `CommentID` (`CommentID`,`UserID`,`IP`,`TimeStamp`)," .
@@ -2266,7 +2266,7 @@ class shoppingOrders extends modules {
 			" `ShoppingOrderID` INT UNSIGNED NOT NULL default '0'," .
 			" `ShoppingItemID` MEDIUMINT UNSIGNED NOT NULL default '0'," .
 			" `ShoppingItemDigitalGoodID` INT UNSIGNED NOT NULL default '0'," .
-			" `IP` BIGINT NOT NULL default '0'," .
+			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `StartTimeStamp` TIMESTAMP NOT NULL default CURRENT_TIMESTAMP," .
 			" `FinishTimeStamp` TIMESTAMP NULL DEFAULT NULL," .
 			" PRIMARY KEY  (`ID`)," .
@@ -5605,7 +5605,7 @@ class shoppingOrders extends modules {
 						($download['FinishTimeStamp']?
 							calendar::datetime($download['FinishTimeStamp']):
 							_('unknown')),
-						long2ip($download['IP']));
+						security::long2ip($download['IP']));
 					
 			if ($download['FinishTimeStamp']) {
 				$timediff = strtotime($download['FinishTimeStamp']) - 
