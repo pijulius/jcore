@@ -665,7 +665,7 @@ class _menus {
 	
 	function displayOne(&$row, $language = null, $menuitem = null) {
 		echo
-			"<div " .
+			"<nav " .
 				(JCORE_VERSION >= '0.5' && $this->arguments?
 					"class":
 					"id") .
@@ -688,7 +688,7 @@ class _menus {
 					'ul':
 					'div') .
 				">" .
-			"</div>";
+			"</nav>";
 	}
 	
 	function displayArguments() {

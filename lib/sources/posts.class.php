@@ -2502,7 +2502,7 @@ class _posts {
 	
 	function displayOne(&$row) {
 		echo
-			"<div" .
+			"<article" .
 				(!isset($this->arguments)?
 					" id='post".$row['ID']."'":
 					null) .
@@ -2575,14 +2575,14 @@ class _posts {
 				"<div class='separator bottom'></div>";
 			
 		echo
-			"</div>";
+			"</article>";
 	}
 	
 	function displaySelected(&$row) {
 		$this->incViews($row);
 		
 		echo
-			"<div" .
+			"<article" .
 				(!isset($this->arguments)?
 					" id='post".$row['ID']."'":
 					null) .
@@ -2676,7 +2676,7 @@ class _posts {
 			"<div class='separator bottom'></div>";
 			
 		echo
-			"</div>";
+			"</article>";
 			
 		if ($this->selectedID == $row['ID'] && $row['EnableComments'])
 			$this->displayComments($row);
