@@ -11,7 +11,12 @@
  
 include_once('lib/url.class.php');
 
+if (defined('COMPRESSION_DISABLED'))
+	_jQuery::$compression = (COMPRESSION_DISABLED?false:true);
+
 class _jQuery {
+	static $compression = true;
+	
 	var $path;
 	var $ajaxRequest = null;
 	
@@ -36,6 +41,9 @@ class _jQuery {
 	}
 	
 	static function compress($buffer) {
+		if (!jQuery::$compression)
+			return $buffer;
+		
 		if (false !== stripos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip')) {
 			header('Vary: Accept-Encoding');
 			header('Content-Encoding: gzip');
@@ -83,7 +91,7 @@ class _jQuery {
 		return true;
 	}
 	
-	static function displayPluginsJS($compress = true) {
+	static function displayPluginsJS() {
 		$admin = null;
 		
 		if (isset($_GET['admin']))
@@ -111,9 +119,7 @@ class _jQuery {
 			return true;
 		}
 		
-		if ($compress)
-			ob_start(array('jQuery', 'compress'));
-		
+		ob_start(array('jQuery', 'compress'));
 		$plugins = array();
 		
 		if ($admin && defined('JQUERY_LOAD_ADMIN_PLUGINS') &&
@@ -197,9 +203,7 @@ class _jQuery {
 					@file_get_contents(SITE_PATH.'template/template.js')."\n";
 		}
 		
-		if ($compress)
-			ob_end_flush();
-		
+		ob_end_flush();
 		return true;
 	}
 	
@@ -237,7 +241,7 @@ class _jQuery {
 			"</script>\n";
 	}
 	
-	static function displayJS($compress = true) {
+	static function displayJS() {
 		$admin = null;
 		
 		if (isset($_GET['admin']))
@@ -265,8 +269,7 @@ class _jQuery {
 			return true;
 		}
 		
-		if ($compress)
-			ob_start(array('jQuery', 'compress'));
+		ob_start(array('jQuery', 'compress'));
 		
 		echo 
 			@file_get_contents('lib/jquery/' .
@@ -275,9 +278,7 @@ class _jQuery {
 					'jquery.js'), 
 				FILE_USE_INCLUDE_PATH)."\n";
 		
-		if ($compress)
-			ob_end_flush();
-		
+		ob_end_flush();
 		return true;
 	}
 	

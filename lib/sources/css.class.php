@@ -11,8 +11,13 @@
  
 include_once('lib/url.class.php');
 
+if (defined('COMPRESSION_DISABLED'))
+	_css::$compression = (COMPRESSION_DISABLED?false:true);
+
 class _css {
 	static $parseURLs = true;
+	static $compression = true;
+	
 	var $ajaxRequest = null;
 	
 	// CSS Browser Selector based on Bastian Allgeier's work
@@ -152,6 +157,9 @@ class _css {
 			$buffer = preg_replace_callback('/url ?+\((\'|")?(.*?)(\1)?\)/i',
 				array('css', 'parseURL'), $buffer);
 		
+		if (!css::$compression)
+			return $buffer;
+		
 		if (false !== stripos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip')) {
 			header('Vary: Accept-Encoding');
 			header('Content-Encoding: gzip');
@@ -180,7 +188,7 @@ class _css {
 		return true;
 	}
 	
-	static function display3PIE($compress = true) {
+	static function display3PIE() {
 		if (defined('JCORE_PATH'))
 			$filemtime = @filemtime(JCORE_PATH.'lib/jquery/css3pie.htc');
 		else
@@ -196,22 +204,18 @@ class _css {
 			return true;
 		}
 		
-		if ($compress)
-			ob_start(array('css', 'compress'));
-		
+		ob_start(array('css', 'compress'));
 		css::$parseURLs = false;
 		
 		echo 
 			@file_get_contents('lib/jquery/css3pie.htc', 
 				FILE_USE_INCLUDE_PATH)."\n";
 		
-		if ($compress)
-			ob_end_flush();
-		
+		ob_end_flush();
 		return true;
 	}
 	
-	static function displayCSS($compress = true) {
+	static function displayCSS() {
 		$admin = null;
 		
 		if (isset($_GET['admin']))
@@ -258,9 +262,7 @@ class _css {
 			return true;
 		}
 		
-		if ($compress)
-			ob_start(array('css', 'compress'));
-		
+		ob_start(array('css', 'compress'));
 		css::$parseURLs = true;
 		
 		if ($admin) {
@@ -310,9 +312,7 @@ class _css {
 			echo 
 				@file_get_contents(SITE_PATH.'template/template.css')."\n";
 		
-		if ($compress)
-			ob_end_flush();
-		
+		ob_end_flush();
 		return true;
 	}
 	
