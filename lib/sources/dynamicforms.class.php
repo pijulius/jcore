@@ -1023,7 +1023,7 @@ class _dynamicForms extends form {
 			" SELECT * FROM `{dynamicforms}` " .
 			" WHERE `ID` = '".$id."'"));
 		
-		if ($row['SQLTable']) {
+		if ($row['SQLTable'] && !$row['Protected']) {
 			$usedbyothers = sql::fetch(sql::run(
 				" SELECT * FROM `{dynamicforms}` " .
 				" WHERE `ID` != '".$id."'" .
