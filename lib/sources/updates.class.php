@@ -252,7 +252,9 @@ class _updates {
 			if ($customdelimiter && !$splittedquery)
 				continue;
 			
-			if (sql::run($querybuffer) && sql::display())
+			sql::run($querybuffer, true);
+			
+			if (sql::error())
 				$success = false;
 			
 			$querybuffer = null;
