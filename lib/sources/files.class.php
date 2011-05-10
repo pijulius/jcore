@@ -487,9 +487,9 @@ class _files {
  		return dirs::isWritable(substr($file, 0, strrpos($file, '/')));
  	}
  	
- 	static function delete($file) {
- 		if (strpos($file, '://') !== false)
- 			return false;
+ 	static function delete($file, $debug = false) {
+ 		if ($debug)
+ 			echo sprintf(__("Deleting file %s"), $file)." ... ";
  		
  		if (@is_dir($file)) {
 			$d = dir($file);
@@ -499,10 +499,26 @@ class _files {
 					files::delete($file.'/'.$entry);
 			
 			$d->close();
-			return @rmdir($file);
+			$result = @rmdir($file);
+			
+ 		} else {
+	 		$result = @unlink($file);
  		}
  		
- 		return @unlink($file);
+ 		if (!$result) {
+ 			if ($debug)
+ 				echo "<b class='red'>" .
+ 					strtoupper(__("Error")) .
+					"</b>" .
+					" (".__("not writable").")<br />";
+ 			
+ 			return false;
+ 		}
+ 		
+ 		if ($debug)
+			echo "<b>".strtoupper(__("Ok"))."</b><br />";
+		
+		return $result;
  	}
  	
  	static function rename($file, $to) {
