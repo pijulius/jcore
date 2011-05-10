@@ -1256,14 +1256,17 @@ class _posts {
 		$sitemap = new siteMap();
 		$sitemap->load();
 		
-		$page = sql::fetch(sql::run(
-			" SELECT * FROM `{" .
-				(JCORE_VERSION >= '0.8'?
-					'pages':
-					'menuitems') .
-				"}`" .
-			" WHERE `ID` = '".(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
-			
+		if ((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])
+			$page = sql::fetch(sql::run(
+				" SELECT * FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE `ID` = '".(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
+		else
+			$page = pages::getHome();
+		
 		if (SEO_FRIENDLY_LINKS)
 			$pageurl = SITE_URL.
 				$page['Path'];
@@ -1286,15 +1289,17 @@ class _posts {
 		
 		unset($sitemap);
 		
-		if (!$this->updateRSS() || !$this->updateRSS((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]))
+		if ($page[(JCORE_VERSION >= '0.9'?'AccessibleBy':'ViewableBy')] <= PAGE_GUESTS_ONLY && 
+			(!$this->updateRSS() || !$this->updateRSS($page['ID'])))
 			tooltip::display(
 				__("Post successfully created but rss feed couldn't be updated.")." " .
 				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
 					"rss/"),
 				TOOLTIP_NOTIFICATION);
 		
-		if (defined('BLOG_PING_ON_NEW_POSTS') && BLOG_PING_ON_NEW_POSTS && 
-			!$this->blogPing((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]))
+		if (defined('BLOG_PING_ON_NEW_POSTS') && BLOG_PING_ON_NEW_POSTS &&
+			$page[(JCORE_VERSION >= '0.9'?'AccessibleBy':'ViewableBy')] <= PAGE_GUESTS_ONLY && 
+			!$this->blogPing($page['ID']))
 			tooltip::display(
 				__("Post successfully created but couldn't ping blog servers. " .
 					"Please define at least one blog ping server or multiple " .
@@ -1438,14 +1443,17 @@ class _posts {
 		$sitemap = new siteMap();
 		$sitemap->load();
 		
-		$page = sql::fetch(sql::run(
-			" SELECT * FROM `{" .
-				(JCORE_VERSION >= '0.8'?
-					'pages':
-					'menuitems') .
-				"}`" .
-			" WHERE `ID` = '".(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
-			
+		if ((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])
+			$page = sql::fetch(sql::run(
+				" SELECT * FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE `ID` = '".(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
+		else
+			$page = pages::getHome();
+		
 		if (SEO_FRIENDLY_LINKS)
 			$pageurl = SITE_URL.
 				$page['Path'];
@@ -1468,7 +1476,8 @@ class _posts {
 		
 		unset($sitemap);
 		
-		if (!$this->updateRSS() || !$this->updateRSS((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]))
+		if ($page[(JCORE_VERSION >= '0.9'?'AccessibleBy':'ViewableBy')] <= PAGE_GUESTS_ONLY && 
+			(!$this->updateRSS() || !$this->updateRSS($page['ID'])))
 			tooltip::display(
 				__("Post successfully updated but rss feed couldn't be updated.")." " .
 				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
@@ -1523,11 +1532,7 @@ class _posts {
 			sql::run(
 				" DELETE FROM `{postratings}` " .
 				" WHERE `PostID` = '".$id."'");
-			
-		$page = sql::fetch(sql::run(
-			" SELECT `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` FROM `{posts}` " .
-			" WHERE `ID` = '".$id."'"));
-			
+		
 		sql::run(
 			" DELETE FROM `{posts}` " .
 			" WHERE `ID` = '".$id."'");
@@ -1536,7 +1541,7 @@ class _posts {
 			$row = sql::fetch(sql::run(
 				" SELECT COUNT(`ID`) AS `Rows` FROM `{posts}`" .
 				" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
-					$page[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
+					$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
 			
 			sql::run(
 				"UPDATE `{" .
@@ -1545,14 +1550,26 @@ class _posts {
 						'menuitems') .
 					"}`" .
 				" SET `Posts` = '".(int)$row['Rows']."'" .
-				" WHERE `ID` = '".$page[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'");
+				" WHERE `ID` = '".$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'");
 			
 			$this->updateKeywordsCloud(
 				null, $post['Keywords'],
 				null, (JCORE_VERSION >= '0.7'?$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]:null));
 		}
-					
-		if (!$this->updateRSS() || !$this->updateRSS($page[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]))
+		
+		if ($post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])	
+			$page = sql::fetch(sql::run(
+				" SELECT * FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE `ID` = '".$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
+		else
+			$page = pages::getHome();
+		
+		if ($page[(JCORE_VERSION >= '0.9'?'AccessibleBy':'ViewableBy')] <= PAGE_GUESTS_ONLY && 
+			(!$this->updateRSS() || !$this->updateRSS($page['ID'])))
 			tooltip::display(
 				__("Post successfully deleted but rss feed couldn't be updated.")." " .
 				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
@@ -1602,6 +1619,20 @@ class _posts {
 		$rss = new rss();
 		$rss->file = SITE_PATH.'rss/posts.xml';
 		
+		$ignorepageids = null;
+		$pageids = sql::fetch(sql::run(
+			" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS PageIDs" .
+			" FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
+			" WHERE `Deactivated`" .
+			" OR `".(JCORE_VERSION >= '0.9'?'AccessibleBy':'ViewableBy')."` > 1"));
+		
+		if (isset($pageids['PageIDs']) && $pageids['PageIDs'])
+			$ignorepageids = $pageids['PageIDs'];
+		
 		if ($pageid) {
 			$page = sql::fetch(sql::run(
 				" SELECT `Title`, `Path` " .
@@ -1629,6 +1660,10 @@ class _posts {
 			($pageid?
 				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 					(int)$pageid."'":
+				null) .
+			($ignorepageids?
+				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` NOT IN (" .
+					$ignorepageids.")":
 				null) .
 			" ORDER BY `OrderID`, `StartDate`, `ID` DESC" .
 			" LIMIT 10");
@@ -1667,7 +1702,12 @@ class _posts {
 						null)));
 		}
 		
-		if (!$rss->save()) {
+		if (!count($rss->items)) {
+			files::delete($rss->file);
+			unset($rss);
+			return true;
+			
+		} elseif (!$rss->save()) {
 			unset($rss);
 			return false;
 		}

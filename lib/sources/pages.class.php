@@ -1699,6 +1699,9 @@ class _pages {
 			}
 		}
 		
+		$posts = new posts();
+		$posts->updateRSS($page['ID']);
+		
 		if ((!$page['Deactivated'] && $values['Deactivated']) || (JCORE_VERSION < '0.9' &&
 			$page['ViewableBy'] < $values['ViewableBy'] && $values['ViewableBy'] > 1))
 			$sitemap->delete($pageurl);
@@ -1757,7 +1760,7 @@ class _pages {
 				 $row['ViewableBy'] > $values['ViewableBy'] && $values['ViewableBy'] < 2))
 				$sitemap->add(array('Link' => $url));
 			
-			if ($updatesql)
+			if ($updatesql) {
 				sql::run(
 					" UPDATE `{" .
 						(JCORE_VERSION >= '0.8'?
@@ -1766,6 +1769,9 @@ class _pages {
 						"}` SET" .
 					implode(',', $updatesql) .
 					" WHERE `ID` = '".$row['ID']."'");
+				
+				$posts->updateRSS($row['ID']);
+			}
 		}
 		
 		foreach(pages::getBackTraceTree((int)$id) as $row) {
@@ -1787,7 +1793,7 @@ class _pages {
 				$row['ViewableBy'] > $values['ViewableBy'] && $values['ViewableBy'] < 2))
 				$sitemap->add(array('Link' => $url));
 			
-			if ($updatesql)
+			if ($updatesql) {
 				sql::run(
 					" UPDATE `{" .
 						(JCORE_VERSION >= '0.8'?
@@ -1796,6 +1802,9 @@ class _pages {
 						"}` SET" .
 					implode(',', $updatesql) .
 					" WHERE `ID` = '".$row['ID']."'");
+				
+				$posts->updateRSS($row['ID']);
+			}
 		}
 
 		if (!$sitemap->save())
@@ -1805,7 +1814,11 @@ class _pages {
 					"sitemap.xml"),
 				TOOLTIP_NOTIFICATION);
 		
+		$posts->updateRSS();
+		
+		unset($posts);
 		unset($sitemap);
+		
 		return true;
 	}
 	
@@ -1876,6 +1889,8 @@ class _pages {
 			
 			$url = str_replace('&amp;', '&', $this->generateLink($page));
 			$sitemap->delete($url);
+			
+			$posts->updateRSS($pageid);
 		}
 		
 		if (!$sitemap->save())
@@ -1884,6 +1899,8 @@ class _pages {
 				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
 					"sitemap.xml"),
 				TOOLTIP_NOTIFICATION);
+		
+		$posts->updateRSS();
 		
 		unset($sitemap);
 		unset($posts);
