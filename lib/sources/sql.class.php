@@ -18,6 +18,7 @@ class _sql {
 	static $link = null;
 	static $quiet = false;
 	static $lastQuery = null;
+	static $lastQueryTime = 0;
 	
 	static function setTimeZone() {
 		sql::run("SET `time_zone` = '".
@@ -119,16 +120,10 @@ class _sql {
 	    $result = @mysql_query($query, sql::$link);
 	    
 		if ($debug) {
-			$time = sql::mtimetosec(microtime(true), $time_start);
+			sql::$lastQueryTime = sql::mtimetosec(microtime(true), $time_start);
+			sql::display();
 			
-			tooltip::display(
-				"Query took: $time seconds<br />" .
-				"MySQL error: ". sql::error() . "<br /><br />" .
-				htmlspecialchars($query),
-				TOOLTIP_NOTIFICATION);
-		}
-		
-	    if (!$result) {
+		} elseif (!$result && !sql::$quiet) {
 	    	if (mysql_errno(sql::$link) == 1146 && !headers_sent())
 	    		sql::fatalError(sql::error());
 	    	
@@ -201,17 +196,10 @@ class _sql {
 		}
 		
 		if ($debug) {
-			$time = sql::mtimetosec(microtime(true), $time_start);
+			sql::$lastQueryTime = sql::mtimetosec(microtime(true), $time_start);
+			sql::display();
 		}
- 		
-		if ($debug) {
-			tooltip::display(
-				sprintf(__("Query took %s seconds"), $time)."<br />" .
-				__("SQL Error:")." ". sql::error() . "<br /><br />" .
-				$query,
-				TOOLTIP_NOTIFICATION);
-		}
-	
+		
 		return $row['Rows'];	
 	}
 	
@@ -347,7 +335,7 @@ class _sql {
 	static function displayError() {
 		$error = sql::error();
 		
-		if (!$error || sql::$quiet)
+		if (!$error)
 			return false;
 		
 		if (isset($GLOBALS['USER']) && 
@@ -411,8 +399,15 @@ class _sql {
 		else
 			echo "<b>" .
 					strtoupper(__("Ok")) .
-				"</b> " .
-				sprintf(__("(affected rows: %s)"), sql::affected());
+				"</b> (" .
+				sprintf(__("affected rows: %s"),
+					sql::affected()) .
+					(sql::$lastQueryTime?
+						", " .
+						sprintf(__("query took: %s seconds"), 
+							sql::$lastQueryTime):
+						null).
+					")";
 		
 		echo
 				"</br>" .
