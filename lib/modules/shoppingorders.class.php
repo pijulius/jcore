@@ -4455,7 +4455,7 @@ class shoppingOrders extends modules {
 					"<th><span class='nowrap'>".
 						__("Title / Created on")."</span></th>" .
 					"<th><span class='nowrap'>".
-						__("Orders")."</span></th>" .
+						_("Orders")."</span></th>" .
 					"<th><span class='nowrap'>".
 						__("Comments")."</span></th>" .
 				"</tr>" .
@@ -4607,7 +4607,7 @@ class shoppingOrders extends modules {
 					"<th><span class='nowrap'>".
 						__("Title / Created on")."</span></th>" .
 					"<th><span class='nowrap'>".
-						__("Views")."</span></th>" .
+						_("Views")."</span></th>" .
 					"<th><span class='nowrap'>".
 						__("Comments")."</span></th>" .
 				"</tr>" .
