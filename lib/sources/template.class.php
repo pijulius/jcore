@@ -605,7 +605,7 @@ class _template {
 				$this->displayAdminList($templates, $selectedtemplate);
 			else
 				tooltip::display(
-					__("No installed templates found."),
+					__("No templates found."),
 					TOOLTIP_NOTIFICATION);
 			
 			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
