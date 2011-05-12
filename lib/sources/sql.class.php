@@ -16,6 +16,7 @@ if (!defined('SQL_PREFIX'))
 
 class _sql {
 	static $link = null;
+	static $debug = false;
 	static $quiet = false;
 	static $lastQuery = null;
 	static $lastQueryTime = 0;
@@ -110,7 +111,7 @@ class _sql {
 		
 		sql::$lastQuery = $query;
 		
-		if ($debug)
+		if ($debug || sql::$debug)
 			$time_start = microtime(true);
 	
 		if (!sql::$link) 
@@ -119,7 +120,7 @@ class _sql {
 		$query = sql::prefixTable($query);
 	    $result = @mysql_query($query, sql::$link);
 	    
-		if ($debug) {
+		if ($debug || sql::$debug) {
 			sql::$lastQueryTime = sql::mtimetosec(microtime(true), $time_start);
 			sql::display();
 			
@@ -167,9 +168,8 @@ class _sql {
 	}
 	
 	static function count($tblkey = '`ID`', $debug = false) {
-		if ($debug) {
+		if ($debug || sql::$debug)
 			$time_start = microtime(true);
-		}
 		
 		if (sql::$lastQuery) {
 			$query = sql::$lastQuery;
@@ -195,7 +195,7 @@ class _sql {
 			$row = sql::fetch(sql::run($query));
 		}
 		
-		if ($debug) {
+		if ($debug || sql::$debug) {
 			sql::$lastQueryTime = sql::mtimetosec(microtime(true), $time_start);
 			sql::display();
 		}

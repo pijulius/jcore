@@ -16,6 +16,7 @@ define('FILE_TYPE_BANNER', 4);
 define('FILE_TYPE_AUDIO', 5); 
 
 class _files {
+	static $debug = false;
 	static $allowedFileTypes = array(
 		FILE_TYPE_UPLOAD => '\.(7z|aiff|asf|avi|bmp|csv|doc|fla|flv|gif|gz|gzip|jpeg|jpg|mid|mov|mp3|mp4|mpc|mpeg|mpg|ods|odt|pdf|png|ppt|eps|pxd|qt|ram|rar|rm|rmi|rmvb|rtf|sdc|sitd|swf|sxc|sxw|tar|tgz|tif|tiff|txt|vsd|wav|wma|wmv|xls|xml|zip|patch|sql|mo|po)$',
 		FILE_TYPE_IMAGE => '\.(jpg|gif|jpeg|png|bmp)$',
@@ -488,7 +489,7 @@ class _files {
  	}
  	
  	static function delete($file, $debug = false) {
- 		if ($debug)
+ 		if ($debug || files::$debug)
  			echo sprintf(__("Deleting file %s"), $file)." ... ";
  		
  		if (@is_dir($file)) {
@@ -506,7 +507,7 @@ class _files {
  		}
  		
  		if (!$result) {
- 			if ($debug)
+ 			if ($debug || files::$debug)
  				echo "<b class='red'>" .
  					strtoupper(__("Error")) .
 					"</b>" .
@@ -515,7 +516,7 @@ class _files {
  			return false;
  		}
  		
- 		if ($debug)
+ 		if ($debug || files::$debug)
 			echo "<b>".strtoupper(__("Ok"))."</b><br />";
 		
 		return $result;
@@ -606,13 +607,13 @@ class _files {
  	}
  	
  	static function save($file, $data = null, $debug = false) {
- 		if ($debug)
+ 		if ($debug || files::$debug)
  			echo sprintf(__("Writing file %s"), $file)." ... ";
  		
  		$result = @files::create($file, $data);
  		
  		if (!$result) {
- 			if ($debug)
+ 			if ($debug || files::$debug)
  				echo "<b class='red'>" .
  					strtoupper(__("Error")) .
 					"</b>" .
@@ -621,8 +622,11 @@ class _files {
  			return false;
  		}
  		
- 		if ($debug)
-			echo "<b>".strtoupper(__("Ok"))."</b><br />";
+ 		if ($debug || files::$debug)
+			echo "<b>" .
+				strtoupper(__("Ok")). 
+				"</b>" .
+				" (".files::humanSize(strlen($data)).")<br />";
 		
  		return $result;
  	}
