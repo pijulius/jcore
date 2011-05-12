@@ -522,12 +522,11 @@ class _template {
 	function displayAdmin() {
 		if (JCORE_VERSION < '0.7')
 			$this->displayAdminDescription();
+		else
+			$this->displayAdminTitle();
 		
 		echo
 			"<div class='admin-content'>";
-		
-		if (JCORE_VERSION >= '0.7')
-			$this->displayAdminTitle();
 		
 		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
 			echo 

@@ -684,15 +684,15 @@ class _updates {
 		if (isset($_GET['check']))
 			$check = (bool)$_GET['check'];
 		
-		echo
-			"<div class='admin-content'>";
-		
 		$verifyok = false;
 		$updates = $this->get(null, $check);
 		
 		$this->displayAdminTitle(
 			sprintf(__('ver. %s'), JCORE_VERSION));
 		$this->displayAdminDescription();
+		
+		echo
+			"<div class='admin-content'>";
 		
 		if (count($updates))
 			$this->displayAdminList($updates);
