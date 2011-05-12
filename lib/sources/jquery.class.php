@@ -59,6 +59,58 @@ class _jQuery {
 		return $buffer;
 	}
 	
+	static function addPlugin($plugin) {
+		if (!$plugin)
+			return false;
+		
+		$plugin = trim($plugin);
+		$plugins = jQuery::getPlugins();
+		
+		if (in_array($plugin, $plugins))
+			return true;
+		
+		$plugins[] = $plugin;
+		sql::run(
+			" UPDATE `{settings}` SET" .
+			" `Value` = '".sql::escape(implode(', ', $plugins))."'" .
+			" WHERE `ID` = 'jQuery_Load_Plugins';");
+		
+		if (sql::error())
+			return false;
+		
+		return true;
+	}
+	
+	static function removePlugin($plugin) {
+		if (!$plugin)
+			return false;
+		
+		$plugin = trim($plugin);
+		$plugins = jQuery::getPlugins();
+		
+		if (!in_array($plugin, $plugins))
+			return true;
+		
+		unset($plugins[array_search($plugin, $plugins)]);
+		sql::run(
+			" UPDATE `{settings}` SET" .
+			" `Value` = '".sql::escape(implode(', ', $plugins))."'" .
+			" WHERE `ID` = 'jQuery_Load_Plugins';");
+		
+		if (sql::error())
+			return false;
+		
+		return true;
+	}
+	
+	static function getPlugins() {
+		$plugins = sql::fetch(sql::run(
+			" SELECT `Value` FROM `{settings}`" .
+			" WHERE `ID` = 'jQuery_Load_Plugins'"));
+		
+		return explode(',', str_replace(' ', '', $plugins['Value']));
+	}
+	
 	function ajaxRequest() {
 		$admin = null;
 		$request = null;
