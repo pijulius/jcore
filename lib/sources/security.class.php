@@ -976,6 +976,20 @@ class _security {
 		
 		return long2ip($long);
 	}
+	
+	function checkOutOfMemory($datalength, $multiplier = 1) {
+		$memoryneeded = round($datalength*$multiplier);
+		
+		$availablememory = settings::iniGet('memory_limit', true);
+		
+		if (!$availablememory)
+			return false;
+			
+		if ($memoryneeded+memory_get_usage() < $availablememory)
+			return false;
+			
+		return true;
+	}
 }
 
 ?>
