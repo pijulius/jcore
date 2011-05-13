@@ -117,22 +117,10 @@ class _updates {
 		if (!$successfiles || !$successsql)
 			return false;
 		
-		if ($this->testing) {
-			tooltip::display(
-				__("Test has been successfully completed."),
-				TOOLTIP_NOTIFICATION);
-			
-		} else { 
+		if (!$this->testing) {
 			$settings = new settings();
 			$settings->set('Maintenance_Website_Suspended', '0');
 			unset($settings);
-			
-			tooltip::display(
-				__("Update has been successfully installed.")." " .
-				"<a href='".url::uri('update, check')."'>" .
-					__("Refresh") .
-				"</a>",
-				TOOLTIP_SUCCESS);
 		}
 		
 		if (!$packagefile)
@@ -283,7 +271,7 @@ class _updates {
 		echo
 			sprintf(__("Uncompressing %s"), $packagefile)." ... ";
 		
-		if ($this->checkOutOfMemory($this->rootPath.$packagefile)) {
+		if (security::checkOutOfMemory(@filesize($this->rootPath.$packagefile), 6)) {
 			echo
 				"<b class=\"red\">" .
 					strtoupper(__("Error")) .
@@ -521,6 +509,85 @@ class _updates {
 		}
 		
 		return $success;
+	}
+	
+	function displayInstallResults($title, $results, $success = false) {
+		echo
+			"<div tabindex='0' class='fc" .
+				(!$success?
+					" expanded":
+					null) .
+				"'>" .
+				"<a class='fc-title'>" .
+				($success?
+					" <span class='align-right'>[".strtoupper(__("Success"))."]</span>":
+					" <span class='align-right'>[".strtoupper(__("Error"))."]</span>") .
+				$title .
+				"</a>" .
+				"<div class='fc-content'>" .
+					$results .
+				"</div>" .
+			"</div>";
+	}
+	
+	function displayInstallFunctions($installbutton = false) {
+		if ($installbutton)
+			echo
+				"<input type='submit' name='install' value='" .
+					htmlspecialchars(__("Install Update"), ENT_QUOTES) .
+					"' class='button submit' /> ";
+		
+		echo
+			"<input type='button' name='refresh' value='" .
+				htmlspecialchars(__("Test Update"), ENT_QUOTES) .
+				"' class='button' onclick=\"window.location.reload();\" />";
+	}
+	
+	function displayInstall($update = null) {
+		if (!$update && !$this->selectedUpdate)
+			return false;
+		
+		if (!$update && !$update = $this->get($this->selectedUpdate))
+			return false;
+		
+		if (isset($_POST['install']) && $_POST['install'])
+			$this->testing = false;
+		
+		$success = $this->install($update);
+		
+		if ($success) {
+			if ($this->testing)
+				tooltip::display(
+					__("Test has been successfully completed."),
+					TOOLTIP_NOTIFICATION);
+			else 
+				tooltip::display(
+					__("Update has been successfully installed.")." " .
+					"<a href='".url::uri('update, check')."'>" .
+						__("Refresh") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+		
+		} else {
+			tooltip::display(
+				($this->testing?
+					__("Test couldn't be successfully completed!"):
+					__("Update couldn't be installed!"))." " .
+				__("Please review and fix the errors above and try again."),
+				TOOLTIP_ERROR);
+		}
+		
+		if (!$this->testing && $success)
+			return true;
+		
+		echo
+			"<form action='".url::uri()."' id='updateinstallform' method='post'>";
+		
+		$this->displayInstallFunctions($success);
+		
+		echo
+			"</form>" .
+			"<div class='clear-both'></div>";
 	}
 	
 	// ************************************************   Admin Part
@@ -1038,20 +1105,6 @@ class _updates {
 		return $content;
 	}
 	
-	function checkOutOfMemory($file) {
-		$memoryneeded = round(@filesize($file)*6);
-		
-		$availablememory = settings::iniGet('memory_limit', true);
-		
-		if (!$availablememory)
-			return false;
-			
-		if ($memoryneeded+memory_get_usage() < $availablememory)
-			return false;
-			
-		return true;
-	}
-	
 	function ajaxRequest() {
 		$counter = null;
 		
@@ -1081,63 +1134,6 @@ class _updates {
 		}
 		
 		return true;
-	}
-	
-	function displayInstallResults($title, $results, $success = false) {
-		echo
-			"<div tabindex='0' class='fc" .
-				(!$success?
-					" expanded":
-					null) .
-				"'>" .
-				"<a class='fc-title'>" .
-				($success?
-					" <span class='align-right'>[".strtoupper(__("Success"))."]</span>":
-					" <span class='align-right'>[".strtoupper(__("Error"))."]</span>") .
-				$title .
-				"</a>" .
-				"<div class='fc-content'>" .
-					$results .
-				"</div>" .
-			"</div>";
-	}
-	
-	function displayInstallFunctions($installbutton = false) {
-		if ($installbutton)
-			echo
-				"<input type='submit' name='install' value='" .
-					htmlspecialchars(__("Install Update"), ENT_QUOTES) .
-					"' class='button submit' /> ";
-		
-		echo
-			"<input type='button' name='refresh' value='" .
-				htmlspecialchars(__("Test Update"), ENT_QUOTES) .
-				"' class='button' onclick=\"window.location.reload();\" />";
-	}
-	
-	function displayInstall($update = null) {
-		if (!$update && !$this->selectedUpdate)
-			return false;
-		
-		if (!$update && !$update = $this->get($this->selectedUpdate))
-			return false;
-		
-		if (isset($_POST['install']) && $_POST['install'])
-			$this->testing = false;
-		
-		$success = $this->install($update);
-		
-		if (!$this->testing && $success)
-			return true;
-		
-		echo
-			"<form action='".url::uri()."' id='updateinstallform' method='post'>";
-		
-		$this->displayInstallFunctions($success);
-		
-		echo
-			"</form>" .
-			"<div class='clear-both'></div>";
 	}
 }
 

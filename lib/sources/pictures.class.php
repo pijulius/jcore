@@ -1233,22 +1233,6 @@ class _pictures {
     	return $img; 
 	}
 	
-	function checkOutOfMemory($imageinfo) {
-		$memoryneeded = Round(($imageinfo[0] * $imageinfo[1] * 
-			@$imageinfo['bits'] * @$imageinfo['channels'] / 8 + 
-			Pow(2, 16)) * 1.65);
-		
-		$availablememory = settings::iniGet('memory_limit', true);
-		
-		if (!$availablememory)
-			return false;
-			
-		if ($memoryneeded+memory_get_usage() < $availablememory)
-			return false;
-			
-		return true;
-	}
-
 	function uploadThumbnail($file, $to, $filename = null) {
 		return files::upload(
 			$file,
@@ -1298,7 +1282,10 @@ class _pictures {
 			}
 		}
 		
-		if ($this->checkOutOfMemory($file_data)) {
+		if (security::checkOutOfMemory(Round(($file_data[0] * $file_data[1] * 
+			@$file_data['bits'] * @$file_data['channels'] / 8 + 
+			Pow(2, 16)) * 1.65)))
+		{
 			tooltip::display(
 				__("Couldn't create thumbnail as the defined picture " .
 					"is to big to be processed with the current memory limit " .
@@ -1433,7 +1420,10 @@ class _pictures {
 		
 		$file_data = @getimagesize($file);
 		
-		if ($this->checkOutOfMemory($file_data)) {
+		if (security::checkOutOfMemory(Round(($file_data[0] * $file_data[1] * 
+			@$file_data['bits'] * @$file_data['channels'] / 8 + 
+			Pow(2, 16)) * 1.65))) 
+		{
 			tooltip::display(
 				__("Couldn't add watermark to picture as the picture " .
 					"is to big to be processed with the current memory limit " .

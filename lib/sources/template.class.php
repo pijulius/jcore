@@ -925,7 +925,7 @@ class _template {
 		if (!$filename = files::upload($file, $this->rootPath, FILE_TYPE_UPLOAD))
 			return false;
 		
-		if ($this->checkOutOfMemory($this->rootPath.$filename)) {
+		if (security::checkOutOfMemory(@filesize($this->rootPath.$filename), 3)) {
 			tooltip::display(
 				__("Couldn't extract template as it is to big to be processed " .
 					"with the current memory limit set. " .
@@ -1011,20 +1011,6 @@ class _template {
 		files::delete($this->rootPath.$filename);
 		unset($tar);
 		
-		return true;
-	}
-	
-	function checkOutOfMemory($file) {
-		$memoryneeded = round(@filesize($file)*3);
-		
-		$availablememory = settings::iniGet('memory_limit', true);
-		
-		if (!$availablememory)
-			return false;
-			
-		if ($memoryneeded+memory_get_usage() < $availablememory)
-			return false;
-			
 		return true;
 	}
 	
