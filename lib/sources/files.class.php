@@ -502,8 +502,10 @@ class _files {
 			$d->close();
 			$result = @rmdir($file);
 			
- 		} else {
+ 		} elseif (@file_exists($file)) {
 	 		$result = @unlink($file);
+ 		} else {
+ 			$result = true;
  		}
  		
  		if (!$result) {
