@@ -791,7 +791,7 @@ class _dynamicForms extends form {
 				" `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY" .
 				" ) ENGINE = MYISAM ;");
 			
-			if (sql::display(true))
+			if (sql::error())
 				return false;
 		}
 			
@@ -888,7 +888,7 @@ class _dynamicForms extends form {
 				" `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY" .
 				" ) ENGINE = MYISAM ;");
 			
-			if (sql::display(true))
+			if (sql::error())
 				return false;
 			
 			$formfields = new dynamicFormFields();
@@ -946,7 +946,7 @@ class _dynamicForms extends form {
 				" RENAME TABLE `{".$row['SQLTable']. "}`" .
 				" TO `{".$values['SQLTable']."}` ;");
 			
-			if (sql::display(true))
+			if (sql::error())
 				return false;
 		}
 			
@@ -963,7 +963,7 @@ class _dynamicForms extends form {
 			sql::run(
 				" DROP TABLE `{".$row['SQLTable']. "}`;");
 			
-			if (sql::display(true))
+			if (sql::error())
 				return false;
 		}
 			
@@ -1033,7 +1033,7 @@ class _dynamicForms extends form {
 				sql::run(
 					" DROP TABLE `{".$row['SQLTable']."}`;");
 				
-				if (sql::display(true))
+				if (sql::error())
 					return false;
 			}
 		}

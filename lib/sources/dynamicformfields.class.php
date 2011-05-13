@@ -1035,7 +1035,7 @@ class _dynamicFormFields {
 					" ADD `".$values['Name']."` VARCHAR( 255 ) NOT NULL DEFAULT '';");
 		}
 		
-		if (sql::display(true))
+		if (sql::error())
 			return false;
 			
 		if (JCORE_VERSION >= '0.7' && in_array($values['ValueType'], array(
@@ -1145,7 +1145,7 @@ class _dynamicFormFields {
 					" CHANGE `".$row['Name']."` `".$values['Name']."` VARCHAR( 255 ) NOT NULL DEFAULT '';");
 		}
 		
-		if (sql::display(true))
+		if (sql::error())
 			return false;
 			
 		if (JCORE_VERSION >= '0.7' && in_array($values['ValueType'], array(
@@ -1195,7 +1195,7 @@ class _dynamicFormFields {
 						" ALTER TABLE `{".$this->storageSQLTable."}`" .
 						" DROP `".$row['Name']."`;");
 					
-					if (sql::display(true))
+					if (sql::error(true))
 						return false;
 				}
 			}
