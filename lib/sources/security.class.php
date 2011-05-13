@@ -977,7 +977,7 @@ class _security {
 		return long2ip($long);
 	}
 	
-	function checkOutOfMemory($datalength, $multiplier = 1) {
+	static function checkOutOfMemory($datalength, $multiplier = 1) {
 		$memoryneeded = round($datalength*$multiplier);
 		
 		$availablememory = settings::iniGet('memory_limit', true);
