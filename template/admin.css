@@ -208,6 +208,10 @@
 	background-image: url("http://icons.jcore.net/48/menus.png");
 }
 
+.as-site-modules a {
+	background-image: url("http://icons.jcore.net/48/puzzle.png");
+}
+
 .as-site-template a {
 	background-image: url("http://icons.jcore.net/48/emblem-art.png");
 }
@@ -273,7 +277,7 @@
 }
 
 .as-site-updates a {
-	background-image: url("http://icons.jcore.net/48/system-software-update.png");
+	background-image: url("http://icons.jcore.net/48/system-upgrade.png");
 }
 
 .as-members-users a {

@@ -2109,26 +2109,25 @@ class shoppingOrders extends modules {
 			" SELECT * FROM `{dynamicforms}` " .
 			" WHERE `FormID` = 'shoppingorders';"));
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
-		$formid = $exists['ID'];
-			
-		if (!$exists) {
+		
+		if ($exists)
+			$formid = $exists['ID'];
+		else
 			$formid = sql::run(
 				" INSERT INTO `{dynamicforms}` " .
 				" (`Title`, `FormID`, `Method`, `SendNotificationEmail`, `SQLTable`, `Protected`, `ProtectedSQLTable`, `BrowseDataURL`) VALUES" .
 				" ('Shopping Orders', 'shoppingorders', 'post', 0, 'shoppingorders', 1, 1, '?path=admin/modules/shoppingorders');");
 			
-			if (sql::display())
-				return false;
-		}
+		if (sql::error())
+			return false;
 		
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicformfields}` " .
 			" WHERE `FormID` = '".$formid."';"));
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		if (!$exists) {
@@ -2162,7 +2161,7 @@ class shoppingOrders extends modules {
 				" (".$formid.", 'Please enter your gift message here', 'GiftMessage', 6, 9, 0, '', '', '', '', 'width: 300px;', 25, 0)," .
 				" (".$formid.", ' ', '', 14, 0, 0, '', '', '', '', '', 26, 0);");
 			
-			if (sql::display())
+			if (sql::error())
 				return false;
 		}
 		
@@ -2206,7 +2205,7 @@ class shoppingOrders extends modules {
 			" KEY `OrderStatus` (`OrderStatus`,`PaymentStatus`)" .
 			") ENGINE=MyISAM ;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		sql::run(
@@ -2221,7 +2220,7 @@ class shoppingOrders extends modules {
 			" KEY `ShoppingOrderID` (`ShoppingOrderID`)" .
 			") ENGINE=MyISAM ;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		sql::run(
@@ -2243,7 +2242,7 @@ class shoppingOrders extends modules {
 			" KEY `Pending` (`Pending`)" .
 			") ENGINE=MyISAM ;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		sql::run(
@@ -2257,7 +2256,7 @@ class shoppingOrders extends modules {
 			" KEY `Rating` (`Rating`)" .
 			") ENGINE=MyISAM ;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		sql::run(
@@ -2273,7 +2272,7 @@ class shoppingOrders extends modules {
 			" INDEX (  `ShoppingOrderID` ,  `ShoppingItemID` ,  `ShoppingItemDigitalGoodID` )" .
 			") ENGINE = MYISAM ;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		$exists = sql::fetch(sql::run(
@@ -2283,7 +2282,7 @@ class shoppingOrders extends modules {
 					null) .
 				"shoppingcartsettings'"));
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		if (!$exists) {
@@ -2299,7 +2298,7 @@ class shoppingOrders extends modules {
 			" SELECT * FROM `{shoppingcartsettings}`" .
 			" WHERE `ID` LIKE 'Shopping_Cart_Order_Method%'"));
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		if (!$exists) {
@@ -2308,7 +2307,7 @@ class shoppingOrders extends modules {
 				" ORDER BY `OrderID` DESC" .
 				" LIMIT 1"));
 		
-			if (sql::display())
+			if (sql::error())
 				return false;
 				
 			$nextorderid = (int)($lastorderid['OrderID']+1);
@@ -2368,26 +2367,12 @@ class shoppingOrders extends modules {
 				" ('Shopping_Cart_Order_Method_Ogone_Page_Logo', '', 1, ".($nextorderid+8).")," .
 				" ('Shopping_Cart_Order_Method_Ogone_Dynamic_Template_URL', '', 1, ".($nextorderid+8).");");
 			
-			if (sql::display())
+			if (sql::error())
 				return false;
 		}
 		
-		$exists = sql::fetch(sql::run(
-			" SELECT * FROM `{settings}`" .
-			" WHERE `ID` = 'jQuery_Load_Plugins'"));
-		
-		if (sql::display())
+		if (!jQuery::addPlugin('numberformat'))
 			return false;
-		
-		if ($exists && !preg_match('/numberformat/i', $exists['Value'])) {
-			sql::run(
-				" UPDATE `{settings}` SET" .
-				" `Value` = CONCAT(`Value`, ', numberformat')" .
-				" WHERE `ID` = 'jQuery_Load_Plugins';");
-			
-			if (sql::display())
-				return false;
-		}
 		
 		return true;
 	}
@@ -2492,7 +2477,49 @@ class shoppingOrders extends modules {
 			"}\n";
 		
 		return
-			files::save(SITE_PATH.'template/modules/css/shoppingorders.css', $css, true);
+			files::save(SITE_PATH.'template/modules/css/shoppingorders.css', $css);
+	}
+	
+	function uninstallSQL() {
+		$exists = sql::fetch(sql::run(
+			" SELECT * FROM `{dynamicforms}` " .
+			" WHERE `FormID` = 'shoppingorders';"));
+		
+		if ($exists) {
+			$form = new dynamicForms();
+			$form->deleteForm($exists['ID']);
+			unset($form);
+		}
+		
+		sql::run(
+			" DROP TABLE IF EXISTS `{shoppingorders}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{shoppingorderitems}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{shoppingordercomments}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{shoppingordercommentsratings}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{shoppingorderdownloads}`;");
+		
+		$exists = sql::fetch(sql::run(
+			" SHOW TABLES LIKE '" .
+				(SQL_PREFIX?
+					SQL_PREFIX.'_':
+					null) .
+				"shoppingcartsettings'"));
+		
+		if ($exists)
+			sql::run(
+				" DELETE FROM `{shoppingcartsettings}`" .
+				" WHERE `ID` LIKE 'Shopping_Cart_Order_Method%'");
+		
+		return true;
+	}
+	
+	function uninstallFiles() {
+		return
+			files::delete(SITE_PATH.'template/modules/css/shoppingorders.css');
 	}
 	
 	// ************************************************   Admin Part

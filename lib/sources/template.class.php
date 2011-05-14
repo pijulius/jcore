@@ -281,8 +281,7 @@ class _template {
 					"<div class='template-details'>" .
 						sprintf(__("by %s"), $row['_Author']) .
 						($row['_URI']?
-							" (<a href='".$row['_URI']."' target='_blank'>" .
-								$row['_URI']."</a>)":
+							" (".$row['_URI'].")":
 							null) .
 					"</div>" .
 					"<div class='template-description'>" .
@@ -1042,7 +1041,7 @@ class _template {
 			preg_match('/'.$variable.': (.*)$/mi', $data, $matches);
 			
 			if (isset($matches[1]))
-				$values['_'.$variable] = $matches[1];
+				$values['_'.$variable] = url::parseLinks(trim($matches[1]));
 		}
 		
 		return $values;

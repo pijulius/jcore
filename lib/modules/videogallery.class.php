@@ -761,7 +761,7 @@ class videoGallery extends modules {
 			" KEY `MembersOnly` (`MembersOnly`, `ShowToGuests`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -781,7 +781,7 @@ class videoGallery extends modules {
 			" KEY `VideoGalleryID` (`VideoGalleryID`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -803,7 +803,7 @@ class videoGallery extends modules {
 			" KEY `Pending` (`Pending`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -817,7 +817,7 @@ class videoGallery extends modules {
 			" KEY `Rating` (`Rating`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -836,7 +836,7 @@ class videoGallery extends modules {
 			" KEY `VideoGalleryID` (`VideoGalleryID`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -850,7 +850,7 @@ class videoGallery extends modules {
 			" KEY `VideoGalleryID` (`VideoGalleryID`,`UserID`,`IP`,`TimeStamp`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		return true;
@@ -965,7 +965,29 @@ class videoGallery extends modules {
 			"}\n";
 		
 		return
-			files::save(SITE_PATH.'template/modules/css/videogallery.css', $css, true);
+			files::save(SITE_PATH.'template/modules/css/videogallery.css', $css);
+	}
+	
+	function uninstallSQL() {
+		sql::run(
+			" DROP TABLE IF EXISTS `{videogalleries}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{videogalleryicons}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{videogallerycomments}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{videogallerycommentsratings}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{videogalleryvideos}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{videogalleryratings}`;");
+		
+		return true;
+	}
+	
+	function uninstallFiles() {
+		return
+			files::delete(SITE_PATH.'template/modules/css/videogallery.css');
 	}
 	
 	// ************************************************   Admin Part

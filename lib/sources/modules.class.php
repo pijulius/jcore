@@ -38,10 +38,17 @@ class _modules {
 			" SELECT * FROM `{".$this->sqlTable."}`, `{modules}` " .
 			" WHERE `".$this->sqlRow."` = '".$this->selectedOwnerID."'" .
 			" AND `ModuleID` = `ID`" .
+			" AND `Installed`" .
+			(JCORE_VERSION >= '0.9'?
+				" AND !`Deactivated`":
+				null) .
 			" ORDER BY `Name`";
 	}
 	
 	function install() {
+		files::$debug = true;
+		sql::$debug = true;
+		
 		ob_start();
 		
 		$obcontent = null;
@@ -51,18 +58,17 @@ class _modules {
 		ob_end_clean();
 		
 		$this->displayInstallResults(
-			__("Installing files"),
+			__("Writing files"),
 			$obcontent,
 			$successfiles);
 		
 		ob_start();
-		sql::$quiet = true;
 		
 		$obcontent = null;
 		$successsql = $this->installSQL();
+		$successcustom = $this->installCustom();
 		$obcontent = ob_get_contents();
 		
-		sql::$quiet = false;
 		ob_end_clean();
 		
 		$this->displayInstallResults(
@@ -70,13 +76,19 @@ class _modules {
 			$obcontent,
 			$successsql);
 		
-		if (!$successfiles || !$successsql)
+		files::$debug = false;
+		sql::$debug = false;
+		
+		if (!$successfiles || !$successsql || !$successcustom) {
+			tooltip::display(
+				__("Module couldn't be installed!")." " .
+				__("Please see detailed error messages above and try again."),
+				TOOLTIP_ERROR);
+			
 			return false;
+		}
 		
-		ob_start();
-		
-		$obcontent = null;
-		$success = false;
+		$module = ucfirst(get_class($this));
 		
 		if (!$csssuccess = css::update())
 			tooltip::display(
@@ -92,50 +104,104 @@ class _modules {
 					"template/template.js"),
 				TOOLTIP_ERROR);
 		
-		$exists = sql::fetch(sql::run(
-			" SELECT `ID` FROM `{modules}` " .
-			" WHERE `Name` LIKE '".ucfirst(get_class($this))."'"));
+		if (!$csssuccess || !$jssuccess)
+			return false;
 		
-		if (!sql::display() && $csssuccess && $jssuccess) {
-			if ($exists) {
-				sql::run(
-					" UPDATE `{modules}` SET " .
-					(JCORE_VERSION >= '0.5' && $this->searchable?
-						" `Searchable` = 1,":
-						null) .
-					" `Installed` = 1" .
-					" WHERE `Name` LIKE '".ucfirst(get_class($this))."'");
-			} else {
-				sql::run(
-					" INSERT INTO `{modules}` SET " .
-					" `Name` = '".ucfirst(get_class($this))."'," .
-					(JCORE_VERSION >= '0.5' && $this->searchable?
-						" `Searchable` = 1,":
-						null) .
-					" `Installed` = 1");
-			}
-			
-			if (!sql::display())
-				$success = true;
-		}
-			
+		$exists = modules::get($module);
+		
+		if ($exists)
+			sql::run(
+				" UPDATE `{modules}` SET " .
+				(JCORE_VERSION >= '0.5' && $this->searchable?
+					" `Searchable` = 1,":
+					null) .
+				(JCORE_VERSION >= '0.9'?
+					" `Deactivated` = 0,":
+					null) .
+				" `Installed` = 1" .
+				" WHERE `ID` = '".$exists['ID']."'");
+		else
+			sql::run(
+				" INSERT INTO `{modules}` SET " .
+				" `Name` = '".sql::escape($module)."'," .
+				(JCORE_VERSION >= '0.5' && $this->searchable?
+					" `Searchable` = 1,":
+					null) .
+				(JCORE_VERSION >= '0.9'?
+					" `Deactivated` = 0,":
+					null) .
+				" `Installed` = 1");
+		
+		if (!sql::error())
+			return true;
+		
+		return false;
+	}
+	
+	function uninstall() {
+		files::$debug = true;
+		sql::$debug = true;
+		
+		ob_start();
+		
+		$obcontent = null;
+		$this->uninstallFiles();
 		$obcontent = ob_get_contents();
+		
 		ob_end_clean();
 		
 		$this->displayInstallResults(
-			__("Activating Module"),
+			__("Deleting files"),
 			$obcontent,
-			$success);
+			null);
 		
-		if (!$success)
+		ob_start();
+		
+		$obcontent = null;
+		$this->uninstallSQL();
+		$this->uninstallCustom();
+		$obcontent = ob_get_contents();
+		
+		ob_end_clean();
+		
+		$this->displayInstallResults(
+			__("Running SQL Queries"),
+			$obcontent,
+			null);
+		
+		files::$debug = false;
+		sql::$debug = false;
+		
+		$module = ucfirst(get_class($this));
+		
+		css::update();
+		jQuery::update();
+		
+		$exists = modules::get($module);
+		
+		if (sql::error())
 			return false;
 		
-		tooltip::display(
-			__("Module has been successfully installed.")." " .
-			"<a href='".url::uri()."'>" .
-				__("View Module") .
-			"</a>",
-			TOOLTIP_SUCCESS);
+		if (!$exists)
+			return true;
+		
+		sql::run(
+			" DELETE FROM `{modules}` " .
+			" WHERE `ID` = '".$exists['ID']."'");
+		
+		if (sql::error())
+			return false;
+		
+		sql::run(
+			" DELETE FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pagemodules':
+					'menuitemmodules') .
+				"}` " .
+			" WHERE `ModuleID` = '".$exists['ID']."'");
+		
+		if (sql::error())
+			return false;
 		
 		return true;
 	}
@@ -152,21 +218,40 @@ class _modules {
 		return true;
 	}
 	
-	// ************************************************   Admin Part
-	function verifyAdmin(&$form = null) {
+	function installCustom() {
+		return true;
 	}
 	
+	function uninstallSQL() {
+		echo "<p>".__("No SQL queries to run.")."</p>";
+		
+		return true;
+	}
+	
+	function uninstallFiles() {
+		echo "<p>".__("No files to uninstall.")."</p>";
+		
+		return true;
+	}
+	
+	function uninstallCustom() {
+		return true;
+	}
+	
+	// ************************************************   Admin Part
 	function displayInstallResults($title, $results, $success = false) {
 		echo
 			"<div tabindex='0' class='fc" .
-				(!$success?
+				(isset($success) && !$success?
 					" expanded":
 					null) .
 				"'>" .
 				"<a class='fc-title'>" .
-				($success?
-					" <span class='align-right'>[".strtoupper(__("Success"))."]</span>":
-					" <span class='align-right'>[".strtoupper(__("Error"))."]</span>") .
+				(isset($success)?
+					($success?
+						" <span class='align-right'>[".strtoupper(__("Success"))."]</span>":
+						" <span class='align-right'>[".strtoupper(__("Error"))."]</span>"):
+					null) .
 				$title .
 				"</a>" .
 				"<div class='fc-content'>" .
@@ -214,12 +299,20 @@ class _modules {
 			"<div class='admin-content'>";
 			
 		if ($install && $this->install()) {
+			tooltip::display(
+				__("Module has been successfully installed.")." " .
+				"<a href='".url::uri()."'>" .
+					__("View Module") .
+				"</a>",
+				TOOLTIP_SUCCESS);
+			
 			echo "</div>"; //admin-content
 			return true;
 		}
 		
-		$this->displayInstallNotification();
-
+		if (!$install)
+			$this->displayInstallNotification();
+		
 		echo
 			"<form action='".url::uri()."' id='moduleinstallform' method='post'>" .
 			"<input type='hidden' name='install' value='1' />";
@@ -242,12 +335,15 @@ class _modules {
 		return true;
 	}
 	
-	// ************************************************   Client Part
 	static function loadAdmin() {
-		modules::loadModules(true);
+		modules::loadModules((JCORE_VERSION < '0.3'?true:false));
 		ksort(modules::$available);
 		
 		foreach(modules::$available as $id => $details) {
+			if (JCORE_VERSION >= '0.9' && 
+				(!isset(modules::$loaded[$id]) || !modules::$loaded[$id]))
+				continue;
+			
 			admin::add('Modules', $id, 
 				"<a href='".url::uri('ALL')."?path=admin/modules/".strtolower($id)."' " .
 					"title='".htmlspecialchars($details['Description'], ENT_QUOTES)."'>" .
@@ -256,9 +352,17 @@ class _modules {
 		}
 	}
 	
+	// ************************************************   Client Part
 	static function loadModules($skipinstalledcheck = false) {
 		$rows = sql::run(
 			" SELECT * FROM `{modules}`" .
+			" WHERE 1" .
+			(!$skipinstalledcheck?
+				" AND `Installed`":
+				null) .
+			(JCORE_VERSION >= '0.9'?
+				" AND !`Deactivated`":
+				null) .
 			" ORDER BY `Name`");
 			
 		while($row = sql::fetch($rows)) {
@@ -306,8 +410,10 @@ class _modules {
 		$module = strtolower(preg_replace(
 					'/[^a-zA-Z0-9\@\.\_\-]/', '', $module));
 		
-		if (isset(modules::$loaded[$module]))
-			return true;
+		if (isset(modules::$loaded[$module]) && (!$skipinstalledcheck || modules::$loaded[$module]))
+			return modules::$loaded[$module];
+		
+		modules::$loaded[$module] = false;
 		
 		if (@is_dir(SITE_PATH.'lib/modules/'.$module))
 			include_once('lib/modules/'.$module.'/'.$module.'.class.php');
@@ -317,8 +423,15 @@ class _modules {
 		if (!class_exists($module))
 			return false;
 			
-		if (!$skipinstalledcheck && !modules::installed($module))
-			return false;
+		if (!$skipinstalledcheck) {
+			$exists = modules::get($module);
+			
+			if (!$exists || !$exists['Installed'] || 
+				(JCORE_VERSION >= '0.9' && $exists['Deactivated']))
+				return false;
+		}
+		
+		modules::$loaded[$module] = true;
 		
 		if ($quiet)
 			return true;
@@ -338,8 +451,6 @@ class _modules {
 						url::site()."template/modules/js/".$module.".js?revision=".
 						JCORE_VERSION .
 						"' type='text/javascript' language='Javascript'></script>\n";
-		
-		modules::$loaded[$module] = true;
 		
 		return true;
 	}
@@ -374,13 +485,15 @@ class _modules {
 		if ($id)
 			return sql::fetch(sql::run(
 				" SELECT * FROM `{modules}`" .
-				" WHERE `Installed`" .
-				" AND `Name` LIKE '".sql::escape($id)."'" .
-				" ORDER BY `Name`"));
+				" WHERE `Name` LIKE '".sql::escape($id)."'" .
+				" LIMIT 1"));
 		
 		return sql::run(
 			" SELECT * FROM `{modules}`" .
 			" WHERE `Installed`" .
+			(JCORE_VERSION >= '0.9'?
+				" AND !`Deactivated`":
+				null) .
 			" ORDER BY `Name`");
 	}
 	
@@ -501,7 +614,10 @@ class _modules {
 		return sql::count(
 			" SELECT COUNT(*) AS `Rows` " .
 			" FROM `{modules}`" .
-			" WHERE `Installed`");
+			" WHERE `Installed`" .
+			(JCORE_VERSION >= '0.9'?
+				" AND !`Deactivated`":
+				null));
 	}
 	
 	static function displayCSSLinks() {
@@ -510,7 +626,10 @@ class _modules {
 			
 		$modules = sql::run(
 			" SELECT `Name` FROM `{modules}`" .
-			" WHERE `Installed`");
+			" WHERE `Installed`" .
+			(JCORE_VERSION >= '0.9'?
+				" AND !`Deactivated`":
+				null));
 			
 		while($module = sql::fetch($modules)) {
 			if (@is_file(SITE_PATH.'template/modules/css/'.
@@ -530,13 +649,16 @@ class _modules {
 		if (!$this->sqlTable)
 			return;
 		
+		$rows = sql::run(
+			$this->SQL());
+		
+		if (!sql::rows($rows))
+			return;
+		
 		$owner = sql::fetch(sql::run(
 			" SELECT * FROM `{".$this->sqlOwnerTable. "}`" .
 			" WHERE `ID` = '".$this->selectedOwnerID."'"));
 		
-		$rows = sql::run(
-			$this->SQL());
-
 		while($row = sql::fetch($rows)) {
 			$modulename = preg_replace('/[^a-zA-Z0-9\_\-]/', '', 
 				$row['Name']);

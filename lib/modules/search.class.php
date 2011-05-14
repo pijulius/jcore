@@ -59,7 +59,7 @@ class search extends modules {
 			" KEY `Counter` (`Counter`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -69,7 +69,7 @@ class search extends modules {
 			" INDEX ( `ModuleID` )" .
 			" ) ENGINE = MYISAM ;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		return true;
@@ -129,7 +129,21 @@ class search extends modules {
 			"}\n";
 		
 		return
-			files::save(SITE_PATH.'template/modules/css/search.css', $css, true);
+			files::save(SITE_PATH.'template/modules/css/search.css', $css);
+	}
+	
+	function uninstallSQL() {
+		sql::run(
+			" DROP TABLE IF EXISTS `{searches}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{searchmodules}`;");
+		
+		return true;
+	}
+	
+	function uninstallFiles() {
+		return
+			files::delete(SITE_PATH.'template/modules/css/search.css');
 	}
 	
 	// ************************************************   Admin Part

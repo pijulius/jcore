@@ -168,9 +168,6 @@ class _sql {
 	}
 	
 	static function count($tblkey = '`ID`', $debug = false) {
-		if ($debug || sql::$debug)
-			$time_start = microtime(true);
-		
 		if (sql::$lastQuery) {
 			$query = sql::$lastQuery;
 			preg_match("/FROM (.*?) (GROUP|ORDER|LIMIT)/is", $query, $found);
@@ -187,17 +184,12 @@ class _sql {
 			}
 			
 			$query = sql::prefixTable($query);
-			$row = sql::fetch(sql::run($query));
+			$row = sql::fetch(sql::run($query, $debug));
 			
 		} else {
 			$query = "SELECT FOUND_ROWS() AS `Rows`";
 			
-			$row = sql::fetch(sql::run($query));
-		}
-		
-		if ($debug || sql::$debug) {
-			sql::$lastQueryTime = sql::mtimetosec(microtime(true), $time_start);
-			sql::display();
+			$row = sql::fetch(sql::run($query, $debug));
 		}
 		
 		return $row['Rows'];	

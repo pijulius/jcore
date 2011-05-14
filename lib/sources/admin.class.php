@@ -32,6 +32,7 @@ include_once('lib/templatejseditor.class.php');
 include_once('lib/templateimages.class.php');
 include_once('lib/templateexporter.class.php');
 include_once('lib/updates.class.php');
+include_once('lib/modulemanager.class.php');
 
 if (JCORE_VERSION < '0.7')
 	include_once('lib/dynamicformfieldvalues.class.php');
@@ -185,6 +186,17 @@ class _admin {
 				"'>" .
 				"<span>".__("Menu Blocks")."</span>" .
 			"</a>");
+		
+		if (JCORE_VERSION >= '0.3')
+			$this->add('Site', 'Modules', 
+				"<a href='".url::uri('ALL')."?path=admin/site/modules' " .
+					"title='".
+						htmlspecialchars(
+							__("Add additional functionality to your website"), 
+							ENT_QUOTES).
+					"'>" .
+					"<span>".__("Module Manager")."</span>" .
+				"</a>");
 		
 		if (JCORE_VERSION >= '0.7')
 			$this->add('Site', 'Template-Manager', 
@@ -446,6 +458,9 @@ class _admin {
 			$itemscount = 0;
 			$class = strtolower($itemid);
 			
+			if ($class == 'modules')
+				$class = 'modulemanager';
+			
 			if (ADMIN_ITEMS_COUNTER_ENABLED &&
 				class_exists($class) && method_exists($class, "countAdminItems")) 
 			{
@@ -541,6 +556,9 @@ class _admin {
 				$installmodule = true;
 				url::setPath('admin/modules/'.$class);
 			}
+			
+			if ($class == 'modules')
+				$class = 'moduleManager';
 			
 			if (!class_exists($class) || !method_exists($class,'displayAdmin')) {
 				$this->displayHeader();

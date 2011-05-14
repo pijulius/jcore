@@ -130,27 +130,26 @@ class members extends modules {
 			" SELECT * FROM `{dynamicforms}` " .
 			" WHERE `FormID` = 'memberregistration';"));
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
-		$formid = $exists['ID'];
-			
-		if (!$exists) {
+		if ($exists)
+			$formid = $exists['ID'];
+		else
 			$formid = sql::run(
 				" INSERT INTO `{dynamicforms}` " .
 				" (`Title`, `FormID`, `Method`, `SendNotificationEmail`, `SQLTable`, `Protected`, `ProtectedSQLTable`, `BrowseDataURL`) VALUES" .
 				" ('Member Registration', 'memberregistration', 'post', 0, 'users', 1, 1, '?path=admin/members/users');");
-			
-			if (sql::display())
-				return false;
-		}
+		
+		if (sql::error())
+			return false;
 		
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicformfields}` " .
 			" WHERE `FormID` = '".$formid."'" .
 			" AND `Protected`;"));
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		if (!$exists) {
@@ -164,35 +163,34 @@ class members extends modules {
 				" (".$formid.", 'Verification code', '', 11, 1, 1, '', '', '', '', '', 5, 0)," .
 				" (".$formid.", 'Please note that you will need to enter a valid e-mail address before your account is activated. You will receive an e-mail at the address you provided that contains an account activation link.', '', 18, 0, 0, '', '', '', '', '', 6, 0);");
 			
-			if (sql::display())
+			if (sql::error())
 				return false;
 		}
-			
+		
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicforms}` " .
 			" WHERE `FormID` = 'memberaccount';"));
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
-		$formid = $exists['ID'];
-			
-		if (!$exists) {
+		
+		if ($exists)
+			$formid = $exists['ID'];
+		else
 			$formid = sql::run(
 				" INSERT INTO `{dynamicforms}` " .
 				" (`Title`, `FormID`, `Method`, `SendNotificationEmail`, `SQLTable`, `Protected`, `ProtectedSQLTable`, `BrowseDataURL`) VALUES" .
 				" ('Member Account', 'memberaccount', 'post', 0, 'users', 1, 1, '?path=admin/members/users');");
 		
-			if (sql::display())
-				return false;
-		}
-			
+		if (sql::error())
+			return false;
+		
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicformfields}` " .
 			" WHERE `FormID` = '".$formid."'" .
 			" AND `Protected`;"));
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		if (!$exists) {
@@ -210,7 +208,7 @@ class members extends modules {
 				" (".$formid.", 'Retype password', 'RePassword', 21, 1, 0, '', '', '', '', 'width: 200px;', 9, 1)," .
 				" (".$formid.", ' ', '', 14, 0, 0, '', '', '', '', '', 10, 0);");
 		
-			if (sql::display())
+			if (sql::error())
 				return false;
 		}
 		
@@ -224,7 +222,36 @@ class members extends modules {
 			"}\n";
 		
 		return
-			files::save(SITE_PATH.'template/modules/css/members.css', $css, true);
+			files::save(SITE_PATH.'template/modules/css/members.css', $css);
+	}
+	
+	function uninstallSQL() {
+		$exists = sql::fetch(sql::run(
+			" SELECT * FROM `{dynamicforms}` " .
+			" WHERE `FormID` = 'memberregistration';"));
+		
+		if ($exists) {
+			$form = new dynamicForms();
+			$form->deleteForm($exists['ID']);
+			unset($form);
+		}
+		
+		$exists = sql::fetch(sql::run(
+			" SELECT * FROM `{dynamicforms}` " .
+			" WHERE `FormID` = 'memberaccount';"));
+		
+		if ($exists) {
+			$form = new dynamicForms();
+			$form->deleteForm($exists['ID']);
+			unset($form);
+		}
+		
+		return true;
+	}
+	
+	function uninstallFiles() {
+		return 
+			files::delete(SITE_PATH.'template/modules/css/members.css');
 	}
 	
 	// ************************************************   Admin Part

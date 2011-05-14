@@ -2392,7 +2392,7 @@ class newsletter extends modules {
 			" INDEX ( `TimeStamp`, `UserID` )" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		sql::run(
@@ -2410,13 +2410,13 @@ class newsletter extends modules {
 			" KEY `OrderID` (`OrderID`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		$exists = sql::rows(sql::run(
 			" SELECT * FROM `{newsletterlists}`"));
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		if (!$exists) {
@@ -2425,7 +2425,7 @@ class newsletter extends modules {
 				" (`Title`, `Path`, `Deactivated`, `OrderID`) VALUES" .
 				" ('Default List', 'default-list', 0, 1);");
 		
-			if (sql::display())
+			if (sql::error())
 				return false;
 		}
 		
@@ -2442,7 +2442,7 @@ class newsletter extends modules {
 			" KEY `Confirmed` (`Confirmed`, `ConfirmationCode`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		return true;
@@ -2486,7 +2486,23 @@ class newsletter extends modules {
 			"}\n";
 		
 		return
-			files::save(SITE_PATH.'template/modules/css/newsletter.css', $css, true);
+			files::save(SITE_PATH.'template/modules/css/newsletter.css', $css);
+	}
+	
+	function uninstallSQL() {
+		sql::run(
+			" DROP TABLE IF EXISTS `{newsletters}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{newsletterlists}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{newslettersubscriptions}`;");
+		
+		return true;
+	}
+	
+	function uninstallFiles() {
+		return 
+			files::delete(SITE_PATH.'template/modules/css/newsletter.css');
 	}
 	
 	// ************************************************   Admin Part

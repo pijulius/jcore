@@ -282,7 +282,10 @@ class _css {
 		
 		$modules = sql::run(
 			" SELECT `Name` FROM `{modules}`" .
-			" WHERE `Installed`");
+			" WHERE `Installed`" .
+			(JCORE_VERSION >= '0.9'?
+				" AND !`Deactivated`":
+				null));
 			
 		while($module = sql::fetch($modules)) {
 			$cssfile = strtolower($module['Name']).'.css';

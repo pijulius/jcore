@@ -495,7 +495,7 @@ class poll extends modules {
 			" KEY `MembersOnly` (`MembersOnly`, `ShowToGuests`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -511,7 +511,7 @@ class poll extends modules {
 			" KEY `OrderID` (`OrderID`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -528,7 +528,7 @@ class poll extends modules {
 			" KEY `UserID` (`UserID`, `IP`, `TimeStamp`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -550,7 +550,7 @@ class poll extends modules {
 			" KEY `Pending` (`Pending`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -564,7 +564,7 @@ class poll extends modules {
 			" KEY `Rating` (`Rating`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -584,7 +584,7 @@ class poll extends modules {
 			" KEY `PollID` (`PollID`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -604,7 +604,7 @@ class poll extends modules {
 			" KEY `PollID` (`PollID`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		return true;
@@ -680,7 +680,31 @@ class poll extends modules {
 			"}\n";
 		
 		return
-			files::save(SITE_PATH.'template/modules/css/poll.css', $css, true);
+			files::save(SITE_PATH.'template/modules/css/poll.css', $css);
+	}
+	
+	function uninstallSQL() {
+		sql::run(
+			" DROP TABLE IF EXISTS `{polls}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{pollanswers}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{pollvotes}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{pollcomments}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{pollcommentsratings}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{pollpictures}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{pollattachments}`;");
+		
+		return true;
+	}
+	
+	function uninstallFiles() {
+		return
+			files::delete(SITE_PATH.'template/modules/css/poll.css');
 	}
 	
 	// ************************************************   Admin Part

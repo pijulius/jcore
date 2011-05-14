@@ -45,7 +45,7 @@ class contact extends modules {
 			" SELECT * FROM `{dynamicforms}` " .
 			" WHERE `FormID` = 'contact';"));
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		if ($exists)
@@ -56,9 +56,9 @@ class contact extends modules {
 			" (`Title`, `FormID`, `Method`, `SendNotificationEmail`, `SQLTable`, `Protected`) VALUES" .
 			" ('Contact', 'contact', 'post', 1, '', 1);");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
+		
 		sql::run(
 			" INSERT INTO `{dynamicformfields}` " .
 			" (`FormID`, `Title`, `Name`, `TypeID`, `ValueType`, `Required`, `PlaceholderText`, `TooltipText`, `AdditionalText`, `Attributes`, `Style`, `OrderID`, `Protected`) VALUES" .
@@ -68,9 +68,9 @@ class contact extends modules {
 			" (".$newformid.", 'Questions / Comments', 'Message', 6, 9, 1, '', '', '', '', 'width: 290px; height: 100px;', 4, 0)," .
 			" (".$newformid.", 'Verification code', '', 11, 1, 1, '', '', '', '', '', 5, 0);");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
+		
 		return true;
 	}
 	
@@ -81,7 +81,26 @@ class contact extends modules {
 			"}\n";
 		
 		return 
-			files::save(SITE_PATH.'template/modules/css/contact.css', $css, true);
+			files::save(SITE_PATH.'template/modules/css/contact.css', $css);
+	}
+	
+	function uninstallSQL() {
+		$exists = sql::fetch(sql::run(
+			" SELECT * FROM `{dynamicforms}` " .
+			" WHERE `FormID` = 'contact';"));
+		
+		if ($exists) {
+			$form = new dynamicForms();
+			$form->deleteForm($exists['ID']);
+			unset($form);
+		}
+		
+		return true;
+	}
+	
+	function uninstallFiles() {
+		return 
+			files::delete(SITE_PATH.'template/modules/css/contact.css');
 	}
 	
 	// ************************************************   Admin Part

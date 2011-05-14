@@ -224,7 +224,10 @@ class _jQuery {
 		if (JCORE_VERSION >= '0.5') {
 			$modules = sql::run(
 				" SELECT `Name` FROM `{modules}`" .
-				" WHERE `Installed`");
+				" WHERE `Installed`" .
+				(JCORE_VERSION >= '0.9'?
+					" AND !`Deactivated`":
+					null));
 				
 			while($module = sql::fetch($modules)) {
 				$jsfile = strtolower($module['Name']).'.js';

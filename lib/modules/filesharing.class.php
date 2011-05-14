@@ -287,9 +287,9 @@ class fileSharing extends modules {
 			" KEY `MembersOnly` (`MembersOnly`, `ShowToGuests`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
+		
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{filesharingicons}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -307,9 +307,9 @@ class fileSharing extends modules {
 			" KEY `FileSharingID` (`FileSharingID`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
+		
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{filesharingcomments}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -329,9 +329,9 @@ class fileSharing extends modules {
 			" KEY `Pending` (`Pending`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
+		
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{filesharingcommentsratings}` (" .
 			" `CommentID` int(10) unsigned NOT NULL default '0'," .
@@ -343,9 +343,9 @@ class fileSharing extends modules {
 			" KEY `Rating` (`Rating`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
+		
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{filesharingattachments}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -363,9 +363,9 @@ class fileSharing extends modules {
 			" KEY `FileSharingID` (`FileSharingID`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
+		
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{filesharingratings}` (" .
 			" `FileSharingID` smallint(5) unsigned NOT NULL default '0'," .
@@ -377,9 +377,9 @@ class fileSharing extends modules {
 			" KEY `FileSharingID` (`FileSharingID`,`UserID`,`IP`,`TimeStamp`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
+		
 		return true;
 	}
 	
@@ -486,7 +486,29 @@ class fileSharing extends modules {
 			"}\n";
 		
 		return 
-			files::save(SITE_PATH.'template/modules/css/filesharing.css', $css, true);
+			files::save(SITE_PATH.'template/modules/css/filesharing.css', $css);
+	}
+	
+	function uninstallSQL() {
+		sql::run(
+			" DROP TABLE IF EXISTS `{filesharings}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{filesharingicons}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{filesharingcomments}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{filesharingcommentsratings}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{filesharingattachments}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{filesharingratings}`;");
+		
+		return true;
+	}
+	
+	function uninstallFiles() {
+		return 
+			files::delete(SITE_PATH.'template/modules/css/filesharing.css');
 	}
 	
 	// ************************************************   Admin Part

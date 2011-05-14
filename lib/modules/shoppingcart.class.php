@@ -3233,7 +3233,7 @@ class shoppingCart extends modules {
 			" KEY `SessionID` (`SessionID`,`TimeStamp`)" .
 			" ) ENGINE=MyISAM ;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -3246,13 +3246,13 @@ class shoppingCart extends modules {
 			" KEY `OrderID` (`OrderID`)" .
 			") ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingcartsettings}`"));
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 		
 		if (!$exists) {
@@ -3272,11 +3272,11 @@ class shoppingCart extends modules {
 				" ('Shopping_Cart_Limits', '', 0, 4)," .
 				" ('Shopping_Cart_Minimum_Item_Order', '1', 1, 4)," .
 				" ('Shopping_Cart_Minimum_Order_Price', '1', 1, 4);");
+			
+			if (sql::error())
+				return false;
 		}
 		
-		if (sql::display())
-			return false;
-			
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{shoppingcartdiscounts}` (" .
 			" `ID` smallint(5) unsigned NOT NULL auto_increment," .
@@ -3291,7 +3291,7 @@ class shoppingCart extends modules {
 			" KEY `Priority` (`Priority`)" .
 			") ENGINE=MyISAM ;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -3312,7 +3312,7 @@ class shoppingCart extends modules {
 			" KEY `Priority` (`Priority`)" .
 			") ENGINE=MyISAM ;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		sql::run(
@@ -3327,7 +3327,7 @@ class shoppingCart extends modules {
 			" KEY `Priority` (`Priority`)" .
 			") ENGINE=MyISAM ;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
 			
 		return true;
@@ -3485,7 +3485,27 @@ class shoppingCart extends modules {
 			"}\n";
 		
 		return
-			files::save(SITE_PATH.'template/modules/css/shoppingcart.css', $css, true);
+			files::save(SITE_PATH.'template/modules/css/shoppingcart.css', $css);
+	}
+	
+	function uninstallSQL() {
+		sql::run(
+			" DROP TABLE IF EXISTS `{shoppingcarts}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{shoppingcartsettings}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{shoppingcartdiscounts}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{shoppingcartfees}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{shoppingcarttaxes}`;");
+		
+		return true;
+	}
+	
+	function uninstallFiles() {
+		return
+			files::delete(SITE_PATH.'template/modules/css/shoppingcart.css');
 	}
 	
 	// ************************************************   Admin Part

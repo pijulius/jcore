@@ -715,9 +715,9 @@ class photoGallery extends modules {
 			" KEY `MembersOnly` (`MembersOnly`, `ShowToGuests`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
+		
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{photogalleryicons}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -735,9 +735,9 @@ class photoGallery extends modules {
 			" KEY `PhotoGalleryID` (`PhotoGalleryID`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
+		
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{photogallerycomments}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -757,9 +757,9 @@ class photoGallery extends modules {
 			" KEY `Pending` (`Pending`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
+		
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{photogallerycommentsratings}` (" .
 			" `CommentID` int(10) unsigned NOT NULL default '0'," .
@@ -771,9 +771,9 @@ class photoGallery extends modules {
 			" KEY `Rating` (`Rating`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
+		
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{photogallerypictures}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -791,9 +791,9 @@ class photoGallery extends modules {
 			" KEY `PhotoGalleryID` (`PhotoGalleryID`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
+		
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{photogalleryratings}` (" .
 			" `PhotoGalleryID` smallint(5) unsigned NOT NULL default '0'," .
@@ -805,9 +805,9 @@ class photoGallery extends modules {
 			" KEY `PhotoGalleryID` (`PhotoGalleryID`,`UserID`,`IP`,`TimeStamp`)" .
 			" ) ENGINE=MyISAM;");
 		
-		if (sql::display())
+		if (sql::error())
 			return false;
-			
+		
 		return true;
 	}
 	
@@ -913,7 +913,29 @@ class photoGallery extends modules {
 			"}\n";
 		
 		return
-			files::save(SITE_PATH.'template/modules/css/photogallery.css', $css, true);
+			files::save(SITE_PATH.'template/modules/css/photogallery.css', $css);
+	}
+	
+	function uninstallSQL() {
+		sql::run(
+			" DROP TABLE IF EXISTS `{photogalleries}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{photogalleryicons}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{photogallerycomments}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{photogallerycommentsratings}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{photogallerypictures}`;");
+		sql::run(
+			" DROP TABLE IF EXISTS `{photogalleryratings}`;");
+		
+		return true;
+	}
+	
+	function uninstallFiles() {
+		return
+			files::delete(SITE_PATH.'template/modules/css/photogallery.css');
 	}
 	
 	// ************************************************   Admin Part
