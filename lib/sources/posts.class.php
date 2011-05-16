@@ -2842,7 +2842,7 @@ class _posts {
 		
 		if (preg_match('/(^|\/)keyword\/(.*?)($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)keyword\/.*?($|\/)/', '\2', $this->arguments);
-			$this->searchKeywords = trim(strip_tags($matches[2]));
+			$this->searchKeywords = trim($matches[2]);
 			
 			$this->selectedPageID = null;
 			$this->selectedID = null;
@@ -2850,7 +2850,7 @@ class _posts {
 		
 		if (preg_match('/(^|\/)search\/(.*?)($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)search\/.*?($|\/)/', '\2', $this->arguments);
-			$this->search = trim(strip_tags($matches[2]));
+			$this->search = trim($matches[2]);
 			
 			$this->selectedPageID = null;
 			$this->selectedID = null;

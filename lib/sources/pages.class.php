@@ -2312,6 +2312,31 @@ class _pages {
 			"</div>";
 	}
 	
+	function displayPath($level = 0, $page = null) {
+		if (!$page)
+			$page = pages::$selected;
+			
+		if (!$page)
+			return;
+		
+		$i = 0;
+		$backtrace = $this->getBackTraceTree($page['ID']);
+		
+		foreach($backtrace as $key => $page) {
+			if ($key < $level)
+				continue;
+			
+			if ($i > 0)
+				echo "<span class='path-separator'> / </span>";
+			
+			echo
+				"<a class='url-path' href='". $this->generateLink($page) .
+					"'>".__($page['Title'])."</a>";
+			
+			$i++;
+		}
+	}
+	
 	function displayArguments() {
 		if (!isset($this->arguments))
 			return false;
@@ -2322,12 +2347,15 @@ class _pages {
 		$page = null;
 		$argtype = null;
 		
-		if (preg_match('/(^|\/)(url|[A-Z][A-Za-z0-9_\-]+?)($|\/)/', $this->arguments, $matches)) {
-			$this->arguments = preg_replace('/(^|\/)(url|[A-Z][A-Za-z0-9_\-]+?)($|\/)/', '\3', $this->arguments);
+		if (preg_match('/(^|\/)(url|path|[A-Z][A-Za-z0-9_\-]+?)($|\/)/', $this->arguments, $matches)) {
+			$this->arguments = preg_replace('/(^|\/)(url|path|[A-Z][A-Za-z0-9_\-]+?)($|\/)/', '\3', $this->arguments);
 			$argtype = $matches[2];
 		}
 		
-		if (preg_match('/(^|\/)selected($|\/)/', $this->arguments)) {
+		if (!$this->arguments) {
+			$page = pages::$selected;
+			
+		} elseif (preg_match('/(^|\/)selected($|\/)/', $this->arguments)) {
 			$this->arguments = preg_replace('/(^|\/)selected($|\/)/', '\2', $this->arguments);
 			$page = pages::$selected;
 			
@@ -2347,10 +2375,18 @@ class _pages {
 			return true;
 		
 		if ($argtype) {
-			if ($argtype == 'url')
-				echo $this->generateLink($page);
-			else if (isset($page[$argtype])) 
-				echo $page[$argtype];
+			switch($argtype) {
+				case 'url':
+					echo $this->generateLink($page);
+					break;
+					
+				case 'path':
+					$this->displayPath(0, $page);
+					break;
+					
+				default: 
+					echo $page[$argtype];
+			}
 			
 			return true;
 		}
