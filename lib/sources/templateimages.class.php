@@ -19,7 +19,7 @@ class _templateImages extends fileManager {
 		parent::__construct();
 		
 		$this->rootPath = SITE_PATH.'template/images/';
-		$this->uriRequest = "admin/site/template&amp;filemanager=1";
+		$this->uriRequest = "admin/site/template/".$this->uriRequest;
 		$this->picturesPreview = true;
 		$this->directLinks = true;
 		
@@ -78,6 +78,33 @@ class _templateImages extends fileManager {
 		
 		echo
 			"</div>";
+	}
+	
+	function ajaxRequest() {
+		if (!$GLOBALS['USER']->loginok || 
+			!$GLOBALS['USER']->data['Admin']) 
+		{
+			tooltip::display(
+				__("Request can only be accessed by administrators!"),
+				TOOLTIP_ERROR);
+			return true;
+		}
+		
+		$permission = userPermissions::check(
+			$GLOBALS['USER']->data['ID'],
+			$this->adminPath);
+		
+		if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
+			$permission['PermissionIDs'])
+		{
+			tooltip::display(
+				__("You do not have permission to access this path!"),
+				TOOLTIP_ERROR);
+			
+			return true;
+		}
+		
+		return parent::ajaxRequest();
 	}
 }
 

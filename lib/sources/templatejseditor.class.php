@@ -19,7 +19,7 @@ class _templateJSEditor extends fileEditor {
 		parent::__construct();
 		
 		$this->file = SITE_PATH.'template/template.js';
-		$this->uriRequest = "admin/site/template&amp;jseditor=1";
+		$this->uriRequest = "admin/site/template/".$this->uriRequest;
 		
 		if (template::$selected)
 			$this->file = SITE_PATH.'template/' .
@@ -64,6 +64,33 @@ class _templateJSEditor extends fileEditor {
 		
 		echo
 			"</div>";
+	}
+	
+	function ajaxRequest() {
+		if (!$GLOBALS['USER']->loginok || 
+			!$GLOBALS['USER']->data['Admin']) 
+		{
+			tooltip::display(
+				__("Request can only be accessed by administrators!"),
+				TOOLTIP_ERROR);
+			return true;
+		}
+		
+		$permission = userPermissions::check(
+			$GLOBALS['USER']->data['ID'],
+			$this->adminPath);
+		
+		if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
+			$permission['PermissionIDs'])
+		{
+			tooltip::display(
+				__("You do not have permission to access this path!"),
+				TOOLTIP_ERROR);
+			
+			return true;
+		}
+		
+		return parent::ajaxRequest();
 	}
 }
 

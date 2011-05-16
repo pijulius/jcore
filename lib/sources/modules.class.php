@@ -132,10 +132,10 @@ class _modules {
 					null) .
 				" `Installed` = 1");
 		
-		if (!sql::error())
-			return true;
+		if (sql::error())
+			return false;
 		
-		return false;
+		return true;
 	}
 	
 	function uninstall() {

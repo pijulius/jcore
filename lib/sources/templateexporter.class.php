@@ -41,12 +41,9 @@ class _templateExporter {
 			'_Author' => $GLOBALS['USER']->data['UserName'],
 			'_Version' => "1.0");
 		
-		if (template::$selected) {
-			$template = new template();
-			$row = template::parseData(
-				files::get($template->rootPath.template::$selected['Name'].'/template.php'));
-			unset($template);
-		}
+		if (template::$selected)
+			$row = templateManager::parseData(
+				files::get($this->rootPath.template::$selected['Name'].'/template.php'));
 		
 		$form->add(
 			__('Name'),

@@ -33,6 +33,7 @@ include_once('lib/templateimages.class.php');
 include_once('lib/templateexporter.class.php');
 include_once('lib/updates.class.php');
 include_once('lib/modulemanager.class.php');
+include_once('lib/templatemanager.class.php');
 
 if (JCORE_VERSION < '0.7')
 	include_once('lib/dynamicformfieldvalues.class.php');
@@ -199,7 +200,7 @@ class _admin {
 				"</a>");
 		
 		if (JCORE_VERSION >= '0.7')
-			$this->add('Site', 'Template-Manager', 
+			$this->add('Site', 'TemplateManager', 
 				"<a href='".url::uri('ALL')."?path=admin/site/template' " .
 					"title='".
 						htmlspecialchars(
@@ -459,7 +460,10 @@ class _admin {
 			$class = strtolower($itemid);
 			
 			if ($class == 'modules')
-				$class = 'modulemanager';
+				$class = 'moduleManager';
+			
+			if ($class == 'template')
+				$class = 'templateManager';
 			
 			if (ADMIN_ITEMS_COUNTER_ENABLED &&
 				class_exists($class) && method_exists($class, "countAdminItems")) 
@@ -559,6 +563,9 @@ class _admin {
 			
 			if ($class == 'modules')
 				$class = 'moduleManager';
+			
+			if ($class == 'template')
+				$class = 'templateManager';
 			
 			if (!class_exists($class) || !method_exists($class,'displayAdmin')) {
 				$this->displayHeader();
