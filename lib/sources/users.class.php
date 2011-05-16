@@ -2458,7 +2458,7 @@ class _users {
 				sprintf(__("Account suspended! <b>This account has been suspended " .
 					"for %s minutes because of to many logins from different IP " .
 					"addresses.</b> Please ensure that you have a secure " .
-					"password and/or your are logged out from your other PCs before trying " .
+					"password and/or you are logged out from your other PCs before trying " .
 					"again."), 
 						$ptprotection->protectionTimeMinutes),
 				TOOLTIP_ERROR);

@@ -573,7 +573,7 @@ class _updates {
 				($this->testing?
 					__("Test couldn't be successfully completed!"):
 					__("Update couldn't be installed!"))." " .
-				__("Please review and fix the errors above and try again."),
+				__("Please see detailed error messages above and try again."),
 				TOOLTIP_ERROR);
 		}
 		
