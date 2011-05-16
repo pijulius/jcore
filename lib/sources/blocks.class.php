@@ -201,6 +201,8 @@ class _blocks {
 		
 		$form->addValue('A', '* ' .
 			__('Administration Section'));
+		$form->addValue('M', '* ' .
+			__('Mobile Browsers'));
 		
 		foreach(pages::getTree() as $page)
 			$form->addValue($page['ID'], 
@@ -539,6 +541,14 @@ class _blocks {
 					$pageroute .= 
 						"<div>* " .
 							__("Administration Section") .
+						"</div>";
+					continue;
+				}
+				
+				if ($blockpage == 'M') {
+					$pageroute .= 
+						"<div>* " .
+							__("Mobile Browsers") .
 						"</div>";
 					continue;
 				}
@@ -1379,33 +1389,47 @@ class _blocks {
 		}
 		
 		if ($block[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')]) {
-			$limitedtoadmin = false;
+			$admin = false;
+			$mobile = false;
 			
-			if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN'] && 
-				preg_match('/A(\||$)/', $block[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')])) 
-			{
-				$limitedtoadmin = true;
+			if (strpos($block[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')], 'A') !== false) {
+				$admin = isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN'];
 				
-				if ($block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')])
+				if (($admin && $block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')]) ||
+					(!$admin && !$block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')]))
 					return;
 			}
 			
-			if (!$limitedtoadmin && !(int)$this->selectedPageID && 
+			if (strpos($block[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')], 'M') !== false) {
+				$mobile = isset($block['_BrowserSelector']) && strpos($block['_BrowserSelector'], 'mobile');
+				
+				if (($mobile && $block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')]) ||
+					(!$mobile && !$block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')]))
+					return;
+			}
+			
+			if (!$admin && !$mobile && !(int)$this->selectedPageID && 
 				!$block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')])
 				return;
 			
-			$pageparents = pages::getBackTraceTree(
-				(int)$this->selectedPageID, true, 'ID');
+			$pageids = array_flip(explode('|', 
+				$block[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')]));
 			
-			$pageids = explode('|', $block[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')]);
+			unset($pageids['A']);
+			unset($pageids['M']);
 			
-			foreach($pageparents as $pageparent) {
-				if ((!$block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')] && 
-						!in_array($pageparent['ID'], $pageids)) ||
-					($block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')] && 
-						in_array($pageparent['ID'], $pageids)))
-				{ 
-					return;
+			if (count($pageids) && (int)$this->selectedPageID) {
+				$pageparents = pages::getBackTraceTree(
+					(int)$this->selectedPageID, true, 'ID');
+				
+				foreach($pageparents as $pageparent) {
+					if ((!$block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')] && 
+							!isset($pageids[$pageparent['ID']])) ||
+						($block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')] && 
+							isset($pageids[$pageparent['ID']])))
+					{ 
+						return;
+					}
 				}
 			}
 		}
