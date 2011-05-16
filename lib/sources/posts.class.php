@@ -35,6 +35,7 @@ class _posts {
 	var $ignorePaging = false;
 	var $showPaging = true;
 	var $search = null;
+	var $searchKeywords = null;
 	var $ajaxPaging = AJAX_PAGING;
 	var $ajaxRequest = null;
 	var $adminPath = array(
@@ -70,7 +71,7 @@ class _posts {
 		$page = pages::get($this->selectedPageID);
 		
 		$searchignorepageids = null;
-		if ($this->search || !$page) {
+		if ($this->search || $this->searchKeywords || !$page) {
 			$pageids = sql::fetch(sql::run(
 				" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS PageIDs" .
 				" FROM `{" .
@@ -98,13 +99,20 @@ class _posts {
 				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` NOT IN (" .
 					$searchignorepageids.")":
 				null) .
-			($this->search && !$this->selectedID?
+			(($this->search || $this->searchKeywords) && !$this->selectedID?
 				sql::search(
-					$this->search,
-					(JCORE_VERSION >= '0.7'? 
-						dynamicForms::searchableFields('posts'):
-						array('Title', 'Content', 'Keywords')),
-					'AND', array('date' => 'TimeStamp')):
+					($this->searchKeywords?
+						$this->searchKeywords.',':
+						$this->search),
+					($this->searchKeywords?
+						array('Keywords'):
+						(JCORE_VERSION >= '0.7'? 
+							dynamicForms::searchableFields('posts'):
+							array('Title', 'Content', 'Keywords'))),
+					($this->searchKeywords?
+						'OR':
+						'AND'), 
+					array('date' => 'TimeStamp')):
 				($page?
 					" AND (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 						$page['ID']."'" .
@@ -2830,6 +2838,22 @@ class _posts {
 		if (preg_match('/(^|\/)([0-9]+?)($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)[0-9]+?($|\/)/', '\2', $this->arguments);
 			$this->limit = (int)$matches[2];
+		}
+		
+		if (preg_match('/(^|\/)keyword\/(.*?)($|\/)/', $this->arguments, $matches)) {
+			$this->arguments = preg_replace('/(^|\/)keyword\/.*?($|\/)/', '\2', $this->arguments);
+			$this->searchKeywords = trim(strip_tags($matches[2]));
+			
+			$this->selectedPageID = null;
+			$this->selectedID = null;
+		}
+		
+		if (preg_match('/(^|\/)search\/(.*?)($|\/)/', $this->arguments, $matches)) {
+			$this->arguments = preg_replace('/(^|\/)search\/.*?($|\/)/', '\2', $this->arguments);
+			$this->search = trim(strip_tags($matches[2]));
+			
+			$this->selectedPageID = null;
+			$this->selectedID = null;
 		}
 		
 		if (preg_match('/(^|\/)keywords($|\/)/', $this->arguments)) {
