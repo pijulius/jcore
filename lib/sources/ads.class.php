@@ -80,22 +80,59 @@ class _ads {
 		$form->setValueType(FORM_VALUE_TYPE_INT);
 		$form->addValue('', '');
 		
+		$blockids = array();
 		$disabledblocks = array();
 		
-		foreach(blocks::getTree() as $block) {
-			$form->addValue($block['ID'], 
-				($block['SubBlockOfID']?
-					str_replace(' ', '&nbsp;', 
-						str_pad('', $block['PathDeepnes']*4, ' ')).
-					"|- ":
-					null) .
-				$block['Title']);
-			
-			if ($block['TypeID'] != BLOCK_TYPE_AD)
-				$disabledblocks[] = $block['ID'];
-		}
+		$adblocks = sql::run(
+			" SELECT `ID`, `SubBlockOfID` FROM `{blocks}`" .
+			" WHERE `TypeID` = '".BLOCK_TYPE_AD."'" .
+			(JCORE_VERSION >= '0.7'?
+				" AND `TemplateID` = '".
+					(template::$selected?
+						(int)template::$selected['ID']:
+						0)."'":
+				null));
+		
+		if (sql::rows($adblocks)) {
+			while($adblock = sql::fetch($adblocks)) {
+				if (isset($blockids[$adblock['SubBlockOfID']])) {
+					$blockids[$adblock['ID']] = true;
+					continue;
+				}
 				
-		$form->disableValues($disabledblocks);
+				foreach(blocks::getBackTraceTree($adblock['ID']) as $block) {
+					if (isset($blockids[$block['ID']]))
+						continue;
+					
+					$blockids[$block['ID']] = true;
+				}
+			}
+			
+			foreach(blocks::getTree() as $block) {
+				if (!isset($blockids[$block['ID']]))
+					continue;
+				
+				$form->addValue($block['ID'], 
+					($block['SubBlockOfID']?
+						str_replace(' ', '&nbsp;', 
+							str_pad('', $block['PathDeepnes']*4, ' ')).
+						"|- ":
+						null) .
+					$block['Title']);
+				
+				if ($block['TypeID'] != BLOCK_TYPE_AD)
+					$disabledblocks[] = $block['ID'];
+			}
+				
+			$form->disableValues($disabledblocks);
+			
+		} else {
+			$form->edit(
+				'BlockID',
+				null,
+				null,
+				FORM_INPUT_TYPE_HIDDEN);
+		}
 		
 		$form->add(
 			__('Upload a banner'),

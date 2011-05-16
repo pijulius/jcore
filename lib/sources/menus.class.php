@@ -78,22 +78,59 @@ class _menus {
 			
 		$form->addValue('', '');
 		
+		$blockids = array();
 		$disabledblocks = array();
 		
-		foreach(blocks::getTree() as $block) {
-			$form->addValue($block['ID'], 
-				($block['SubBlockOfID']?
-					str_replace(' ', '&nbsp;', 
-						str_pad('', $block['PathDeepnes']*4, ' ')).
-					"|- ":
-					null) .
-				$block['Title']);
-				
-			if ($block['TypeID'] != BLOCK_TYPE_MENU)
-				$disabledblocks[] = $block['ID'];
-		}
+		$menublocks = sql::run(
+			" SELECT `ID`, `SubBlockOfID` FROM `{blocks}`" .
+			" WHERE `TypeID` = '".BLOCK_TYPE_MENU."'" .
+			(JCORE_VERSION >= '0.7'?
+				" AND `TemplateID` = '".
+					(template::$selected?
+						(int)template::$selected['ID']:
+						0)."'":
+				null));
 		
-		$form->disableValues($disabledblocks);
+		if (sql::rows($menublocks)) {
+			while($menublock = sql::fetch($menublocks)) {
+				if (isset($blockids[$menublock['SubBlockOfID']])) {
+					$blockids[$menublock['ID']] = true;
+					continue;
+				}
+				
+				foreach(blocks::getBackTraceTree($menublock['ID']) as $block) {
+					if (isset($blockids[$block['ID']]))
+						continue;
+					
+					$blockids[$block['ID']] = $block['Title'];
+				}
+			}
+			
+			foreach(blocks::getTree() as $block) {
+				if (!isset($blockids[$block['ID']]))
+					continue;
+				
+				$form->addValue($block['ID'], 
+					($block['SubBlockOfID']?
+						str_replace(' ', '&nbsp;', 
+							str_pad('', $block['PathDeepnes']*4, ' ')).
+						"|- ":
+						null) .
+					$block['Title']);
+					
+				if ($block['TypeID'] != BLOCK_TYPE_MENU)
+					$disabledblocks[] = $block['ID'];
+			}
+			
+			$form->disableValues($disabledblocks);
+			
+		} else {
+			$form->edit(
+				'BlockID',
+				null,
+				null,
+				FORM_INPUT_TYPE_HIDDEN);
+		}
 		
 		$form->add(
 			__('Additional Options'),

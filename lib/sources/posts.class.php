@@ -214,24 +214,62 @@ class _posts {
 			
 			if ($form->getElementID('BlockID')) {
 				$form->addValue('BlockID', '','');
+				
+				$blockids = array();
 				$disabledblocks = array();
 				
-				foreach(blocks::getTree() as $block) {
-					$form->addValue(
-						'BlockID',
-						$block['ID'], 
-						($block['SubBlockOfID']?
-							str_replace(' ', '&nbsp;', 
-								str_pad('', $block['PathDeepnes']*4, ' ')).
-							"|- ":
-							null) .
-						$block['Title']);
-					
-					if ($block['TypeID'] != BLOCK_TYPE_CONTENT)
-						$disabledblocks[] = $block['ID'];
-				}
+				$postblocks = sql::run(
+					" SELECT `ID`, `SubBlockOfID` FROM `{blocks}`" .
+					" WHERE `TypeID` = '".BLOCK_TYPE_CONTENT."'" .
+					(JCORE_VERSION >= '0.7'?
+						" AND `TemplateID` = '".
+							(template::$selected?
+								(int)template::$selected['ID']:
+								0)."'":
+						null));
 				
-				$form->disableValues('BlockID', $disabledblocks);
+				if (sql::rows($postblocks)) {
+					while($postblock = sql::fetch($postblocks)) {
+						if (isset($blockids[$postblock['SubBlockOfID']])) {
+							$blockids[$postblock['ID']] = true;
+							continue;
+						}
+						
+						foreach(blocks::getBackTraceTree($postblock['ID']) as $block) {
+							if (isset($blockids[$block['ID']]))
+								continue;
+							
+							$blockids[$block['ID']] = $block['Title'];
+						}
+					}
+					
+					foreach(blocks::getTree() as $block) {
+						if (!isset($blockids[$block['ID']]))
+							continue;
+						
+						$form->addValue(
+							'BlockID',
+							$block['ID'], 
+							($block['SubBlockOfID']?
+								str_replace(' ', '&nbsp;', 
+									str_pad('', $block['PathDeepnes']*4, ' ')).
+								"|- ":
+								null) .
+							$block['Title']);
+						
+						if ($block['TypeID'] != BLOCK_TYPE_CONTENT)
+							$disabledblocks[] = $block['ID'];
+					}
+					
+					$form->disableValues('BlockID', $disabledblocks);
+					
+				} else {
+					$form->edit(
+						'BlockID',
+						null,
+						null,
+						FORM_INPUT_TYPE_HIDDEN);
+				}
 			}
 			
 			if ($edit) {
@@ -386,22 +424,59 @@ class _posts {
 		$form->setValueType(FORM_VALUE_TYPE_INT);
 		$form->addValue('','');
 		
+		$blockids = array();
 		$disabledblocks = array();
 		
-		foreach(blocks::getTree() as $block) {
-			$form->addValue($block['ID'], 
-				($block['SubBlockOfID']?
-					str_replace(' ', '&nbsp;', 
-						str_pad('', $block['PathDeepnes']*4, ' ')).
-					"|- ":
-					null) .
-				$block['Title']);
-			
-			if ($block['TypeID'] != BLOCK_TYPE_CONTENT)
-				$disabledblocks[] = $block['ID'];
-		}
+		$postblocks = sql::run(
+			" SELECT `ID`, `SubBlockOfID` FROM `{blocks}`" .
+			" WHERE `TypeID` = '".BLOCK_TYPE_CONTENT."'" .
+			(JCORE_VERSION >= '0.7'?
+				" AND `TemplateID` = '".
+					(template::$selected?
+						(int)template::$selected['ID']:
+						0)."'":
+				null));
 		
-		$form->disableValues($disabledblocks);
+		if (sql::rows($postblocks)) {
+			while($postblock = sql::fetch($postblocks)) {
+				if (isset($blockids[$postblock['SubBlockOfID']])) {
+					$blockids[$postblock['ID']] = true;
+					continue;
+				}
+				
+				foreach(blocks::getBackTraceTree($postblock['ID']) as $block) {
+					if (isset($blockids[$block['ID']]))
+						continue;
+					
+					$blockids[$block['ID']] = $block['Title'];
+				}
+			}
+			
+			foreach(blocks::getTree() as $block) {
+				if (!isset($blockids[$block['ID']]))
+					continue;
+				
+				$form->addValue($block['ID'], 
+					($block['SubBlockOfID']?
+						str_replace(' ', '&nbsp;', 
+							str_pad('', $block['PathDeepnes']*4, ' ')).
+						"|- ":
+						null) .
+					$block['Title']);
+				
+				if ($block['TypeID'] != BLOCK_TYPE_CONTENT)
+					$disabledblocks[] = $block['ID'];
+			}
+			
+			$form->disableValues($disabledblocks);
+			
+		} else {
+			$form->edit(
+				'BlockID',
+				null,
+				null,
+				FORM_INPUT_TYPE_HIDDEN);
+		}
 		
 		$form->add(
 			__('Display on Main page'),
