@@ -228,15 +228,15 @@ class _moduleManager {
 						"<div class='template-details'>" .
 							sprintf(__("by %s"), $row['_Author']) .
 							($row['_URI']?
-								" (".$row['_URI'].")":
+								" (".url::parseLinks($row['_URI']).")":
 								null) .
 						"</div>":
 						null) .
 					"<div class='template-description'>" .
 						"<p>" .
 							($row['_Description']?
-								$row['_Description']:
-								$row['Description']) .
+								url::parseLinks($row['_Description']):
+								url::parseLinks($row['Description'])) .
 						"</p>" .
 					"</div>" .
 					($row['_Tags']?
@@ -720,10 +720,10 @@ class _moduleManager {
 		$values['_Tags'] = '';
 		
 		foreach($variables as $variable) {
-			preg_match('/'.$variable.': (.*)$/mi', $data, $matches);
+			preg_match('/\/\*.*?'.$variable.': (.*?)(\r|\n).*?\*\//si', $data, $matches);
 			
 			if (isset($matches[1]))
-				$values['_'.$variable] = url::parseLinks(trim($matches[1]));
+				$values['_'.$variable] = trim($matches[1]);
 		}
 		
 		return $values;

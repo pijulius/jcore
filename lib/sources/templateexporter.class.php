@@ -208,7 +208,9 @@ class _templateExporter {
 				'Author' => $GLOBALS['USER']->data['UserName'],
 				'Version' => "1.0");
 		
+		$templatephp = null;
 		$blockqueries = null;
+		
 		$blocks = sql::run(
 			" SELECT * FROM `{blocks}`" .
 			" WHERE 1" .
@@ -225,10 +227,8 @@ class _templateExporter {
 		while($block = sql::fetch($blocks))
 			$blockqueries .= $this->generateBlockCode($block);
 		
-		$templatephp = 
-				'<?php
-
-/***************************************************************************
+		$templateheaderphp = 
+			'/***************************************************************************
  * 
  *  Name: '.$details['Name'].'
  *  URI: '.$details['URI'].'
@@ -237,14 +237,10 @@ class _templateExporter {
  *  Version: '.$details['Version'].'
  *  Tags: '.$details['Tags'].'
  * 
- ****************************************************************************/
- 
-class templateInstaller extends template {
-	// This will be automatically set when activating template so 
-	// you can use it to associate with blocks or other things
-	var $templateID = 0;
-	
-	function installSQL() {
+ ****************************************************************************/';
+		
+		$installSQLphp = 
+			'function installSQL() {
 		$languageids = array();
 		$homepageids = array();
 		
@@ -258,10 +254,57 @@ class templateInstaller extends template {
 		}
 		
 		'.$blockqueries.'return true;
-	}
+	}';
+		
+		if (template::$selected) {
+			$oldtemplate = files::get($this->rootPath.template::$selected['Name'].'/template.php');
+			
+			if (preg_match('/class( |\t|\r|\n)+?templateInstaller( |\t|\r|\n)+?.*?\{/is', $oldtemplate)) {
+				if (preg_match('/function( |\t|\r|\n)+?installSQL( |\t|\r|\n)*?\(.*?\)/is', $oldtemplate)) {
+					$templatephp = preg_replace('/function( |\t|\r|\n)+?installSQL( |\t|\r|\n)*?\(.*?\).*?\{([^{}]+|\{([^{}]+|\{([^{}]+|\{([^{}]+|\{([^{}]+|\{([^{}]+|\{([^{}]+)*\})*\})*\})*\})*\})*\})*\}/is', 
+						$installSQLphp, $oldtemplate);
+				} else {
+					$templatephp = preg_replace('/(class( |\t|\r|\n)+?templateInstaller( |\t|\r|\n)+?.*?\{)/i', 
+						'\1'."\n\t".$installSQLphp."\n\n", $oldtemplate);
+				}
+				
+				if (preg_match('/\/\*.*?\*\//s', $templatephp)) {
+					$variables = array(
+						'Tags', 'Version', 'Author',
+						'Description', 'URI', 'Name');
+					
+					foreach($variables as $variable) {
+						if (preg_match('/(\/\*.*?'.$variable.':) .*?((\r|\n).*?\*\/)/si', $templatephp))
+							$templatephp = preg_replace('/(\/\*.*?'.$variable.':) .*?((\r|\n).*?\*\/)/si', 
+								'\1 '.$details[$variable].'\2', $templatephp);
+						else
+							$templatephp = preg_replace('/(\/\*.*?(\r|\n))(.*?\*\/)/si', 
+								'\1 *  '.$variable.": ".$details[$variable].'\2\3', $templatephp);
+					}
+					
+				} else {
+					$templatephp = preg_replace('/(class( |\t|\r|\n)+?templateInstaller( |\t|\r|\n)+?.*?\{)/i', 
+						$templateheaderphp."\n\n".'\1', $templatephp);
+				}
+			}
+		}
+		
+		if (!$templatephp) {
+			$templatephp = 
+				'<?php
+
+'.$templateheaderphp.'
+
+class templateInstaller extends template {
+	// This will be automatically set when activating template so 
+	// you can use it to associate with blocks or other things
+	var $templateID = 0;
+	
+	'.$installSQLphp.'
 }
 
 ?>';
+		}
 		
 		$tar = new tar();
 		$templatedir = url::genPathFromString($details['Name'], false);

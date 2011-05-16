@@ -262,17 +262,21 @@ class _templateManager {
 			"<td class='auto-width'>" .
 				"<div class='admin-content-preview' style='padding-left: 0;'>" .
 					"<h2 class='template-name' style='margin: 0;'>" .
-						$row['_Name'] .
+						($row['_Name']?
+							$row['_Name']:
+							$row['_ID']) .
 						($row['_Version']?
 							" (".$row['_Version'].")":
 							null) .
 					"</h2>" .
-					"<div class='template-details'>" .
-						sprintf(__("by %s"), $row['_Author']) .
-						($row['_URI']?
-							" (".$row['_URI'].")":
-							null) .
-					"</div>" .
+					($row['_Author']?
+						"<div class='template-details'>" .
+							sprintf(__("by %s"), $row['_Author']) .
+							($row['_URI']?
+								" (".url::parseLinks($row['_URI']).")":
+								null) .
+						"</div>":
+						null) .
 					"<div class='template-description'>" .
 						"<p>" .
 							url::parseLinks($row['_Description']) .
@@ -987,10 +991,10 @@ class _templateManager {
 		$values['_Tags'] = '';
 		
 		foreach($variables as $variable) {
-			preg_match('/'.$variable.': (.*)$/mi', $data, $matches);
+			preg_match('/\/\*.*?'.$variable.': (.*?)(\r|\n).*?\*\//si', $data, $matches);
 			
 			if (isset($matches[1]))
-				$values['_'.$variable] = url::parseLinks(trim($matches[1]));
+				$values['_'.$variable] = trim($matches[1]);
 		}
 		
 		return $values;
