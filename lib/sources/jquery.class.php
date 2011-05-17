@@ -44,8 +44,7 @@ class _jQuery {
 		$buffer = 
 			str_replace('%SITE_URL%', url::site(),
 			str_replace('%JCORE_URL%', url::jCore(),
-			str_replace('%ICONS_URL%', url::jCore().'lib/icons/',
-			preg_replace(',/\*.*?\*/|\r|\n,s',' ',$buffer))));
+			str_replace('%ICONS_URL%', url::jCore().'lib/icons/')));
 		
 		if (!jQuery::$compression)
 			return $buffer;
