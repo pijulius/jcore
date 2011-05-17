@@ -22,7 +22,7 @@ if ($sitehost && $sitehost != $currenthost &&
 	($sitehost == 'www.'.$currenthost || 'www.'.$sitehost == $currenthost))
 {
 	$https = false;
-	if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'])
+	if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && $_SERVER['HTTPS'] != 'off')
 		$https = true;
 	
 	$redirecturl = 

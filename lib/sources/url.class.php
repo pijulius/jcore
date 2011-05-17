@@ -254,7 +254,7 @@ class _url {
 	}
 	
 	static function https() {
-		if (!isset($_SERVER['HTTPS']) || !$_SERVER['HTTPS'])
+		if (!isset($_SERVER['HTTPS']) || !$_SERVER['HTTPS'] || $_SERVER['HTTPS'] == 'off')
 			return false;
 		
 		return true;
