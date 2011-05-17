@@ -1401,7 +1401,7 @@ class _blocks {
 			}
 			
 			if (strpos($block[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')], 'M') !== false) {
-				$mobile = isset($block['_BrowserSelector']) && strpos($block['_BrowserSelector'], 'mobile');
+				$mobile = MOBILE_BROWSER;
 				
 				if (($mobile && $block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')]) ||
 					(!$mobile && !$block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')]))

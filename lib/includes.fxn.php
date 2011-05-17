@@ -19,7 +19,8 @@ $currenthost = strtolower(
 		$_SERVER['SERVER_NAME']));
 
 if ($sitehost && $sitehost != $currenthost &&
-	($sitehost == 'www.'.$currenthost || 'www.'.$sitehost == $currenthost))
+	($sitehost == 'www.'.$currenthost || 'www.'.$sitehost == $currenthost) &&
+	(!isset($_GET['ajax']) || !$_GET['ajax'] || !isset($_GET['request']) || !$_GET['request']))
 {
 	$https = false;
 	if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && $_SERVER['HTTPS'] != 'off')
@@ -51,17 +52,6 @@ if ($sitehost && $sitehost != $currenthost &&
 	exit();
 }
 
-if (((defined('MAINTENANCE_SUSPEND_WEBSITE') && MAINTENANCE_SUSPEND_WEBSITE) ||
-	(defined('MAINTENANCE_WEBSITE_SUSPENDED') && MAINTENANCE_WEBSITE_SUSPENDED)) &&
-	!preg_match('/admin\//', $_SERVER['PHP_SELF']) && !isset($_GET['ajax']))
-{ 
-	include_once('lib/url.class.php');
-	include_once('lib/users.class.php');
-	
-	if (!users::fastCheck('Admin'))
-		exit(MAINTENANCE_SUSPEND_TEXT);
-}
-
 // If magic quotes are enabled, strip slashes from all user data
 function stripslashes_recursive($var) {
 	return (is_array($var) ? array_map('stripslashes_recursive', $var) : stripslashes($var));
@@ -75,6 +65,18 @@ if (get_magic_quotes_gpc()) {
 
 header('Content-Type: text/html; charset='.PAGE_CHARSET);
 session_start();
+
+if (((defined('MAINTENANCE_SUSPEND_WEBSITE') && MAINTENANCE_SUSPEND_WEBSITE) ||
+	(defined('MAINTENANCE_WEBSITE_SUSPENDED') && MAINTENANCE_WEBSITE_SUSPENDED)) &&
+	!preg_match('/admin\//', $_SERVER['PHP_SELF']) && 
+	(!isset($_GET['ajax']) || !$_GET['ajax'] || !isset($_GET['request']) || !$_GET['request']))
+{ 
+	include_once('lib/url.class.php');
+	include_once('lib/users.class.php');
+	
+	if (!users::fastCheck('Admin'))
+		exit(MAINTENANCE_SUSPEND_TEXT);
+}
 
 if (!isset($GLOBALS['ADMIN']))
 	$GLOBALS['ADMIN'] = false;
