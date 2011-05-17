@@ -2127,7 +2127,8 @@ class _users {
 						"name='ajaxsearch' " .
 						"value='".
 							htmlspecialchars($search, ENT_QUOTES).
-						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' />" .
+						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' " .
+						"autofocus='autofocus' />" .
 					"</form>" .
 				"</div>" .
 				"<br />" .
@@ -2210,6 +2211,7 @@ class _users {
 											"(jQuery('".$target."').val()?'" .
 												htmlspecialchars($separator, ENT_QUOTES)." ':'')+" .
 											"'".$formatedvalue."');" .
+											"jQuery(this).closest('.select-users-list').find('input[type=search]').first().focus();" .
 										"\" class='add-link'>":
 									"onclick='jQuery(\"".$target."\")" .
 										".val(\"".$formatedvalue."\");" .

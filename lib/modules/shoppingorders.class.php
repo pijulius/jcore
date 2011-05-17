@@ -3438,7 +3438,8 @@ class shoppingOrders extends modules {
 						"name='ajaxsearch' " .
 						"value='".
 							htmlspecialchars($search, ENT_QUOTES).
-						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' />" .
+						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' " .
+						"autofocus='autofocus' />" .
 					"</form>" .
 				"</div>" .
 				"<br />";
@@ -3552,8 +3553,9 @@ class shoppingOrders extends modules {
 									(isset($specialprice)?
 										$specialprice:
 										$price) .
-									"');\" " .
-							"class='shopping-order-new-order-add-item'>" .
+									"');" .
+									"jQuery(this).closest('.shopping-order-new-order-items').find('input[type=search]').first().focus();" .
+								"\" class='shopping-order-new-order-add-item'>" .
 						"</a>" .
 					"</td>" .
 					"<td>" .

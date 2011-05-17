@@ -798,7 +798,8 @@ class _posts {
 						"name='ajaxsearch' " .
 						"value='".
 							htmlspecialchars($search, ENT_QUOTES).
-						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' />" .
+						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' " .
+						"autofocus='autofocus' />" .
 					"</form>" .
 				"</div>" .
 				"<br />" .
@@ -854,6 +855,7 @@ class _posts {
 									"jQuery('#neweditpostform #entryKeywords').val()+" .
 									"(jQuery('#neweditpostform #entryKeywords').val()?', ':'')+" .
 									"'".htmlspecialchars($row['Keyword'], ENT_QUOTES)."');" .
+									"jQuery(this).closest('.posts-add-keywords-list').find('input[type=search]').first().focus();" .
 								"\" class='add-link'>" .
 							(JCORE_VERSION < '0.6'?
 								"&nbsp;+&nbsp;":

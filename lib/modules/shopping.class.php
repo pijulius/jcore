@@ -1706,7 +1706,8 @@ class shoppingItems {
 						"name='ajaxsearch' " .
 						"value='".
 							htmlspecialchars($search, ENT_QUOTES).
-						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' />" .
+						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' " .
+						"autofocus='autofocus' />" .
 					"</form>" .
 				"</div>" .
 				"<br />" .
@@ -1762,6 +1763,7 @@ class shoppingItems {
 									"jQuery('#newedititemform #entryKeywords').val()+" .
 									"(jQuery('#newedititemform #entryKeywords').val()?', ':'')+" .
 									"'".htmlspecialchars($row['Keyword'], ENT_QUOTES)."');" .
+									"jQuery(this).closest('.shopping-item-add-keywords-list').find('input[type=search]').first().focus();" .
 								"\" class='add-link'>" .
 							(JCORE_VERSION < '0.6'?
 								"&nbsp;+&nbsp;":
