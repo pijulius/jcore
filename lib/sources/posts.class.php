@@ -317,6 +317,17 @@ class _posts {
 				FORM_INSERT_BEFORE);
 			$form->setValueType(FORM_VALUE_TYPE_INT);
 			
+			$form->addAdditionalText(
+				'Keywords',
+				"<br />" .
+				"<a href='".url::uri('request, keywords') .
+					"&amp;request=".url::path() .
+					"&amp;keywords=1' " .
+					"class='posts-add-keyword add-link ajax-content-link' " .
+					"title='".htmlspecialchars(__("Add Keyword"), ENT_QUOTES)."'>" .
+					__("Add Keyword") .
+				"</a>");
+			
 			unset($postsform);
 			return;
 		}
@@ -353,17 +364,6 @@ class _posts {
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 300px;');
 		
-		$form->add(
-			__('Keywords'),
-			'Keywords',
-			FORM_INPUT_TYPE_TEXT);
-		$form->setStyle('width: 250px;');
-		
-		if (JCORE_VERSION >= '0.6')
-			$form->setTooltipText(__("e.g. oranges, lemons, limes"));
-		else
-			$form->addAdditionalText(" (".__("e.g. oranges, lemons, limes").")");
-		
 		if (JCORE_VERSION >= '0.6') {
 			$form->add(
 				__('Link to URL'),
@@ -372,6 +372,29 @@ class _posts {
 			$form->setStyle('width: 300px;');
 			$form->setValueType(FORM_VALUE_TYPE_URL);
 			$form->setTooltipText(__("e.g. http://domain.com"));
+		}
+		
+		$form->add(
+			__('Keywords'),
+			'Keywords',
+			FORM_INPUT_TYPE_TEXT);
+		$form->setStyle('width: 250px;');
+		
+		if (JCORE_VERSION >= '0.6') {
+			$form->setTooltipText(__("e.g. oranges, lemons, limes"));
+			
+			$form->addAdditionalText(
+				"<br />" .
+				"<a href='".url::uri('request, keywords') .
+					"&amp;request=".url::path() .
+					"&amp;keywords=1' " .
+					"class='posts-add-keyword add-link ajax-content-link' " .
+					"title='".htmlspecialchars(__("Add Keyword"), ENT_QUOTES)."'>" .
+					__("Add Keyword") .
+				"</a>");
+			
+		} else {
+			$form->addAdditionalText(" (".__("e.g. oranges, lemons, limes").")");
 		}
 		
 		$form->add(
@@ -749,6 +772,117 @@ class _posts {
 		
 		$form->reset();
 		return true;
+	}
+	
+	function displayAdminAvailableKeywords() {
+		$search = null;
+		
+		if (isset($_POST['ajaxsearch']))
+			$search = trim(strip_tags($_POST['ajaxsearch']));
+		
+		if (isset($_GET['ajaxsearch']))
+			$search = trim(strip_tags($_GET['ajaxsearch']));
+		
+		if (!isset($search) && !isset($_GET['ajaxlimit']))
+			echo 
+				"<div class='posts-add-keywords-list'>";
+			
+		echo
+				"<div class='posts-add-keywords-list-search' " .
+					"style='margin-right: 20px;'>" .
+					"<form action='".url::uri('ajaxsearch, ajaxlimit, ajax')."' method='post' " .
+						"class='ajax-form' " .
+						"target='.posts-add-keywords-list'>" .
+					__("Search").": " .
+					"<input type='search' " .
+						"name='ajaxsearch' " .
+						"value='".
+							htmlspecialchars($search, ENT_QUOTES).
+						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' />" .
+					"</form>" .
+				"</div>" .
+				"<br />" .
+				"<table cellpadding='0' cellspacing='0' class='list'>" .
+					"<thead>" .
+					"<tr>" .
+						"<th>" .
+							"<span class='nowrap'>".
+								__("Add") .
+							"</span>" .
+						"</th>" .
+						"<th>" .
+							"<span class='nowrap'>".
+							__("Keyword").
+							"</span>" .
+						"</th>" .
+						"<th style='text-align: right;'>" .
+							"<span class='nowrap'>".
+							__("Popularity").
+							"</span>" .
+						"</th>" .
+					"</tr>" .
+					"</thead>" .
+					"<tbody>";
+					
+		$paging = new paging(10,
+			'&amp;ajaxsearch='.urlencode($search));
+		
+		$paging->track('ajaxlimit');
+		$paging->ajax = true;
+		
+		$rows = sql::run(
+			" SELECT * FROM `{postkeywords}`" .
+			" WHERE 1" .
+			($search?
+				" AND (`Keyword` LIKE '%".sql::escape($search)."%') ":
+				null) .
+			" ORDER BY `Counter` DESC, `Keyword`" .
+			" LIMIT ".$paging->limit);
+		
+		$paging->setTotalItems(sql::count('Keyword'));
+		
+		$i = 1;
+		$total = sql::rows($rows);
+		
+		while ($row = sql::fetch($rows)) {
+			echo
+				"<tr".($i%2?" class='pair'":NULL).">" .
+					"<td align='center'>" .
+						"<a href='javascript://' " .
+							"onclick=\"" .
+								"jQuery('#neweditpostform #entryKeywords').val(" .
+									"jQuery('#neweditpostform #entryKeywords').val()+" .
+									"(jQuery('#neweditpostform #entryKeywords').val()?', ':'')+" .
+									"'".htmlspecialchars($row['Keyword'], ENT_QUOTES)."');" .
+								"\" class='add-link'>" .
+							(JCORE_VERSION < '0.6'?
+								"&nbsp;+&nbsp;":
+								null) .
+						"</a>" .
+					"</td>" .
+					"<td class='auto-width'>" .
+						"<b>" .
+						$row['Keyword'] .
+						"</b>" .
+					"</td>" .
+					"<td style='text-align: right;'>" .
+						$row['Counter'] .
+					"</td>" .
+				"</tr>";
+			
+			$i++;
+		}
+		
+		echo
+					"</tbody>" .
+				"</table>" .
+				"<br />";
+				
+		$paging->display();
+		
+		if (!isset($search) && !isset($_GET['ajaxlimit']))
+			echo
+				"</div>";
 	}
 	
 	function displayAdminListItemSelected(&$row) {
@@ -2095,9 +2229,13 @@ class _posts {
 	
 	function ajaxRequest() {
 		$users = null;
+		$keywords = null;
 		
 		if (isset($_GET['users']))
 			$users = $_GET['users'];
+		
+		if (isset($_GET['keywords']))
+			$keywords = $_GET['keywords'];
 		
 		if ($users) {
 			if (!$GLOBALS['USER']->loginok || 
@@ -2125,6 +2263,11 @@ class _posts {
 			}
 			
 			$GLOBALS['USER']->displayQuickList('#neweditpostform #entryOwner');
+			return true;
+		}
+		
+		if ($keywords) {
+			$this->displayAdminAvailableKeywords();
 			return true;
 		}
 		

@@ -550,6 +550,17 @@ class shoppingItems {
 					_("Select User") .
 				"</a>");
 			
+			$form->addAdditionalText(
+				'Keywords',
+				"<br />" .
+				"<a href='".url::uri('request, keywords') .
+					"&amp;request=".url::path() .
+					"&amp;keywords=1' " .
+					"class='shopping-item-add-keyword add-link ajax-content-link' " .
+					"title='".htmlspecialchars(__("Add Keyword"), ENT_QUOTES)."'>" .
+					__("Add Keyword") .
+				"</a>");
+			
 			unset($itemsform);
 			return;
 		}
@@ -677,10 +688,22 @@ class shoppingItems {
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 250px;');
 		
-		if (JCORE_VERSION >= '0.6')
+		if (JCORE_VERSION >= '0.6') {
 			$form->setTooltipText(__("e.g. oranges, lemons, limes"));
-		else
+			
+			$form->addAdditionalText(
+				"<br />" .
+				"<a href='".url::uri('request, keywords') .
+					"&amp;request=".url::path() .
+					"&amp;keywords=1' " .
+					"class='shopping-item-add-keyword add-link ajax-content-link' " .
+					"title='".htmlspecialchars(__("Add Keyword"), ENT_QUOTES)."'>" .
+					__("Add Keyword") .
+				"</a>");
+			
+		} else {
 			$form->addAdditionalText(" ("._("e.g. oranges, lemons, limes").")");
+		}
 		
 		$form->add(
 			null,
@@ -1657,6 +1680,117 @@ class shoppingItems {
 				
 		$form->reset();
 		return true;
+	}
+	
+	function displayAdminAvailableKeywords() {
+		$search = null;
+		
+		if (isset($_POST['ajaxsearch']))
+			$search = trim(strip_tags($_POST['ajaxsearch']));
+		
+		if (isset($_GET['ajaxsearch']))
+			$search = trim(strip_tags($_GET['ajaxsearch']));
+		
+		if (!isset($search) && !isset($_GET['ajaxlimit']))
+			echo 
+				"<div class='shopping-item-add-keywords-list'>";
+			
+		echo
+				"<div class='shopping-item-add-keywords-list-search' " .
+					"style='margin-right: 20px;'>" .
+					"<form action='".url::uri('ajaxsearch, ajaxlimit, ajax')."' method='post' " .
+						"class='ajax-form' " .
+						"target='.shopping-item-add-keywords-list'>" .
+					__("Search").": " .
+					"<input type='search' " .
+						"name='ajaxsearch' " .
+						"value='".
+							htmlspecialchars($search, ENT_QUOTES).
+						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' />" .
+					"</form>" .
+				"</div>" .
+				"<br />" .
+				"<table cellpadding='0' cellspacing='0' class='list'>" .
+					"<thead>" .
+					"<tr>" .
+						"<th>" .
+							"<span class='nowrap'>".
+								__("Add") .
+							"</span>" .
+						"</th>" .
+						"<th>" .
+							"<span class='nowrap'>".
+							__("Keyword").
+							"</span>" .
+						"</th>" .
+						"<th style='text-align: right;'>" .
+							"<span class='nowrap'>".
+							__("Popularity").
+							"</span>" .
+						"</th>" .
+					"</tr>" .
+					"</thead>" .
+					"<tbody>";
+					
+		$paging = new paging(10,
+			'&amp;ajaxsearch='.urlencode($search));
+		
+		$paging->track('ajaxlimit');
+		$paging->ajax = true;
+		
+		$rows = sql::run(
+			" SELECT * FROM `{shoppingkeywords}`" .
+			" WHERE 1" .
+			($search?
+				" AND (`Keyword` LIKE '%".sql::escape($search)."%') ":
+				null) .
+			" ORDER BY `Counter` DESC, `Keyword`" .
+			" LIMIT ".$paging->limit);
+		
+		$paging->setTotalItems(sql::count('Keyword'));
+		
+		$i = 1;
+		$total = sql::rows($rows);
+		
+		while ($row = sql::fetch($rows)) {
+			echo
+				"<tr".($i%2?" class='pair'":NULL).">" .
+					"<td align='center'>" .
+						"<a href='javascript://' " .
+							"onclick=\"" .
+								"jQuery('#newedititemform #entryKeywords').val(" .
+									"jQuery('#newedititemform #entryKeywords').val()+" .
+									"(jQuery('#newedititemform #entryKeywords').val()?', ':'')+" .
+									"'".htmlspecialchars($row['Keyword'], ENT_QUOTES)."');" .
+								"\" class='add-link'>" .
+							(JCORE_VERSION < '0.6'?
+								"&nbsp;+&nbsp;":
+								null) .
+						"</a>" .
+					"</td>" .
+					"<td class='auto-width'>" .
+						"<b>" .
+						$row['Keyword'] .
+						"</b>" .
+					"</td>" .
+					"<td style='text-align: right;'>" .
+						$row['Counter'] .
+					"</td>" .
+				"</tr>";
+			
+			$i++;
+		}
+		
+		echo
+					"</tbody>" .
+				"</table>" .
+				"<br />";
+				
+		$paging->display();
+		
+		if (!isset($search) && !isset($_GET['ajaxlimit']))
+			echo
+				"</div>";
 	}
 	
 	function displayAdminListHeader() {
@@ -3025,12 +3159,16 @@ class shoppingItems {
 	function ajaxRequest() {
 		$users = null;
 		$options = null;
+		$keywords = null;
 		
 		if (isset($_GET['users']))
 			$users = $_GET['users'];
 		
 		if (isset($_GET['shoppingitemoptions']))
 			$options = (int)$_GET['shoppingitemoptions'];
+		
+		if (isset($_GET['keywords']))
+			$keywords = $_GET['keywords'];
 		
 		if ($users) {
 			if (!$GLOBALS['USER']->loginok || 
@@ -3070,6 +3208,11 @@ class shoppingItems {
 			if ($row)
 				$this->displayBuyFormOptions($row);
 			
+			return true;
+		}
+		
+		if ($keywords) {
+			$this->displayAdminAvailableKeywords();
 			return true;
 		}
 		
