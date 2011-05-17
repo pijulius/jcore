@@ -41,6 +41,12 @@ class _jQuery {
 	}
 	
 	static function compress($buffer) {
+		$buffer = 
+			str_replace('%SITE_URL%', url::site(),
+			str_replace('%JCORE_URL%', url::jCore(),
+			str_replace('%ICONS_URL%', url::jCore().'lib/icons/',
+			preg_replace(',/\*.*?\*/|\r|\n,s',' ',$buffer))));
+		
 		if (!jQuery::$compression)
 			return $buffer;
 		

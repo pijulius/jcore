@@ -107,7 +107,7 @@ class _css {
 			str_replace('%SITE_URL%', url::site(),
 			str_replace('%JCORE_URL%', url::jCore(),
 			str_replace('%ICONS_URL%', url::jCore().'lib/icons/',
-			preg_replace(',/\*.*?\*/|\s+,s',' ',$buffer)))));
+			preg_replace(',/\*.*?\*/|\s+|\r|\n,s',' ',$buffer)))));
 		
 		if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']) {
 			if (SITE_URL != url::site())
