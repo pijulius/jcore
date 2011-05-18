@@ -730,19 +730,25 @@ input.button:hover {
 }
 
 .pagenumber a {
-	padding: 3px 7px;
+	padding: 4px 7px;
 	color: #a9a9a9;
 	text-decoration: none;
+	border: 1px solid transparent;
+	-webkit-border-top-right-radius: 7px;
+	-moz-border-top-right-radius: 7px;
+	border-top-right-radius: 7px;
 }
 
 .pagenumber a:hover, 
 .pagenumber.pagenumber-selected a 
 {
-	padding: 3px 9px;
 	background: url("images/buttonbluebg.jpg") repeat-x #50b1d4;
 	border: 1px solid #338ead;
 	color: #fff;
 	text-shadow: 1px 1px 1px #338ead;
+}
+
+.pagenumber.pagenumber-selected a {
 	font-weight: bold;
 }
 
