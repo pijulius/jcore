@@ -28,7 +28,7 @@ class _template {
 	}
 	
 	function install() {
-		if (!$this->templateID)
+		if (!isset($this->templateID) || !$this->templateID)
 			return false;
 		
 		files::$debug = true;
@@ -73,10 +73,23 @@ class _template {
 			return false;
 		}
 		
+		if (JCORE_VERSION >= '0.9') {
+			sql::run(
+				" UPDATE `{templates}` SET " .
+				" `Installed` = 1" .
+				" WHERE `ID` = '".$this->templateID."'");
+			
+			if (sql::error())
+				return false;
+		}
+		
 		return true;
 	}
 	
 	function uninstall() {
+		if (!isset($this->templateID) || !$this->templateID)
+			return false;
+		
 		files::$debug = true;
 		sql::$debug = true;
 		
@@ -110,6 +123,16 @@ class _template {
 		files::$debug = false;
 		sql::$debug = false;
 		
+		if (JCORE_VERSION >= '0.9') {
+			sql::run(
+				" UPDATE `{templates}` SET " .
+				" `Installed` = 0" .
+				" WHERE `ID` = '".$this->templateID."'");
+			
+			if (sql::error())
+				return false;
+		}
+		
 		return true;
 	}
 	
@@ -126,6 +149,18 @@ class _template {
 	}
 	
 	function installCustom() {
+		return true;
+	}
+	
+	function installjQueryPlugins($plugins = null) {
+		if (!isset($this->templateID) || !$this->templateID)
+			return false;
+		
+		sql::run(
+			" UPDATE `{templates}`" .
+			" SET `jQueryPlugins` = '".sql::escape($plugins)."'" .
+			" WHERE `ID` = '".$this->templateID."'");
+		
 		return true;
 	}
 	

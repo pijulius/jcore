@@ -491,6 +491,73 @@ class _moduleManager {
 			"</div>"; //admin-content
 	}
 	
+	function add($values) {
+		if (!is_array($values))
+			return false;
+		
+		$newid = sql::run(
+			" INSERT INTO `{modules}` SET" .
+			" `Name` = '".
+				sql::escape($values['Name'])."'");
+		
+		if (!$newid) {
+			tooltip::display(
+				sprintf(__("Module couldn't be added! Error: %s"), 
+					sql::error()),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		return $newid;
+	}
+	
+	function delete($id) {
+		if (!$id)
+			return false;
+		
+		if (modules::load($id, true, true)) {
+			$exists = modules::get($id);
+			
+			$module = new $id;
+			$module->moduleID = $exists['ID'];
+			$success = $module->uninstall();
+			unset($module);
+			
+			if (!$success)
+				return false;
+			
+			sql::run(
+				" DELETE FROM `{modules}` " .
+				" WHERE `ID` = '".$exists['ID']."'");
+			
+			sql::run(
+				" DELETE FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pagemodules':
+						'menuitemmodules') .
+					"}` " .
+				" WHERE `ModuleID` = '".$exists['ID']."'");
+		}
+		
+		$isdir = @is_dir(SITE_PATH.'lib/modules/'.$id);
+		
+		if (($isdir && !files::delete(SITE_PATH.'lib/modules/'.$id)) ||
+			(!$isdir && !files::delete(SITE_PATH.'lib/modules/'.$id.'.class.php'))) 
+		{
+			tooltip::display(
+				sprintf(__("Module couldn't be deleted but it is now safe " .
+					"to be deleted manually by just simply removing " .
+					"the \"%s\" file or folder."), 'lib/modules/'.$id .
+					($isdir?
+						'/':
+						'.class.php')),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		return true;
+	}
+	
 	function activate($id) {
 		if (!$id)
 			return false;
@@ -523,7 +590,17 @@ class _moduleManager {
 			return true;
 		}
 		
+		if ($exists)
+			$newid = $exists['ID'];
+		else
+			$newid = $this->add(array(
+				'Name' => $id));
+		
+		if (!$newid)
+			return false;
+		
 		$module = new $id;
+		$module->moduleID = $newid;
 		$success = $module->install();
 		unset($module);
 		
@@ -577,38 +654,6 @@ class _moduleManager {
 		
 		css::update();
 		jQuery::update();
-		
-		return true;
-	}
-	
-	function delete($id) {
-		if (!$id)
-			return false;
-		
-		if (modules::load($id, true, true)) {
-			$module = new $id;
-			$success = $module->uninstall();
-			unset($module);
-			
-			if (!$success)
-				return false;
-		}
-		
-		$isdir = @is_dir(SITE_PATH.'lib/modules/'.$id);
-		
-		if (($isdir && !files::delete(SITE_PATH.'lib/modules/'.$id)) ||
-			(!$isdir && !files::delete(SITE_PATH.'lib/modules/'.$id.'.class.php'))) 
-		{
-			tooltip::display(
-				sprintf(__("Module couldn't be deleted but it is now safe " .
-					"to be deleted manually by just simply removing " .
-					"the \"%s\" file or folder."), 'lib/modules/'.$id .
-					($isdir?
-						'/':
-						'.class.php')),
-				TOOLTIP_ERROR);
-			return false;
-		}
 		
 		return true;
 	}

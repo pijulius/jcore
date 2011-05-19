@@ -177,23 +177,25 @@ class _jQuery {
 		}
 		
 		ob_start(array('jQuery', 'compress'));
-		$plugins = array();
 		
-		if ($admin && defined('JQUERY_LOAD_ADMIN_PLUGINS') &&
-			JQUERY_LOAD_ADMIN_PLUGINS) 
-			$plugins += explode(',', JQUERY_LOAD_ADMIN_PLUGINS);
+		$plugins = null;
+		$jsfiles = array();
 		
 		if (defined('JQUERY_LOAD_PLUGINS')) {
-			$plugins += explode(',', JQUERY_LOAD_PLUGINS);
+			$plugins = JQUERY_LOAD_PLUGINS;
 			
 		} elseif (isset($this) && isset($this->plugins)) {
-			$plugins = (array)$this->plugins;
+			$plugins = implode(',', (array)$this->plugins);
 		
 		} else {
 			$jquery = new jQuery();
-			$plugins = $jquery->plugins;
+			$plugins = implode(',', $jquery->plugins);
 			unset($jquery);
 		}
+		
+		if ($admin && defined('JQUERY_LOAD_ADMIN_PLUGINS') &&
+			JQUERY_LOAD_ADMIN_PLUGINS) 
+			$plugins .= ','.JQUERY_LOAD_ADMIN_PLUGINS;
 		
 		if (JCORE_VERSION < '0.6')
 			echo 
@@ -206,7 +208,58 @@ class _jQuery {
 		echo
 			"var JCORE_VERSION = '".JCORE_VERSION."';";
 		
-		$plugins = array_map('trim', $plugins);
+		if (JCORE_VERSION >= '0.5') {
+			$modules = sql::run(
+				" SELECT `Name`" .
+				(JCORE_VERSION >= '0.9'?
+					", `jQueryPlugins`":
+					null) .
+				" FROM `{modules}`" .
+				" WHERE `Installed`" .
+				(JCORE_VERSION >= '0.9'?
+					" AND !`Deactivated`":
+					null));
+				
+			while($module = sql::fetch($modules)) {
+				if (JCORE_VERSION >= '0.9' && $module['jQueryPlugins'])
+					$plugins .= ','.$module['jQueryPlugins'];
+				
+				$jsfile = strtolower($module['Name']).'.js';
+				
+				if (defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE &&
+					(!$admin || WEBSITE_TEMPLATE_SETFORADMIN) &&
+					@is_file(SITE_PATH.'template/'.WEBSITE_TEMPLATE .
+						'/modules/js/'.$jsfile))
+				{
+					$jsfiles[] = SITE_PATH.'template/'.WEBSITE_TEMPLATE .
+							'modules/js/'.$jsfile;
+						
+				} elseif (@is_file(SITE_PATH.'template/modules/js/'.$jsfile)) {
+					$jsfiles[] = SITE_PATH.'template/modules/js/'.$jsfile;
+				}
+			}
+			
+			if (defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE &&
+				(!$admin || WEBSITE_TEMPLATE_SETFORADMIN))
+			{
+				$jsfiles[] = SITE_PATH.'template/' .
+						WEBSITE_TEMPLATE.'/template.js';
+				
+				if (JCORE_VERSION >= '0.9') {
+					$template = sql::fetch(sql::run(
+						" SELECT `jQueryPlugins` FROM `{templates}`" .
+						" WHERE `Name` = '".sql::escape(WEBSITE_TEMPLATE)."'"));
+					
+					if ($template && $template['jQueryPlugins'])
+						$plugins .= ','.$template['jQueryPlugins'];
+				}
+				
+			} else {
+				$jsfiles[] = SITE_PATH.'template/template.js';
+			}
+		}
+		
+		$plugins = explode(',', str_replace(' ', '', $plugins));
 		$plugins = array_unique($plugins);
 		
 		if (!in_array('jcore', $plugins))
@@ -226,42 +279,8 @@ class _jQuery {
 					FILE_USE_INCLUDE_PATH)."\n";
 		}
 		
-		if (JCORE_VERSION >= '0.5') {
-			$modules = sql::run(
-				" SELECT `Name` FROM `{modules}`" .
-				" WHERE `Installed`" .
-				(JCORE_VERSION >= '0.9'?
-					" AND !`Deactivated`":
-					null));
-				
-			while($module = sql::fetch($modules)) {
-				$jsfile = strtolower($module['Name']).'.js';
-				
-				if (defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE &&
-					(!$admin || WEBSITE_TEMPLATE_SETFORADMIN) &&
-					@is_file(SITE_PATH.'template/'.WEBSITE_TEMPLATE .
-						'/modules/js/'.$jsfile))
-				{
-					echo 
-						@file_get_contents(SITE_PATH.'template/'.WEBSITE_TEMPLATE .
-							'modules/js/'.$jsfile)."\n";
-						
-				} elseif (@is_file(SITE_PATH.'template/modules/js/'.$jsfile)) {
-					echo 
-						@file_get_contents(SITE_PATH.'template/modules/js/'.
-							$jsfile)."\n";
-				}
-			}
-			
-			if (defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE &&
-				(!$admin || WEBSITE_TEMPLATE_SETFORADMIN))
-				echo 
-					@file_get_contents(SITE_PATH.'template/' .
-						WEBSITE_TEMPLATE.'/template.js')."\n";
-			else
-				echo 
-					@file_get_contents(SITE_PATH.'template/template.js')."\n";
-		}
+		foreach($jsfiles as $jsfile)
+			echo @file_get_contents($jsfile)."\n";
 		
 		ob_end_flush();
 		return true;

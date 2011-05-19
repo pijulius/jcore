@@ -2371,8 +2371,10 @@ class shoppingOrders extends modules {
 				return false;
 		}
 		
-		if (!jQuery::addPlugin('numberformat'))
-			return false;
+		if (JCORE_VERSION >= '0.9')
+			$this->installjQueryPlugins('numberformat');
+		else
+			jQuery::addPlugin('numberformat');
 		
 		return true;
 	}

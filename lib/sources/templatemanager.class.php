@@ -388,13 +388,6 @@ class _templateManager {
 			$row += templateManager::parseData(
 				files::get($this->rootPath.$template.'/template.php'));
 			
-			$template = sql::fetch(sql::run(
-				" SELECT * FROM `{templates}`" .
-				" WHERE `Name` = '".sql::escape($row['_ID'])."'"));
-			
-			if ($template)
-				$row['ID'] = $template['ID'];
-			
 			if ($selectedtemplate == $row['_ID'])
 				$row['_Activated'] = true;
 			
@@ -633,62 +626,25 @@ class _templateManager {
 		return $newid;
 	}
 	
-	function edit($id, $values) {
-		if (!$id)
-			return false;
-		
-		if (!is_array($values))
-			return false;
-		
-		sql::run(
-			" UPDATE `{templates}` SET" .
-			" `Name` = '".
-				sql::escape($values['Name'])."'" .
-			" WHERE `ID` = '".(int)$id."'");
-		
-		if (sql::affected() == -1) {
-			tooltip::display(
-				sprintf(__("Template couldn't be updated! Error: %s"), 
-					sql::error()),
-				TOOLTIP_ERROR);
-			return false;
-		}
-		
-		return true;
-	}
-	
 	function delete($id) {
 		if (!$id)
 			return false;
 		
-		$template = null;
-		$templatename = null;
+		$exists = sql::fetch(sql::run(
+			" SELECT * FROM `{templates}`" .
+			" WHERE `Name` = '".sql::escape($id)."'"));
 		
-		if (is_numeric($id)) {
-			$template = sql::fetch(sql::run(
-				" SELECT * FROM `{templates}`" .
-				" WHERE `ID` = '".(int)$id."'"));
-			
-		} else {
-			$templatename = $id;
-			$template = sql::fetch(sql::run(
-				" SELECT * FROM `{templates}`" .
-				" WHERE `Name` = '".sql::escape($id)."'"));
-		}
-		
-		if ($template) {
-			$templatename = $template['Name'];
-			
-			if (!$this->deactivate($template['ID']))
+		if ($exists) {
+			if (!$this->deactivate($id))
 				return false;
 			
-			@include_once($this->rootPath.$template['Name'].'/template.php');
+			@include_once($this->rootPath.$exists['Name'].'/template.php');
 			
 			if (class_exists('templateInstaller') && 
 				method_exists('templateInstaller', 'uninstall'))
 			{
 				$installer = new templateInstaller();
-				$installer->templateID = $template['ID'];
+				$installer->templateID = $exists['ID'];
 				$success = $installer->uninstall();
 				unset($installer);
 				
@@ -698,20 +654,20 @@ class _templateManager {
 			
 			sql::run(
 				" DELETE FROM `{templates}`" .
-				" WHERE `ID` = '".(int)$template['ID']."'");
+				" WHERE `ID` = '".(int)$exists['ID']."'");
 			
 			sql::run(
 				" DELETE FROM `{blocks}`" .
-				" WHERE `TemplateID` = '".(int)$template['ID']."'");
+				" WHERE `TemplateID` = '".(int)$exists['ID']."'");
 		}
 		
-		if (is_dir($this->rootPath.$templatename) && 
-			!dirs::delete($this->rootPath.$templatename)) 
+		if (is_dir($this->rootPath.$id) && 
+			!dirs::delete($this->rootPath.$id)) 
 		{
 			tooltip::display(
 				sprintf(__("Template couldn't be deleted but it is now safe " .
 					"to be deleted manually by just simply removing " .
-					"the \"%s\" folder."), 'template/'.$templatename.'/'),
+					"the \"%s\" folder."), 'template/'.$id.'/'),
 				TOOLTIP_ERROR);
 			return false;
 		}
@@ -727,9 +683,10 @@ class _templateManager {
 			" DELETE FROM `{blocks}`" .
 			" WHERE `TemplateID` = '".(int)$templateid."'");
 		
-		sql::run(
-			" DELETE FROM `{templates}`" .
-			" WHERE `ID` = '".(int)$templateid."'");
+		if (JCORE_VERSION < '0.9')
+			sql::run(
+				" DELETE FROM `{templates}`" .
+				" WHERE `ID` = '".(int)$templateid."'");
 		
 		return true;
 	}
@@ -738,38 +695,27 @@ class _templateManager {
 		if (!$id)
 			return false;
 		
-		if (is_numeric($id)) {
-			$template = sql::fetch(sql::run(
-				" SELECT * FROM `{templates}`" .
-				" WHERE `ID` = '".(int)$id."'"));
-			
-			if (!$template) {
-				tooltip::display(
-					__("The template you selected cannot be found!"),
-					TOOLTIP_ERROR);
-				return false;
-			}
-			
-		} else {
-			$template = sql::fetch(sql::run(
-				" SELECT * FROM `{templates}`" .
-				" WHERE `Name` = '".sql::escape($id)."'"));
-		}
+		$exists = sql::fetch(sql::run(
+			" SELECT * FROM `{templates}`" .
+			" WHERE `Name` = '".sql::escape($id)."'"));
 		
-		if ($template) {
+		if ($exists && (JCORE_VERSION < '0.9' || $exists['Installed'])) {
 			$settings = new settings();
-			$settings->set('Website_Template', $template['Name']);
+			$settings->set('Website_Template', $exists['Name']);
 			$settings->set('Website_Template_SetForAdmin', '0');
 			unset($settings);
 			
-			$this->autoSetup($template['ID']);
+			$this->autoSetup($exists['ID']);
 			
-			template::$selected = $template;
+			template::$selected = $exists;
 			return true;
 		}
 		
-		$newid = $this->add(array(
-			'Name' => $id));
+		if ($exists)
+			$newid = $exists['ID'];
+		else
+			$newid = $this->add(array(
+				'Name' => $id));
 		
 		if (!$newid)
 			return false;
@@ -791,6 +737,8 @@ class _templateManager {
 		unset($installer);
 		
 		if (!$success) {
+			$this->cleanUp($newid);
+			
 			tooltip::display(
 				__("Template couldn't be activated!")." " .
 				__("Please see detailed error messages above and try again."),
@@ -818,11 +766,11 @@ class _templateManager {
 		if (!$id)
 			return false;
 		
-		$template = sql::fetch(sql::run(
+		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{templates}`" .
-			" WHERE `ID` = '".(int)$id."'"));
+			" WHERE `Name` = '".sql::escape($id)."'"));
 		
-		if (!$template) {
+		if (!$exists) {
 			tooltip::display(
 				__("The template you selected cannot be found!"),
 				TOOLTIP_ERROR);
@@ -844,11 +792,11 @@ class _templateManager {
 		if (!$id)
 			return false;
 		
-		$template = sql::fetch(sql::run(
+		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{templates}`" .
-			" WHERE `ID` = '".(int)$id."'"));
+			" WHERE `Name` = '".sql::escape($id)."'"));
 		
-		if (!$template) {
+		if (!$exists) {
 			tooltip::display(
 				__("The template you selected cannot be found!"),
 				TOOLTIP_ERROR);
@@ -866,11 +814,11 @@ class _templateManager {
 		if (!$id)
 			return false;
 		
-		$template = sql::fetch(sql::run(
+		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{templates}`" .
-			" WHERE `ID` = '".(int)$id."'"));
+			" WHERE `Name` = '".sql::escape($id)."'"));
 		
-		if (!$template) {
+		if (!$exists) {
 			tooltip::display(
 				__("The template you selected cannot be found!"),
 				TOOLTIP_ERROR);

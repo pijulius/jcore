@@ -46,6 +46,28 @@ class _modules {
 	}
 	
 	function install() {
+		if (!isset($this->moduleID) || !$this->moduleID) {
+			$module = ucfirst(get_class($this));
+			$exists = modules::get($module);
+			
+			if ($exists)
+				$this->moduleID = $exists['ID'];
+			else
+				$this->moduleID = sql::run(
+					" INSERT INTO `{modules}` SET " .
+					" `Name` = '".sql::escape($module)."'," .
+					(JCORE_VERSION >= '0.5' && $this->searchable?
+						" `Searchable` = 1,":
+						null) .
+					(JCORE_VERSION >= '0.9'?
+						" `Deactivated` = 0,":
+						null) .
+					" `Installed` = 0");
+			
+			if (sql::error())
+				return false;
+		}
+		
 		files::$debug = true;
 		sql::$debug = true;
 		
@@ -88,8 +110,6 @@ class _modules {
 			return false;
 		}
 		
-		$module = ucfirst(get_class($this));
-		
 		if (!$csssuccess = css::update())
 			tooltip::display(
 				__("Couldn't update template.css file.")." " .
@@ -107,30 +127,16 @@ class _modules {
 		if (!$csssuccess || !$jssuccess)
 			return false;
 		
-		$exists = modules::get($module);
-		
-		if ($exists)
-			sql::run(
-				" UPDATE `{modules}` SET " .
-				(JCORE_VERSION >= '0.5' && $this->searchable?
-					" `Searchable` = 1,":
-					null) .
-				(JCORE_VERSION >= '0.9'?
-					" `Deactivated` = 0,":
-					null) .
-				" `Installed` = 1" .
-				" WHERE `ID` = '".$exists['ID']."'");
-		else
-			sql::run(
-				" INSERT INTO `{modules}` SET " .
-				" `Name` = '".sql::escape($module)."'," .
-				(JCORE_VERSION >= '0.5' && $this->searchable?
-					" `Searchable` = 1,":
-					null) .
-				(JCORE_VERSION >= '0.9'?
-					" `Deactivated` = 0,":
-					null) .
-				" `Installed` = 1");
+		sql::run(
+			" UPDATE `{modules}` SET " .
+			(JCORE_VERSION >= '0.5' && $this->searchable?
+				" `Searchable` = 1,":
+				null) .
+			(JCORE_VERSION >= '0.9'?
+				" `Deactivated` = 0,":
+				null) .
+			" `Installed` = 1" .
+			" WHERE `ID` = '".$this->moduleID."'");
 		
 		if (sql::error())
 			return false;
@@ -139,6 +145,13 @@ class _modules {
 	}
 	
 	function uninstall() {
+		if (!isset($this->moduleID) || !$this->moduleID) {
+			$module = ucfirst(get_class($this));
+			
+			if ($exists = modules::get($module))
+				$this->moduleID = $exists['ID'];
+		}
+		
 		files::$debug = true;
 		sql::$debug = true;
 		
@@ -172,33 +185,13 @@ class _modules {
 		files::$debug = false;
 		sql::$debug = false;
 		
-		$module = ucfirst(get_class($this));
-		
 		css::update();
 		jQuery::update();
 		
-		$exists = modules::get($module);
-		
-		if (sql::error())
-			return false;
-		
-		if (!$exists)
-			return true;
-		
 		sql::run(
-			" DELETE FROM `{modules}` " .
-			" WHERE `ID` = '".$exists['ID']."'");
-		
-		if (sql::error())
-			return false;
-		
-		sql::run(
-			" DELETE FROM `{" .
-				(JCORE_VERSION >= '0.8'?
-					'pagemodules':
-					'menuitemmodules') .
-				"}` " .
-			" WHERE `ModuleID` = '".$exists['ID']."'");
+			" UPDATE `{modules}` SET " .
+			" `Installed` = 0" .
+			" WHERE `ID` = '".$this->moduleID."'");
 		
 		if (sql::error())
 			return false;
@@ -219,6 +212,22 @@ class _modules {
 	}
 	
 	function installCustom() {
+		return true;
+	}
+	
+	function installjQueryPlugins($plugins = null) {
+		if (!isset($this->moduleID) || !$this->moduleID) {
+			$module = ucfirst(get_class($this));
+			
+			if ($exists = modules::get($module))
+				$this->moduleID = $exists['ID'];
+		}
+		
+		sql::run(
+			" UPDATE `{modules}`" .
+			" SET `jQueryPlugins` = '".sql::escape($plugins)."'" .
+			" WHERE `ID` = '".$this->moduleID."'");
+		
 		return true;
 	}
 	
