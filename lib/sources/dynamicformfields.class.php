@@ -118,6 +118,15 @@ class _dynamicFormFields {
 		$form->addValue(
 			FORM_CLOSE_FRAME_CONTAINER, form::type2Text(FORM_CLOSE_FRAME_CONTAINER));
 		
+		if (JCORE_VERSION < 0.7) {
+			$form->add(
+				__('Field Name'),
+				'Name',
+				FORM_INPUT_TYPE_TEXT);
+			$form->setStyle('width: 150px;');
+			$form->setValueType(FORM_VALUE_TYPE_LIMITED_STRING);
+		}
+		
 		$form->add(
 			__('Value Type'),
 			'ValueType',
@@ -198,12 +207,13 @@ class _dynamicFormFields {
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 350px;');
 		
-		if (JCORE_VERSION >= '0.2')
+		if (JCORE_VERSION >= '0.2') {
 			$form->add(
 				__('Additional Text'),
 				'AdditionalText',
 				FORM_INPUT_TYPE_TEXT);
 			$form->setStyle('width: 350px;');
+		}
 		
 		if (JCORE_VERSION >= '0.6') {
 			$form->add(

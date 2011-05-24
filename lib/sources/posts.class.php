@@ -127,10 +127,22 @@ class _posts {
 						")":
 						null) .
 					($homepage['ID'] == $page['ID']?
-						" OR `OnMainPage` OR !`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` ":
+						" OR (`OnMainPage`" .
+						(JCORE_VERSION >= '0.9'?
+							" AND `LanguageID` = '".$page['LanguageID']."'":
+							null) .
+						") OR (!`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
+						(JCORE_VERSION >= '0.9'?
+							" AND (`LanguageID` = '".$page['LanguageID']."' OR !`LanguageID`)":
+							null) .
+						")":
 						" OR ((`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$homepage['ID']."'" .
-							" OR !`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`) AND `OnMainPage`) ") .
-					" ) ":
+							" OR (!`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
+							(JCORE_VERSION >= '0.9'?
+								" AND (`LanguageID` = '".$page['LanguageID']."' OR !`LanguageID`)":
+								null) .
+							")) AND `OnMainPage`) ") .
+					")":
 					null)) .
 			" ORDER BY" .
 			($this->randomize?
@@ -141,7 +153,9 @@ class _posts {
 				(JCORE_VERSION >= '0.8' && $page && trim($page['PostKeywords'])?
 					" `TimeStamp` DESC,":
 					null) .
-				" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = 0," .
+				($homepage['ID'] == $page['ID']?
+					" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = 0,":
+					" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$page['ID']."',") .
 				" `OnMainPage` DESC, `OrderID`, `StartDate`, `ID` DESC");
 	}
 	
@@ -316,6 +330,15 @@ class _posts {
 				admin::getPathID(),
 				FORM_INSERT_BEFORE);
 			$form->setValueType(FORM_VALUE_TYPE_INT);
+			
+			if (JCORE_VERSION >= '0.9') {
+				$form->insert(
+					'PageID',
+					'LanguageID',
+					'LanguageID',
+					FORM_INPUT_TYPE_HIDDEN);
+				$form->setValueType(FORM_VALUE_TYPE_INT);
+			}
 			
 			$form->addAdditionalText(
 				'Keywords',
@@ -1353,7 +1376,9 @@ class _posts {
 			return false;
 		
 		if ($values['OrderID'] == '') {
-			$pageids = pages::getAliasIDs((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]);
+			if (JCORE_VERSION < '0.9')
+				$pageids = pages::getAliasIDs((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]);
+			
 			$pageids[] = (int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')];
 			
 			sql::run(
@@ -1375,12 +1400,26 @@ class _posts {
 				" AND `OrderID` >= '".(int)$values['OrderID']."'");
 		}
 		
+		if ((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])
+			$page = sql::fetch(sql::run(
+				" SELECT * FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE `ID` = '".(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
+		else
+			$page = pages::getHome();
+		
 		if (stripos($values['Content'], '<div style="page-break-after: always') !== false)
 			$values['PartialContent'] = true;
 		
 		if (JCORE_VERSION >= '0.7') {
 			if (!isset($values['UserID']))
 				$values['UserID'] = (int)$GLOBALS['USER']->data['ID'];
+			
+			if (JCORE_VERSION >= '0.9' && (int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])
+				$values['LanguageID'] = $page['LanguageID'];
 			
 			$postsform = new postsForm();
 			$newid = $postsform->addData($values);
@@ -1475,17 +1514,6 @@ class _posts {
 		$sitemap = new siteMap();
 		$sitemap->load();
 		
-		if ((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])
-			$page = sql::fetch(sql::run(
-				" SELECT * FROM `{" .
-					(JCORE_VERSION >= '0.8'?
-						'pages':
-						'menuitems') .
-					"}`" .
-				" WHERE `ID` = '".(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
-		else
-			$page = pages::getHome();
-		
 		if (SEO_FRIENDLY_LINKS)
 			$pageurl = SITE_URL.
 				$page['Path'];
@@ -1539,6 +1567,17 @@ class _posts {
 			" SELECT * FROM `{posts}`" .
 			" WHERE `ID` = '".(int)$id."'"));
 		
+		if ((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])
+			$page = sql::fetch(sql::run(
+				" SELECT * FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE `ID` = '".(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
+		else
+			$page = pages::getHome();
+		
 		if (stripos($values['Content'], '<div style="page-break-after: always') !== false &&
 			stripos($post['Content'], '<div style="page-break-after: always') === false)
 			$values['PartialContent'] = true;
@@ -1548,6 +1587,9 @@ class _posts {
 			$values['PartialContent'] = false;
 		
 		if (JCORE_VERSION >= '0.7') {
+			if (JCORE_VERSION >= '0.9' && (int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])
+				$values['LanguageID'] = $page['LanguageID'];
+			
 			$postsform = new postsForm();
 			$postsform->editData($id, $values);
 			unset($postsform);
@@ -1661,17 +1703,6 @@ class _posts {
 		
 		$sitemap = new siteMap();
 		$sitemap->load();
-		
-		if ((int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])
-			$page = sql::fetch(sql::run(
-				" SELECT * FROM `{" .
-					(JCORE_VERSION >= '0.8'?
-						'pages':
-						'menuitems') .
-					"}`" .
-				" WHERE `ID` = '".(int)$values[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
-		else
-			$page = pages::getHome();
 		
 		if (SEO_FRIENDLY_LINKS)
 			$pageurl = SITE_URL.

@@ -38,6 +38,40 @@ class _postsAtGlance extends posts {
 		$form->addValue(
 			(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'), 
 			'', '');
+		
+		foreach(pages::getTree() as $page)
+			$form->addValue(
+				(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'),
+				$page['ID'], 
+				($page[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]?
+					str_replace(' ', '&nbsp;', 
+						str_pad('', $page['PathDeepnes']*4, ' ')).
+					"|- ":
+					null) .
+				$page['Title']);
+		
+		$form->groupValues(
+			(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'), 
+			array('0'));
+		
+		if (JCORE_VERSION >= '0.9') {
+			$form->edit(
+				'LanguageID',
+				__('Language'),
+				'LanguageID',
+				FORM_INPUT_TYPE_SELECT);
+			
+			$form->addValue(
+				'LanguageID', 
+				'', '');
+			
+			if ($languages = languages::get())
+				while($language = sql::fetch($languages))
+					$form->addValue(
+						'LanguageID',
+						$language['ID'], 
+						$language['Title']);
+		}
 	}
 	
 	function verifyAdmin(&$form) {
@@ -143,6 +177,13 @@ class _postsAtGlance extends posts {
 			admin::displayItemData(
 				__("Page"),
 				$pageroute);
+			
+		} elseif (JCORE_VERSION >= '0.9' && $row['LanguageID']) {
+			$language = languages::get($row['LanguageID']);
+			
+			admin::displayItemData(
+				__("Language"),
+				$language['Title']);
 		}
 		
 		parent::displayAdminListItemSelected($row);
@@ -334,21 +375,6 @@ class _postsAtGlance extends posts {
 	
 		$paging = new paging(10);
 		$paging->ignoreArgs = 'id, edit, delete';
-		
-		foreach(pages::getTree() as $row)
-			$form->addValue(
-				(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'),
-				$row['ID'], 
-				($row[(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')]?
-					str_replace(' ', '&nbsp;', 
-						str_pad('', $row['PathDeepnes']*4, ' ')).
-					"|- ":
-					null) .
-				$row['Title']);
-		
-		$form->groupValues(
-			(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'), 
-			array('0'));
 		
 		$rows = sql::run(
 			" SELECT * FROM `{posts}` " .

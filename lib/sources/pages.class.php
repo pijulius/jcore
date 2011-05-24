@@ -1605,6 +1605,13 @@ class _pages {
 		}
 		
 		if (JCORE_VERSION >= '0.9') {
+			if ($page['LanguageID'] != $values['LanguageID'])
+				sql::run(
+					" UPDATE `{posts}` SET" .
+					" `LanguageID` = '".$values['LanguageID']."'," .
+					" `TimeStamp` = `TimeStamp`" .
+					" WHERE `PageID` = '".(int)$id."'");
+			
 			$items = sql::run(
 				" SELECT * FROM `{menuitems}`" .
 				" WHERE `PageID` = '".(int)$id."'");

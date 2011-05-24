@@ -336,7 +336,7 @@ class _postsHandling {
 			"<input type='submit' name='copysubmit' value='" .
 				htmlspecialchars(__("Copy"), ENT_QUOTES)."' class='button submit' /> " .
 			"<input type='submit' name='movesubmit' value='" .
-				htmlspecialchars(__("Move"), ENT_QUOTES)."' class='button submit' /> ";
+				htmlspecialchars(__("Move"), ENT_QUOTES)."' class='button' /> ";
 	}
 	
 	function displayAdminList(&$rows) {
@@ -548,6 +548,10 @@ class _postsHandling {
 			return false;
 		}
 		
+		$page = sql::fetch(sql::run(
+			" SELECT * FROM `{pages}`" .
+			" WHERE `ID` = '".(int)$topageid."'"));
+		
 		if (JCORE_VERSION >= '0.5')
 			sql::run(
 				" UPDATE `{" .
@@ -562,6 +566,9 @@ class _postsHandling {
 			" UPDATE `{posts}` SET" .
 			" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 				$topageid."'," .
+			(JCORE_VERSION >= '0.9'?
+				" `LanguageID` = '".$page['LanguageID']."',":
+				null) .
 			" `TimeStamp` = `TimeStamp`" .
 			" WHERE `ID` = '".$newpostid."'");
 		
@@ -638,10 +645,17 @@ class _postsHandling {
 			" SELECT * FROM `{posts}`" .
 			" WHERE `ID` = '".(int)$postid."'"));
 		
+		$page = sql::fetch(sql::run(
+			" SELECT * FROM `{pages}`" .
+			" WHERE `ID` = '".(int)$topageid."'"));
+		
 		sql::run(
 			" UPDATE `{posts}` SET" .
 			" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 				$topageid."'," .
+			(JCORE_VERSION >= '0.9'?
+				" `LanguageID` = '".$page['LanguageID']."',":
+				null) .
 			" `TimeStamp` = `TimeStamp`" .
 			" WHERE `ID` = '".(int)$postid."'");
 		
