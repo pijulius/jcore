@@ -608,9 +608,10 @@ class _blocks {
 					__("Display Only in Language")),
 				$languageroute);
 		
-		admin::displayItemData(
-			__("Viewable by"),
-			$this->access2Text($row['ViewableBy']));
+		if ($row['ViewableBy'])
+			admin::displayItemData(
+				__("Viewable by"),
+				$this->access2Text($row['ViewableBy']));
 		
 		if ($row['Limit'])
 			admin::displayItemData(
@@ -631,12 +632,14 @@ class _blocks {
 					$row['CacheRefreshTime']));
 		}
 		
-		admin::displayItemData(
-			"<hr />");
-		admin::displayItemData(
-			"<code style='max-height: none;'>" .
-				nl2br(htmlspecialchars($row['Content'])) .
-			"</code>");
+		if ($row['Content']) {
+			admin::displayItemData(
+				"<hr />");
+			admin::displayItemData(
+				"<code style='max-height: none;'>" .
+					nl2br(htmlspecialchars($row['Content'])) .
+				"</code>");
+		}
 	}
 	
 	function displayAdminListFunctions() {
