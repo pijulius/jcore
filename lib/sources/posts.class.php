@@ -2994,8 +2994,8 @@ class _posts {
 		if (!(int)$blockid)
 			return false;
 		
-		$homepage = 
-			pages::getHome($this->selectedLanguageID);
+		$homepage = pages::getHome($this->selectedLanguageID);
+		$page = pages::get($this->selectedPageID);
 		
 		$rows = sql::run(
 			" SELECT * " .
@@ -3004,13 +3004,27 @@ class _posts {
 			" AND `BlockID` = '".(int)$blockid."'" .
 			" AND (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 				$this->selectedPageID."'" .
-			($homepage['ID'] == $this->selectedPageID?
-				" OR `OnMainPage` OR !`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` ":
+			($homepage['ID'] == $page['ID']?
+				" OR (`OnMainPage`" .
+				(JCORE_VERSION >= '0.9'?
+					" AND `LanguageID` = '".$page['LanguageID']."'":
+					null) .
+				") OR (!`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
+				(JCORE_VERSION >= '0.9'?
+					" AND (`LanguageID` = '".$page['LanguageID']."' OR !`LanguageID`)":
+					null) .
+				")":
 				" OR ((`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$homepage['ID']."'" .
-					" OR !`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`) AND `OnMainPage`) ") .
+					" OR (!`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
+					(JCORE_VERSION >= '0.9'?
+						" AND (`LanguageID` = '".$page['LanguageID']."' OR !`LanguageID`)":
+						null) .
+					")) AND `OnMainPage`) ") .
 			" ) " .
 			" ORDER BY" .
-			" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = 0," .
+			($homepage['ID'] == $page['ID']?
+				" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = 0,":
+				" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$page['ID']."',") .
 			" `OnMainPage` DESC, `OrderID`, `StartDate`, `ID` DESC" .
 			($this->limit?
 				" LIMIT ".$this->limit:
@@ -3149,6 +3163,24 @@ class _posts {
 			($this->selectedLanguageID?
 				" AND `LanguageID` = '".$this->selectedLanguageID."'":
 				null) .
+			(JCORE_VERSION >= '0.9'?
+				" AND (!`AccessibleBy` OR " .
+					($GLOBALS['USER']->loginok?
+						($GLOBALS['USER']->data['Admin']?
+							" `AccessibleBy` IN (2, 3)":
+							" `AccessibleBy` = 2") .
+						($GLOBALS['USER']->data['GroupID']?
+							" OR `AccessibleBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
+							null):
+						" `AccessibleBy` = 1") .
+				" )":
+				" AND (!`ViewableBy` OR " .
+					($GLOBALS['USER']->loginok?
+						($GLOBALS['USER']->data['Admin']?
+							" `ViewableBy` IN (2, 3)":
+							" `ViewableBy` = 2"):
+						" `ViewableBy` = 1") .
+				" )") .
 			" AND '".sql::escape($this->arguments)."/' LIKE CONCAT(`Path`,'/%')" .
 			" ORDER BY `Path` DESC," .
 				(JCORE_VERSION < '0.9'?
@@ -3175,7 +3207,7 @@ class _posts {
 			" WHERE !`Deactivated`" .
 			" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$page['ID']."'" .
 			" AND '".sql::escape($this->arguments)."/' LIKE CONCAT(`Path`,'/%')" .
-			" ORDER BY `OrderID`" .
+			" ORDER BY `Path` DESC, `OrderID`" .
 			" LIMIT 1"));
 			
 		if (!$post)

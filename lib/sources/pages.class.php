@@ -360,6 +360,12 @@ class _pages {
 			$form->addValue(
 				PAGE_ADMINS_ONLY, $this->access2Text(PAGE_ADMINS_ONLY));
 			
+			$ugroups = userGroups::get();
+			
+			while($ugroup = sql::fetch($ugroups))
+				$form->addValue(
+					$ugroup['ID']+10, $ugroup['GroupName']);
+			
 		} else {
 			$form->add(
 				__('Viewable by'),
@@ -927,9 +933,11 @@ class _pages {
 		if (JCORE_VERSION >= '0.9')
 			echo
 				"<td style='text-align: right;'>" .
+					"<span class='nowrap'>" .
 					($row['AccessibleBy']?
 						$this->access2Text($row['AccessibleBy']):
 						null) .
+					"</span>" .
 				"</td>";
 		else
 			echo
@@ -937,9 +945,11 @@ class _pages {
 					($row['Hidden']?__('Yes'):'&nbsp;').
 				"</td>" .
 				"<td style='text-align: right;'>" .
+					"<span class='nowrap'>" .
 					($row['ViewableBy']?
 						$this->access2Text($row['ViewableBy']):
 						null) .
+					"</span>" .
 				"</td>";
 		
 		echo
@@ -1979,6 +1989,15 @@ class _pages {
 	}
 	
 	static function access2Text($typeid) {
+		if ($typeid > 10) {
+			$ugroup = userGroups::get($typeid-10);
+			
+			if (!$ugroup)
+				return false;
+			
+			return $ugroup['GroupName'];
+		}
+		
 		switch($typeid) {
 			case PAGE_ADMINS_ONLY:
 				return __('Admins');
@@ -2429,8 +2448,9 @@ class _pages {
 		
 		if (JCORE_VERSION >= '0.9') {
 			if (($page['AccessibleBy'] > PAGE_GUESTS_ONLY && !$GLOBALS['USER']->loginok) ||
-				($page['AccessibleBy'] > PAGE_USERS_ONLY && $GLOBALS['USER']->loginok && 
-				 !$GLOBALS['USER']->data['Admin'])) 
+				($page['AccessibleBy'] == PAGE_ADMINS_ONLY && !$GLOBALS['USER']->data['Admin']) ||
+				($page['AccessibleBy'] > 10 && !$GLOBALS['USER']->data['Admin'] &&
+				 $GLOBALS['USER']->data['GroupID'] != $page['AccessibleBy']-10)) 
 			{
 				$this->displaySelected($page);
 				

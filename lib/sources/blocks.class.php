@@ -62,7 +62,10 @@ class _blocks {
 				($GLOBALS['USER']->loginok?
 					($GLOBALS['USER']->data['Admin']?
 						" `ViewableBy` IN (2, 3)":
-						" `ViewableBy` = 2"):
+						" `ViewableBy` = 2") .
+					(JCORE_VERSION >= '0.9' && $GLOBALS['USER']->data['GroupID']?
+						" OR `ViewableBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
+						null):
 					" `ViewableBy` = 1") .
 			" )" .
 			" ORDER BY `OrderID`";		
@@ -237,6 +240,14 @@ class _blocks {
 			BLOCK_USERS_ONLY, $this->access2Text(BLOCK_USERS_ONLY));
 		$form->addValue(
 			BLOCK_ADMINS_ONLY, $this->access2Text(BLOCK_ADMINS_ONLY));
+		
+		if (JCORE_VERSION >= '0.9') {
+			$ugroups = userGroups::get();
+			
+			while($ugroup = sql::fetch($ugroups))
+				$form->addValue(
+					$ugroup['ID']+10, $ugroup['GroupName']);
+		}
 		
 		$form->add(
 			null,
@@ -1301,6 +1312,15 @@ class _blocks {
 	}
 	
 	function access2Text($typeid) {
+		if ($typeid > 10) {
+			$ugroup = userGroups::get($typeid-10);
+			
+			if (!$ugroup)
+				return false;
+			
+			return $ugroup['GroupName'];
+		}
+		
 		switch($typeid) {
 			case BLOCK_ADMINS_ONLY:
 				return __('Admins');
@@ -1500,7 +1520,10 @@ class _blocks {
 				($GLOBALS['USER']->loginok?
 					($GLOBALS['USER']->data['Admin']?
 						" `ViewableBy` IN (2, 3)":
-						" `ViewableBy` = 2"):
+						" `ViewableBy` = 2") .
+					(JCORE_VERSION >= '0.9' && $GLOBALS['USER']->data['GroupID']?
+						" OR `ViewableBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
+						null):
 					" `ViewableBy` = 1") .
 			" )" .
 			" ORDER BY `OrderID`");
@@ -1551,7 +1574,10 @@ class _blocks {
 				($GLOBALS['USER']->loginok?
 					($GLOBALS['USER']->data['Admin']?
 						" `ViewableBy` IN (2, 3)":
-						" `ViewableBy` = 2"):
+						" `ViewableBy` = 2") .
+					(JCORE_VERSION >= '0.9' && $GLOBALS['USER']->data['GroupID']?
+						" OR `ViewableBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
+						null):
 					" `ViewableBy` = 1") .
 			" )" .
 			" ORDER BY `OrderID`" .

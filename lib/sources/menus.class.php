@@ -690,7 +690,7 @@ class _menus {
 		if ($menuitem) {
 			$menuitems->selectedMenuID = $row['ID'];
 			$menuitems->getSelectedIDs();
-			$menuitems->displayOne($menuitem, $language);
+			$menuitems->displaySubmenus($menuitem, false);
 			
 		} else {
 			$menuitems->selectedMenuID = $row['ID'];
@@ -789,12 +789,15 @@ class _menus {
 				
 			$menuitem = sql::fetch(sql::run(
 				" SELECT * FROM `{" .
-					(JCORE_VERSION >= '0.8'?
+					(JCORE_VERSION == '0.8'?
 						'pages':
 						'menuitems') .
 					"}` " .
 				" WHERE !`Deactivated`" .
-				" AND !`Hidden`" .
+				" AND `MenuID` = '".$row['ID']."'" .
+				(JCORE_VERSION < '0.9'?
+					" AND !`Hidden`":
+					null) .
 				($language?
 					" AND `LanguageID` = '".(int)$language['ID']."'" .
 					" AND `Path` LIKE '".sql::escape($item)."'":
@@ -803,30 +806,28 @@ class _menus {
 							$lang.'/'.$item:
 							$lang)).
 						"'") .
-				" ORDER BY `OrderID`" .
+				" AND (!`ViewableBy` OR " .
+					($GLOBALS['USER']->loginok?
+						($GLOBALS['USER']->data['Admin']?
+							" `ViewableBy` IN (2, 3)":
+							" `ViewableBy` = 2") .
+						(JCORE_VERSION >= '0.9' && $GLOBALS['USER']->data['GroupID']?
+							" OR `ViewableBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
+							null):
+						" `ViewableBy` = 1") .
+				" )" .
+				" ORDER BY" .
+				(JCORE_VERSION >= '0.9'?
+					" `SubMenuItemOfID`,":
+					null) .
+				" `OrderID`, `ID`" .
 				" LIMIT 1"));
 			
-			if ($menuitem) {
-				$submenus = sql::run(
-					" SELECT * FROM `{" .
-						(JCORE_VERSION >= '0.8'?
-							'pages':
-							'menuitems') .
-						"}` " .
-					" WHERE !`Deactivated`" .
-					" AND !`Hidden`" .
-					" AND `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '" .
-						(int)$menuitem['ID']."'" .
-					($language?
-						" AND `LanguageID` = '".(int)$language['ID']."'":
-						null) .
-					" ORDER BY `OrderID`");
-				
-				while ($submenu = sql::fetch($submenus))
-					$this->displayOne($row, $language, $submenu);
-				
+			if (!$menuitem)
 				return true;
-			}
+			
+			$this->displayOne($row, $language, $menuitem);
+			return true;
 		}
 		
 		$this->displayOne($row);

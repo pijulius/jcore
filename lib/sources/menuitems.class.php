@@ -40,7 +40,10 @@ class _menuItems {
 					($GLOBALS['USER']->loginok?
 						($GLOBALS['USER']->data['Admin']?
 							" `ViewableBy` IN (2, 3)":
-							" `ViewableBy` = 2"):
+							" `ViewableBy` = 2") .
+						(JCORE_VERSION >= '0.9' && $GLOBALS['USER']->data['GroupID']?
+							" OR `ViewableBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
+							null):
 						" `ViewableBy` = 1") .
 				" )" .
 				" ORDER BY `OrderID`, `ID`";
@@ -203,6 +206,14 @@ class _menuItems {
 			MENU_USERS_ONLY, $this->access2Text(MENU_USERS_ONLY));
 		$form->addValue(
 			MENU_ADMINS_ONLY, $this->access2Text(MENU_ADMINS_ONLY));
+		
+		if (JCORE_VERSION >= '0.9') {
+			$ugroups = userGroups::get();
+			
+			while($ugroup = sql::fetch($ugroups))
+				$form->addValue(
+					$ugroup['ID']+10, $ugroup['GroupName']);
+		}
 		
 		$form->add(
 			'MenuID',
@@ -558,9 +569,11 @@ class _menuItems {
 				"</div>" .
 			"</td>" .
 			"<td style='text-align: right;'>" .
+				"<span class='nowrap'>" .
 				($row['ViewableBy']?
 					$this->access2Text($row['ViewableBy']):
 					null) .
+				"</span>" .
 			"</td>";
 	}
 	
@@ -978,6 +991,15 @@ class _menuItems {
 	
 	// ************************************************   Client Part
 	static function access2Text($typeid) {
+		if ($typeid > 10) {
+			$ugroup = userGroups::get($typeid-10);
+			
+			if (!$ugroup)
+				return false;
+			
+			return $ugroup['GroupName'];
+		}
+		
 		switch($typeid) {
 			case MENU_ADMINS_ONLY:
 				return __('Admins');
@@ -1200,7 +1222,7 @@ class _menuItems {
 			"</a>";
 	}
 	
-	function displaySubmenus(&$row) {
+	function displaySubmenus(&$row, $container = true) {
 		if (JCORE_VERSION >= '0.9') {
 			$rows = sql::run(
 				" SELECT * FROM `{menuitems}`" .
@@ -1217,10 +1239,13 @@ class _menuItems {
 					($GLOBALS['USER']->loginok?
 						($GLOBALS['USER']->data['Admin']?
 							" `ViewableBy` IN (2, 3)":
-							" `ViewableBy` = 2"):
+							" `ViewableBy` = 2") .
+						($GLOBALS['USER']->data['GroupID']?
+							" OR `ViewableBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
+							null):
 						" `ViewableBy` = 1") .
 				" )" .
-				" ORDER BY `OrderID`");
+				" ORDER BY `OrderID`, `ID`");
 			
 		} else {
 			$rows = sql::run(
@@ -1246,7 +1271,7 @@ class _menuItems {
 							" `ViewableBy` = 2"):
 						" `ViewableBy` = 1") .
 				" )" .
-				" ORDER BY `OrderID`");
+				" ORDER BY `OrderID`, `ID`");
 		}
 		
 		$i = 1;
@@ -1255,7 +1280,8 @@ class _menuItems {
 		if (!$items)
 			return;
 		
-		echo 
+		if ($container)
+			echo 
 			"<" .
 			(JCORE_VERSION >= '0.5'?
 				'ul':
@@ -1279,7 +1305,8 @@ class _menuItems {
 			$i++;
 		}
 		
-		echo 
+		if ($container)
+			echo 
 			"</" .
 			(JCORE_VERSION >= '0.5'?
 				'ul':
@@ -1289,8 +1316,7 @@ class _menuItems {
 	
 	function displayOne(&$row = null) {
 		if ($row['Link'])
-			$row['_Link'] = url::generateLink(
-				$row['Link']);
+			$row['_Link'] = url::generateLink($row['Link']);
 		else
 			$row['_Link'] = $this->generateLink($row);
 		
