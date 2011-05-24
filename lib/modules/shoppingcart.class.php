@@ -3821,6 +3821,30 @@ class shoppingCart extends modules {
 				return false;
 			}
 			
+			$cartquantity = sql::fetch(sql::run(
+				" SELECT SUM(`Quantity`) AS `Quantity` FROM `{shoppingcarts}`" .
+				" WHERE `SessionID` = '".sql::escape(session_id())."'" .
+				" AND `ShoppingItemID` = '".$item['ID']."'"));
+			
+			$totalquantity = (int)$itemquantity;
+			
+			if ($cartquantity && $cartquantity['Quantity'])
+				$totalquantity += $cartquantity['Quantity'];
+			
+			if ($item['AvailableQuantity'] && $totalquantity > $item['AvailableQuantity']) {
+				$itemquantity = $item['AvailableQuantity']-$cartquantity['Quantity'];
+				
+				if ($itemquantity <= 0) {
+					tooltip::display(
+						sprintf(
+							_("The selected quantity exceeds quantity available (%s) in stock!"),
+							$item['AvailableQuantity']),
+						TOOLTIP_ERROR);
+					
+					return false;
+				}
+			}
+			
 			$category = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppings}`" .
 				" WHERE !`Deactivated`" .
@@ -4000,12 +4024,48 @@ class shoppingCart extends modules {
 		}
 		
 		if ($itemquantities) {
-			foreach($itemquantities as $cartid => $quantity)
+			foreach($itemquantities as $cartid => $quantity) {
+				$cartitem = sql::fetch(sql::run(
+					" SELECT `Quantity`, `ShoppingItemID` FROM `{shoppingcarts}`" .
+					" WHERE `ID` = '".(int)$cartid."'"));
+				
+				if (!$cartitem || $cartitem['Quantity'] == $quantity)
+					continue;
+				
+				$item = sql::fetch(sql::run(
+					" SELECT `ID`, `AvailableQuantity` FROM `{shoppingitems}`" .
+					" WHERE `ID` = '".$cartitem['ShoppingItemID']."'"));
+				
+				if (!$item)
+					continue;
+				
+				$cartquantity = sql::fetch(sql::run(
+					" SELECT SUM(`Quantity`) AS `Quantity` FROM `{shoppingcarts}`" .
+					" WHERE `SessionID` = '".sql::escape(session_id())."'" .
+					" AND `ShoppingItemID` = '".$item['ID']."'" .
+					" AND `ID` != '".(int)$cartid."'"));
+				
+				$totalquantity = (int)$quantity;
+				
+				if ($cartquantity && $cartquantity['Quantity'])
+					$totalquantity += $cartquantity['Quantity'];
+				
+				if ($item['AvailableQuantity'] && $totalquantity > $item['AvailableQuantity']) {
+					tooltip::display(
+						sprintf(
+							_("The selected quantity exceeds quantity available (%s) in stock!"),
+							$item['AvailableQuantity']),
+						TOOLTIP_ERROR);
+					
+					return false;
+				}
+				
 				sql::run(
 					" UPDATE `{shoppingcarts}` SET" .
 					" `Quantity` = '".(int)$quantity."'," .
 					" `TimeStamp` = `TimeStamp`" .
 					" WHERE `ID` = '".(int)$cartid."'");
+			}
 			
 			tooltip::display(
 				_("Cart has been successfully updated."),
