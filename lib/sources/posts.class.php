@@ -100,6 +100,9 @@ class _posts {
 					$searchignorepageids.")":
 				null) .
 			(($this->search || $this->searchKeywords) && !$this->selectedID?
+				(JCORE_VERSION >= '0.9'?
+					" AND !`NotSearchable`":
+					null) .
 				sql::search(
 					($this->searchKeywords?
 						$this->searchKeywords.',':
@@ -939,13 +942,6 @@ class _posts {
 				__("End Date"),
 				$row['EndDate']);
 		
-		if ($row['OnMainPage'])
-			admin::displayItemData(
-				(pages::isHome($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])?
-					__("Display on All pages"):
-					__("Display on Main page")),
-				__("Yes"));
-		
 		if ($row['BlockID'])
 			foreach(blocks::getBackTraceTree($row['BlockID']) as $block)
 				$blockroute .=
@@ -970,6 +966,18 @@ class _posts {
 		if ($row['PartialContent'])
 			admin::displayItemData(
 				__("Partial Content"),
+				__("Yes"));
+		
+		if ($row['NotSearchable'])
+			admin::displayItemData(
+				__("Not Searchable"),
+				__("Yes"));
+		
+		if ($row['OnMainPage'])
+			admin::displayItemData(
+				(pages::isHome($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])?
+					__("Display on All pages"):
+					__("Display on Main page")),
 				__("Yes"));
 		
 		if (isset($row['DisplayRelatedPosts']) && $row['DisplayRelatedPosts'])
@@ -2449,7 +2457,8 @@ class _posts {
 			'OnMainPage', 'BlockID', 'PartialContent', 
 			'DisplayRelatedPosts', 'EnableRating', 
 			'EnableGuestRating', 'EnableComments', 
-			'EnableGuestComments', 'Deactivated', 'OrderID'));
+			'EnableGuestComments', 'Deactivated', 'OrderID',
+			'NotSearchable'));
 		
 		unset($postsform);
 	}
