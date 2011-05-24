@@ -756,11 +756,11 @@ class search extends modules {
 		$keywords = array();
 		
 		if ($this->search) {
-			if (!$this->searchIn)
+			if (!$this->searchIn && AJAX_PAGING)
 				$this->searchIn = 'posts';
-			else
-				url::setURI(url::uri('searchin').
-					"&searchin=".$this->searchIn);
+			
+			url::setURI(url::uri('searchin').
+				"&searchin=".$this->searchIn);
 			
 			$class = new $classname();
 			$class->search = $this->search;
