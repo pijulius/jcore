@@ -99,6 +99,9 @@ class _posts {
 				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` NOT IN (" .
 					$searchignorepageids.")":
 				null) .
+			(JCORE_VERSION >= '0.9'?
+				" AND (`EndDate` IS NULL OR `EndDate` >= CURDATE() OR (`EndDate` < CURDATE() && !`HideExpired`))":
+				null) .
 			(($this->search || $this->searchKeywords) && !$this->selectedID?
 				(JCORE_VERSION >= '0.9'?
 					" AND !`NotSearchable`":
@@ -950,6 +953,11 @@ class _posts {
 			admin::displayItemData(
 				__("End Date"),
 				$row['EndDate']);
+		
+		if ($row['HideExpired'])
+			admin::displayItemData(
+				__("Hide when Expired"),
+				__("Yes"));
 		
 		if ($row['BlockID'])
 			foreach(blocks::getBackTraceTree($row['BlockID']) as $block)
@@ -2478,7 +2486,7 @@ class _posts {
 			'DisplayRelatedPosts', 'EnableRating', 
 			'EnableGuestRating', 'EnableComments', 
 			'EnableGuestComments', 'Deactivated', 'OrderID',
-			'NotSearchable'));
+			'NotSearchable', 'HideExpired'));
 		
 		unset($postsform);
 	}
@@ -3024,6 +3032,9 @@ class _posts {
 			" AND `BlockID` = '".(int)$blockid."'" .
 			" AND (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 				$this->selectedPageID."'" .
+			(JCORE_VERSION >= '0.9'?
+				" AND (`EndDate` IS NULL OR `EndDate` >= CURDATE() OR (`EndDate` < CURDATE() && !`HideExpired`))":
+				null) .
 			($homepage['ID'] == $page['ID']?
 				" OR (`OnMainPage`" .
 				(JCORE_VERSION >= '0.9'?
