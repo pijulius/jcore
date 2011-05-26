@@ -951,7 +951,7 @@ class photoGallery extends modules {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				_('New Gallery'), 
 				'?path='.admin::path().'#adminform');
@@ -1353,7 +1353,13 @@ class photoGallery extends modules {
 					" UPDATE `{photogalleries}` " .
 					" SET `OrderID` = '".(int)$ovalue."'," .
 					" `TimeStamp` = `TimeStamp`" .
-					" WHERE `ID` = '".(int)$oid."'");
+					" WHERE `ID` = '".(int)$oid."'" .
+					($this->userPermissionIDs?
+						" AND `ID` IN (".$this->userPermissionIDs.")":
+						null) .
+					($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+						" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+						null));
 			}
 			
 			tooltip::display(
@@ -1460,6 +1466,9 @@ class photoGallery extends modules {
 			
 			return true;
 		}
+		
+		if ($this->userPermissionIDs)
+			return false;
 		
 		if (!$newid = $this->add($form->getPostArray()))
 			return false;
@@ -1786,7 +1795,7 @@ class photoGallery extends modules {
 			$this->displayAdminListHeader();
 			$this->displayAdminListHeaderOptions();
 					
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListHeaderFunctions();
 					
 			echo
@@ -1803,7 +1812,7 @@ class photoGallery extends modules {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 					
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -1847,7 +1856,7 @@ class photoGallery extends modules {
 				"</table>" .
 				"<br />";
 		
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 				$this->displayAdminListFunctions();
 				
 				echo
@@ -1876,8 +1885,12 @@ class photoGallery extends modules {
 	}
 	
 	function displayAdmin() {
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -1912,14 +1925,23 @@ class photoGallery extends modules {
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
 		
+		$selected = null;
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($id)
+			$selected = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{photogalleries}`" .
+				" WHERE `ID` = '".$id."'" .
+				($this->userPermissionIDs?
+					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null) .
+				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					null)));
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			((!$edit && !$delete) || $selected))
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		foreach(photoGallery::getTree() as $row) {
 			$form->addValue('SubGalleryOfID',
@@ -1937,7 +1959,13 @@ class photoGallery extends modules {
 			" WHERE 1" .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
-				" AND !`SubGalleryOfID`") .
+				null) .
+			($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+				null) .
+			(!$this->userPermissionIDs && ~$this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+				" AND !`SubGalleryOfID`":
+				null) .
 			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
 		
 		if (sql::rows($rows))
@@ -1947,24 +1975,20 @@ class photoGallery extends modules {
 					_("No galleries found."),
 					TOOLTIP_NOTIFICATION);
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			(!$this->userPermissionIDs || ($edit && $selected)))
 		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
-					" SELECT * FROM `{photogalleries}` " .
-					" WHERE `ID` = '".$id."'" .
-					($this->userPermissionIDs?
-						" AND `ID` IN (".$this->userPermissionIDs.")":
-						null)));
+			if ($edit && $selected && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
+					" SELECT * FROM `{photogalleries}`" .
+					" WHERE `ID` = '".$id."'"));
 				
-				if (JCORE_VERSION >= '0.7' && $row['PicasaAPIURL'])
-					$row += photoGalleryPicasaPictures::parseAPIURL($row['PicasaAPIURL']);
+				if (JCORE_VERSION >= '0.7' && $selected['PicasaAPIURL'])
+					$selected += photoGalleryPicasaPictures::parseAPIURL($selected['PicasaAPIURL']);
 				
-				$form->setValues($row);
+				$form->setValues($selected);
 				
-				$user = $GLOBALS['USER']->get($row['UserID']);
+				$user = $GLOBALS['USER']->get($selected['UserID']);
 				$form->setValue('Owner', $user['UserName']);
 			}
 			
@@ -2524,9 +2548,7 @@ class photoGallery extends modules {
 				$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
-			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
-				$permission['PermissionIDs'])
-			{
+			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);

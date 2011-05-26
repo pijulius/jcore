@@ -25,7 +25,7 @@ class _massEmail {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Email'), 
 				'?path='.admin::path().'#adminform');
@@ -484,7 +484,7 @@ class _massEmail {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 				
 		echo
@@ -500,7 +500,7 @@ class _massEmail {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -627,8 +627,12 @@ class _massEmail {
 	}
 	
 	function displayAdmin() {
+		$delete = null;
 		$resend = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['resend']))
 			$resend = (int)$_GET['resend'];
@@ -674,9 +678,21 @@ class _massEmail {
 				str_replace('&amp;', '&', url::uri('id, resend, delete'))."'\"");
 		}
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		$selected = null;
+		$emailssent = false;
+		
+		if ($id)
+			$selected = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{massemails}`" .
+				" WHERE `ID` = '".$id."'" .
+				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					null)));
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			((!$resend && !$delete) || $selected))
 			$emailssent = $this->verifyAdmin($form);
-	
+		
 		if ($form->get('PreviewSubmit') || $form->get('SendSubmit')) {
 			$this->displayAdminPreview($form, $emailssent);
 			
@@ -740,8 +756,8 @@ class _massEmail {
 		
 		$rows = sql::run(
 				" SELECT * FROM `{massemails}`" .
-				($this->userPermissionIDs?
-					" WHERE `ID` IN (".$this->userPermissionIDs.")":
+				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+					" WHERE `UserID` = '".$GLOBALS['USER']->data['ID']."'":
 					null) .
 				" ORDER BY `ID` DESC" .
 				" LIMIT ".$paging->limit);
@@ -757,16 +773,13 @@ class _massEmail {
 		
 		$paging->display();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($resend && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($resend && $id && !$form->submitted()) {
-				$row = sql::fetch(sql::run(
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($resend && $selected && ($emailssent || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{massemails}`" .
 					" WHERE `ID` = '".$id."'"));
 				
-				$form->setValues($row);
+				$form->setValues($selected);
 			}
 			
 			echo
@@ -890,9 +903,7 @@ class _massEmail {
 				$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
-			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
-				$permission['PermissionIDs'])
-			{
+			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);

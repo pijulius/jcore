@@ -11,6 +11,7 @@
  
 define('USER_PERMISSION_TYPE_READ', 1);
 define('USER_PERMISSION_TYPE_WRITE', 2);
+define('USER_PERMISSION_TYPE_OWN', 4);
  
 class _userPermissions {
 	var $sqlTable = 'userpermissions';
@@ -110,13 +111,17 @@ class _userPermissions {
 		$form->setValueType(FORM_VALUE_TYPE_INT);
 		
 		$form->addValue(
-			2, $this->type2Text(2));
+			USER_PERMISSION_TYPE_WRITE, $this->type2Text(USER_PERMISSION_TYPE_WRITE));
 		$form->addValue(
-			1, $this->type2Text(1));
+			USER_PERMISSION_TYPE_READ, $this->type2Text(USER_PERMISSION_TYPE_READ));
+		$form->addValue(
+			USER_PERMISSION_TYPE_WRITE | USER_PERMISSION_TYPE_OWN, $this->type2Text(USER_PERMISSION_TYPE_WRITE | USER_PERMISSION_TYPE_OWN));
+		$form->addValue(
+			USER_PERMISSION_TYPE_READ | USER_PERMISSION_TYPE_OWN, $this->type2Text(USER_PERMISSION_TYPE_READ | USER_PERMISSION_TYPE_OWN));
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Permission'), 
 				'?path='.admin::path().'#adminform');
@@ -179,7 +184,6 @@ class _userPermissions {
 			
 			return true;
 		}
-		
 		
 		$paths = $form->get('Paths');
 		$successpaths = null;
@@ -390,7 +394,9 @@ class _userPermissions {
 				"</div>" .
 			"</td>" .
 			"<td style='text-align: right;'>" .
+				"<span class='nowrap'>" .
 				$this->type2Text($row['PermissionTypeID']) .
+				"</span>" .
 			"</td>";
 	}
 	
@@ -423,7 +429,7 @@ class _userPermissions {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 					
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 					
 		echo
@@ -439,7 +445,7 @@ class _userPermissions {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 					
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -481,8 +487,12 @@ class _userPermissions {
 			return;
 		}
 		
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -523,19 +533,12 @@ class _userPermissions {
 		
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($edit, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$rows = sql::run(
 			" SELECT * FROM `{".$this->sqlTable."}`" .
 			" WHERE `".$this->sqlRow."` = '".admin::getPathID()."'" .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
 			" ORDER BY `Path`");
 			
 		if (sql::rows($rows))
@@ -545,17 +548,13 @@ class _userPermissions {
 				__("No permissions found."),
 				TOOLTIP_NOTIFICATION);
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{".$this->sqlTable."}`" .
-					" WHERE `".$this->sqlRow."` = '".admin::getPathID()."'" .
-					" AND `ID` = '".$id."'"));
-			
-				$form->setValues($row);
+					" WHERE `ID` = '".$id."'"));
+				
+				$form->setValues($selected);
 			}
 			
 			echo
@@ -674,6 +673,10 @@ class _userPermissions {
 				return __('Read');
 			case USER_PERMISSION_TYPE_WRITE:
 				return __('Write');
+			case USER_PERMISSION_TYPE_READ | USER_PERMISSION_TYPE_OWN:
+				return __('Read Own');
+			case USER_PERMISSION_TYPE_WRITE | USER_PERMISSION_TYPE_OWN:
+				return __('Write Own');
 			default:
 				return __('Undefined!');
 		}
@@ -772,8 +775,12 @@ class _userPermissions {
 			}
 			
 			if (isset($matches[1]) && (int)$matches[1]) {
-				$permissionids[] = (int)$matches[1];
+				if (!isset($permissionids) || count($permissionids))
+					$permissionids[] = (int)$matches[1];
+				
 				$permissionidtypes[(int)$matches[1]] = $permission['PermissionTypeID'];
+			} else {
+				$permissionids = array();
 			}
 		}
 		
@@ -806,9 +813,7 @@ class _userPermissions {
 				$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
-			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
-				$permission['PermissionIDs'])
-			{
+			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);

@@ -2540,7 +2540,7 @@ class shoppingOrders extends modules {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				_('New Order'), 
 				'?path=admin/modules/shoppingorders/shoppingneworders#adminform');
@@ -3211,6 +3211,9 @@ class shoppingOrders extends modules {
 			return true;
 		}
 		
+		if ($this->userPermissionIDs)
+			return false;
+		
 		$ordermethodclass = 'shoppingOrderMethod'.
 			$form->get('ordermethod');
 		
@@ -3770,7 +3773,7 @@ class shoppingOrders extends modules {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 		
 		echo
@@ -3788,7 +3791,7 @@ class shoppingOrders extends modules {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 					
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -3865,6 +3868,7 @@ class shoppingOrders extends modules {
 	function displayAdminOrders($ordertypes = null) {
 		$search = null;
 		$status = null;
+		$delete = null;
 		$edit = null;
 		$id = null;
 		
@@ -3873,6 +3877,9 @@ class shoppingOrders extends modules {
 		
 		if (isset($_GET['status']))
 			$status = (int)$_GET['status'];
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -3921,14 +3928,23 @@ class shoppingOrders extends modules {
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
 		
+		$selected = null;
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($id)
+			$selected = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{shoppingorders}`" .
+				" WHERE `ID` = '".$id."'" .
+				($this->userPermissionIDs?
+					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null) .
+				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					null)));
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			((!$edit && !$delete) || $selected))
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$paging = new paging(20);
 		
@@ -3944,6 +3960,9 @@ class shoppingOrders extends modules {
 				null) .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
+				null) .
+			($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
 				null) .
 			($status?
 				" AND `OrderStatus` = '".(int)$status."'":
@@ -3967,16 +3986,15 @@ class shoppingOrders extends modules {
 		
 		$paging->display();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			(!$this->userPermissionIDs || ($edit && $selected)))
 		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
-					" SELECT * FROM `{shoppingorders}` " .
+			if ($edit && $selected && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
+					" SELECT * FROM `{shoppingorders}`" .
 					" WHERE `ID` = '".$id."'"));
-					
-				$form->setValues($row);
+				
+				$form->setValues($selected);
 			}
 			
 			if (!$edit)
@@ -5207,9 +5225,7 @@ class shoppingOrders extends modules {
 				$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
-			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
-				$permission['PermissionIDs'])
-			{
+			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);

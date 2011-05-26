@@ -102,9 +102,24 @@ class _postsAtGlance extends posts {
 		}
 		
 		if ($ids && count($ids)) {
+			$permissionids = null;
+			if ($this->userPermissionIDs)
+				$permissionids = explode(',', $this->userPermissionIDs);
+			
 			if ($deactivate) {
-				foreach($ids as $id)
+				foreach($ids as $id) {
+					if ($permissionids && !in_array($id, $permissionids))
+						continue;
+					
+					if ($this->userPermissionType & USER_PERMISSION_TYPE_OWN && 
+						!sql::rows(sql::run(
+							" SELECT `ID` FROM `{posts}`" .
+							" WHERE `ID` = '".(int)$id."'" .
+							" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'")))
+						continue;
+					
 					$this->deactivate($id);
+				}
 				
 				tooltip::display(
 					__("Posts have been successfully deactivated and " .
@@ -115,8 +130,19 @@ class _postsAtGlance extends posts {
 			}
 			
 			if ($activate) {
-				foreach($ids as $id)
+				foreach($ids as $id) {
+					if ($permissionids && !in_array($id, $permissionids))
+						continue;
+					
+					if ($this->userPermissionType & USER_PERMISSION_TYPE_OWN && 
+						!sql::rows(sql::run(
+							" SELECT `ID` FROM `{posts}`" .
+							" WHERE `ID` = '".(int)$id."'" .
+							" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'")))
+						continue;
+					
 					$this->activate($id);
+				}
 				
 				tooltip::display(
 					__("Posts have been successfully activated and " .
@@ -127,8 +153,19 @@ class _postsAtGlance extends posts {
 			}
 			
 			if ($delete) {
-				foreach($ids as $id)
+				foreach($ids as $id) {
+					if ($permissionids && !in_array($id, $permissionids))
+						continue;
+					
+					if ($this->userPermissionType & USER_PERMISSION_TYPE_OWN && 
+						!sql::rows(sql::run(
+							" SELECT `ID` FROM `{posts}`" .
+							" WHERE `ID` = '".(int)$id."'" .
+							" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'")))
+						continue;
+					
 					$this->delete($id);
+				}
 				
 				tooltip::display(
 					__("Posts have been successfully deleted."),
@@ -145,7 +182,7 @@ class _postsAtGlance extends posts {
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' alt='.list' " .
-				($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+				(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 					"disabled='disabled' ":
 					null) .
 				"/>" .
@@ -204,7 +241,7 @@ class _postsAtGlance extends posts {
 					($ids && in_array($row['ID'], $ids)?
 						"checked='checked' ":
 						null).
-					($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+					(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 						"disabled='disabled' ":
 						null) .
 					" />" .
@@ -303,6 +340,7 @@ class _postsAtGlance extends posts {
 	function displayAdmin() {
 		$pageid = null;
 		$search = null;
+		$delete = null;
 		$edit = null;
 		$id = null;
 		
@@ -311,6 +349,9 @@ class _postsAtGlance extends posts {
 		
 		if (isset($_GET['searchpageid']))
 			$pageid = (int)$_GET['searchpageid'];
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -364,15 +405,24 @@ class _postsAtGlance extends posts {
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
 		
+		$selected = null;
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($id)
+			$selected = sql::fetch(sql::run(
+				" SELECT `ID`, `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` FROM `{posts}`" .
+				" WHERE `ID` = '".$id."'" .
+				($this->userPermissionIDs?
+					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null) .
+				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					null)));
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			((!$edit && !$delete) || $selected))
 			$verifyok = $this->verifyAdmin($form);
-		}
-	
+		
 		$paging = new paging(10);
 		$paging->ignoreArgs = 'id, edit, delete';
 		
@@ -381,6 +431,9 @@ class _postsAtGlance extends posts {
 			" WHERE 1" .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
+				null) .
+			($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
 				null) .
 			($pageid?
 				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
@@ -409,24 +462,23 @@ class _postsAtGlance extends posts {
 		
 		$paging->display();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			(!$this->userPermissionIDs || ($edit && $selected)))
 		{
-			if ($id)
-				$row = sql::fetch(sql::run(
-					" SELECT * FROM `{posts}`" .
-					" WHERE `ID` = '".$id."'"));
-			
-			if (!$id || pages::isHome($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]))
+			if (!$id || ($selected && 
+				pages::isHome($selected[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])))
 				$form->edit(
 					'OnMainPage',
 					__('Display on All pages'));
 			
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$form->setValues($row);
+			if ($edit && $selected && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
+					" SELECT * FROM `{posts}`" .
+					" WHERE `ID` = '".$id."'"));
 				
-				$user = $GLOBALS['USER']->get($row['UserID']);
+				$form->setValues($selected);
+				
+				$user = $GLOBALS['USER']->get($selected['UserID']);
 				$form->setValue('Owner', $user['UserName']);
 			}
 			

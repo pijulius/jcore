@@ -39,7 +39,8 @@ class _postsCalendar extends monthCalendar {
 	function displayDay($time) {
 		$posts = sql::rows(sql::run(
 			" SELECT `ID` FROM `{posts}`" .
-			" WHERE `TimeStamp` LIKE '".date('Y-m-d', $time)."%'" .
+			" WHERE `TimeStamp` >= '".date('Y-m-d', $time)." 00:00:00'" .
+			" AND `TimeStamp` <= '".date('Y-m-d', $time)." 23:59:59'" .
 			($this->pageID?
 				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 					(int)$this->pageID."'":

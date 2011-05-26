@@ -97,7 +97,7 @@ class _menuItems {
 			return;
 		}
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Menu Item'), 
 				'?path='.admin::path().'#adminform');
@@ -414,17 +414,12 @@ class _menuItems {
 	}
 	
 	function displayAdminListItems($menuid = 0, $submenuof = 0, $rowpair = false, $language = null) {
-		if ($this->userPermissionIDs && $submenuof)
-			return false;
-		
 		$rows = sql::run(
 			" SELECT * FROM `{menuitems}`" .
 			" WHERE `MenuID` = '".$this->selectedMenuID."'" .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				((int)$submenuof?
-					" AND `SubMenuItemOfID` = '".(int)$submenuof."'":
-					" AND !`SubMenuItemOfID`")) .
+			((int)$submenuof?
+				" AND `SubMenuItemOfID` = '".(int)$submenuof."'":
+				" AND !`SubMenuItemOfID`") .
 			($language?
 				" AND `LanguageID` = '".$language['ID']."'":
 				null) .
@@ -450,7 +445,7 @@ class _menuItems {
 			$this->displayAdminListHeader();
 			$this->displayAdminListHeaderOptions();
 		
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListHeaderFunctions();
 					
 			echo
@@ -467,7 +462,7 @@ class _menuItems {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -633,7 +628,7 @@ class _menuItems {
 		else
 			echo "<br />";
 		
-		if ($itemsfound && $this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($itemsfound && $this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -674,8 +669,12 @@ class _menuItems {
 			return;
 		}
 		
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -719,12 +718,8 @@ class _menuItems {
 		
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		foreach(menuItems::getTree($this->selectedMenuID) as $row)
 			$form->addValue('SubMenuItemOfID',
@@ -741,19 +736,13 @@ class _menuItems {
 		$languages = languages::get();
 		$this->displayAdminList($languages);
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
-					" SELECT * FROM `{menuitems}` " .
-					" WHERE `ID` = '".$id."'" .
-					($this->userPermissionIDs?
-						" AND `ID` IN (".$this->userPermissionIDs.")":
-						null)));
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
+					" SELECT * FROM `{menuitems}`" .
+					" WHERE `ID` = '".$id."'"));
 				
-				if ($row['PageID']) {
+				if ($selected['PageID']) {
 					$form->edit(
 						'LanguageID',
 						null,
@@ -767,7 +756,7 @@ class _menuItems {
 						FORM_INPUT_TYPE_HIDDEN);
 				}
 				
-				$form->setValues($row);
+				$form->setValues($selected);
 			}
 			
 			echo

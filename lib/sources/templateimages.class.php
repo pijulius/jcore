@@ -29,7 +29,7 @@ class _templateImages extends fileManager {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New File'),
 				'?path='.admin::path().
@@ -69,7 +69,7 @@ class _templateImages extends fileManager {
 		echo
 			"<div class='admin-content'>";
 			
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->display();
 		else
 			tooltip::display(
@@ -94,9 +94,7 @@ class _templateImages extends fileManager {
 			$GLOBALS['USER']->data['ID'],
 			$this->adminPath);
 		
-		if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
-			$permission['PermissionIDs'])
-		{
+		if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 			tooltip::display(
 				__("You do not have permission to access this path!"),
 				TOOLTIP_ERROR);

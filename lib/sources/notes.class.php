@@ -29,7 +29,7 @@ class _notes {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Note'), 
 				'?path='.admin::path().'#adminform');
@@ -144,7 +144,7 @@ class _notes {
 			
 			return true;
 		}
-					
+		
 		if (!$newid = $this->add($form->getPostArray()))
 			return false;
 			
@@ -306,7 +306,7 @@ class _notes {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 		
 		echo
@@ -322,7 +322,7 @@ class _notes {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 					
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -371,11 +371,15 @@ class _notes {
 	
 	function displayAdmin() {
 		$search = null;
+		$delete = null;
 		$edit = null;
 		$id = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -420,21 +424,30 @@ class _notes {
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
 		
+		$selected = null;
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($id)
+			$selected = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{notes}`" .
+				" WHERE `ID` = '".$id."'" .
+				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					null)));
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			((!$edit && !$delete) || $selected))
 			$verifyok = $this->verifyAdmin($form);
-		}
-	
+		
 		$paging = new paging(10);
 		$paging->ignoreArgs = 'id, edit, delete';
 		
 		$rows = sql::run(
 				" SELECT * FROM `{notes}`" .
 				" WHERE 1" .
+				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					null) .
 				($search?
 					sql::search(
 						$search,
@@ -454,16 +467,13 @@ class _notes {
 		
 		$paging->display();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && $selected && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{notes}`" .
 					" WHERE `ID` = '".$id."'"));
-		
-				$form->setValues($row);
+				
+				$form->setValues($selected);
 			}
 			
 			echo

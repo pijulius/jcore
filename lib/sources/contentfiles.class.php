@@ -24,7 +24,7 @@ class _contentFiles extends fileManager {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New File'),
 				'?path='.admin::path().

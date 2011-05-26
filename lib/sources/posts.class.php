@@ -202,7 +202,7 @@ class _posts {
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Post'), 
 				'?path='.admin::path().'#adminform');
@@ -703,7 +703,13 @@ class _posts {
 					" UPDATE `{posts}` " .
 					" SET `OrderID` = '".(int)$ovalue."'," .
 					" `TimeStamp` = `TimeStamp`" .
-					" WHERE `ID` = '".(int)$oid."'");
+					" WHERE `ID` = '".(int)$oid."'" .
+					($this->userPermissionIDs?
+						" AND `ID` IN (".$this->userPermissionIDs.")":
+						null) .
+					($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+						" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+						null));
 			}
 			
 			tooltip::display(
@@ -776,7 +782,10 @@ class _posts {
 			
 			return true;
 		}
-					
+		
+		if ($this->userPermissionIDs)
+			return false;
+		
 		if (!$newid = $this->add($form->getPostArray()))
 			return false;
 			
@@ -1168,7 +1177,7 @@ class _posts {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 		
 		echo
@@ -1184,7 +1193,7 @@ class _posts {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 					
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -1213,7 +1222,7 @@ class _posts {
 		
 		echo "<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -1240,11 +1249,15 @@ class _posts {
 	
 	function displayAdmin() {
 		$search = null;
+		$delete = null;
 		$edit = null;
 		$id = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -1307,15 +1320,24 @@ class _posts {
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
 		
+		$selected = null;
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($id)
+			$selected = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{posts}`" .
+				" WHERE `ID` = '".$id."'" .
+				($this->userPermissionIDs?
+					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null) .
+				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					null)));
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			((!$edit && !$delete) || $selected))
 			$verifyok = $this->verifyAdmin($form);
-		}
-	
+		
 		$paging = new paging(10);
 		$paging->ignoreArgs = 'id, edit, delete';
 		
@@ -1325,6 +1347,9 @@ class _posts {
 					admin::getPathID()."'" .
 				($this->userPermissionIDs?
 					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null) .
+				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
 					null) .
 				($search?
 					sql::search(
@@ -1345,25 +1370,22 @@ class _posts {
 		
 		$paging->display();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			(!$this->userPermissionIDs || ($edit && $selected)))
 		{
 			if (pages::isHome(admin::getPathID()))
 				$form->edit(
 					'OnMainPage',
 					__('Display on All pages'));
 			
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+			if ($edit && $selected && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{posts}`" .
-					" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
-						admin::getPathID()."'" .
-					" AND `ID` = '".$id."'"));
+					" WHERE `ID` = '".$id."'"));
 				
-				$form->setValues($row);
+				$form->setValues($selected);
 				
-				$user = $GLOBALS['USER']->get($row['UserID']);
+				$user = $GLOBALS['USER']->get($selected['UserID']);
 				$form->setValue('Owner', $user['UserName']);
 			}
 			
@@ -2294,9 +2316,7 @@ class _posts {
 				$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
-			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
-				$permission['PermissionIDs'])
-			{
+			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);

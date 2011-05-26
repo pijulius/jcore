@@ -720,7 +720,7 @@ class poll extends modules {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				_('New Poll'), 
 				'?path='.admin::path().'#adminform');
@@ -981,14 +981,23 @@ class poll extends modules {
 					" UPDATE `{polls}` " .
 					" SET `OrderID` = '".(int)$ovalue."'," .
 					" `TimeStamp` = `TimeStamp`" .
-					" WHERE `ID` = '".(int)$oid."'");
+					" WHERE `ID` = '".(int)$oid."'" .
+					($this->userPermissionIDs?
+						" AND `ID` IN (".$this->userPermissionIDs.")":
+						null) .
+					($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+						" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+						null));
 				
 				if (isset($answerorders[$oid]) && is_array($answerorders[$oid]))
 					foreach($answerorders[$oid] as $aid => $avalue)
 						sql::run(
 							" UPDATE `{pollanswers}` " .
 							" SET `OrderID` = '".(int)$avalue."'" .
-							" WHERE `ID` = '".(int)$aid."'");
+							" WHERE `ID` = '".(int)$aid."'" .
+							($this->userPermissionIDs?
+								" AND `PollID` IN (".$this->userPermissionIDs.")":
+								null));
 			}
 			
 			tooltip::display(
@@ -1065,6 +1074,9 @@ class poll extends modules {
 			
 			return true;
 		}
+		
+		if ($this->userPermissionIDs)
+			return false;
 		
 		if (!$newid = $this->add($postarray))
 			return false;
@@ -1301,7 +1313,7 @@ class poll extends modules {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 				
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 				
 		echo
@@ -1317,7 +1329,7 @@ class poll extends modules {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 					
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -1345,7 +1357,7 @@ class poll extends modules {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -1382,11 +1394,15 @@ class poll extends modules {
 	
 	function displayAdmin() {
 		$search = null;
+		$delete = null;
 		$edit = null;
 		$id = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -1431,20 +1447,32 @@ class poll extends modules {
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
 		
+		$selected = null;
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($id)
+			$selected = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{polls}`" .
+				" WHERE `ID` = '".$id."'" .
+				($this->userPermissionIDs?
+					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null) .
+				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					null)));
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			((!$edit && !$delete) || $selected))
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$rows = sql::run(
 			" SELECT * FROM `{polls}`" .
 			" WHERE 1" .
 			($this->userPermissionIDs?
 				" AND `ID` IN (".$this->userPermissionIDs.")":
+				null) .
+			($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
 				null) .
 			($search?
 				sql::search(
@@ -1460,26 +1488,22 @@ class poll extends modules {
 					_("No polls found."),
 					TOOLTIP_NOTIFICATION);
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			(!$this->userPermissionIDs || ($edit && $selected)))
 		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
-					" SELECT * FROM `{polls}` " .
-					" WHERE `ID` = '".$id."'" .
-					($this->userPermissionIDs?
-						" AND `ID` IN (".$this->userPermissionIDs.")":
-						null)));
+			if ($edit && $selected && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
+					" SELECT * FROM `{polls}`" .
+					" WHERE `ID` = '".$id."'"));
 				
-				$form->setValues($row);
+				$form->setValues($selected);
 				
-				$user = $GLOBALS['USER']->get($row['UserID']);
+				$user = $GLOBALS['USER']->get($selected['UserID']);
 				$form->setValue('Owner', $user['UserName']);
 				
 				$answers = sql::run(
 					" SELECT * FROM `{pollanswers}` " .
-					" WHERE `PollID` = '".$row['ID']."'" .
+					" WHERE `PollID` = '".$selected['ID']."'" .
 					" ORDER BY `OrderID` DESC, `ID` DESC");
 				
 				$i = 0;
@@ -2051,9 +2075,7 @@ class poll extends modules {
 				$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
-			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
-				$permission['PermissionIDs'])
-			{
+			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);

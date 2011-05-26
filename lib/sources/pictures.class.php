@@ -69,7 +69,7 @@ class _pictures {
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Picture'), 
 				'?path='.admin::path().'#adminform');
@@ -725,7 +725,7 @@ class _pictures {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 		
 		echo
@@ -741,7 +741,7 @@ class _pictures {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -755,7 +755,7 @@ class _pictures {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -790,8 +790,12 @@ class _pictures {
 			return;
 		}
 		
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -841,24 +845,17 @@ class _pictures {
 		
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
-	
+		
 		$paging = new paging(10);
 		$paging->ignoreArgs = 'id, edit, delete';
 		
 		$rows = sql::run(
-				" SELECT * FROM `{" .$this->sqlTable."}`" .
+				" SELECT * FROM `{".$this->sqlTable."}`" .
 				" WHERE 1" .
 				($this->sqlRow?
 					" AND `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
-					null) .
-				($this->userPermissionIDs?
-					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				" ORDER BY `OrderID`, `ID` DESC" .
 				" LIMIT ".$paging->limit);
@@ -877,30 +874,24 @@ class _pictures {
 		
 		$paging->display();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{".$this->sqlTable."}`" .
-					" WHERE `ID` = '".$id."'" .
-					($this->sqlRow?
-						" AND `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
-						null)));
+					" WHERE `ID` = '".$id."'"));
 				
-				$form->setValues($row);
-				$form->setValue('File', $row['Location']);
+				$form->setValues($selected);
+				$form->setValue('File', $selected['Location']);
 				
-				if (JCORE_VERSION >= '0.5' && !$row['Thumbnail'])
+				if (JCORE_VERSION >= '0.5' && !$selected['Thumbnail'])
 					$form->setValue('NoThumbnail', 1);
 				
-				if (JCORE_VERSION >= '0.5' && $row['Thumbnail'])
+				if (JCORE_VERSION >= '0.5' && $selected['Thumbnail'])
 					$file_data = @getimagesize($this->rootPath.
-						$this->thumbnailsFolder.$row['Location']);
+						$this->thumbnailsFolder.$selected['Location']);
 				else
 					$file_data = @getimagesize($this->rootPath.
-						$row['Location']);
+						$selected['Location']);
 				
 				if ($this->thumbnailWidth)
 					$form->setValue('ThumbnailWidth', $file_data[0]);

@@ -133,7 +133,7 @@ class _dynamicFormFieldValues {
 		
 		if (!$this->add($form->getPostArray()))
 			return false;
-			
+		
 		tooltip::display(
 			__("Field value has been successfully created."),
 			TOOLTIP_SUCCESS);
@@ -227,7 +227,7 @@ class _dynamicFormFieldValues {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 					
 		echo
@@ -243,7 +243,7 @@ class _dynamicFormFieldValues {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -257,7 +257,7 @@ class _dynamicFormFieldValues {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo 
@@ -287,8 +287,12 @@ class _dynamicFormFieldValues {
 			" SELECT * FROM `{dynamicformfields}`" .
 			" WHERE `ID` = '".admin::getPathID()."'"));
 		
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -325,19 +329,12 @@ class _dynamicFormFieldValues {
 		
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$rows = sql::run(
 			" SELECT * FROM `{dynamicformfieldvalues}`" .
 			" WHERE `FieldID` = '".admin::getPathID()."'" .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
 			" ORDER BY `OrderID`, `ValueTitle`, `Value`");
 			
 		if (sql::rows($rows))
@@ -347,17 +344,13 @@ class _dynamicFormFieldValues {
 				__("No field values found."),
 				TOOLTIP_NOTIFICATION);
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{dynamicformfieldvalues}`" .
-					" WHERE `FieldID` = '".admin::getPathID()."'" .
-					" AND `ID` = '".$id."'"));
-			
-				$form->setValues($row);
+					" WHERE `ID` = '".$id."'"));
+				
+				$form->setValues($selected);
 			}
 			
 			$this->displayAdminForm($form);

@@ -118,7 +118,7 @@ class _notificationEmails {
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' " .
-				($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+				(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 					"disabled='disabled' ":
 					null) .
 				"/>" .
@@ -149,7 +149,7 @@ class _notificationEmails {
 					($ids && in_array($row['ID'], $ids)?
 						"checked='checked' ":
 						null).
-					($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+					(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 						"disabled='disabled' ":
 						null) .
 					" />" .
@@ -219,7 +219,7 @@ class _notificationEmails {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 					
 		echo
@@ -235,7 +235,7 @@ class _notificationEmails {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -263,7 +263,7 @@ class _notificationEmails {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -328,22 +328,14 @@ class _notificationEmails {
 		
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$paging = new paging(20);
 		$paging->ignoreArgs = 'id, edit, delete';
 		
 		$rows = sql::run(
 			" SELECT * FROM `{notificationemails}`" .
-			" WHERE 1" .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
 			" ORDER BY `EmailID`, `ID`" .
 			" LIMIT ".$paging->limit);
 				
@@ -358,16 +350,13 @@ class _notificationEmails {
 		
 		$paging->display();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{notificationemails}`" .
 					" WHERE `ID` = '".$id."'"));
-			
-				$form->setValues($row);
+				
+				$form->setValues($selected);
 			}
 			
 			if ($edit) {

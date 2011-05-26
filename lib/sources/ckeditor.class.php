@@ -161,9 +161,7 @@ class _ckEditor {
 			
 			tooltip::caching(true);
 			
-			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
-				$permission['PermissionIDs'])
-			{
+			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				$this->setUploadResult('',
 					__("You do not have permission to access this path!"));
 				

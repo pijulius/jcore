@@ -52,7 +52,7 @@ class _dynamicForms extends form {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Form'), 
 				'?path='.admin::path().'#adminform');
@@ -232,7 +232,7 @@ class _dynamicForms extends form {
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
 		
-		if ($id && $delete) {
+		if ($delete) {
 			$row = sql::fetch(sql::run(
 				" SELECT * FROM `{dynamicforms}` " .
 				" WHERE `ID` = '".$id."'"));
@@ -244,9 +244,7 @@ class _dynamicForms extends form {
 				
 				return false;
 			}
-		}
-		
-		if ($delete) {
+			
 			if (!$this->deleteForm($id))
 				return false;
 				
@@ -287,6 +285,9 @@ class _dynamicForms extends form {
 			
 			return true;
 		}
+		
+		if ($this->userPermissionIDs)
+			return false;
 		
 		if (!$newid = $this->addForm($form->getPostArray()))
 			return false;
@@ -594,7 +595,7 @@ class _dynamicForms extends form {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 					
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 					
 		echo
@@ -610,7 +611,7 @@ class _dynamicForms extends form {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 				
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 				
 			echo
@@ -659,8 +660,12 @@ class _dynamicForms extends form {
 	}
 	
 	function displayAdmin() {
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -695,14 +700,20 @@ class _dynamicForms extends form {
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
 		
+		$selected = null;
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($id)
+			$selected = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{dynamicforms}`" .
+				" WHERE `ID` = '".$id."'" .
+				($this->userPermissionIDs?
+					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null)));
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			((!$edit && !$delete) || $selected))
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$rows = sql::run(
 			" SELECT * FROM `{dynamicforms}`" .
@@ -723,20 +734,18 @@ class _dynamicForms extends form {
 			$form->setValue('SendNotificationEmail', 1);
 		}
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			(!$this->userPermissionIDs || ($edit && $selected)))
 		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+			if ($edit && $selected && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{dynamicforms}`" .
 					" WHERE `ID` = '".$id."'"));
-			
-				if ($row['Protected']) {
-					$form->edit('FormID', null, 'FormID', FORM_INPUT_TYPE_HIDDEN);
-				}
 				
-				$form->setValues($row);
+				if ($selected['Protected'])
+					$form->edit('FormID', null, 'FormID', FORM_INPUT_TYPE_HIDDEN);
+				
+				$form->setValues($selected);
 			}
 			
 			echo
@@ -1520,9 +1529,7 @@ class _dynamicForms extends form {
 				$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
-			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
-				$permission['PermissionIDs'])
-			{
+			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);

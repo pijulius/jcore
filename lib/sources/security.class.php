@@ -217,7 +217,7 @@ class _security {
 		$this->displayAdminBFListHeader();
 		$this->displayAdminBFListHeaderOptions();
 					
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminBFListHeaderFunctions();
 		
 		echo
@@ -233,7 +233,7 @@ class _security {
 			$this->displayAdminBFListItem($row);
 			$this->displayAdminBFListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminBFListItemFunctions($row);
 					
 			echo
@@ -362,7 +362,7 @@ class _security {
 		$this->displayAdminPTListHeader();
 		$this->displayAdminPTListHeaderOptions();
 					
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminPTListHeaderFunctions();
 		
 		echo
@@ -378,7 +378,7 @@ class _security {
 			$this->displayAdminPTListItem($row);
 			$this->displayAdminPTListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminPTListItemFunctions($row);
 					
 			echo
@@ -461,7 +461,7 @@ class _security {
 		echo
 			"<div class='admin-content'>";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE && 
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE && 
 			JCORE_VERSION >= '0.5') 
 		{
 			echo
@@ -491,7 +491,7 @@ class _security {
 			"<div class='separator'></div>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE && 
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE && 
 			JCORE_VERSION >= '0.5') 
 		{
 			echo

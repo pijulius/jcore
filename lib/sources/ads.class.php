@@ -52,7 +52,7 @@ class _ads {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Ad'), 
 				'?path='.admin::path().'#adminform');
@@ -280,7 +280,10 @@ class _ads {
 					" UPDATE `{ads}`" .
 					" SET `OrderID` = '".(int)$ovalue."', " .
 					" `TimeStamp` = `TimeStamp`" .
-					" WHERE `ID` = '".(int)$oid."'");
+					" WHERE `ID` = '".(int)$oid."'" .
+					($this->userPermissionIDs?
+						" AND `ID` IN (".$this->userPermissionIDs.")":
+						null));
 			}
 			
 			tooltip::display(
@@ -328,6 +331,9 @@ class _ads {
 				
 			return true;
 		}
+		
+		if ($this->userPermissionIDs)
+			return false;
 		
 		if (!$newid = $this->add($form->getPostArray()))
 			return false;
@@ -581,7 +587,7 @@ class _ads {
 			$this->displayAdminListHeader($row);
 			$this->displayAdminListHeaderOptions();
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListHeaderFunctions();
 			
 			echo
@@ -609,7 +615,7 @@ class _ads {
 				$this->displayAdminListItem($ad);
 				$this->displayAdminListItemOptions($ad);
 				
-				if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+				if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 					$this->displayAdminListItemFunctions($ad);
 				
 				echo
@@ -638,7 +644,7 @@ class _ads {
 				"<br />";
 		}
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -664,8 +670,12 @@ class _ads {
 	}
 	
 	function displayAdmin() {
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -700,15 +710,21 @@ class _ads {
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
 		
+		$selected = null;
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($id)
+			$selected = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{ads}`" .
+				" WHERE `ID` = '".$id."'" .
+				($this->userPermissionIDs?
+					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null)));
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			((!$edit && !$delete) || $selected))
 			$verifyok = $this->verifyAdmin($form);
-		}
-
+		
 		$rows = sql::run(
 			" SELECT DISTINCT `BlockID` FROM `{ads}` " .
 			" WHERE 1" .
@@ -724,22 +740,22 @@ class _ads {
 					__("No ads found."),
 					TOOLTIP_NOTIFICATION);
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			(!$this->userPermissionIDs || ($edit && $selected)))
 		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
-					" SELECT * FROM `{ads}` " .
+			if ($edit && $selected && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
+					" SELECT * FROM `{ads}`" .
 					" WHERE `ID` = '".$id."'"));
 				
-				$form->setValues($row);
+				$form->setValues($selected);
+				
 				$form->setValue('ShowOn', 
-					(isset($row['ShowOn'])?
-						explode(',', $row['ShowOn']):
+					(isset($selected['ShowOn'])?
+						explode(',', $selected['ShowOn']):
 						null));
 				
-				$form->setValue('File', $row['Location']);
+				$form->setValue('File', $selected['Location']);
 			}
 			
 			echo

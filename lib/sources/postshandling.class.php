@@ -117,7 +117,7 @@ class _postsHandling {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('Pages / Posts'), 
 				'?path=' .
@@ -135,7 +135,7 @@ class _postsHandling {
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' alt='.list' " .
-				($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+				(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 					"disabled='disabled' ":
 					null) .
 				"/>" .
@@ -173,7 +173,7 @@ class _postsHandling {
 					($ids && in_array($row['ID'], $ids)?
 						"checked='checked' ":
 						null).
-					($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+					(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 						"disabled='disabled' ":
 						null) .
 					" />" .
@@ -392,7 +392,7 @@ class _postsHandling {
 				$this->displayAdminListHeader($pageroute);
 				$this->displayAdminListHeaderOptions();
 							
-				if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+				if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 					$this->displayAdminListHeaderFunctions();
 				
 				echo
@@ -409,7 +409,7 @@ class _postsHandling {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 					
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 					
 			echo
@@ -437,7 +437,7 @@ class _postsHandling {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -484,7 +484,7 @@ class _postsHandling {
 		echo
 			"<div class='admin-content'>";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->verifyAdmin();
 		
 		$paging = new paging(10);
@@ -492,9 +492,6 @@ class _postsHandling {
 		$rows = sql::run(
 			" SELECT * FROM `{posts}` " .
 			" WHERE 1" .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
 			($pageid?
 				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 					$pageid."'":

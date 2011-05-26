@@ -87,7 +87,7 @@ class _blocks {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Block'), 
 				'?path='.admin::path().'#adminform');
@@ -382,7 +382,10 @@ class _blocks {
 				sql::run(
 					" UPDATE `{blocks}` " .
 					" SET `OrderID` = '".(int)$ovalue."'" .
-					" WHERE `ID` = '".(int)$oid."'");
+					" WHERE `ID` = '".(int)$oid."'" .
+					($this->userPermissionIDs?
+						" AND `ID` IN (".$this->userPermissionIDs.")":
+						null));
 			}
 			
 			tooltip::display(
@@ -442,6 +445,9 @@ class _blocks {
 			
 			return true;
 		}
+		
+		if ($this->userPermissionIDs)
+			return false;
 		
 		if (!$newid = $this->add($form->getPostArray()))
 			return false;
@@ -676,7 +682,7 @@ class _blocks {
 			$this->displayAdminListHeader();
 			$this->displayAdminListHeaderOptions();
 					
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListHeaderFunctions();
 					
 			echo
@@ -693,7 +699,7 @@ class _blocks {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 					
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 					
 			echo
@@ -743,7 +749,7 @@ class _blocks {
 				"</table>" .
 				"<br />";
 		
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 				$this->displayAdminListFunctions();
 				
 				echo
@@ -770,8 +776,12 @@ class _blocks {
 	}
 	
 	function displayAdmin() {
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -806,14 +816,20 @@ class _blocks {
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
 		
+		$selected = null;
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($id)
+			$selected = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{blocks}`" .
+				" WHERE `ID` = '".$id."'" .
+				($this->userPermissionIDs?
+					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null)));
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			((!$edit && !$delete) || $selected))
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$rows = sql::run(
 			" SELECT * FROM `{blocks}`" .
@@ -836,16 +852,15 @@ class _blocks {
 				__("No blocks found."),
 				TOOLTIP_NOTIFICATION);
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			(!$this->userPermissionIDs || ($edit && $selected)))
 		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
-					" SELECT * FROM `{blocks}` " .
+			if ($edit && $selected && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
+					" SELECT * FROM `{blocks}`" .
 					" WHERE `ID` = '".$id."'"));
-					
-				$form->setValues($row);
+				
+				$form->setValues($selected);
 			}
 			
 			foreach(blocks::getTree() as $row) {

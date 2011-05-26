@@ -111,7 +111,7 @@ class _users {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New User'), 
 				'?path='.admin::path().'#adminform');
@@ -401,9 +401,21 @@ class _users {
 		}
 		
 		if ($ids && count($ids)) {
+			$permissionids = null;
+			if ($this->userPermissionIDs)
+				$permissionids = explode(',', $this->userPermissionIDs);
+			
 			if ($activate) {
-				foreach($ids as $id)
+				foreach($ids as $id) {
+					if ($permissionids && !in_array($id, $permissionids))
+						continue;
+					
+					if ($this->userPermissionType & USER_PERMISSION_TYPE_OWN && 
+						(int)$id != $GLOBALS['USER']->data['ID'])
+						continue;
+					
 					$this->activate($id);
+				}
 				
 				tooltip::display(
 					__("Users have been successfully activated and are now " .
@@ -414,8 +426,16 @@ class _users {
 			}
 			
 			if ($suspend) {
-				foreach($ids as $id)
+				foreach($ids as $id) {
+					if ($permissionids && !in_array($id, $permissionids))
+						continue;
+					
+					if ($this->userPermissionType & USER_PERMISSION_TYPE_OWN && 
+						(int)$id != $GLOBALS['USER']->data['ID'])
+						continue;
+					
 					$this->suspend($id);
+				}
 				
 				tooltip::display(
 					__("Users have been successfully suspended."),
@@ -425,8 +445,16 @@ class _users {
 			}
 			
 			if ($delete) {
-				foreach($ids as $id)
+				foreach($ids as $id) {
+					if ($permissionids && !in_array($id, $permissionids))
+						continue;
+					
+					if ($this->userPermissionType & USER_PERMISSION_TYPE_OWN && 
+						(int)$id != $GLOBALS['USER']->data['ID'])
+						continue;
+					
 					$this->delete($id);
+				}
 				
 				tooltip::display(
 					__("Users have been successfully deleted."),
@@ -465,7 +493,10 @@ class _users {
 				
 			return true;
 		}
-			
+		
+		if ($this->userPermissionIDs || $this->userPermissionType & USER_PERMISSION_TYPE_OWN)
+			return false;
+		
 		if (!$newid = $this->add($form->getPostArray())) 
 			return false;
 		
@@ -487,7 +518,7 @@ class _users {
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' " .
-				($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+				(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 					"disabled='disabled' ":
 					null) .
 				"/>" .
@@ -538,7 +569,7 @@ class _users {
 					($ids && in_array($row['ID'], $ids)?
 						"checked='checked' ":
 						null).
-					($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+					(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 						"disabled='disabled' ":
 						null) .
 					" />" .
@@ -758,7 +789,7 @@ class _users {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 					
 		echo
@@ -774,7 +805,7 @@ class _users {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -802,7 +833,7 @@ class _users {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -830,6 +861,7 @@ class _users {
 	function displayAdmin() {
 		$search = null;
 		$groupid = null;
+		$delete = null;
 		$edit = null;
 		$id = null;
 		
@@ -838,6 +870,9 @@ class _users {
 		
 		if (isset($_GET['searchgroupid']))
 			$groupid = (int)$_GET['searchgroupid'];
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -884,14 +919,23 @@ class _users {
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
 		
+		$selected = null;
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($id)
+			$selected = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{users}`" .
+				" WHERE `ID` = '".$id."'" .
+				($this->userPermissionIDs?
+					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null) .
+				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+					" AND `ID` = '".$GLOBALS['USER']->data['ID']."'":
+					null)));
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			((!$edit && !$delete) || $selected))
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$paging = new paging(20);
 		$paging->ignoreArgs = 'id, edit, delete';
@@ -901,6 +945,9 @@ class _users {
 				" WHERE 1" .
 				($this->userPermissionIDs?
 					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null) .
+				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+					" AND `ID` = '".$GLOBALS['USER']->data['ID']."'":
 					null) .
 				(JCORE_VERSION >= '0.8' && $groupid?
 					" AND `GroupID` = '".(int)$groupid."'":
@@ -924,16 +971,15 @@ class _users {
 		
 		$paging->display();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			((!$this->userPermissionIDs && ~$this->userPermissionType & USER_PERMISSION_TYPE_OWN) || ($edit && $selected)))
 		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+			if ($edit && $selected && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{users}`" .
 					" WHERE `ID` = '".$id."'"));
 				
-				$form->setValues($row);
+				$form->setValues($selected);
 			}
 			
 			echo

@@ -75,8 +75,7 @@ class _ckEditorFileManager extends fileManager {
 				$GLOBALS['USER']->data['ID'],
 				'admin/content/postsatglance');
 		
-		if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
-			$permission['PermissionIDs'])
+		if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE)
 			$this->readOnly = true;
 		
 		if (AJAX_PAGING && isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {

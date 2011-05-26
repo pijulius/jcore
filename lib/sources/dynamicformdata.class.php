@@ -24,7 +24,7 @@ class _dynamicFormData {
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Data'), 
 				'?path='.admin::path().'#adminform');
@@ -89,9 +89,6 @@ class _dynamicFormData {
 			sql::run(
 				" DELETE FROM `{".$this->storageSQLTable."}`" .
 				" WHERE 1" .
-				($this->userPermissionIDs?
-					" AND `ID` IN (".$this->userPermissionIDs.")":
-					null) .
 				($search?
 					sql::search(
 						$search,
@@ -184,7 +181,7 @@ class _dynamicFormData {
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' " .
-				($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+				(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 					"disabled='disabled' ":
 					null) .
 				"/>" .
@@ -267,7 +264,7 @@ class _dynamicFormData {
 					($ids && in_array($row['ID'], $ids)?
 						"checked='checked' ":
 						null).
-					($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+					(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 						"disabled='disabled' ":
 						null) .
 					" />" .
@@ -476,7 +473,7 @@ class _dynamicFormData {
 		$this->displayAdminListHeader($form);
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 		
 		echo
@@ -492,7 +489,7 @@ class _dynamicFormData {
 			$this->displayAdminListItem($row, $form);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -520,7 +517,7 @@ class _dynamicFormData {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -547,11 +544,15 @@ class _dynamicFormData {
 	
 	function displayAdmin() {
 		$search = null;
+		$delete = null;
 		$edit = null;
 		$id = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -647,12 +648,8 @@ class _dynamicFormData {
 		
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$paging = new paging(20);
 		$paging->ignoreArgs = 'id, edit, delete';
@@ -660,9 +657,6 @@ class _dynamicFormData {
 		$rows = sql::run(
 			" SELECT * FROM `{".$this->storageSQLTable."}`" .
 			" WHERE 1" .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
 			($search?
 				sql::search(
 					$search,
@@ -684,16 +678,13 @@ class _dynamicFormData {
 		
 		$paging->display();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{".$this->storageSQLTable."}`" .
 					" WHERE `ID` = '".$id."'"));
 				
-				$form->setValues($row);
+				$form->setValues($selected);
 			}
 			
 			echo

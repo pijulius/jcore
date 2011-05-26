@@ -201,7 +201,7 @@ class search extends modules {
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' " .
-				($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+				(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 					"disabled='disabled' ":
 					null) .
 				"/>" .
@@ -233,7 +233,7 @@ class search extends modules {
 					($moduleset?
 						"checked='checked' ":
 						null).
-					($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+					(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 						"disabled='disabled' ":
 						null) .
 					" />" .
@@ -249,7 +249,7 @@ class search extends modules {
 			"<td align='right'>" .
 				"<input type='text' name='modulelimits[".$row['ID']."]' " .
 					"value='".$moduleset['Limit']."' " .
-					($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+					(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 						"disabled='disabled' ":
 						null) .
 					"style='width: 30px;' onchange=\"if(parseInt(this.value) > 0) " .
@@ -297,7 +297,7 @@ class search extends modules {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -343,7 +343,7 @@ class search extends modules {
 		echo
 			"<div class='admin-content'>";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->verifyAdmin();
 		
 		$rows = search::getTree();

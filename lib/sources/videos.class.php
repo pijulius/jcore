@@ -66,7 +66,7 @@ class _videos {
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Video'), 
 				'?path='.admin::path().'#adminform');
@@ -538,7 +538,7 @@ class _videos {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 		
 		echo
@@ -554,7 +554,7 @@ class _videos {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -568,7 +568,7 @@ class _videos {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -603,8 +603,12 @@ class _videos {
 			return;
 		}
 		
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -654,24 +658,17 @@ class _videos {
 		
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
-	
+		
 		$paging = new paging(10);
 		$paging->ignoreArgs = 'id, edit, delete';
 		
 		$rows = sql::run(
-				" SELECT * FROM `{" .$this->sqlTable."}`" .
+				" SELECT * FROM `{".$this->sqlTable."}`" .
 				" WHERE 1" .
 				($this->sqlRow?
 					" AND `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
-					null) .
-				($this->userPermissionIDs?
-					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				" ORDER BY `OrderID`, `ID` DESC" .
 				" LIMIT ".$paging->limit);
@@ -690,21 +687,15 @@ class _videos {
 		
 		$paging->display();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{".$this->sqlTable."}`" .
-					" WHERE `ID` = '".$id."'" .
-					($this->sqlRow?
-						" AND `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
-						null)));
+					" WHERE `ID` = '".$id."'"));
 				
-				$form->setValues($row);
-				$form->setValue('File', $row['Location']);
-				$form->setValue('CapFile', $row['CapLocation']);
+				$form->setValues($selected);
+				$form->setValue('File', $selected['Location']);
+				$form->setValue('CapFile', $selected['CapLocation']);
 			}
 			
 			if (!$edit) {

@@ -152,7 +152,7 @@ class _settings {
 		echo
 			"<div class='admin-content'>";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->verifyAdmin();
 		
 		$rows = sql::run(
@@ -235,7 +235,7 @@ class _settings {
 									'90%':
 									'350px') .
 									"; height: 200px;' " .
-								($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+								(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 									"readonly='readonly' ":
 									null) .
 								" id='settings".$setting['ID']."'>".
@@ -255,7 +255,7 @@ class _settings {
 								"document.getElementById(\"hsettings".$setting['ID']."\").value=\"1\"; " .
 								"else " .
 								"document.getElementById(\"hsettings".$setting['ID']."\").value=\"0\";' " .
-							($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+							(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 								"disabled='disabled' ":
 								null) .
 							"id='settings".$setting['ID']."' />";
@@ -265,7 +265,7 @@ class _settings {
 							"<input type='text' name='settings[".$setting['ID']."]' " .
 								"value='".htmlspecialchars($setting['Value'], ENT_QUOTES)."' " .
 								"style='width: 50px;' " .
-								($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+								(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 									"readonly='readonly' ":
 									null) .
 								"id='settings".$setting['ID']."' />";
@@ -288,7 +288,7 @@ class _settings {
 									null) .
 								"value='".htmlspecialchars($setting['Value'], ENT_QUOTES)."' " .
 								"size='".$inputlength."' " .
-								($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+								(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 									"readonly='readonly' ":
 									null) .
 								"id='settings".$setting['ID']."' />";
@@ -311,7 +311,7 @@ class _settings {
 				$firstrow = $row;
 		}
 	
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			echo
 				"<input type='submit' name='submit' value='" .
 					htmlspecialchars(__("Submit"), ENT_QUOTES)."' class='button submit' /> " .

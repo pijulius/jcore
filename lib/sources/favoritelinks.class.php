@@ -30,7 +30,7 @@ class _favoriteLinks {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Link'), 
 				'?path='.admin::path().'#adminform');
@@ -242,7 +242,7 @@ class _favoriteLinks {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 					
 		echo
@@ -258,7 +258,7 @@ class _favoriteLinks {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -272,7 +272,7 @@ class _favoriteLinks {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -298,8 +298,12 @@ class _favoriteLinks {
 	}
 	
 	function displayAdmin() {
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -336,19 +340,11 @@ class _favoriteLinks {
 		
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$rows = sql::run(
 			" SELECT * FROM `{favoritelinks}`" .
-			" WHERE 1" .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
 			" ORDER BY `OrderID`, `ID`");
 			
 		if (sql::rows($rows))
@@ -358,16 +354,13 @@ class _favoriteLinks {
 					__("No links found."),
 					TOOLTIP_NOTIFICATION);
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{favoritelinks}`" .
 					" WHERE `ID` = '".$id."'"));
-			
-				$form->setValues($row);
+				
+				$form->setValues($selected);
 			}
 			
 			echo
@@ -475,7 +468,7 @@ class _favoriteLinks {
 		if (isset(favoriteLinks::$links[$link]))
 			return false;
 		
-		preg_match('/(\?|&)path=(.*?)(&|\'|"|$)/i', $link, $matches);
+		preg_match('/(\?|&)path=(.*?)(#|&|\'|"|$)/i', $link, $matches);
 		
 		$userpermission = userPermissions::check($GLOBALS['USER']->data['ID'], 
 			(isset($matches[2])?

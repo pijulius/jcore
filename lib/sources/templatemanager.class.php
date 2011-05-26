@@ -28,7 +28,7 @@ class _templateManager {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('Upload Template'), 
 				'?path='.admin::path().'#adminform');
@@ -253,7 +253,7 @@ class _templateManager {
 						"</a>" .
 					"</div>";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListItemActivation($row);
 		
 		echo
@@ -368,7 +368,7 @@ class _templateManager {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 		
 		echo
@@ -397,7 +397,7 @@ class _templateManager {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 					
 			echo
@@ -513,7 +513,7 @@ class _templateManager {
 		echo
 			"<div class='admin-content'>";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			echo 
 				"<div tabindex='0' class='fc" .
 					form::fcState('fcts', true) .
@@ -552,7 +552,7 @@ class _templateManager {
 			
 			$verifyok = false;
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$verifyok = $this->verifyAdmin($form);
 			
 			$templates = array();
@@ -592,7 +592,7 @@ class _templateManager {
 					__("No templates found."),
 					TOOLTIP_NOTIFICATION);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 				echo
 					"<a name='adminform'></a>";
 				

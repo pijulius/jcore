@@ -70,7 +70,7 @@ class newsletterLists {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				_('New List'), 
 				'?path=admin/modules/newsletter/newsletterlists#adminform');
@@ -348,7 +348,7 @@ class newsletterLists {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 					
 		echo
@@ -364,7 +364,7 @@ class newsletterLists {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -392,7 +392,7 @@ class newsletterLists {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -418,8 +418,12 @@ class newsletterLists {
 	}
 	
 	function displayAdmin() {
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -456,19 +460,11 @@ class newsletterLists {
 		
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$rows = sql::run(
 			" SELECT * FROM `{newsletterlists}`" .
-			" WHERE 1" .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
 			" ORDER BY `OrderID`");
 			
 		if (sql::rows($rows))
@@ -478,16 +474,13 @@ class newsletterLists {
 				_("No lists found."),
 				TOOLTIP_NOTIFICATION);
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{newsletterlists}`" .
 					" WHERE `ID` = '".$id."'"));
-			
-				$form->setValues($row);
+				
+				$form->setValues($selected);
 			}
 			
 			echo
@@ -645,7 +638,7 @@ class newsletterSubscriptions {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				_('New Subscription'), 
 				'?path=admin/modules/newsletter/newslettersubscriptions#adminform');
@@ -787,9 +780,6 @@ class newsletterSubscriptions {
 				" `Confirmed` = 1," .
 				" `TimeStamp` = `TimeStamp`" .
 				" WHERE 1" .
-				($this->userPermissionIDs?
-					" AND `ID` IN (".$this->userPermissionIDs.")":
-					null) .
 				($listid == -1?
 					" AND `Confirmed`":
 					null) .
@@ -816,9 +806,6 @@ class newsletterSubscriptions {
 			$rows = sql::run(
 				" DELETE FROM `{newslettersubscriptions}`" .
 				" WHERE 1" .
-				($this->userPermissionIDs?
-					" AND `ID` IN (".$this->userPermissionIDs.")":
-					null) .
 				($listid == -1?
 					" AND `Confirmed`":
 					null) .
@@ -1028,7 +1015,7 @@ class newsletterSubscriptions {
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' " .
-				($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+				(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 					"disabled='disabled' ":
 					null) .
 				"/>" .
@@ -1067,7 +1054,7 @@ class newsletterSubscriptions {
 					($ids && in_array($row['ID'], $ids)?
 						"checked='checked' ":
 						null).
-					($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+					(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 						"disabled='disabled' ":
 						null) .
 					" />" .
@@ -1182,7 +1169,7 @@ class newsletterSubscriptions {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 					
 		echo
@@ -1198,7 +1185,7 @@ class newsletterSubscriptions {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -1212,7 +1199,7 @@ class newsletterSubscriptions {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -1292,14 +1279,16 @@ class newsletterSubscriptions {
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
 		
+		$selected = null;
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($id)
+			$selected = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{newslettersubscriptions}`" .
+				" WHERE `ID` = '".$id."'"));
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$paging = new paging(10);
 		$paging->ignoreArgs = 'id, edit, delete';
@@ -1307,9 +1296,6 @@ class newsletterSubscriptions {
 		$rows = sql::run(
 			" SELECT * FROM `{newslettersubscriptions}`" .
 			" WHERE 1" .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
 			($listid == -1?
 				" AND `Confirmed`":
 				null) .
@@ -1338,13 +1324,13 @@ class newsletterSubscriptions {
 		
 		$paging->display();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = newsletterSubscriptions::get($id);
-				$form->setValues($row);
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && $selected && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
+					" SELECT * FROM `{newslettersubscriptions}`" .
+					" WHERE `ID` = '".$id."'"));
+				
+				$form->setValues($selected);
 			}
 			
 			echo
@@ -1596,7 +1582,7 @@ class newsletterEmails {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				_('New Email'), 
 				'?path=admin/modules/newsletter/newsletteremails#adminform');
@@ -1960,7 +1946,7 @@ class newsletterEmails {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 				
 		echo
@@ -1976,7 +1962,7 @@ class newsletterEmails {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -2123,8 +2109,12 @@ class newsletterEmails {
 	}
 	
 	function displayAdmin() {
+		$delete = null;
 		$resend = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['resend']))
 			$resend = (int)$_GET['resend'];
@@ -2171,9 +2161,19 @@ class newsletterEmails {
 				str_replace('&amp;', '&', url::uri('id, resend, delete'))."'\"");
 		}
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		$selected = null;
+		$emailssent = false;
+		
+		if ($id && $this->userPermissionType & USER_PERMISSION_TYPE_OWN)
+			$selected = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{newsletters}`" .
+				" WHERE `ID` = '".$id."'" .
+				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'"));
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			((!$resend && !$delete) || $selected))
 			$emailssent = $this->verifyAdmin($form);
-	
+		
 		if ($form->get('PreviewSubmit') || $form->get('SendSubmit')) {
 			$this->displayAdminPreview($form, $emailssent);
 			
@@ -2238,8 +2238,8 @@ class newsletterEmails {
 		
 		$rows = sql::run(
 				" SELECT * FROM `{newsletters}`" .
-				($this->userPermissionIDs?
-					" WHERE `ID` IN (".$this->userPermissionIDs.")":
+				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+					" WHERE `UserID` = '".$GLOBALS['USER']->data['ID']."'":
 					null) .
 				" ORDER BY `TimeStamp` DESC" .
 				" LIMIT ".$paging->limit);
@@ -2255,16 +2255,15 @@ class newsletterEmails {
 		
 		$paging->display();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($resend && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
+			(~$this->userPermissionType & USER_PERMISSION_TYPE_OWN || ($resend && $selected)))
 		{
-			if ($resend && $id && !$form->submitted()) {
-				$row = sql::fetch(sql::run(
+			if ($resend && ($emailssent || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{newsletters}`" .
 					" WHERE `ID` = '".$id."'"));
 				
-				$form->setValues($row);
+				$form->setValues($selected);
 			}
 			
 			echo
@@ -2514,7 +2513,7 @@ class newsletter extends modules {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			favoriteLinks::add(
 				_('New Email'), 
 				'?path=admin/modules/newsletter/newsletteremails#adminform');

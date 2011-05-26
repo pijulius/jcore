@@ -109,7 +109,7 @@ class _comments {
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Comment'), 
 				'?path='.admin::path().'#adminform');
@@ -205,9 +205,6 @@ class _comments {
 				" WHERE 1" .
 				($this->sqlRow?
 					" AND `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
-					null) .
-				($this->userPermissionIDs?
-					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($search?
 					sql::search(
@@ -353,7 +350,7 @@ class _comments {
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' " .
-				($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+				(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 					"disabled='disabled' ":
 					null) .
 				"/>" .
@@ -396,7 +393,7 @@ class _comments {
 					($ids && in_array($row['ID'], $ids)?
 						"checked='checked' ":
 						null).
-					($this->userPermissionType != USER_PERMISSION_TYPE_WRITE?
+					(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 						"disabled='disabled' ":
 						null) .
 					" />" .
@@ -546,7 +543,7 @@ class _comments {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 		
 		echo
@@ -562,7 +559,7 @@ class _comments {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 					
 			echo
@@ -576,7 +573,7 @@ class _comments {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -612,11 +609,15 @@ class _comments {
 		}
 		
 		$search = null;
+		$delete = null;
 		$edit = null;
 		$id = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags($_GET['search']));
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -675,24 +676,17 @@ class _comments {
 		
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
-	
+		
 		$paging = new paging(10);
 		$paging->ignoreArgs = 'id, edit, delete, approve, decline';
 		
 		$rows = sql::run(
-				" SELECT * FROM `{".$this->sqlTable . "}`" .
+				" SELECT * FROM `{".$this->sqlTable."}`" .
 				" WHERE 1" .
 				($this->sqlRow?
 					" AND `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
-					null) .
-				($this->userPermissionIDs?
-					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($search?
 					sql::search(
@@ -724,27 +718,21 @@ class _comments {
 				$row['ID'],
 				"#".$row['ID']);
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
-					" SELECT * FROM `{".$this->sqlTable . "}`" .
-					" WHERE `ID` = '".$id."'" .
-					($this->sqlRow?
-						" AND `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
-						null)));
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
+					" SELECT * FROM `{".$this->sqlTable."}`" .
+					" WHERE `ID` = '".$id."'"));
 				
-				if ($row['SubCommentOfID'])
+				if ($selected['SubCommentOfID'])
 					$form->addValue('SubCommentOfID',
-						$row['SubCommentOfID'],
-						"#".$row['SubCommentOfID']);
+						$selected['SubCommentOfID'],
+						"#".$selected['SubCommentOfID']);
 				
-				if (JCORE_VERSION >= '0.7' && !$row['UserID'])
+				if (JCORE_VERSION >= '0.7' && !$selected['UserID'])
 					$form->edit('Email', null, null, FORM_INPUT_TYPE_EMAIL);
 					
-				$form->setValues($row);
+				$form->setValues($selected);
 			}
 			
 			echo

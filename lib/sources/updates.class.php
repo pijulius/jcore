@@ -619,7 +619,7 @@ class _updates {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('Check for Updates'), 
 				'?path='.admin::path().'&amp;check=1');
@@ -648,7 +648,7 @@ class _updates {
 						"</p>" .
 					"</div>";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			$row['Installable'] && $row['Ver'] && !$this->selectedUpdate)
 			echo
 					"<div class='button submit'>" .
@@ -717,7 +717,7 @@ class _updates {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE && $this->selectedUpdate)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE && $this->selectedUpdate)
 			$this->displayInstall($rows[$this->selectedUpdate]);
 	}
 	

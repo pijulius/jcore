@@ -20,7 +20,7 @@ class _dynamicFormFields {
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Field'), 
 				'?path='.admin::path().'#adminform');
@@ -327,20 +327,6 @@ class _dynamicFormFields {
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
 		
-		if ($id && $delete) {
-			$row = sql::fetch(sql::run(
-				" SELECT * FROM `{dynamicformfields}` " .
-				" WHERE `ID` = '".$id."'"));
-				
-			if ($row['Protected']) {
-				tooltip::display(
-					__("You are NOT allowed to delete a protected field!"),
-					TOOLTIP_ERROR);
-				
-				return false;
-			}
-		}
-		
 		if ($reorder) {
 			if (!$orders)
 				return false;
@@ -360,6 +346,18 @@ class _dynamicFormFields {
 		}
 		
 		if ($delete) {
+			$row = sql::fetch(sql::run(
+				" SELECT * FROM `{dynamicformfields}` " .
+				" WHERE `ID` = '".$id."'"));
+				
+			if ($row['Protected']) {
+				tooltip::display(
+					__("You are NOT allowed to delete a protected field!"),
+					TOOLTIP_ERROR);
+				
+				return false;
+			}
+			
 			if (!$this->delete($id))
 				return false;
 			
@@ -606,7 +604,7 @@ class _dynamicFormFields {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 					
 		echo
@@ -622,7 +620,7 @@ class _dynamicFormFields {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 				
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 				
 			echo
@@ -650,7 +648,7 @@ class _dynamicFormFields {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo
@@ -684,8 +682,12 @@ class _dynamicFormFields {
 		$this->displayAdminTitle($owner['Title']);
 		$this->displayAdminDescription();
 			
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -727,12 +729,8 @@ class _dynamicFormFields {
 		
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		echo 
 			"<div tabindex='0' class='fc" .
@@ -753,9 +751,6 @@ class _dynamicFormFields {
 		$rows = sql::run(
 			" SELECT * FROM `{dynamicformfields}`" .
 			" WHERE `FormID` = '".admin::getPathID()."'" .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
 			" ORDER BY `OrderID`, `ID`");
 			
 		if (sql::rows($rows))
@@ -765,22 +760,18 @@ class _dynamicFormFields {
 				__("No form fields found."),
 				TOOLTIP_NOTIFICATION);
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{dynamicformfields}`" .
-					" WHERE `FormID` = '".admin::getPathID()."'" .
-					" AND `ID` = '".$id."'"));
+					" WHERE `ID` = '".$id."'"));
 				
-				if ($row['Protected']) {
+				if ($selected['Protected']) {
 					$form->edit('ValueType', null, 'ValueType', FORM_INPUT_TYPE_HIDDEN);
 					$form->edit('Name', null, 'Name', FORM_INPUT_TYPE_HIDDEN);
 				}
 				
-				$form->setValues($row);
+				$form->setValues($selected);
 			}
 			
 			echo

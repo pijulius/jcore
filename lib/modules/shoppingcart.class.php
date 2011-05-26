@@ -63,7 +63,7 @@ class shoppingCartDiscounts {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				_('New Discount'), 
 				'?path='.admin::path().'#adminform');
@@ -408,7 +408,7 @@ class shoppingCartDiscounts {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 					
 		echo
@@ -424,7 +424,7 @@ class shoppingCartDiscounts {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -439,7 +439,7 @@ class shoppingCartDiscounts {
 			"<br />";
 		
 		if (JCORE_VERSION >= '0.7' && 
-			$this->userPermissionType == USER_PERMISSION_TYPE_WRITE) 
+			$this->userPermissionType & USER_PERMISSION_TYPE_WRITE) 
 		{
 			$this->displayAdminListFunctions();
 			
@@ -466,8 +466,12 @@ class shoppingCartDiscounts {
 	}
 	
 	function displayAdmin() {
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -504,19 +508,11 @@ class shoppingCartDiscounts {
 		
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$rows = sql::run(
 			" SELECT * FROM `{shoppingcartdiscounts}`" .
-			" WHERE 1" .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
 			" ORDER BY " .
 			(JCORE_VERSION >= '0.7'?
 				" `Priority`, ":
@@ -533,19 +529,16 @@ class shoppingCartDiscounts {
 				_("No discounts found."),
 				TOOLTIP_NOTIFICATION);
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{shoppingcartdiscounts}`" .
 					" WHERE `ID` = '".$id."'"));
-			
-				$form->setValues($row);
+				
+				$form->setValues($selected);
 				
 				if (JCORE_VERSION >= '0.5') {
-					$user = $GLOBALS['USER']->get($row['UserID']);
+					$user = $GLOBALS['USER']->get($selected['UserID']);
 					$form->setValue('UserName', $user['UserName']);
 				}
 			}
@@ -726,9 +719,7 @@ class shoppingCartDiscounts {
 				$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
-			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
-				$permission['PermissionIDs'])
-			{
+			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
@@ -766,7 +757,7 @@ class shoppingCartFees {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				_('New Fee'), 
 				'?path='.admin::path().'#adminform');
@@ -1314,7 +1305,7 @@ class shoppingCartFees {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 					
 		echo
@@ -1330,7 +1321,7 @@ class shoppingCartFees {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -1345,7 +1336,7 @@ class shoppingCartFees {
 			"<br />";
 		
 		if (JCORE_VERSION >= '0.7' && 
-			$this->userPermissionType == USER_PERMISSION_TYPE_WRITE) 
+			$this->userPermissionType & USER_PERMISSION_TYPE_WRITE) 
 		{
 			$this->displayAdminListFunctions();
 			
@@ -1372,8 +1363,12 @@ class shoppingCartFees {
 	}
 	
 	function displayAdmin() {
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -1410,19 +1405,11 @@ class shoppingCartFees {
 		
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$rows = sql::run(
 			" SELECT * FROM `{shoppingcartfees}`" .
-			" WHERE 1" .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				null) .
 			" ORDER BY " .
 			(JCORE_VERSION >= '0.7'?
 				" `Priority`,":
@@ -1439,25 +1426,22 @@ class shoppingCartFees {
 				_("No fees found."),
 				TOOLTIP_NOTIFICATION);
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{shoppingcartfees}`" .
 					" WHERE `ID` = '".$id."'"));
-			
-				$form->setValues($row);
+				
+				$form->setValues($selected);
 				
 				if (JCORE_VERSION >= '0.5') {
 					$field = sql::fetch(sql::run(
 						" SELECT `Name` FROM `{dynamicformfields}`" .
-						" WHERE `ID` = '".$row['FieldID']."'"));
+						" WHERE `ID` = '".$selected['FieldID']."'"));
 					
 					$form->setValue('FieldName', $field['Name']);
 					$form->setValue('FieldValue', 
-						sql::regexp2txt($row['FieldValue']));
+						sql::regexp2txt($selected['FieldValue']));
 				}
 			}
 			
@@ -1674,9 +1658,7 @@ class shoppingCartFees {
 				$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
-			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
-				$permission['PermissionIDs'])
-			{
+			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
@@ -1714,7 +1696,7 @@ class shoppingCartTaxes {
 	}
 	
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				_('New Tax'), 
 				'?path='.admin::path().'#adminform');
@@ -2055,7 +2037,7 @@ class shoppingCartTaxes {
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
 	
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
 		
 		echo
@@ -2071,7 +2053,7 @@ class shoppingCartTaxes {
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
 			
-			if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE)
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
 			
 			echo
@@ -2085,7 +2067,7 @@ class shoppingCartTaxes {
 			"</table>" .
 			"<br />";
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
 			
 			echo 
@@ -2111,8 +2093,12 @@ class shoppingCartTaxes {
 	}
 	
 	function displayAdmin() {
+		$delete = null;
 		$edit = null;
 		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = $_GET['edit'];
@@ -2149,22 +2135,12 @@ class shoppingCartTaxes {
 		
 		$verifyok = false;
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		}
 		
 		$rows = sql::run(
 			" SELECT * FROM `{shoppingcarttaxes}`" .
-			($this->userPermissionIDs?
-				" WHERE `ID` IN (".$this->userPermissionIDs.")":
-				null) .
-			" ORDER BY " .
-			" `Priority`, " .
-			" `FieldID`, " .
-			" `Tax`");
+			" ORDER BY `Priority`, `FieldID`, `Tax`");
 			
 		if (sql::rows($rows))
 			$this->displayAdminList($rows);
@@ -2173,24 +2149,21 @@ class shoppingCartTaxes {
 				_("No taxes found."),
 				TOOLTIP_NOTIFICATION);
 		
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && 
-				in_array($id, explode(',', $this->userPermissionIDs)))))
-		{
-			if ($edit && $id && ($verifyok || !$form->submitted())) {
-				$row = sql::fetch(sql::run(
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{shoppingcarttaxes}`" .
 					" WHERE `ID` = '".$id."'"));
 				
-				$form->setValues($row);
+				$form->setValues($selected);
 				
 				$field = sql::fetch(sql::run(
 					" SELECT `Name` FROM `{dynamicformfields}`" .
-					" WHERE `ID` = '".$row['FieldID']."'"));
+					" WHERE `ID` = '".$selected['FieldID']."'"));
 				
 				$form->setValue('FieldName', $field['Name']);
 				$form->setValue('FieldValue', 
-					sql::regexp2txt($row['FieldValue']));
+					sql::regexp2txt($selected['FieldValue']));
 			}
 			
 			echo
@@ -2348,9 +2321,7 @@ class shoppingCartTaxes {
 				$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
-			if ($permission['PermissionType'] != USER_PERMISSION_TYPE_WRITE ||
-				$permission['PermissionIDs'])
-			{
+			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
@@ -3510,7 +3481,7 @@ class shoppingCart extends modules {
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
-		if ($this->userPermissionType == USER_PERMISSION_TYPE_WRITE) {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			favoriteLinks::add(
 				_('New Discount'), 
 				'?path=admin/modules/shoppingcart/shoppingcartdiscounts#adminform');
