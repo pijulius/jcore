@@ -1305,13 +1305,17 @@ class _dynamicForms extends form {
 		$rows = sql::run(
 			" SELECT * FROM `{dynamicformfields}`" .
 			" WHERE `FormID` = '".$form['ID']."'" .
-			(JCORE_VERSION >= '0.7' &&
-			 (!$GLOBALS['USER']->loginok || !$GLOBALS['USER']->data['Admin'])?
-					" AND (!`ViewableBy` OR " .
+			(JCORE_VERSION >= '0.7'?
+				" AND (!`ViewableBy` OR " .
 					($GLOBALS['USER']->loginok?
-						" `ViewableBy` = 2":
+						($GLOBALS['USER']->data['Admin']?
+							" `ViewableBy` IN (2, 3)":
+							" `ViewableBy` = 2") .
+						(JCORE_VERSION >= '0.9' && $GLOBALS['USER']->data['GroupID']?
+							" OR `ViewableBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
+							null):
 						" `ViewableBy` = 1") .
-					" )":
+				" )":
 				null) .
 			" ORDER BY `OrderID`, `ID`");
 		

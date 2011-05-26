@@ -246,6 +246,14 @@ class _dynamicFormFields {
 				DYNAMIC_FORM_FIELD_ADMINS_ONLY, $this->access2Text(DYNAMIC_FORM_FIELD_ADMINS_ONLY));
 		}
 		
+		if (JCORE_VERSION >= '0.9') {
+			$ugroups = userGroups::get();
+			
+			while($ugroup = sql::fetch($ugroups))
+				$form->addValue(
+					$ugroup['ID']+10, $ugroup['GroupName']);
+		}
+		
 		$form->add(
 			null,
 			null,
@@ -1224,6 +1232,15 @@ class _dynamicFormFields {
 	
 	// ************************************************   Client Part
 	static function access2Text($typeid) {
+		if ($typeid > 10) {
+			$ugroup = userGroups::get($typeid-10);
+			
+			if (!$ugroup)
+				return false;
+			
+			return $ugroup['GroupName'];
+		}
+		
 		switch($typeid) {
 			case DYNAMIC_FORM_FIELD_ADMINS_ONLY:
 				return __('Admins Only');
