@@ -380,7 +380,27 @@ class _sql {
 		echo 
 			"<p class='sql-query'>" .
 				"<code>".
-					htmlspecialchars(sql::lastQuery())." " .
+					htmlspecialchars(sql::$lastQuery).";<br />";
+		
+		if (!sql::error() && preg_match('/^ *?SELECT/i', sql::$lastQuery) &&
+			$explains = @mysql_query('EXPLAIN '.sql::prefixTable(sql::$lastQuery), sql::$link))
+		{
+			echo
+						"<span class='comment'><b>EXPLAIN</b>: ";
+			
+			$explains = sql::fetch($explains);
+			foreach($explains as $key => $explain) {
+				if ($key == 'id' || $key == 'table')
+					continue;
+				
+				echo $key.'='.($explain?$explain:'NULL').'; ';
+			}
+			
+			echo
+					"</span>";
+		}
+		
+		echo
 				"</code><br />";
 		
 		if (sql::error())
