@@ -1309,7 +1309,7 @@ class _dynamicForms extends form {
 				" AND (!`ViewableBy` OR " .
 					($GLOBALS['USER']->loginok?
 						($GLOBALS['USER']->data['Admin']?
-							" `ViewableBy` IN (2, 3)":
+							" `ViewableBy` IN (1, 2, 3)":
 							" `ViewableBy` = 2") .
 						(JCORE_VERSION >= '0.9' && $GLOBALS['USER']->data['GroupID']?
 							" OR `ViewableBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
