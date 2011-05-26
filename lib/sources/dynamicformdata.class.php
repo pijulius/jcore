@@ -55,6 +55,7 @@ class _dynamicFormData {
 	function verifyAdmin(&$form) {
 		$search = null;
 		$deleteall = null;
+		$exportall = null;
 		$delete = null;
 		$edit = null;
 		$id = null;
@@ -68,6 +69,9 @@ class _dynamicFormData {
 		
 		if (isset($_POST['deleteallsubmit']))
 			$deleteall = $_POST['deleteallsubmit'];
+		
+		if (isset($_POST['exportallsubmit']))
+			$exportall = $_POST['exportallsubmit'];
 		
 		if (isset($_POST['deletesubmit']))
 			$delete = $_POST['deletesubmit'];
@@ -101,6 +105,43 @@ class _dynamicFormData {
 				__("Data has been successfully deleted."),
 				TOOLTIP_SUCCESS);
 				
+			return true;
+		}
+		
+		if ($exportall) {
+			$owner = sql::fetch(sql::run(
+				" SELECT * FROM `{dynamicforms}`" .
+				" WHERE `ID` = '".admin::getPathID()."'"));
+			
+			if (!$file = $this->export(
+				($search?
+					" WHERE 1" .
+					sql::search(
+						$search,
+						(JCORE_VERSION >= '0.7'? 
+							dynamicForms::searchableFields($owner['FormID']):
+							array('ID'))):
+					null)))
+				return false;
+			
+			tooltip::display(
+				__("Data has been successfully exported.")." " .
+				"<a href='".url::uri('id, edit, delete, request, download') .
+					"&amp;request=".url::path() .
+					"&amp;download=".$file .
+					"&amp;ajax=1'>" .
+					__("Download") .
+				"</a>" .
+				"<script type='text/javascript'>" .
+					"jQuery(document).ready(function() {" .
+						"window.location='".url::uri('id, edit, delete, request, download') .
+							"&request=".url::path() .
+							"&download=".$file .
+							"&ajax=1';" .
+					"});" .
+				"</script>",
+				TOOLTIP_SUCCESS);
+			
 			return true;
 		}
 		
@@ -453,7 +494,10 @@ class _dynamicFormData {
 				"' class='button confirm-link' /> " .
 			"<input type='submit' name='deleteallsubmit' value='" .
 				htmlspecialchars(__("Delete All"), ENT_QUOTES) .
-				"' class='button confirm-link' /> ";
+				"' class='button confirm-link' /> " .
+			"<input type='submit' name='exportallsubmit' value='" .
+				htmlspecialchars(__("Export All"), ENT_QUOTES) .
+				"' class='button' /> ";
 	}
 	
 	function displayAdminList(&$rows, &$form) {
@@ -849,6 +893,52 @@ class _dynamicFormData {
 		return true;
 	}
 	
+	function export($searchquery = null) {
+		if (!$this->storageSQLTable)
+			return false;
+		
+		$rows = sql::run(
+			" SELECT * FROM `{".$this->storageSQLTable."}`" .
+			($searchquery?
+				$searchquery:
+				null) .
+			" ORDER BY `ID` DESC");
+		
+		$filename = 'form-data-'.$this->storageSQLTable.'-'.date('Y-m-d').'.csv';
+		$file = SITE_PATH.'sitefiles/var/forms/'.$filename;
+		
+		if (!files::create($file, '')) {
+			tooltip::display(
+				__("File couldn't be saved!")." " .
+				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
+					SITE_PATH.'sitefiles/var/forms/'),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		if (!$fp = @fopen($file, 'w'))
+			return false;
+		
+		$firstrow = true;
+		while ($row = sql::fetch($rows)) {
+			if ($firstrow) {
+				foreach($row as $key => $data)
+					fwrite($fp, '"'.str_replace('"', '""', $key).'",');
+				
+				fwrite($fp, "\r\n");
+			}
+			
+			foreach($row as $key => $data)
+				fwrite($fp, '"'.str_replace('"', '""', $data).'",');
+			
+			fwrite($fp, "\r\n");
+			$firstrow = false;
+		}
+		
+		fclose($fp);
+		return $filename;
+	}
+	
 	function upload($file, $to = null) {
 		if (!$to)
 			$to = $this->storagePath;
@@ -857,6 +947,82 @@ class _dynamicFormData {
 			return false;
 		
 		return $filename;
+	}
+	
+	function download($filename) {
+		$file = SITE_PATH.'sitefiles/var/forms/'.$filename;
+		
+		if (!is_file($file)) {
+			tooltip::display(
+				sprintf(__("File \"%s\" cannot be found!"),
+					$filename),
+				TOOLTIP_ERROR);
+				
+			return false;
+		}
+
+		session_write_close();
+		files::display($file, true);
+		
+		return true;
+	}
+	
+	function ajaxRequest() {
+		$download = null;
+		
+		if (isset($_GET['download'])) {
+			preg_match('/([^(\/|\\\)]*)$/', $_GET['download'], $matches);
+			
+			if (isset($matches[1]) && $matches[1] != '.' && $matches[1] != '..')
+				$download = $matches[1];
+		}
+		
+		if (!$GLOBALS['USER']->loginok || 
+			!$GLOBALS['USER']->data['Admin']) 
+		{
+			tooltip::display(
+				__("Request can only be accessed by administrators!"),
+				TOOLTIP_ERROR);
+			return true;
+		}
+		
+		$permission = userPermissions::check(
+			$GLOBALS['USER']->data['ID'],
+			$this->adminPath);
+		
+		if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
+			tooltip::display(
+				__("You do not have permission to access this path!"),
+				TOOLTIP_ERROR);
+			
+			return true;
+		}
+		
+		if (!$GLOBALS['USER']->loginok || 
+			!$GLOBALS['USER']->data['Admin']) 
+		{
+			tooltip::display(
+				__("Request can only be accessed by administrators!"),
+				TOOLTIP_ERROR);
+			return true;
+		}
+		
+		$permission = userPermissions::check(
+			$GLOBALS['USER']->data['ID'],
+			$this->adminPath);
+		
+		if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
+			tooltip::display(
+				__("You do not have permission to access this path!"),
+				TOOLTIP_ERROR);
+			
+			return true;
+		}
+		
+		if ($download)
+			return $this->download($download);
+		
+		return true;
 	}
 }
 
