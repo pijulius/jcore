@@ -897,13 +897,6 @@ class _dynamicFormData {
 		if (!$this->storageSQLTable)
 			return false;
 		
-		$rows = sql::run(
-			" SELECT * FROM `{".$this->storageSQLTable."}`" .
-			($searchquery?
-				$searchquery:
-				null) .
-			" ORDER BY `ID` DESC");
-		
 		$filename = 'form-data-'.$this->storageSQLTable.'-'.date('Y-m-d').'.csv';
 		$file = SITE_PATH.'sitefiles/var/forms/'.$filename;
 		
@@ -918,6 +911,13 @@ class _dynamicFormData {
 		
 		if (!$fp = @fopen($file, 'w'))
 			return false;
+		
+		$rows = sql::run(
+			" SELECT * FROM `{".$this->storageSQLTable."}`" .
+			($searchquery?
+				$searchquery:
+				null) .
+			" ORDER BY `ID` DESC");
 		
 		$firstrow = true;
 		while ($row = sql::fetch($rows)) {
