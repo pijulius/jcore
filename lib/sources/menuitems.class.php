@@ -1204,7 +1204,12 @@ class _menuItems {
 	
 	function displayTitle(&$row) {
 		echo 
-			"<a href='".$row['_Link']."'>" .
+			"<a href='".$row['_Link']."'" .
+				($row['Link'] && strpos($row['Link'], '://') !== false && 
+				 strpos($row['Link'], substr(SITE_URL, strpos(SITE_URL, '://'))) === false?
+					" target='_blank'":
+					null) .
+				">" .
 				"<span>" .
 				$row['Title'] .
 				"</span>" .
