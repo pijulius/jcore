@@ -17,7 +17,6 @@ define('NOW_DAY', date('d'));
 define('CURRENT_URL', url::get());
 define('REMOTE_ADDR', $_SERVER['REMOTE_ADDR']);
 
-include_once('lib/contentforms.class.php');
 include_once('lib/calendar.class.php');
  
 class _contentCodes {
@@ -148,9 +147,11 @@ class _contentCodes {
 				if ($this->ignoreCodes && in_array('forms', $this->ignoreCodes))
 					break;
 				
-				$forms = new contentForms($arguments);
-				$forms->display();
-				unset($forms);
+				$form = new dynamicForms($arguments);
+				$form->load();
+				$form->verify();
+				$form->display();
+				unset($form);
 				break;
 				
 			default:

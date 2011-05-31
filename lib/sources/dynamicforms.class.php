@@ -1266,6 +1266,26 @@ class _dynamicForms extends form {
 		if ($this->sendAutoResponse)
 			$this->sendAutoResponseEmail();
 		
+		$this->reset();
+		
+		if ($this->successMessage) {
+			tooltip::display(
+				__($this->successMessage, $this->textsDomain),
+				TOOLTIP_SUCCESS);
+			return true;
+		}
+		
+		if ($this->sendNotificationEmail) {
+			tooltip::display(
+				__("Form has been successfully submitted and a notification email " .
+					"has been sent to the webmaster."),
+				TOOLTIP_SUCCESS);
+			return true;
+		}
+		
+		tooltip::display(
+			__("Form has been successfully submitted."),
+			TOOLTIP_SUCCESS);
 		return true;
 	}
 	
