@@ -2619,7 +2619,7 @@ class _posts {
 				($this->selectedLanguageID?
 					" AND `LanguageID` = '".$this->selectedLanguageID."'":
 					null) .
-				" AND '".sql::escape($pagepath)."/' LIKE CONCAT(`Path`,'/%')" .
+				" AND '".sql::escape(trim($pagepath, '/'))."/' LIKE CONCAT(`Path`,'/%')" .
 				" ORDER BY `Path` DESC," .
 					(JCORE_VERSION < '0.9'?
 						(menus::$order?
