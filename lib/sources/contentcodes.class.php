@@ -202,7 +202,7 @@ class _contentCodes {
 	}
 	
 	static function replaceDefinitions(&$content) {
-		$content = preg_replace_callback('/%([A-Z0-9-_]*?)%/i', 
+		$content = preg_replace_callback('/%([A-Z0-9-_]+?)%/', 
 			array('contentCodes', 'displayDefinitions'), 
 			$content);
 	}

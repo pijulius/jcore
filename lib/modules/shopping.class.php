@@ -302,6 +302,7 @@ class shoppingItems {
 	var $ignorePaging = false;
 	var $showPaging = true;
 	var $search = null;
+	var $format = null;
 	var $randomize = false;
 	var $active = false;
 	var $popular = false;
@@ -3259,8 +3260,8 @@ class shoppingItems {
 	function generateCategoryLink(&$row) {
 		return 
 			$this->shoppingURL .
-			($this->active || $this->popular || 
-			 $this->discussed || $this->rated?
+			(!$this->top && ($this->active || $this->popular || 
+			 $this->discussed || $this->rated)?
 				'&amp;shoppingitems=' .
 				($this->active?'1':null) .
 				($this->popular?'2':null) .
@@ -3856,6 +3857,165 @@ class shoppingItems {
 			"</div>";
 	}
 	
+	function displayFormat(&$row) {
+		echo
+			"<div class='shopping-item" .
+				($this->selectedID == $row['ID']?
+					" selected":
+					" one") .
+				" shopping-item".$row['ID']."" .
+				" shopping-item-num".$row['_ItemNumber'] .
+				(isset($row['_CSSClass'])?
+					" ".$row['_CSSClass']:
+					null) .
+				"'>";
+		
+		ob_start();
+		$this->displayItemFunctions($row);
+		$links = ob_get_contents();
+		ob_end_clean();
+		
+		$parts = preg_split('/%([a-z0-9-_]+?)%/', $this->format, null, PREG_SPLIT_DELIM_CAPTURE);
+		
+		foreach($parts as $part) {
+			switch($part) {
+				case 'title':
+					echo
+							"<h2 class='shopping-item-title'>";
+					
+					$this->displayTitle($row);
+					
+					echo
+							"</h2>";
+					break;
+				
+				case 'details':
+					echo
+							"<div class='shopping-item-details comment'>";
+					
+					$this->displayDetails($row);
+					
+					echo
+							"</div>";
+					break;
+				
+				case 'buy':
+					$this->displayBuyForm($row);
+					break;
+				
+				case 'preview':
+					if ($row['Pictures'])
+						$this->displayLatestPicture($row);
+					break;
+					
+				case 'pictures':
+					if ($row['Pictures'])
+						$this->displayPictures($row);
+					break;
+				
+				case 'teaser':
+					if ($row['Description']) {
+						echo
+							"<div class='shopping-item-content'>";
+						
+						$row['Description'] = posts::generateTeaser($row['Description']);
+						$this->displayDescription($row);
+					
+						echo
+							"</div>";
+					}
+					break;
+					
+				case 'description':
+					if ($row['Content']) {
+						echo
+							"<div class='shopping-item-content'>";
+						
+						$this->displayDescription($row);
+						
+						echo
+							"</div>";
+					}
+					break;
+					
+				case 'customfields':
+					if (JCORE_VERSION >= '0.7') {
+						echo
+							"<div class='shopping-item-custom-fields'>";
+						
+						$this->displayCustomFields($row);
+						
+						echo
+							"</div>";
+					}
+					break;
+					
+				case 'body':
+					if ($row['PartialContent'])
+						$this->displayTeaserBody($row);
+					else
+						$this->displayBody($row);
+					break;
+				
+				case 'links':
+					echo
+						"<div class='shopping-item-links'>" .
+						$links .
+						"<div class='clear-both'></div>" .
+						"</div>";
+					break;
+				
+				case 'rating':
+					if ($row['EnableRating']) {
+						echo
+							"<div class='shopping-item-rating'>";
+						
+						$this->displayRating($row);
+					
+						echo
+							"</div>";
+					}
+					break;
+				
+				case 'attachments':
+					if ($row['Attachments'])
+						$this->displayAttachments($row);
+					break;
+				
+				case 'keywords':
+					if (trim($row['Keywords'])) {
+						echo
+							"<div class='keywords'>";
+						
+						$this->displayKeywords($row);
+						
+						echo
+							"</div>";
+					}
+					break;
+				
+				case 'relateditems':
+					if (isset($row['DisplayRelatedItems']) && $row['DisplayRelatedItems'])
+						$this->displayRelatedItems($row);
+					break;
+				
+				default:
+					echo $part;
+					break;
+			}
+		}
+		
+		echo
+				"<div class='spacer bottom'></div>" .
+				"<div class='separator bottom'></div>";
+			
+		echo
+			"</div>";
+		
+		if ($this->selectedID == $row['ID'] && $row['EnableComments'])
+			$this->displayComments($row);
+	}
+	
 	function displayOne(&$row) {
 		echo
 			"<div class='shopping-item one".
@@ -4077,8 +4237,10 @@ class shoppingItems {
 				$row['_CSSClass'] .= ' first';
 			if ($i == $total)
 				$row['_CSSClass'] .= ' last';
-			 
-			if ($row['ID'] == $this->selectedID || $this->fullItems)
+			
+			if ($this->format)
+				$this->displayFormat($row);
+			elseif ($row['ID'] == $this->selectedID || $this->fullItems)
 				$this->displaySelected($row);
 			else
 				$this->displayOne($row);
@@ -4141,6 +4303,7 @@ class shopping extends modules {
 	var $discussedItems = false;
 	var $ratedItems = false;
 	var $topItems = false;
+	var $itemsFormat = null;
 	var $search = null;
 	var $attachmentsPath;
 	var $picturesPath;
@@ -6261,6 +6424,7 @@ class shopping extends modules {
 		$shoppingitems->discussed = $this->discussedItems;
 		$shoppingitems->rated = $this->ratedItems;
 		$shoppingitems->top = $this->topItems;
+		$shoppingitems->format = $this->itemsFormat;
 		
 		if ($this->topItems) {
 			if (!$shoppingitems->limit)
@@ -6420,6 +6584,7 @@ class shopping extends modules {
 		
 		if (preg_match('/(^|\/)latest($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)latest($|\/)/', '\2', $this->arguments);
+			$this->latestItems = true;
 			$this->ignorePaging = true;
 			$this->showPaging = false;
 			$this->limit = 1;
@@ -6434,6 +6599,19 @@ class shopping extends modules {
 		if (preg_match('/(^|\/)([0-9]+?)($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)[0-9]+?($|\/)/', '\2', $this->arguments);
 			$this->limit = (int)$matches[2];
+		}
+		
+		if (preg_match('/(^|\/)format\/(.*?)($|[^<]\/[^>])/', $this->arguments, $matches)) {
+			$this->arguments = preg_replace('/(^|\/)format\/.*?($|[^<]\/[^>])/', '\2', $this->arguments);
+			$this->itemsFormat = trim($matches[2]);
+		}
+		
+		if (preg_match('/(^|\/)search\/(.*?)($|\/)/', $this->arguments, $matches)) {
+			$this->arguments = preg_replace('/(^|\/)search\/.*?($|\/)/', '\2', $this->arguments);
+			$this->search = trim($matches[2]);
+			
+			$this->selectedItemID = null;
+			$this->selectedID = null;
 		}
 		
 		if (preg_match('/(^|\/)keywords($|\/)/', $this->arguments)) {
@@ -6504,6 +6682,25 @@ class shopping extends modules {
 		$shoppingitems->search = $this->search;
 		$shoppingitems->shoppingURL = shopping::getURL();
 		
+		$shoppingitems->ignorePaging = $this->ignorePaging;
+		$shoppingitems->showPaging = $this->showPaging;
+		$shoppingitems->ajaxPaging = $this->ajaxPaging;
+		$shoppingitems->randomize = $this->randomizeItems;
+		$shoppingitems->active = $this->activeItems;
+		$shoppingitems->popular = $this->popularItems;
+		$shoppingitems->discussed = $this->discussedItems;
+		$shoppingitems->rated = $this->ratedItems;
+		$shoppingitems->top = $this->topItems;
+		$shoppingitems->format = $this->itemsFormat;
+		
+		if ($this->topItems) {
+			if (!$shoppingitems->limit)
+				$shoppingitems->limit = 10;
+			
+			$shoppingitems->showPaging = false;
+			$shoppingitems->selectedID = null;
+		}
+		
 		ob_start();
 		$itemsfound = $shoppingitems->display();
 		$content = ob_get_contents();
@@ -6573,16 +6770,19 @@ class shopping extends modules {
 			$this->topItems)
 		{	
 			$shoppingitems = new shoppingItems();
-			$shoppingitems->limit = $this->limit;
-		
-			if ($this->topItems)
-				$shoppingitems->shoppingURL = shopping::getURL();
 			
+			$shoppingitems->limit = $this->limit;
+			$shoppingitems->shoppingURL = $this->shoppingURL;
+			$shoppingitems->ignorePaging = $this->ignorePaging;
+			$shoppingitems->showPaging = $this->showPaging;
+			$shoppingitems->ajaxPaging = $this->ajaxPaging;
 			$shoppingitems->randomize = $this->randomizeItems;
 			$shoppingitems->active = $this->activeItems;
 			$shoppingitems->popular = $this->popularItems;
 			$shoppingitems->discussed = $this->discussedItems;
 			$shoppingitems->rated = $this->ratedItems;
+			$shoppingitems->top = $this->topItems;
+			$shoppingitems->format = $this->itemsFormat;
 			
 			if ($this->topItems) {
 				if (!$shoppingitems->limit)

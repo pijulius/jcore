@@ -34,6 +34,7 @@ class _posts {
 	var $randomize = false;
 	var $ignorePaging = false;
 	var $showPaging = true;
+	var $format = null;
 	var $search = null;
 	var $searchKeywords = null;
 	var $ajaxPaging = AJAX_PAGING;
@@ -2836,6 +2837,191 @@ class _posts {
 			"</div>";
 	}
 	
+	function displayFormat(&$row) {
+		echo
+			"<article" .
+				(!isset($this->arguments)?
+					" id='post".$row['ID']."'":
+					null) .
+				" class='post" .
+				($this->selectedID == $row['ID']?
+					" selected":
+					" one") .
+				" post".$row['ID'] .
+				" post-num".$row['_PostNumber'] .
+				(isset($row['_CSSClass'])?
+					" ".$row['_CSSClass']:
+					null) .
+				"'>";
+		
+		ob_start();
+		$this->displayFunctions($row);
+		$links = ob_get_contents();
+		ob_end_clean();
+		
+		$parts = preg_split('/%([a-z0-9-_]+?)%/', $this->format, null, PREG_SPLIT_DELIM_CAPTURE);
+		
+		foreach($parts as $part) {
+			switch($part) {
+				case 'title':
+					echo
+							"<h" .
+							(JCORE_VERSION >= '0.6'?
+								'1':
+								'2') .
+							" class='post-title'>";
+							
+					$this->displayTitle($row);
+					
+					echo
+							"</h" .
+							(JCORE_VERSION >= '0.6'?
+								'1':
+								'2') .
+							">";
+					break;
+				
+				case 'details':
+					echo
+						"<div class='post-details comment'>";
+					
+					$this->displayDetails($row);
+					
+					echo
+						"</div>";
+					break;
+				
+				case 'announcement':
+					if ($row['StartDate'] || $row['EndDate']) {
+						echo
+							"<h3 class='post-announcement-dates'>";
+								
+						$this->displayAnnouncementInfo($row);
+						
+						echo
+							"</h3>";
+					}
+					break;
+				
+				case 'preview':
+					if ($row['Pictures'])
+						$this->displayLatestPicture($row);
+					break;
+					
+				case 'pictures':
+					if ($row['Pictures'])
+						$this->displayPictures($row);
+					break;
+				
+				case 'teaser':
+					if ($row['Content']) {
+						echo
+							"<div class='post-content'>";
+						
+						$row['Content'] = posts::generateTeaser($row['Content']);
+						$this->displayContent($row);
+						
+						echo
+							"</div>";
+					}
+					break;
+					
+				case 'description':
+					if ($row['Content']) {
+						echo
+							"<div class='post-content'>";
+						
+						if ($row['PartialContent']) {
+							$row['Content'] = posts::generateTeaser($row['Content']);
+							$this->displayContent($row);
+						} else {
+							$this->displayContent($row);
+						}
+						
+						echo
+							"</div>";
+					}
+					break;
+					
+				case 'customfields':
+					if (JCORE_VERSION >= '0.7') {
+						echo
+							"<div class='post-custom-fields'>";
+						
+						$this->displayCustomFields($row);
+						
+						echo
+							"</div>";
+					}
+					break;
+					
+				case 'body':
+					if ($row['PartialContent'])
+						$this->displayTeaserBody($row);
+					else
+						$this->displayBody($row);
+					break;
+				
+				case 'links':
+					if ($links)
+						echo
+							"<div class='post-links'>" .
+							$links .
+							"<div class='clear-both'></div>" .
+							"</div>";
+					break;
+				
+				case 'rating':
+					if (isset($row['EnableRating']) && $row['EnableRating']) {
+						echo
+							"<div class='post-rating'>";
+						
+						$this->displayRating($row);
+					
+						echo
+							"</div>";
+					}
+					break;
+				
+				case 'attachments':
+					if ($row['Attachments'])
+						$this->displayAttachments($row);
+					break;
+				
+				case 'keywords':
+					if (trim($row['Keywords'])) {
+						echo
+							"<div class='keywords post-keywords'>";
+						
+						$this->displayKeywords($row);
+						
+						echo
+							"</div>";
+					}
+					break;
+				
+				case 'relatedposts':
+					if (isset($row['DisplayRelatedPosts']) && $row['DisplayRelatedPosts'])
+						$this->displayRelatedPosts($row);
+					break;
+				
+				default:
+					echo $part;
+					break;
+			}
+		}
+		
+		echo
+				"<div class='spacer bottom'></div>" .
+				"<div class='separator bottom'></div>";
+			
+		echo
+			"</article>";
+		
+		if ($this->selectedID == $row['ID'] && $row['EnableComments'])
+			$this->displayComments($row);
+	}
+	
 	function displayOne(&$row) {
 		echo
 			"<article" .
@@ -3145,6 +3331,11 @@ class _posts {
 			$this->limit = (int)$matches[2];
 		}
 		
+		if (preg_match('/(^|\/)format\/(.*?)($|[^<]\/[^>])/', $this->arguments, $matches)) {
+			$this->arguments = preg_replace('/(^|\/)format\/.*?($|[^<]\/[^>])/', '\2', $this->arguments);
+			$this->format = trim($matches[2]);
+		}
+		
 		if (preg_match('/(^|\/)keyword\/(.*?)($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)keyword\/.*?($|\/)/', '\2', $this->arguments);
 			$this->searchKeywords = trim($matches[2]);
@@ -3357,7 +3548,9 @@ class _posts {
 			if ($i == $total)
 				$row['_CSSClass'] .= ' last';
 			
-			if ($this->search || ($row['PartialContent'] && 
+			if ($this->format)
+				$this->displayFormat($row);
+			elseif ($this->search || ($row['PartialContent'] && 
 				$row['ID'] != $this->selectedID))
 				$this->displayOne($row);
 			else
