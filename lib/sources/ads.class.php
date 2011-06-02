@@ -81,6 +81,7 @@ class _ads {
 		$form->addValue('', '');
 		
 		$blockids = array();
+		$layoutids = array();
 		$disabledblocks = array();
 		
 		$adblocks = sql::run(
@@ -97,6 +98,10 @@ class _ads {
 			while($adblock = sql::fetch($adblocks)) {
 				if (isset($blockids[$adblock['SubBlockOfID']])) {
 					$blockids[$adblock['ID']] = true;
+					
+					if (JCORE_VERSION >= '0.9')
+						$layoutids[$adblock['LayoutID']] = true;
+					
 					continue;
 				}
 				
@@ -105,11 +110,15 @@ class _ads {
 						continue;
 					
 					$blockids[$block['ID']] = true;
+					
+					if (JCORE_VERSION >= '0.9')
+						$layoutids[$block['LayoutID']] = true;
 				}
 			}
 			
 			foreach(blocks::getTree() as $block) {
-				if (!isset($blockids[$block['ID']]))
+				if ((JCORE_VERSION < '0.9' || !isset($layoutids[$block['LayoutID']]) || 
+					$block['ID']) && !isset($blockids[$block['ID']]))
 					continue;
 				
 				$form->addValue($block['ID'], 
@@ -120,11 +129,12 @@ class _ads {
 						null) .
 					$block['Title']);
 				
-				if ($block['TypeID'] != BLOCK_TYPE_AD)
+				if ($block['ID'] && $block['TypeID'] != BLOCK_TYPE_AD)
 					$disabledblocks[] = $block['ID'];
 			}
 				
 			$form->disableValues($disabledblocks);
+			$form->groupValues(array('0'));
 			
 		} else {
 			$form->edit(

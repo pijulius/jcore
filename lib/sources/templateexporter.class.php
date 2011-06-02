@@ -210,6 +210,21 @@ class _templateExporter {
 		
 		$templatephp = null;
 		$blockqueries = null;
+		$layoutqueries = null;
+		
+		if (JCORE_VERSION >= '0.9') {
+			$layouts = sql::run(
+				" SELECT * FROM `{layouts}`" .
+				" WHERE `TemplateID` = '".
+					(template::$selected?
+						(int)template::$selected['ID']:
+						0) .
+					"'" .
+				" ORDER BY `OrderID`");
+			
+			while($layout = sql::fetch($layouts))
+				$layoutqueries .= $this->generateLayoutCode($layout);
+		}
 		
 		$blocks = sql::run(
 			" SELECT * FROM `{blocks}`" .
@@ -253,7 +268,7 @@ class _templateExporter {
 				$homepageids = array($mainmenu[\'ID\']);
 		}
 		
-		'.$blockqueries.'return true;
+		'.$layoutqueries.$blockqueries.'return true;
 	}';
 		
 		if (template::$selected) {
@@ -377,6 +392,41 @@ class templateInstaller extends template {
 		return true;
 	}
 	
+	function generateLayoutCode($layout) {
+		if (!is_array($layout) || !$layout['ID'])
+			return false;
+		
+		$code = null;
+		foreach($layout as $fieldid => $fieldvalue) {
+			if (in_array($fieldid, array(
+				'ID', 
+				'TemplateID')))
+				continue;
+			
+			if (!$fieldvalue)
+				continue;
+			
+			$code .= '
+			" `'.$fieldid.'` = \''.sql::escape($fieldvalue).'\'," .';
+		}
+		
+		if (!$code)
+			return false;
+		
+		$code = 
+			'$layout'.$layout['ID'].' = sql::run(
+			" INSERT INTO `{layouts}` SET" .' .
+			$code.'
+			" `TemplateID` = \'".$this->templateID."\'");
+		
+		if (sql::error())
+			return false;
+		
+		';
+		
+		return $code;
+	}
+	
 	function generateBlockCode($block) {
 		if (!is_array($block) || !$block['ID'])
 			return false;
@@ -393,6 +443,12 @@ class templateInstaller extends template {
 			if ($fieldid == 'SubBlockOfID' && $fieldvalue) {
 				$code .= '
 			" `'.$fieldid.'` = \'".$block'.$fieldvalue.'."\'," .';
+				continue;
+			}
+			
+			if ($fieldid == 'LayoutID' && $fieldvalue) {
+				$code .= '
+			" `'.$fieldid.'` = \'".$layout'.$fieldvalue.'."\'," .';
 				continue;
 			}
 			

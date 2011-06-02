@@ -237,6 +237,7 @@ class _posts {
 				$form->addValue('BlockID', '','');
 				
 				$blockids = array();
+				$layoutids = array();
 				$disabledblocks = array();
 				
 				$postblocks = sql::run(
@@ -253,6 +254,10 @@ class _posts {
 					while($postblock = sql::fetch($postblocks)) {
 						if (isset($blockids[$postblock['SubBlockOfID']])) {
 							$blockids[$postblock['ID']] = true;
+							
+							if (JCORE_VERSION >= '0.9')
+								$layoutids[$postblock['LayoutID']] = true;
+							
 							continue;
 						}
 						
@@ -260,12 +265,16 @@ class _posts {
 							if (isset($blockids[$block['ID']]))
 								continue;
 							
-							$blockids[$block['ID']] = $block['Title'];
+							$blockids[$block['ID']] = true;
+							
+							if (JCORE_VERSION >= '0.9')
+								$layoutids[$block['LayoutID']] = true;
 						}
 					}
 					
 					foreach(blocks::getTree() as $block) {
-						if (!isset($blockids[$block['ID']]))
+						if ((JCORE_VERSION < '0.9' || !isset($layoutids[$block['LayoutID']]) || 
+							$block['ID']) && !isset($blockids[$block['ID']]))
 							continue;
 						
 						$form->addValue(
@@ -278,11 +287,12 @@ class _posts {
 								null) .
 							$block['Title']);
 						
-						if ($block['TypeID'] != BLOCK_TYPE_CONTENT)
+						if ($block['ID'] && $block['TypeID'] != BLOCK_TYPE_CONTENT)
 							$disabledblocks[] = $block['ID'];
 					}
 					
 					$form->disableValues('BlockID', $disabledblocks);
+					$form->groupValues('BlockID', array('0'));
 					
 				} else {
 					$form->edit(

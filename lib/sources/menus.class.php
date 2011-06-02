@@ -79,6 +79,7 @@ class _menus {
 		$form->addValue('', '');
 		
 		$blockids = array();
+		$layoutids = array();
 		$disabledblocks = array();
 		
 		$menublocks = sql::run(
@@ -95,6 +96,10 @@ class _menus {
 			while($menublock = sql::fetch($menublocks)) {
 				if (isset($blockids[$menublock['SubBlockOfID']])) {
 					$blockids[$menublock['ID']] = true;
+					
+					if (JCORE_VERSION >= '0.9')
+						$layoutids[$menublock['LayoutID']] = true;
+					
 					continue;
 				}
 				
@@ -102,12 +107,16 @@ class _menus {
 					if (isset($blockids[$block['ID']]))
 						continue;
 					
-					$blockids[$block['ID']] = $block['Title'];
+					$blockids[$block['ID']] = true;
+					
+					if (JCORE_VERSION >= '0.9')
+						$layoutids[$block['LayoutID']] = true;
 				}
 			}
 			
-			foreach(blocks::getTree() as $block) {
-				if (!isset($blockids[$block['ID']]))
+			foreach(blocks::getTree() as $key => $block) {
+				if ((JCORE_VERSION < '0.9' || !isset($layoutids[$block['LayoutID']]) || 
+					$block['ID']) && !isset($blockids[$block['ID']]))
 					continue;
 				
 				$form->addValue($block['ID'], 
@@ -118,11 +127,12 @@ class _menus {
 						null) .
 					$block['Title']);
 					
-				if ($block['TypeID'] != BLOCK_TYPE_MENU)
+				if ($block['ID'] && $block['TypeID'] != BLOCK_TYPE_MENU)
 					$disabledblocks[] = $block['ID'];
 			}
 			
 			$form->disableValues($disabledblocks);
+			$form->groupValues(array('0'));
 			
 		} else {
 			$form->edit(

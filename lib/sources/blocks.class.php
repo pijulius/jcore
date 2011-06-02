@@ -13,6 +13,7 @@ include_once('lib/menus.class.php');
 include_once('lib/posts.class.php'); 
 include_once('lib/contentcodes.class.php');
 include_once('lib/ads.class.php');
+include_once('lib/layouts.class.php');
 
 define('BLOCK_TYPE_MAIN_CONTENT', 1);
 define('BLOCK_TYPE_CONTENT', 2);
@@ -56,6 +57,12 @@ class _blocks {
 						0) .
 					"'":
 				null) .
+			(JCORE_VERSION >= '0.9'?
+				(pages::$selected && pages::$selected['LayoutID'] && 
+				 layouts::exists(pages::$selected['LayoutID'])?
+					" AND `LayoutID` = '".pages::$selected['LayoutID']."'":
+					" AND !`LayoutID`"):
+				null) .
 			" AND !`Deactivated`" .
 			" AND !`SubBlockOfID`" .
 			" AND (!`ViewableBy` OR " .
@@ -91,6 +98,11 @@ class _blocks {
 			favoriteLinks::add(
 				__('New Block'), 
 				'?path='.admin::path().'#adminform');
+		
+		if (JCORE_VERSION >= '0.9')
+			favoriteLinks::add(
+				__('Layouts'), 
+				'?path=admin/site/blocks/layouts');
 		
 		favoriteLinks::add(
 			__('CSS Editor'), 
@@ -132,6 +144,22 @@ class _blocks {
 		$form->setValueType(FORM_VALUE_TYPE_INT);
 			
 		$form->addValue('', '');
+		
+		if (JCORE_VERSION >= '0.9') {
+			$layouts = layouts::get();
+			
+			if (sql::rows($layouts)) {
+				$form->add(
+					__('Layout'),
+					'LayoutID',
+					FORM_INPUT_TYPE_SELECT);
+				$form->setValueType(FORM_VALUE_TYPE_INT);
+				$form->addValue('', __('Default'));
+				
+				while($layout = sql::fetch($layouts))
+					$form->addValue($layout['ID'], $layout['Title']);
+			}
+		}
 		
 		$form->add(
 			__('Content Options'),
@@ -656,25 +684,71 @@ class _blocks {
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
 	}
 	
-	function displayAdminList(&$rows, $rowpair = null) {
+	function displayAdminListLayouts($layout) {
+		ob_start();
+		$this->displayAdminListItems(0, false, $layout);
+		$items = ob_get_contents();
+		ob_end_clean();
+		
+		if (!$items)
+			return false;
+		
+		echo 
+		"<div tabindex='0' class='fc" . 
+			form::fcState('fcbl'.$layout['ID'], true) . 
+			"'>" .
+			"<a class='fc-title' name='fcbl".$layout['ID']."'>" .
+				stripcslashes($layout['Title']) .
+			"</a>" .
+			"<div class='fc-content'>" .
+				$items .
+			"</div>" .
+		"</div>";
+		
+		return true;
+	}
+	
+	function displayAdminListItems($blockid, $rowpair = null, $layout = null) {
+		if ($this->userPermissionIDs && $blockid)
+			return false;
+		
 		$id = null;
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
 		
-		if (isset($rowpair)) {
+		$rows = sql::run(
+			" SELECT * FROM `{blocks}`" .
+			" WHERE 1" .
+			(JCORE_VERSION >= '0.7'?
+				" AND `TemplateID` = '".
+					(template::$selected?
+						(int)template::$selected['ID']:
+						0)."'":
+				null) .
+			($this->userPermissionIDs?
+				" AND `ID` IN (".$this->userPermissionIDs.")":
+				((int)$blockid?
+					" AND `SubBlockOfID` = '".(int)$blockid."'":
+					" AND !`SubBlockOfID`")) .
+			($layout?
+				" AND `LayoutID` = '".$layout['ID']."'":
+				null) .
+			" ORDER BY `OrderID`");
+		
+		if (!sql::rows($rows))
+			return false;
+		
+		if ($blockid) {
 			echo 
 				"<tr".($rowpair?" class='pair'":NULL).">" .
 					"<td></td>" .
 					"<td colspan='4' class='auto-width nopadding'>";
-		} else {
-			echo
-				"<form action='".url::uri('edit, delete')."' method='post'>";
 		}
 				
 		echo "<table class='list' cellpadding='0' cellspacing='0'>";
 		
-		if (!isset($rowpair)) {
+		if (!$blockid) {
 			echo
 				"<thead>" .
 				"<tr>";
@@ -719,26 +793,12 @@ class _blocks {
 					"</tr>";
 			}
 			
-			if (!$this->userPermissionIDs) {
-				$subrows = sql::run(
-					" SELECT * FROM `{blocks}`" .
-					" WHERE `SubBlockOfID` = '".$row['ID']."'" .
-					(JCORE_VERSION >= '0.7'?
-						" AND `TemplateID` = '".
-							(template::$selected?
-								(int)template::$selected['ID']:
-								0)."'":
-						null) .
-					" ORDER BY `OrderID`");
-				
-				if (sql::rows($subrows))
-					$this->displayAdminList($subrows, $i%2);
-			}
+			$this->displayAdminListItems($row['ID'], $i%2);
 			
 			$i++;
 		}
 		
-		if (isset($rowpair)) {
+		if ($blockid) {
 			echo 
 				"</table>" .
 				"</td>" .
@@ -746,22 +806,51 @@ class _blocks {
 		} else {
 			echo 
 				"</tbody>" .
-				"</table>" .
-				"<br />";
-		
-			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
-				$this->displayAdminListFunctions();
-				
-				echo
-					"<div class='clear-both'></div>" .
-					"<br />";
-			}
-				
-			echo
-				"</form>";
+				"</table>";
 		}
 		
 		return true;
+	}
+	
+	function displayAdminList(&$rows) {
+		echo
+			"<form action='".url::uri('edit, delete')."' method='post'>";
+				
+		$itemsfound = false;
+		
+		if ($rows && sql::rows($rows)) {
+			$layout['ID'] = 0;
+			$layout['Title'] = __('Default');
+			$itemsfound = $this->displayAdminListLayouts($layout);
+			
+		} else {
+			$itemsfound = $this->displayAdminListItems(0);
+		}
+		
+		if ($rows) {
+			while($row = sql::fetch($rows)) {
+				if ($this->displayAdminListLayouts($row))
+					$itemsfound = true;
+			}
+		}
+		
+		if (!$itemsfound)
+			tooltip::display(
+				__("No blocks found."),
+				TOOLTIP_NOTIFICATION);
+		else
+			echo "<br />";
+		
+		if ($itemsfound && $this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			$this->displayAdminListFunctions();
+			
+			echo
+				"<div class='clear-both'></div>" .
+				"<br />";
+		}
+			
+		echo
+			"</form>";
 	}
 	
 	function displayAdminForm(&$form) {
@@ -831,26 +920,12 @@ class _blocks {
 			((!$edit && !$delete) || $selected))
 			$verifyok = $this->verifyAdmin($form);
 		
-		$rows = sql::run(
-			" SELECT * FROM `{blocks}`" .
-			" WHERE 1" .
-			(JCORE_VERSION >= '0.7'?
-				" AND `TemplateID` = '".
-					(template::$selected?
-						(int)template::$selected['ID']:
-						0)."'":
-				null) .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				" AND !`SubBlockOfID`") .
-			" ORDER BY `OrderID`");
+		$layouts = null;
 		
-		if (sql::rows($rows))
-			$this->displayAdminList($rows);
-		else
-			tooltip::display(
-				__("No blocks found."),
-				TOOLTIP_NOTIFICATION);
+		if (JCORE_VERSION >= '0.9')
+			$layouts = layouts::get();
+			
+		$this->displayAdminList($layouts);
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			(!$this->userPermissionIDs || ($edit && $selected)))
@@ -873,6 +948,8 @@ class _blocks {
 						null) .
 					$row['Title']);
 			}
+			
+			$form->groupValues('SubBlockOfID', array('0'));
 			
 			if ($form->getElementID('LanguageIDs')) {
 				$form->addAdditionalText(
@@ -971,14 +1048,24 @@ class _blocks {
 				" AND `OrderID` >= '".(int)$values['OrderID']."'");
 		}
 		
+		if ((int)$values['SubBlockOfID']) {
+			$parentblock = sql::fetch(sql::run(
+				" SELECT * FROM `{blocks}`" .
+				" WHERE `ID` = '" .
+					(int)$values['SubBlockOfID']."'"));
+			
+			if ($parentblock['Deactivated'] && !$values['Deactivated'])
+				$values['Deactivated'] = true;
+			
+			if ($parentblock['ViewableBy'] && !$values['ViewableBy'])
+				$values['ViewableBy'] = (int)$parentblock['ViewableBy'];
+			
+			if (JCORE_VERSION >= '0.9')
+				$values['LayoutID'] = $parentblock['LayoutID'];
+		}
+		
 		$newid = sql::run(
 			" INSERT INTO `{blocks}` SET ".
-			(JCORE_VERSION >= '0.7'?
-				" `TemplateID` = '".
-					(template::$selected?
-						(int)template::$selected['ID']:
-						0)."',":
-				null) .
 			" `Title` = '".
 				sql::escape($values['Title'])."'," .
 			" `Content` = '".
@@ -1020,6 +1107,15 @@ class _blocks {
 				" `CacheRefreshTime` = '".
 					(int)$values['CacheRefreshTime']."'," .
 				" `CacheTimeStamp` = '0000-00-00 00:00:00',":
+				null) .
+			(JCORE_VERSION >= '0.7'?
+				" `TemplateID` = '".
+					(template::$selected?
+						(int)template::$selected['ID']:
+						0)."',":
+				null) .
+			(JCORE_VERSION >= '0.9' && isset($values['LayoutID'])?
+				" `LayoutID` = '".(int)$values['LayoutID']."',":
 				null) .
 			" `Limit` = '".
 				(int)$values['Limit']."'," .
@@ -1093,6 +1189,9 @@ class _blocks {
 			
 			if ($parentblock['ViewableBy'] && !$values['ViewableBy'])
 				$values['ViewableBy'] = (int)$parentblock['ViewableBy'];
+			
+			if (JCORE_VERSION >= '0.9')
+				$values['LayoutID'] = $parentblock['LayoutID'];
 		}
 		
 		sql::run(
@@ -1141,6 +1240,9 @@ class _blocks {
 					" `CacheTimeStamp` = '0000-00-00 00:00:00',":
 					" `CacheTimeStamp` = `CacheTimeStamp`,"):
 				null) .
+			(JCORE_VERSION >= '0.9' && isset($values['LayoutID'])?
+				" `LayoutID` = '".(int)$values['LayoutID']."',":
+				null) .
 			" `Limit` = '".
 				(int)$values['Limit']."'," .
 			" `OrderID` = '".
@@ -1156,6 +1258,9 @@ class _blocks {
 		}
 		
 		foreach(blocks::getTree((int)$id) as $row) {
+			if (!$row['ID'])
+				continue;
+			
 			$updatesql = null;
 			
 			if (($block['Deactivated'] && !$values['Deactivated']) ||
@@ -1170,6 +1275,10 @@ class _blocks {
 			if ($block['ViewableBy'] != $values['ViewableBy'] &&
 				$row['ViewableBy'] != $values['ViewableBy'])
 				$updatesql[] = " `ViewableBy` = '".(int)$values['ViewableBy']."'";
+			
+			if (JCORE_VERSION >= '0.9' && $block['LayoutID'] != $values['LayoutID'] &&
+				$row['LayoutID'] != $values['LayoutID'])
+				$updatesql[] = " `LayoutID` = ".(int)$values['LayoutID'];
 			
 			if ($updatesql)
 				sql::run(
@@ -1211,6 +1320,9 @@ class _blocks {
 			$maincontentblocks[] = $block['ID'];
 		
 		foreach($subblocks as $subblock) {
+			if (!$subblock['ID'])
+				continue;
+			
 			if ($subblock['TypeID'] != BLOCK_TYPE_MAIN_CONTENT)
 				continue;
 			
@@ -1271,9 +1383,37 @@ class _blocks {
 			($blockid?
 				" AND `SubBlockOfID` = '".$blockid."'":
 				" AND !`SubBlockOfID`") .
-			" ORDER BY `OrderID`");
+			" ORDER BY" .
+			(JCORE_VERSION >= '0.9'?
+				" `LayoutID`,":
+				null) .
+			" `OrderID`");
+		
+		$arelayouts = false;
 		
 		while($row = sql::fetch($rows)) {
+			$last = end($tree['Tree']);
+			
+			if (JCORE_VERSION >= '0.9' && 
+				(!$last || $last['LayoutID'] != $row['LayoutID'])) 
+			{
+				$layout = null;
+				
+				if ($row['LayoutID'])
+					$layout = layouts::get($row['LayoutID']);
+				
+				if ($layout)
+					$tree['Tree'][] = array(
+						'ID' => 0,
+						'Title' => $layout['Title'],
+						'SubBlockOfID' => 0,
+						'LayoutID' => $layout['ID'],
+						'PathDeepnes' => 0);
+				
+				if (!$last['LayoutID'] && $row['LayoutID'])
+					$arelayouts = true;
+			}
+			
 			$row['PathDeepnes'] = $tree['PathDeepnes'];
 			$tree['Tree'][] = $row;
 			
@@ -1281,6 +1421,14 @@ class _blocks {
 			blocks::getTree($row['ID'], false, $tree);
 			$tree['PathDeepnes']--;
 		}
+		
+		if (JCORE_VERSION >= '0.9' && $arelayouts)
+			array_unshift($tree['Tree'], array(
+				'ID' => 0,
+				'Title' => __('Default'),
+				'SubBlockOfID' => 0,
+				'LayoutID' => 0,
+				'PathDeepnes' => 0));
 		
 		if ($firstcall)
 			return $tree['Tree'];

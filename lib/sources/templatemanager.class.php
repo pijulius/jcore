@@ -37,6 +37,11 @@ class _templateManager {
 			__('Layout Blocks'), 
 			'?path=admin/site/blocks');
 		
+		if (JCORE_VERSION >= '0.9')
+			favoriteLinks::add(
+				__('Layouts'), 
+				'?path=admin/site/blocks/layouts');
+		
 		favoriteLinks::add(
 			__('View Website'), 
 			SITE_URL);
@@ -659,6 +664,11 @@ class _templateManager {
 			sql::run(
 				" DELETE FROM `{blocks}`" .
 				" WHERE `TemplateID` = '".(int)$exists['ID']."'");
+			
+			if (JCORE_VERSION >= '0.9')
+				sql::run(
+					" DELETE FROM `{layouts}`" .
+					" WHERE `TemplateID` = '".(int)$exists['ID']."'");
 		}
 		
 		if (is_dir($this->rootPath.$id) && 
@@ -682,6 +692,11 @@ class _templateManager {
 		sql::run(
 			" DELETE FROM `{blocks}`" .
 			" WHERE `TemplateID` = '".(int)$templateid."'");
+		
+		if (JCORE_VERSION >= '0.9')
+			sql::run(
+				" DELETE FROM `{layouts}`" .
+				" WHERE `TemplateID` = '".(int)$templateid."'");
 		
 		if (JCORE_VERSION < '0.9')
 			sql::run(

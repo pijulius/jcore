@@ -413,107 +413,6 @@ class _menuItems {
 		return true;
 	}
 	
-	function displayAdminListItems($menuid = 0, $submenuof = 0, $rowpair = false, $language = null) {
-		$rows = sql::run(
-			" SELECT * FROM `{menuitems}`" .
-			" WHERE `MenuID` = '".$this->selectedMenuID."'" .
-			((int)$submenuof?
-				" AND `SubMenuItemOfID` = '".(int)$submenuof."'":
-				" AND !`SubMenuItemOfID`") .
-			($language?
-				" AND `LanguageID` = '".$language['ID']."'":
-				null) .
-			" ORDER BY `OrderID`, `ID`");
-		
-		if (!sql::rows($rows))
-			return false;
-		
-		if ($submenuof) {
-			echo 
-				"<tr".($rowpair?" class='pair'":NULL).">" .
-					"<td></td>" .
-					"<td colspan='7' class='auto-width nopadding'>";
-		}
-				
-		echo "<table class='list' cellpadding='0' cellspacing='0'>";
-		
-		if (!$submenuof) {
-			echo
-				"<thead>" .
-				"<tr>";
-				
-			$this->displayAdminListHeader();
-			$this->displayAdminListHeaderOptions();
-		
-			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
-				$this->displayAdminListHeaderFunctions();
-					
-			echo
-				"</tr>" .
-				"</thead>" .
-				"<tbody>";
-		}
-		
-		$i = 0;		
-		while($row = sql::fetch($rows)) {
-			echo 
-				"<tr".($i%2?" class='pair'":NULL).">";
-				
-			$this->displayAdminListItem($row);
-			$this->displayAdminListItemOptions($row);
-			
-			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
-				$this->displayAdminListItemFunctions($row);
-			
-			echo
-				"</tr>";
-			
-			$this->displayAdminListItems($menuid, $row['ID'], $i%2);
-			
-			$i++;
-		}
-		
-		if ($submenuof) {
-			echo 
-				"</table>" .
-				"</td>" .
-				"</tr>";
-		} else {
-			echo 
-				"</tbody>" .
-				"</table>";
-		}
-		
-		return true;
-	}
-	
-	function displayAdminListLanguages($menuid, $language) {
-		ob_start();
-		$this->displayAdminListItems($menuid, 0, false, $language);
-		$items = ob_get_contents();
-		ob_end_clean();
-		
-		if (!$items)
-			return false;
-		
-		echo 
-		"<div tabindex='0' class='fc" . 
-			form::fcState('fcl'.$menuid.$language['ID'], true) . 
-			"'>" .
-			"<a class='fc-title' name='fcl".$menuid.$language['ID']."'>" .
-				stripcslashes($language['Title']) .
-				(isset($language['Path']) && $language['Path']?
-					" (".$language['Path'].")":
-					null) .
-			"</a>" .
-			"<div class='fc-content'>" .
-				$items .
-			"</div>" .
-		"</div>";
-		
-		return true;
-	}
-	
 	function displayAdminListHeader() {
 		echo
 			"<th><span class='nowrap'>".
@@ -601,7 +500,108 @@ class _menuItems {
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
 	}
 	
-	function displayAdminList(&$rows, &$languages = null) {
+	function displayAdminListLanguages($language) {
+		ob_start();
+		$this->displayAdminListItems(0, false, $language);
+		$items = ob_get_contents();
+		ob_end_clean();
+		
+		if (!$items)
+			return false;
+		
+		echo 
+		"<div tabindex='0' class='fc" . 
+			form::fcState('fcl'.$language['ID'], true) . 
+			"'>" .
+			"<a class='fc-title' name='fcl".$language['ID']."'>" .
+				stripcslashes($language['Title']) .
+				(isset($language['Path']) && $language['Path']?
+					" (".$language['Path'].")":
+					null) .
+			"</a>" .
+			"<div class='fc-content'>" .
+				$items .
+			"</div>" .
+		"</div>";
+		
+		return true;
+	}
+	
+	function displayAdminListItems($menuid = 0, $rowpair = false, $language = null) {
+		$rows = sql::run(
+			" SELECT * FROM `{menuitems}`" .
+			" WHERE `MenuID` = '".$this->selectedMenuID."'" .
+			((int)$menuid?
+				" AND `SubMenuItemOfID` = '".(int)$menuid."'":
+				" AND !`SubMenuItemOfID`") .
+			($language?
+				" AND `LanguageID` = '".$language['ID']."'":
+				null) .
+			" ORDER BY `OrderID`, `ID`");
+		
+		if (!sql::rows($rows))
+			return false;
+		
+		if ($menuid) {
+			echo 
+				"<tr".($rowpair?" class='pair'":NULL).">" .
+					"<td></td>" .
+					"<td colspan='7' class='auto-width nopadding'>";
+		}
+				
+		echo "<table class='list' cellpadding='0' cellspacing='0'>";
+		
+		if (!$menuid) {
+			echo
+				"<thead>" .
+				"<tr>";
+				
+			$this->displayAdminListHeader();
+			$this->displayAdminListHeaderOptions();
+		
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
+				$this->displayAdminListHeaderFunctions();
+					
+			echo
+				"</tr>" .
+				"</thead>" .
+				"<tbody>";
+		}
+		
+		$i = 0;		
+		while($row = sql::fetch($rows)) {
+			echo 
+				"<tr".($i%2?" class='pair'":NULL).">";
+				
+			$this->displayAdminListItem($row);
+			$this->displayAdminListItemOptions($row);
+			
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
+				$this->displayAdminListItemFunctions($row);
+			
+			echo
+				"</tr>";
+			
+			$this->displayAdminListItems($row['ID'], $i%2);
+			
+			$i++;
+		}
+		
+		if ($menuid) {
+			echo 
+				"</table>" .
+				"</td>" .
+				"</tr>";
+		} else {
+			echo 
+				"</tbody>" .
+				"</table>";
+		}
+		
+		return true;
+	}
+	
+	function displayAdminList(&$rows) {
 		echo
 			"<form action='".url::uri('edit, delete')."' method='post'>";
 		
@@ -610,14 +610,14 @@ class _menuItems {
 		if (sql::rows($rows)) {
 			$language['ID'] = 0;
 			$language['Title'] = __('No Language Defined');
-			$itemsfound = $this->displayAdminListLanguages(0, $language);
+			$itemsfound = $this->displayAdminListLanguages($language);
 			
 		} else {
 			$itemsfound = $this->displayAdminListItems(0);
 		}
 		
 		while($row = sql::fetch($rows)) {
-			if ($this->displayAdminListLanguages(0, $row))
+			if ($this->displayAdminListLanguages($row))
 				$itemsfound = true;
 		}
 		
@@ -806,6 +806,7 @@ class _menuItems {
 			
 			if ($parentitem['Deactivated'] && !$values['Deactivated'])
 				$values['Deactivated'] = true;
+			
 			if ($parentitem['ViewableBy'] && !$values['ViewableBy'])
 				$values['ViewableBy'] = (int)$parentitem['ViewableBy'];
 			
@@ -864,6 +865,22 @@ class _menuItems {
 		if (!isset($values['LanguageID']))
 			$values['LanguageID'] = null;
 			
+		if ((int)$values['SubMenuItemOfID']) {
+			$parentitem = sql::fetch(sql::run(
+				" SELECT * FROM `{menuitems}`" .
+				" WHERE `ID` = '" .
+					(int)$values['SubMenuItemOfID']."'"));
+			
+			if ($parentitem['Deactivated'] && !$values['Deactivated'])
+				$values['Deactivated'] = true;
+			
+			if ($parentitem['ViewableBy'] && !$values['ViewableBy'])
+				$values['ViewableBy'] = (int)$parentitem['ViewableBy'];
+			
+			$values['LanguageID'] = $parentitem['LanguageID'];
+			$values['MenuID'] = $parentitem['MenuID'];
+		}
+		
 		$item = sql::fetch(sql::run(
 			" SELECT * FROM `{menuitems}`" .
 			" WHERE `ID` = '".(int)$id."'"));
@@ -908,6 +925,9 @@ class _menuItems {
 		}
 		
 		foreach(menuItems::getTree($item['MenuID'], (int)$id) as $row) {
+			if (!$row['ID'])
+				continue;
+			
 			$updatesql = null;
 			
 			if (($item['Deactivated'] && !$values['Deactivated']) ||
@@ -967,8 +987,12 @@ class _menuItems {
 			" SELECT * FROM `{menuitems}`" .
 			" WHERE `ID` = '".(int)$id."'"));
 		
-		foreach(menuItems::getTree($item['MenuID'], (int)$id) as $row)
+		foreach(menuItems::getTree($item['MenuID'], (int)$id) as $row) {
+			if (!$row['ID'])
+				continue;
+			
 			$itemids[] = $row['ID'];
+		}
 		
 		foreach($itemids as $itemid)
 			sql::run(
@@ -1041,6 +1065,7 @@ class _menuItems {
 						'ID' => 0,
 						'Title' => $language['Title'],
 						'SubMenuItemOfID' => 0,
+						'LanguageID' => $language['ID'],
 						'PathDeepnes' => 0);
 				
 				if (!$last['LanguageID'] && $row['LanguageID'])
@@ -1060,6 +1085,7 @@ class _menuItems {
 				'ID' => 0,
 				'Title' => __('No Language Defined'),
 				'SubMenuItemOfID' => 0,
+				'LanguageID' => 0,
 				'PathDeepnes' => 0));
 		
 		if ($firstcall)

@@ -200,6 +200,22 @@ class _pages {
 					$language['Title']);
 		}
 		
+		if (JCORE_VERSION >= '0.9') {
+			$layouts = layouts::get();
+			
+			if (sql::rows($layouts)) {
+				$form->add(
+					__('Layout'),
+					'LayoutID',
+					FORM_INPUT_TYPE_SELECT);
+				$form->setValueType(FORM_VALUE_TYPE_INT);
+				$form->addValue('', __('Default'));
+				
+				while($layout = sql::fetch($layouts))
+					$form->addValue($layout['ID'], $layout['Title']);
+			}
+		}
+		
 		if (modules::count()) {
 			$form->add(
 				__('Modules'),
@@ -657,119 +673,6 @@ class _pages {
 		return true;
 	}
 	
-	function displayAdminListItems($pageid = 0, $subpageof = 0, $rowpair = false, $language = null) {
-		if ($this->userPermissionIDs && $subpageof)
-			return false;
-		
-		$rows = sql::run(
-			" SELECT * FROM `{" .
-				(JCORE_VERSION >= '0.8'?
-					'pages':
-					'menuitems') .
-				"}`" .
-			" WHERE 1" .
-			(JCORE_VERSION < '0.9'?
-				" AND `MenuID` = '".(int)$pageid."'":
-				null) .
-			($this->userPermissionIDs?
-				" AND `ID` IN (".$this->userPermissionIDs.")":
-				((int)$subpageof?
-					" AND `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '".(int)$subpageof."'":
-					" AND !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`")) .
-			($language?
-				" AND `LanguageID` = '".$language['ID']."'":
-				null) .
-			" ORDER BY `OrderID`");
-		
-		if (!sql::rows($rows))
-			return false;
-			
-		if ($subpageof) {
-			echo 
-				"<tr".($rowpair?" class='pair'":NULL).">" .
-					"<td></td>" .
-					"<td colspan='7' class='auto-width nopadding'>";
-		}
-				
-		echo "<table class='list' cellpadding='0' cellspacing='0'>";
-		
-		if (!$subpageof) {
-			echo
-				"<thead>" .
-				"<tr>";
-				
-			$this->displayAdminListHeader();
-			$this->displayAdminListHeaderOptions();
-		
-			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
-				$this->displayAdminListHeaderFunctions();
-					
-			echo
-				"</tr>" .
-				"</thead>" .
-				"<tbody>";
-		}
-		
-		$i = 0;		
-		while($row = sql::fetch($rows)) {
-			echo 
-				"<tr".($i%2?" class='pair'":NULL).">";
-				
-			$this->displayAdminListItem($row);
-			$this->displayAdminListItemOptions($row);
-			
-			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
-				$this->displayAdminListItemFunctions($row);
-			
-			echo
-				"</tr>";
-			
-			$this->displayAdminListItems($pageid, $row['ID'], $i%2);
-			
-			$i++;
-		}
-		
-		if ($subpageof) {
-			echo 
-				"</table>" .
-				"</td>" .
-				"</tr>";
-		} else {
-			echo 
-				"</tbody>" .
-				"</table>";
-		}
-		
-		return true;
-	}
-	
-	function displayAdminListLanguages($pageid, $language) {
-		ob_start();
-		$this->displayAdminListItems($pageid, 0, false, $language);
-		$pages = ob_get_contents();
-		ob_end_clean();
-		
-		if (!$pages)
-			return false;
-		
-		echo 
-		"<div tabindex='0' class='fc" . 
-			form::fcState('fcl'.$pageid.$language['ID'], true) . 
-			"'>" .
-			"<a class='fc-title' name='fcl".$pageid.$language['ID']."'>" .
-				stripcslashes($language['Title']) .
-				(isset($language['Path']) && $language['Path']?
-					" (".$language['Path'].")":
-					null) .
-			"</a>" .
-			"<div class='fc-content'>" .
-				$pages .
-			"</div>" .
-		"</div>";
-		
-		return true;
-	}
-	
 	function displayAdminListHeader() {
 		echo
 			"<th><span class='nowrap'>".
@@ -810,6 +713,16 @@ class _pages {
 	function displayAdminListItem(&$row) {
 		$tooltiptxt = null;
 			
+		if (JCORE_VERSION >= '0.9' && $row['LayoutID'] &&
+			$layout = layouts::get($row['LayoutID']))
+		{
+			$tooltiptxt .= 
+				"<b>".__("Layout")."</b>" .
+				"<ul>" .
+					"<li>".$layout['Title']."</li>" .
+				"</ul>";
+		}
+		
 		if (JCORE_VERSION >= '0.8' && $row['PostKeywords'])
 			$tooltiptxt .= 
 				"<b>".__("Post Keywords")."</b>" .
@@ -1013,6 +926,119 @@ class _pages {
 				htmlspecialchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+	}
+	
+	function displayAdminListLanguages($pageid, $language) {
+		ob_start();
+		$this->displayAdminListItems($pageid, 0, false, $language);
+		$pages = ob_get_contents();
+		ob_end_clean();
+		
+		if (!$pages)
+			return false;
+		
+		echo 
+		"<div tabindex='0' class='fc" . 
+			form::fcState('fcl'.($pageid?$pageid:null).$language['ID'], true) . 
+			"'>" .
+			"<a class='fc-title' name='fcl".($pageid?$pageid:null).$language['ID']."'>" .
+				stripcslashes($language['Title']) .
+				(isset($language['Path']) && $language['Path']?
+					" (".$language['Path'].")":
+					null) .
+			"</a>" .
+			"<div class='fc-content'>" .
+				$pages .
+			"</div>" .
+		"</div>";
+		
+		return true;
+	}
+	
+	function displayAdminListItems($pageid = 0, $subpageof = 0, $rowpair = false, $language = null) {
+		if ($this->userPermissionIDs && $subpageof)
+			return false;
+		
+		$rows = sql::run(
+			" SELECT * FROM `{" .
+				(JCORE_VERSION >= '0.8'?
+					'pages':
+					'menuitems') .
+				"}`" .
+			" WHERE 1" .
+			(JCORE_VERSION < '0.9'?
+				" AND `MenuID` = '".(int)$pageid."'":
+				null) .
+			($this->userPermissionIDs?
+				" AND `ID` IN (".$this->userPermissionIDs.")":
+				((int)$subpageof?
+					" AND `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '".(int)$subpageof."'":
+					" AND !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`")) .
+			($language?
+				" AND `LanguageID` = '".$language['ID']."'":
+				null) .
+			" ORDER BY `OrderID`");
+		
+		if (!sql::rows($rows))
+			return false;
+			
+		if ($subpageof) {
+			echo 
+				"<tr".($rowpair?" class='pair'":NULL).">" .
+					"<td></td>" .
+					"<td colspan='7' class='auto-width nopadding'>";
+		}
+				
+		echo "<table class='list' cellpadding='0' cellspacing='0'>";
+		
+		if (!$subpageof) {
+			echo
+				"<thead>" .
+				"<tr>";
+				
+			$this->displayAdminListHeader();
+			$this->displayAdminListHeaderOptions();
+		
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
+				$this->displayAdminListHeaderFunctions();
+					
+			echo
+				"</tr>" .
+				"</thead>" .
+				"<tbody>";
+		}
+		
+		$i = 0;		
+		while($row = sql::fetch($rows)) {
+			echo 
+				"<tr".($i%2?" class='pair'":NULL).">";
+				
+			$this->displayAdminListItem($row);
+			$this->displayAdminListItemOptions($row);
+			
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
+				$this->displayAdminListItemFunctions($row);
+			
+			echo
+				"</tr>";
+			
+			$this->displayAdminListItems($pageid, $row['ID'], $i%2);
+			
+			$i++;
+		}
+		
+		if ($subpageof) {
+			echo 
+				"</table>" .
+				"</td>" .
+				"</tr>";
+		} else {
+			echo 
+				"</tbody>" .
+				"</table>";
+		}
+		
+		return true;
 	}
 	
 	function displayAdminList(&$rows, &$languages = null) {
@@ -1364,6 +1390,10 @@ class _pages {
 				null) .
 			" `LanguageID` = '".
 				(int)$values['LanguageID']."'," .
+			(JCORE_VERSION >= '0.9' && isset($values['LayoutID'])?
+				" `LayoutID` = '".
+					(int)$values['LayoutID']."',":
+				null) .
 			(JCORE_VERSION >= '0.6'?
 				" `SEOTitle` = '".
 					sql::escape($values['SEOTitle'])."'," .
@@ -1588,6 +1618,10 @@ class _pages {
 				null) .
 			" `LanguageID` = '".
 				(int)$values['LanguageID']."'," .
+			(JCORE_VERSION >= '0.9' && isset($values['LayoutID'])?
+				" `LayoutID` = '".
+					(int)$values['LayoutID']."',":
+				null) .
 			(JCORE_VERSION >= '0.6'?
 				" `SEOTitle` = '".
 					sql::escape($values['SEOTitle'])."'," .
@@ -1747,6 +1781,9 @@ class _pages {
 			$sitemap->add(array('Link' => $pageurl));
 			
 		foreach(pages::getTree((int)$id) as $row) {
+			if (!$row['ID'])
+				continue;
+			
 			$updatesql = null;
 			$url = str_replace('&amp;', '&', $this->generateLink($row));
 			
@@ -1868,8 +1905,12 @@ class _pages {
 		$sitemap = new siteMap();
 		$sitemap->load();
 		
-		foreach(pages::getTree((int)$id) as $row)
+		foreach(pages::getTree((int)$id) as $row) {
+			if (!$row['ID'])
+				continue;
+			
 			$pageids[] = $row['ID'];
+		}
 		
 		foreach($pageids as $pageid) {
 			$page = sql::fetch(sql::run(
@@ -2084,6 +2125,7 @@ class _pages {
 							'ID' => 0,
 							'Title' => $language['Title'],
 							'SubPageOfID' => 0,
+							'LanguageID' => $language['ID'],
 							'PathDeepnes' => 0);
 					
 					if (!$last['LanguageID'] && $row['LanguageID'])
@@ -2100,6 +2142,7 @@ class _pages {
 						'ID' => 0,
 						'Title' => $menu['Title'],
 						(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID') => 0,
+						'MenuID' => $menu['ID'],
 						'PathDeepnes' => 0);
 				}
 			}
@@ -2117,6 +2160,7 @@ class _pages {
 				'ID' => 0,
 				'Title' => __('No Language Defined'),
 				'SubPageOfID' => 0,
+				'LanguageID' => 0,
 				'PathDeepnes' => 0));
 		
 		if ($firstcall)
