@@ -3345,7 +3345,9 @@ class shoppingOrders extends modules {
 					" UPDATE `{shoppingitems}` SET " .
 					" `AvailableQuantity` = `AvailableQuantity` - ".(int)$quantities[$key].", " .
 					" `TimeStamp` = `TimeStamp`" .
-					" WHERE `ID` = '".$itemid."'");
+					" WHERE `ID` = '".$itemid."'" .
+					" AND `AvailableQuantity` IS NOT NULL" .
+					" AND `AvailableQuantity` > 0");
 			
 			} else {
 				tooltip::display(

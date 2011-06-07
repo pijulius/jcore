@@ -479,7 +479,7 @@ class _ads {
 				__("End Date"),
 				calendar::date($row['EndDate']).
 				($row['Expired']?
-					" <span class='hilight'>".strtoupper(__("Expired"))."!</span>":
+					" <span class='red'>".strtoupper(__("Expired"))."!</span>":
 					NULL));
 		
 		if (isset($row['ShowOn'])) {

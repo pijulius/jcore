@@ -2331,6 +2331,649 @@ class shoppingCartTaxes {
 	}
 }
 
+class shoppingCartCoupons {
+	var $ajaxRequest = null;
+	var $adminPath = 'admin/modules/shoppingcart/shoppingcartcoupons';
+	
+	function __construct() {
+		languages::load('shopping');
+	}
+	
+	function __destruct() {
+		languages::unload('shopping');
+	}
+	
+	// ************************************************   Admin Part
+	static function countAdminItems() {
+		$row = sql::fetch(sql::run(
+			" SELECT COUNT(*) AS `Rows`" .
+			" FROM `{shoppingcartcoupons}`" .
+			" LIMIT 1"));
+		
+		return $row['Rows'];
+	}
+	
+	function setupAdmin() {
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
+			favoriteLinks::add(
+				_('New Coupon'), 
+				'?path='.admin::path().'#adminform');
+		
+		favoriteLinks::add(
+			__('Settings'), 
+			'?path=admin/modules/shoppingcart/shoppingcartsettings');
+		favoriteLinks::add(
+			__('Users'), 
+			'?path=admin/members/users');
+	}
+	
+	function setupAdminForm(&$form) {
+		$form->add(
+			_('Coupon'),
+			'Coupon',
+			FORM_INPUT_TYPE_TEXT,
+			true);
+		$form->setStyle('width: 150px;');
+		
+		$form->add(
+			_('Discount'),
+			'DiscountPercent',
+			FORM_INPUT_TYPE_TEXT);
+		$form->setStyle('width: 50px;');
+		$form->setValueType(FORM_VALUE_TYPE_INT);
+		$form->addAdditionalText('%');
+		$form->setTooltipText(_("e.g. 25"));
+		
+		$form->add(
+			_('and/or'),
+			'DiscountValue',
+			FORM_INPUT_TYPE_TEXT);
+		$form->setStyle('width: 80px;');
+		$form->setValueType(FORM_VALUE_TYPE_FLOAT);
+		$form->setTooltipText(_("e.g. 170"));
+		
+		if (defined('SHOPPING_CART_CURRENCY')) {
+			if (defined('SHOPPING_CART_CURRENCY_POSITION') &&
+				stristr(SHOPPING_CART_CURRENCY_POSITION, 'right'))
+				$form->addAdditionalText(
+					"<span class='shopping-currency'>" .
+						SHOPPING_CART_CURRENCY .
+					"</span>");
+			else
+				$form->addAdditionalPreText(
+					"<span class='shopping-currency'>" .
+						SHOPPING_CART_CURRENCY .
+					"</span>");
+		}
+		
+		$form->add(
+			__('Additional Options'),
+			null,
+			FORM_OPEN_FRAME_CONTAINER);
+			
+		$form->add(
+			_('Quantity'),
+			'Quantity',
+			FORM_INPUT_TYPE_TEXT);
+		$form->setStyle('width: 50px;');
+		$form->setValueType(FORM_VALUE_TYPE_INT);
+		
+		if (JCORE_VERSION >= '0.6')
+			$form->setTooltipText(_("e.g. 1000 (leave it empty for unlimited)"));
+		else
+			$form->addAdditionalText(_("e.g. 1000 (leave it empty for unlimited)"));
+		
+		$form->add(
+			__('Start Date'),
+			'StartDate',
+			FORM_INPUT_TYPE_DATE);
+		$form->setStyle('width: 100px;');
+		$form->setValueType(FORM_VALUE_TYPE_DATE);
+		
+		$form->add(
+			__('End Date'),
+			'EndDate',
+			FORM_INPUT_TYPE_DATE);
+		$form->setStyle('width: 100px;');
+		$form->setValueType(FORM_VALUE_TYPE_DATE);
+		
+		$form->add(
+			__('Deactivated'),
+			'Deactivated',
+			FORM_INPUT_TYPE_CHECKBOX,
+			false,
+			'1');
+		$form->setValueType(FORM_VALUE_TYPE_BOOL);
+			
+		$form->addAdditionalText(
+			"<span class='comment' style='text-decoration: line-through;'>" .
+			__("(marked with strike through)").
+			"</span>");	
+			
+		$form->add(
+			null,
+			null,
+			FORM_CLOSE_FRAME_CONTAINER,
+			true);
+	}
+	
+	function verifyAdmin(&$form) {
+		$setpriority = null;
+		$priorities = null;
+		$delete = null;
+		$edit = null;
+		$id = null;
+		
+		if (isset($_POST['setprioritysubmit']))
+			$setpriority = $_POST['setprioritysubmit'];
+		
+		if (isset($_POST['priorities']))
+			$priorities = (array)$_POST['priorities'];
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
+		
+		if (isset($_GET['edit']))
+			$edit = $_GET['edit'];
+		
+		if (isset($_GET['id']))
+			$id = (int)$_GET['id'];
+		
+		if ($setpriority) {
+			if (!$priorities)
+				return false;
+			
+			foreach($priorities as $pid => $pvalue) {
+				sql::run(
+					" UPDATE `{shoppingcartcoupons}`" .
+					" SET `Priority` = '".(int)$pvalue."'" .
+					" WHERE `ID` = '".(int)$pid."'");
+			}
+			
+			tooltip::display(
+				_("Priorities have been successfully set."),
+				TOOLTIP_SUCCESS);
+			
+			return true;
+		}
+		
+		if ($delete) {
+			if (!$this->delete($id))
+				return false;
+				
+			tooltip::display(
+				_("Coupon has been successfully deleted."),
+				TOOLTIP_SUCCESS);
+			
+			return true;
+		}
+		
+		if (!$form->verify())
+			return false;
+		
+		if ($edit) {
+			if (!$this->edit($id, $form->getPostArray()))
+				return false;
+				
+			tooltip::display(
+				_("Coupon has been successfully updated.")." " .
+				"<a href='#adminform'>" .
+					__("Edit") .
+				"</a>",
+				TOOLTIP_SUCCESS);
+			
+			return true;
+		}
+		
+		if (!$newid = $this->add($form->getPostArray()))
+			return false;
+			
+		tooltip::display(
+			_("Coupon has been successfully created.")." " .
+			"<a href='".url::uri('id, edit, delete') .
+				"&amp;id=".$newid."&amp;edit=1#adminform'>" .
+				__("Edit") .
+			"</a>",
+			TOOLTIP_SUCCESS);
+		
+		$form->reset();
+		return true;
+	}
+	
+	function displayAdminListHeader() {
+		echo
+			"<th><span class='nowrap'>".
+				_("Priority")."</span></th>" .
+			"<th><span class='nowrap'>".
+				_("Coupon")."</span></th>" .
+			"<th><span class='nowrap'>".
+				_("Discount")."</span></th>" .
+			"<th><span class='nowrap'>".
+				_("Quantity")."</span></th>";
+	}
+	
+	function displayAdminListHeaderOptions() {
+	}
+	
+	function displayAdminListHeaderFunctions() {
+		echo
+			"<th><span class='nowrap'>".
+				__("Edit")."</span></th>" .
+			"<th><span class='nowrap'>".
+				__("Delete")."</span></th>";
+	}
+	
+	function displayAdminListItem(&$row) {
+		echo
+			"<td>" .
+				"<input type='text' name='priorities[".$row['ID']."]' " .
+					"value='".$row['Priority']."' " .
+					"class='order-id-entry' tabindex='1' />" .
+			"</td>" .
+			"<td class='bold auto-width'" .
+				($row['Deactivated']?
+					" style='text-decoration: line-through;'":
+					null).
+				">" .
+				$row['Coupon'] .
+				"<div class='comment' style='padding-left: 10px;'>";
+		
+		if ($row['StartDate'] && $row['EndDate'])
+			echo
+				sprintf(__("Starting <b>%s</b> until <b>%s</b>"),
+					calendar::date($row['StartDate']),
+					calendar::date($row['EndDate']));
+		
+		elseif ($row['StartDate'])
+			echo
+				sprintf(__("Starting <b>%s</b>"),
+					calendar::date($row['StartDate']));
+		
+		elseif ($row['EndDate'])
+			echo
+				sprintf(__("Until <b>%s</b>"),
+					calendar::date($row['EndDate']));
+		
+		if ($row['StartDate'] && $row['Pending'])
+			echo
+				" <span class='hilight'>".strtoupper(__("Pending"))."!</span>";
+		
+		if ($row['EndDate'] && $row['Expired'])
+			echo
+				" <span class='red'>".strtoupper(__("Expired"))."!</span>";
+		
+		echo
+				"</div>" .
+			"</td>" .
+			"<td style='text-align: right;'>" .
+				"<span class='nowrap'>";
+		
+		if ($row['DiscountPercent'] && $row['DiscountValue']) {
+			echo 
+				sprintf(_("%s till %s"),
+					$row['DiscountPercent']."%<span class='comment'>&nbsp;",
+					"&nbsp;</span>".shoppingCart::constructPrice($row['DiscountValue']));
+		
+		} else {
+			if ($row['DiscountPercent'])
+				echo 
+					$row['DiscountPercent']."%";
+			
+			if ($row['DiscountValue'])
+				shoppingCart::displayPrice($row['DiscountValue']);
+		}
+		
+		echo
+				"</span>" .
+			"</td>" .
+			"<td style='text-align: right;'>" .
+				"<span class='nowrap'>" .
+				$row['Quantity'] .
+				"</span>" .
+			"</td>";
+	}
+	
+	function displayAdminListItemOptions(&$row) {
+	}
+	
+	function displayAdminListItemFunctions(&$row) {
+		echo
+			"<td align='center'>" .
+				"<a class='admin-link edit' " .
+					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
+					"href='".url::uri('id, edit, delete') .
+					"&amp;id=".$row['ID']."&amp;edit=1#adminform'>" .
+				"</a>" .
+			"</td>" .
+			"<td align='center'>" .
+				"<a class='admin-link delete confirm-link' " .
+					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
+					"href='".url::uri('id, edit, delete') .
+					"&amp;id=".$row['ID']."&amp;delete=1'>" .
+				"</a>" .
+			"</td>";
+	}
+	
+	function displayAdminListFunctions() {
+		echo 
+			"<input type='submit' name='setprioritysubmit' value='" .
+				htmlspecialchars(_("Set Priority"), ENT_QUOTES)."' class='button' /> " .
+			"<input type='reset' name='reset' value='" .
+				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+	}
+	
+	function displayAdminList(&$rows) {
+		echo
+			"<form action='".
+				url::uri('edit, delete')."' method='post'>";
+			
+		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
+				"<thead>" .
+				"<tr>";
+		
+		$this->displayAdminListHeader();
+		$this->displayAdminListHeaderOptions();
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
+			$this->displayAdminListHeaderFunctions();
+					
+		echo
+				"</tr>" .
+				"</thead>" .
+				"<tbody>";
+		
+		$i = 0;		
+		while($row = sql::fetch($rows)) {
+			echo 
+				"<tr".($i%2?" class='pair'":NULL).">";
+			
+			$this->displayAdminListItem($row);
+			$this->displayAdminListItemOptions($row);
+			
+			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
+				$this->displayAdminListItemFunctions($row);
+			
+			echo
+				"</tr>";
+			
+			$i++;
+		}
+		
+		echo 
+				"</tbody>" .
+			"</table>" .
+			"<br />";
+		
+		if (JCORE_VERSION >= '0.7' && 
+			$this->userPermissionType & USER_PERMISSION_TYPE_WRITE) 
+		{
+			$this->displayAdminListFunctions();
+			
+			echo 
+				"<div class='clear-both'></div>" .
+				"<br />";
+		}
+					
+		echo
+			"</form>";
+	}
+	
+	function displayAdminForm(&$form) {
+		$form->display();
+	}
+	
+	function displayAdminTitle($ownertitle = null) {
+		admin::displayTitle(
+			_('Shopping Cart Coupons Administration'),
+			$ownertitle);
+	}
+	
+	function displayAdminDescription() {
+	}
+	
+	function displayAdmin() {
+		$delete = null;
+		$edit = null;
+		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = $_GET['delete'];
+		
+		if (isset($_GET['edit']))
+			$edit = $_GET['edit'];
+		
+		if (isset($_GET['id']))
+			$id = (int)$_GET['id'];
+		
+		$this->displayAdminTitle();
+		$this->displayAdminDescription();
+		
+		echo
+			"<div class='admin-content'>";
+				
+		$form = new form(
+				($edit?
+					_("Edit Coupon"):
+					_("New Coupon")),
+				'neweditcoupon');
+					
+		if (!$edit)
+			$form->action = url::uri('id, delete, limit');
+					
+		$this->setupAdminForm($form);	
+		$form->addSubmitButtons();
+		
+		if ($edit) {
+			$form->add(
+				__('Cancel'),
+				'cancel',
+				 FORM_INPUT_TYPE_BUTTON);
+			$form->addAttributes("onclick=\"window.location='".
+				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
+		}
+		
+		$verifyok = false;
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
+			$verifyok = $this->verifyAdmin($form);
+		
+		$rows = sql::run(
+			" SELECT *," .
+			" IF (`EndDate` IS NOT NULL AND `EndDate` < CURDATE(), 'true', NULL) AS `Expired`," .
+			" IF (`StartDate` IS NOT NULL AND `StartDate` > CURDATE(), 'true', NULL) AS `Pending`" .
+			" FROM `{shoppingcartcoupons}`" .
+			" ORDER BY `Priority`, `Coupon`");
+			
+		if (sql::rows($rows))
+			$this->displayAdminList($rows);
+		else
+			tooltip::display(
+				_("No coupons found."),
+				TOOLTIP_NOTIFICATION);
+		
+		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+			if ($edit && ($verifyok || !$form->submitted())) {
+				$selected = sql::fetch(sql::run(
+					" SELECT * FROM `{shoppingcartcoupons}`" .
+					" WHERE `ID` = '".$id."'"));
+				
+				$form->setValues($selected);
+			}
+			
+			echo
+				"<a name='adminform'></a>";
+			
+			$this->displayAdminForm($form);
+		}
+		
+		unset($form);
+		
+		echo
+			"</div>"; //admin-content
+	}
+	
+	function add($values) {
+		if (!is_array($values))
+			return false;
+			
+		$newid = sql::run(
+			" INSERT INTO `{shoppingcartcoupons}` SET ".
+			" `Coupon` = '" .
+				sql::escape($values['Coupon'])."'," .
+			" `Quantity` = ".
+				(!is_null($values['Quantity'])?
+					"'".(int)$values['Quantity']."'":
+					"NULL") .
+				"," .
+			" `StartDate` = " .
+				($values['StartDate']?
+					"'".sql::escape($values['StartDate'])."'":
+					"NULL").
+				"," .
+			" `EndDate` = " .
+				($values['EndDate']?
+					"'".sql::escape($values['EndDate'])."'":
+					"NULL").
+				"," .
+			" `Deactivated` = '".
+				(int)$values['Deactivated']."'," .
+			" `DiscountValue` = " .
+				($values['DiscountValue']?
+					"'".sql::escape($values['DiscountValue'])."'":
+					"NULL") .
+				"," .
+			" `DiscountPercent` = '".
+				(int)$values['DiscountPercent']."'");
+			
+		if (!$newid) {
+			tooltip::display(
+				sprintf(_("Coupon couldn't be added! Error: %s"), 
+					sql::error()),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		return $newid;
+	}
+	
+	function edit($id, $values) {
+		if (!$id)
+			return false;
+		
+		if (!is_array($values))
+			return false;
+		
+		sql::run(
+			" UPDATE `{shoppingcartcoupons}` SET ".
+			" `Coupon` = '" .
+				sql::escape($values['Coupon'])."'," .
+			" `Quantity` = ".
+				(!is_null($values['Quantity'])?
+					"'".(int)$values['Quantity']."'":
+					"NULL") .
+				"," .
+			" `StartDate` = " .
+				($values['StartDate']?
+					"'".sql::escape($values['StartDate'])."'":
+					"NULL").
+				"," .
+			" `EndDate` = " .
+				($values['EndDate']?
+					"'".sql::escape($values['EndDate'])."'":
+					"NULL").
+				"," .
+			" `Deactivated` = '".
+				(int)$values['Deactivated']."'," .
+			" `DiscountValue` = " .
+				($values['DiscountValue']?
+					"'".sql::escape($values['DiscountValue'])."'":
+					"NULL") .
+				"," .
+			" `DiscountPercent` = '".
+				(int)$values['DiscountPercent']."'" .
+			" WHERE `ID` = '".(int)$id."'");
+			
+		if (sql::affected() == -1) {
+			tooltip::display(
+				sprintf(_("Coupon couldn't be updated! Error: %s"), 
+					sql::error()),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		return true;
+	}
+	
+	function delete($id) {
+		if (!$id)
+			return false;
+			
+		sql::run(
+			" DELETE FROM `{shoppingcartcoupons}` " .
+			" WHERE `ID` = '".$id."'");
+		
+		return true;
+	}
+	
+	static function clear() {
+		unset($_SESSION['shoppingcartcoupon']);
+	}
+	
+	static function get($coupon = null) {
+		if (!$coupon)
+			$coupon = shoppingCartCoupons::getCode();
+		
+		$row = sql::fetch(sql::run(
+			" SELECT * FROM `{shoppingcartcoupons}`" .
+			" WHERE BINARY `Coupon` = '".sql::escape($coupon)."'" .
+			" AND !`Deactivated`" .
+			" AND (`Quantity` IS NULL OR `Quantity` > 0)" .
+			" AND (`StartDate` IS NULL OR `StartDate` <= CURDATE())" .
+			" AND (`EndDate` IS NULL OR `EndDate` >= CURDATE())" .
+			" ORDER BY `Priority` DESC, `Coupon` DESC" .
+			" LIMIT 1"));
+		
+		if (!$row)
+			return null;
+		
+		return $row;
+	}
+	
+	static function getValue($amount, $coupon = null) {
+		if (!$coupon)
+			$coupon = shoppingCartCoupons::getCode();
+		
+		$row = shoppingCartCoupons::get($coupon);
+		
+		if (!$row)
+			return 0;
+		
+		if ($row['DiscountPercent'] && $row['DiscountValue']) {
+			$percentvalue = $amount*$row['DiscountPercent']/100;
+			
+			if ($percentvalue > $row['DiscountValue'])
+				return number_format($row['DiscountValue'], 2, '.', '');
+			
+			return number_format($percentvalue, 2, '.', '');
+		}
+		
+		if ($row['DiscountPercent'])
+			return number_format($amount*$row['DiscountPercent']/100, 2, '.', '');
+		
+		return number_format($row['DiscountValue'], 2, '.', '');
+	}
+	
+	static function getCode() {
+		if (isset($_POST['shoppingcartcoupon']))
+			return strip_tags($_POST['shoppingcartcoupon']);
+		
+		if (isset($_SESSION['shoppingcartcoupon']))
+			return strip_tags($_SESSION['shoppingcartcoupon']);
+		
+		return '';
+	}
+}
+
 class shoppingCartCheckoutForm extends dynamicForms {
 	function __construct() {
 		languages::load('shopping');
@@ -2369,6 +3012,12 @@ class shoppingCartCheckoutForm extends dynamicForms {
 		$tax = 0;
 		$weight = 0;
 		$taxpercentage = 0;
+		$referer = null;
+		$couponcode = null;
+		$couponvalue = 0;
+		
+		if (isset($_SESSION['HTTP_REFERER']) && $_SESSION['HTTP_REFERER'])
+			$referer = $_SESSION['HTTP_REFERER'];
 		
 		if (JCORE_VERSION >= '0.7')
 			$taxpercentage = shoppingCart::getTax();
@@ -2404,6 +3053,9 @@ class shoppingCartCheckoutForm extends dynamicForms {
 		
 		$discount = shoppingCart::getDiscount($subtotal);
 		$fee = shoppingCart::getFee($subtotal, $weight);
+		
+		if (JCORE_VERSION >= '0.9' && $couponcode = shoppingCartCoupons::getCode())
+			$couponvalue = shoppingCartCoupons::getValue($subtotal, $couponcode);
 		
 		$userid = $GLOBALS['USER']->data['ID'];
 		
@@ -2445,9 +3097,16 @@ class shoppingCartCheckoutForm extends dynamicForms {
 		$ordervalues['OrderMethodDetails'] = 
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			$paymentresult .
-			(isset($_SESSION['HTTP_REFERER']) && $_SESSION['HTTP_REFERER']?
-				"\n\n"._("Order originated from").":\n" .
-				$_SESSION['HTTP_REFERER']:
+			($referer || $couponvalue?
+				"\n":
+				null) .
+			($couponvalue?
+				"\n"._("Coupon").": " .
+				$couponcode." (".strip_tags(shoppingCart::constructPrice($couponvalue)).")":
+				null) .
+			($referer?
+				"\n"._("Order originated from").":\n" .
+				$referer:
 				null);
 		
 		$orders = new shoppingOrders();
@@ -2481,7 +3140,9 @@ class shoppingCartCheckoutForm extends dynamicForms {
 					" UPDATE `{shoppingitems}` SET " .
 					" `AvailableQuantity` = `AvailableQuantity` - ".(int)$row['Quantity'].", " .
 					" `TimeStamp` = `TimeStamp`" .
-					" WHERE `ID` = '".$row['ShoppingItemID']."'");
+					" WHERE `ID` = '".$row['ShoppingItemID']."'" .
+					" AND `AvailableQuantity` IS NOT NULL" .
+					" AND `AvailableQuantity` > 0");
 			
 			} else {
 				tooltip::display(
@@ -2495,6 +3156,18 @@ class shoppingCartCheckoutForm extends dynamicForms {
 		unset($orderitems);
 		
 		shoppingCart::clear();
+		
+		if (JCORE_VERSION >= '0.9') {
+			shoppingCartCoupons::clear();
+			
+			if ($couponcode && $couponvalue && $coupon = shoppingCartCoupons::get($couponcode))
+				sql::run(
+					" UPDATE `{shoppingcartcoupons}` SET " .
+					" `Quantity` = `Quantity` - 1" .
+					" WHERE `ID` = '".$coupon['ID']."'" .
+					" AND `Quantity` IS NOT NULL" .
+					" AND `Quantity` > 0");
+		}
 		
 		$postprocess = $ordermethod->postProcess($orderid);
 		
@@ -3295,6 +3968,31 @@ class shoppingCart extends modules {
 		
 		if (sql::error())
 			return false;
+		
+		if (JCORE_VERSION >= '0.9') {
+			sql::run(
+				" CREATE TABLE IF NOT EXISTS `{shoppingcartcoupons}` (" .
+				" `ID` smallint(5) unsigned NOT NULL auto_increment," .
+				" `Coupon` varchar(25) NOT NULL default ''," .
+				" `DiscountPercent` tinyint(3) unsigned NOT NULL default '0'," .
+				" `DiscountValue` decimal(12,2) default NULL," .
+				" `Quantity` SMALLINT NULL DEFAULT NULL," .
+				" `StartDate` DATE NULL DEFAULT NULL," .
+				" `EndDate` DATE NULL DEFAULT NULL," .
+				" `Priority` SMALLINT NOT NULL DEFAULT  '0'," .
+				" `Deactivated` tinyint(1) unsigned NOT NULL default '0'," .
+				" PRIMARY KEY  (`ID`)," .
+				" KEY `Coupon` (`Coupon`)," .
+				" KEY `Quantity` (`Quantity`)," .
+				" KEY `StartDate` (`StartDate`)," .
+				" KEY `EndDate` (`EndDate`)," .
+				" KEY `Deactivated` (`Deactivated`)," .
+				" KEY `Priority` (`Priority`)" .
+				") ENGINE=MyISAM ;");
+			
+			if (sql::error())
+				return false;
+		}
 			
 		return true;
 	}
@@ -3414,6 +4112,19 @@ class shoppingCart extends modules {
 			"	height: 16px;\n" .
 			"}\n" .
 			"\n" .
+			"#neweditcouponform .form-entry-discountpercent {\n" .
+			"	float: left;\n" .
+			"}\n" .
+			"\n" .
+			"#neweditcouponform .form-entry-discountvalue {\n" .
+			"	clear: none;\n" .
+			"}\n" .
+			"\n" .
+			"#neweditcouponform .form-entry-discountvalue .form-entry-title {\n" .
+			"	width: auto;\n" .
+			"	margin-left: 15px;\n" .
+			"}\n" .
+			"\n" .
 			".shopping-cart-similar-items {\n" .
 			"	padding-top: 30px;\n" .
 			"}\n" .
@@ -3448,6 +4159,9 @@ class shoppingCart extends modules {
 			"\n" .
 			".as-shopping-cart-taxes a {\n" .
 			"	background-image: url(\"http://icons.jcore.net/48/shopping-cart-taxes.png\");\n" .
+			"}\n" .
+			".as-shopping-cart-coupons a {\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/shopping-cart-coupons.png\");\n" .
 			"}\n";
 		
 		return
@@ -3502,6 +4216,7 @@ class shoppingCart extends modules {
 		$discounts = 0;
 		$fees = 0;
 		$taxes = 0;
+		$coupons = 0;
 		
 		if (ADMIN_ITEMS_COUNTER_ENABLED) {
 			$discounts = shoppingCartDiscounts::countAdminItems();
@@ -3509,6 +4224,9 @@ class shoppingCart extends modules {
 			
 			if (JCORE_VERSION >= '0.7')
 				$taxes = shoppingCartTaxes::countAdminItems();
+			
+			if (JCORE_VERSION >= '0.9')
+				$coupons = shoppingCartCoupons::countAdminItems();
 		}
 			
 		echo
@@ -3571,6 +4289,25 @@ class shoppingCart extends modules {
 					"</a>" .
 				"</div>";
 		}
+		
+		if (JCORE_VERSION >= '0.9') {
+			echo
+				"<div class='admin-section-item as-shopping-cart-coupons'>";
+			
+			if ($coupons)
+				counter::display((int)$coupons);
+			
+			echo
+					"<a href='".url::uri('ALL') .
+						"?path=".admin::path()."/shoppingcartcoupons' " .
+						"title='".htmlspecialchars(_("Set and manage discount coupons"), ENT_QUOTES).
+						"'>" .
+						"<span>" .
+						_("Coupons Settings")."" .
+						"</span>" .
+					"</a>" .
+				"</div>";
+		}
 	}
 	
 	function displayAdmin() {
@@ -3615,7 +4352,12 @@ class shoppingCart extends modules {
 	}
 	
 	static function getDiscount($amount, $userid = null) {
-		return shoppingCartDiscounts::get($amount);
+		$discount = shoppingCartDiscounts::get($amount);
+		
+		if (JCORE_VERSION >= '0.9')
+			$discount += shoppingCartCoupons::getValue($amount);
+		
+		return $discount;
 	}
 	
 	static function getFee($amount, $weight = 0) {
@@ -4720,6 +5462,39 @@ class shoppingCart extends modules {
 			"</p>";
 	}
 	
+	function displayRedeemCoupon(&$totals) {
+		$couponcode = shoppingCartCoupons::getCode();
+		
+		$couponvalue = shoppingCartCoupons::getValue(
+			$totals['SubTotal']+$totals['Tax'],
+			$couponcode);
+		
+		echo
+			"<div class='shopping-cart-coupon'>" .
+				"<h3 class='shopping-cart-coupon-title'>" .
+					_("Discount Codes") .
+					($couponcode?
+						" (" .
+							($couponvalue?
+								shoppingCart::constructPrice($couponvalue):
+								_("invalid")) .
+						")":
+						null) .
+				"</h3>" .
+				"<div class='shopping-cart-coupon-form'>" .
+					"<p>" .
+						"<span>" .
+							_("Enter your coupon code if you have one.") .
+						"<br />" .
+						"</span>" .
+					"<input type='text' name='shoppingcartcoupon' value='" .
+						htmlspecialchars(shoppingCartCoupons::getCode(), ENT_QUOTES) .
+						"' class='text-entry' />" .
+					"</p>" .
+				"</div>" .
+			"</div>";
+	}
+	
 	function displayListFooter(&$totals) {
 		$this->displayListTips($totals);
 		
@@ -4729,6 +5504,19 @@ class shoppingCart extends modules {
 					"To change the quantity of an item pick a new quantity and " .
 					"press the Update Cart button.") .
 			"</p>";
+		
+		if (JCORE_VERSION >= '0.9') {
+			$coupons = sql::run(
+				" SELECT `ID` FROM `shoppingcartcoupons`" .
+				" WHERE !`Deactivated`" .
+				" AND (`Quantity` IS NULL OR `Quantity` > 0)" .
+				" AND (`StartDate` IS NULL OR `StartDate` <= CURDATE())" .
+				" AND (`EndDate` IS NULL OR `EndDate` >= CURDATE())" .
+				" LIMIT 1");
+			
+			if (sql::rows($coupons))
+				$this->displayRedeemCoupon($totals);
+		}
 	}
 	
 	function displayListFunctions() {
