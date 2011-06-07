@@ -11,11 +11,6 @@
  * 
  ****************************************************************************/
 
-modules::register(
-	'Newsletter', 
-	_('Newsletters'),
-	_('Create lists, send out newsletters, let people subscribe and unsubscribe'));
-
 email::add('NewsletterSubscribe',
 		"Your confirmation is required to subscribe to %LIST% newsletters at %PAGE_TITLE%",
 		"Dear Subscriber,\n\n" .
@@ -2972,5 +2967,10 @@ class newsletter extends modules {
 		$this->displaySubscriptionForm();
 	}
 }
+
+modules::register(
+	'Newsletter', 
+	_('Newsletters'),
+	_('Create lists, send out newsletters, let people subscribe and unsubscribe'));
 
 ?>

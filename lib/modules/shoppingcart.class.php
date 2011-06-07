@@ -11,11 +11,6 @@
  * 
  ****************************************************************************/
 
-modules::register(
-	'shoppingCart', 
-	_('Shopping Cart'),
-	_('Set Fees, Discounts, Taxes, checkout Limits and let people place orders'));
-
 class shoppingCartSettings extends settings {
 	var $sqlTable = 'shoppingcartsettings';
 	var $adminPath = 'admin/modules/shoppingcart/shoppingcartsettings';
@@ -4960,5 +4955,10 @@ class shoppingCart extends modules {
 			$this->displaySimilarItems();
 	}
 }
+
+modules::register(
+	'shoppingCart', 
+	_('Shopping Cart'),
+	_('Set Fees, Discounts, Taxes, checkout Limits and let people place orders'));
 
 ?>

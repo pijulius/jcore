@@ -424,6 +424,11 @@ class _modules {
 		
 		modules::$loaded[$module] = false;
 		
+		if (!isset(modules::$available[$module]))
+			modules::$available[$module] = array(
+				'Title' => ucwords(preg_replace('/-|_/', ' ', $module)),
+				'Description' => '');
+		
 		if (@is_dir(SITE_PATH.'lib/modules/'.$module))
 			include_once('lib/modules/'.$module.'/'.$module.'.class.php');
 		else
@@ -475,14 +480,10 @@ class _modules {
 		
 		$modulename = strtolower($id);
 		
-		if (isset(modules::$available[$modulename]))
-			exit($id." module couldn't be registered as it's " .
-				"id is already used by another module!");
-		
 		if (class_exists($modulename))
 			$$modulename = new $modulename();
 		
-		modules::$available[strtolower($id)] = array(
+		modules::$available[$modulename] = array(
 			'Title' => _($title),
 			'Description' => _($description));
 		
@@ -525,17 +526,21 @@ class _modules {
 	}
 	
 	static function getTitle($id = null) {
-		if (!$id || !isset(modules::$available[strtolower($id)]))
+		$id = strtolower($id);
+		
+		if (!$id || !isset(modules::$available[$id]))
 			return false;
 		
-		return modules::$available[strtolower($id)]['Title'];
+		return modules::$available[$id]['Title'];
 	}
 	
 	static function getDescription($id = null) {
-		if (!$id || !isset(modules::$available[strtolower($id)]))
+		$id = strtolower($id);
+		
+		if (!$id || !isset(modules::$available[$id]))
 			return false;
 		
-		return modules::$available[strtolower($id)]['Description'];
+		return modules::$available[$id]['Description'];
 	}
 	
 	static function getOwnerMenu($name, $languageid = 0, $moduleitemid = 0) {

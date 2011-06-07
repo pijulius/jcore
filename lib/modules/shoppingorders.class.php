@@ -29,11 +29,6 @@ define('SHOPPING_ORDER_PAYMENT_STATUS_FAILED', 4);
 define('SHOPPING_ORDER_PAYMENT_STATUS_EXPIRED', 5);
 define('SHOPPING_ORDER_PAYMENT_STATUS_PROCESSING', 6);
 
-modules::register(
-	'shoppingOrders', 
-	_('Shopping Orders'),
-	_('Handle New / Processed orders and display members their orders history'));
-
 email::add('ShoppingOrder',
 		"Your Order at %PAGE_TITLE%",
 		"Dear %USERNAME%,\n\n" .
@@ -64,52 +59,66 @@ email::add('ShoppingOrderToWebmaster',
 		"Sincerely,\n" .
 		"%PAGE_TITLE%");
 
-$GLOBALS['SHOPPING_ORDER_METHODS'] = array();
-
-shoppingOrderMethods::add(
-	'invoiceCustomer',
-	_('Invoice Customer'),
-	_('You will be contacted personally to finalize the payments'));
- 
-shoppingOrderMethods::add(
-	'check',
-	_('Check Payment'),
-	_('Please complete the check to be sent to %s'));
- 
-shoppingOrderMethods::add(
-	'payPal',
-	_('Credit Card Payment (PayPal)'),
-	_('An extra step will be required trough Paypal.com'));
- 
-shoppingOrderMethods::add(
-	'ccBill',
-	_('Credit Card Payment (CCBill)'),
-	_('An extra step will be required trough CCBill.com'));
- 
-shoppingOrderMethods::add(
-	'alertPay',
-	_('Credit Card Payment (AlertPay)'),
-	_('An extra step will be required trough AlertPay.com'));
- 
-shoppingOrderMethods::add(
-	'authorizeDotNet',
-	_('Credit Card Payment (Authorize.net)'),
-	_('An extra step will be required trough Authorize.net'));
- 
-shoppingOrderMethods::add(
-	'2CheckOut',
-	_('Credit Card Payment (2CheckOut)'),
-	_('An extra step will be required trough 2CheckOut.com'));
- 
-shoppingOrderMethods::add(
-	'MoneyBookers',
-	_('Credit Card Payment (MoneyBookers)'),
-	_('An extra step will be required trough MoneyBookers.com'));
- 
-shoppingOrderMethods::add(
-	'Ogone',
-	_('Credit Card Payment (Ogone)'),
-	_('An extra step will be required trough Ogone.com'));
+class shoppingOrderMethods {
+	static $available = array();
+	static $activated = array();
+	
+	static function add($id, $title, $description = null) {
+		if (!$id)
+			return false;
+		
+		$id = strtolower(preg_replace(
+					'/[^a-zA-Z0-9\@\.\_\-]/', '', $id));
+		
+		if (!$description) {
+			$description = $title;
+			$title = $id;
+		}
+		
+		languages::load('shopping');
+		
+		shoppingOrderMethods::$available[$id] = array(
+			'Title' => _($title),
+			'Description' => sprintf(_($description),
+				(defined('SHOPPING_CART_ORDER_METHOD_CHECK_TO_NAME')?
+					SHOPPING_CART_ORDER_METHOD_CHECK_TO_NAME:
+					PAGE_TITLE)));
+		
+		languages::unload('shopping');
+		
+		if ((defined('SHOPPING_CART_ENABLE_ORDER_METHOD_'.strtoupper($id)) && 
+			!constant('SHOPPING_CART_ENABLE_ORDER_METHOD_'.strtoupper($id))) ||
+			(defined('SHOPPING_CART_ORDER_METHOD_'.strtoupper($id).'_ENABLED') && 
+			!constant('SHOPPING_CART_ORDER_METHOD_'.strtoupper($id).'_ENABLED')) ||
+			(!defined('SHOPPING_CART_ENABLE_ORDER_METHOD_'.strtoupper($id)) && 
+			!defined('SHOPPING_CART_ORDER_METHOD_'.strtoupper($id).'_ENABLED') &&
+			in_array(strtolower($id), 
+				array(
+					'invoicecustomer', 
+					'check', 
+					'paypal', 
+					'ccbill',
+					'alertpay',
+					'authorizedotnet',
+					'2checkout',
+					'moneybookers',
+					'ogone'))))
+			return false;
+		
+		shoppingOrderMethods::$activated[$id] = shoppingOrderMethods::$available[$id];
+		return true;
+	}
+	
+	static function get($methodid = null) {
+		if (!$methodid)
+			return shoppingOrderMethods::$activated;
+			
+		if (isset(shoppingOrderMethods::$activated[$methodid]))
+			return shoppingOrderMethods::$activated[$methodid];
+		
+		return null;
+	}
+}
  
 class shoppingOrderMethodInvoiceCustomer extends form {
 	var $postProcessText = null;
@@ -139,6 +148,11 @@ class shoppingOrderMethodInvoiceCustomer extends form {
 	}
 }
 
+shoppingOrderMethods::add(
+	'invoiceCustomer',
+	_('Invoice Customer'),
+	_('You will be contacted personally to finalize the payments'));
+ 
 class shoppingOrderMethodCheck extends form {
 	var $postProcessText = null;
 	var $processResult = null;
@@ -194,6 +208,11 @@ class shoppingOrderMethodCheck extends form {
 	}
 }
 
+shoppingOrderMethods::add(
+	'check',
+	_('Check Payment'),
+	_('Please complete the check to be sent to %s'));
+ 
 class shoppingOrderMethodPayPal extends form {
 	var $postProcessText = null;
 	var $processResult = null;
@@ -428,6 +447,11 @@ class shoppingOrderMethodPayPal extends form {
 	}
 }
 
+shoppingOrderMethods::add(
+	'payPal',
+	_('Credit Card Payment (PayPal)'),
+	_('An extra step will be required trough Paypal.com'));
+ 
 class shoppingOrderMethodCCBill extends form {
 	var $postProcessText = null;
 	var $processResult = null;
@@ -627,6 +651,11 @@ class shoppingOrderMethodCCBill extends form {
 	}
 }
 
+shoppingOrderMethods::add(
+	'ccBill',
+	_('Credit Card Payment (CCBill)'),
+	_('An extra step will be required trough CCBill.com'));
+ 
 class shoppingOrderMethodAlertPay extends form {
 	var $postProcessText = null;
 	var $processResult = null;
@@ -829,6 +858,11 @@ class shoppingOrderMethodAlertPay extends form {
 	}
 }
 
+shoppingOrderMethods::add(
+	'alertPay',
+	_('Credit Card Payment (AlertPay)'),
+	_('An extra step will be required trough AlertPay.com'));
+ 
 class shoppingOrderMethodAuthorizeDotNet extends form {
 	var $postProcessText = null;
 	var $processResult = null;
@@ -1048,6 +1082,11 @@ class shoppingOrderMethodAuthorizeDotNet extends form {
 	}
 }
 
+shoppingOrderMethods::add(
+	'authorizeDotNet',
+	_('Credit Card Payment (Authorize.net)'),
+	_('An extra step will be required trough Authorize.net'));
+ 
 class shoppingOrderMethod2CheckOut extends form {
 	var $postProcessText = null;
 	var $processResult = null;
@@ -1290,6 +1329,11 @@ class shoppingOrderMethod2CheckOut extends form {
 	}
 }
 
+shoppingOrderMethods::add(
+	'2CheckOut',
+	_('Credit Card Payment (2CheckOut)'),
+	_('An extra step will be required trough 2CheckOut.com'));
+ 
 class shoppingOrderMethodMoneyBookers extends form {
 	var $postProcessText = null;
 	var $processResult = null;
@@ -1491,6 +1535,11 @@ class shoppingOrderMethodMoneyBookers extends form {
 	}
 }
 
+shoppingOrderMethods::add(
+	'MoneyBookers',
+	_('Credit Card Payment (MoneyBookers)'),
+	_('An extra step will be required trough MoneyBookers.com'));
+ 
 class shoppingOrderMethodOgone extends form {
 	var $postProcessText = null;
 	var $processResult = null;
@@ -1863,63 +1912,10 @@ class shoppingOrderMethodOgone extends form {
 	}
 }
 
-class shoppingOrderMethods {
-	static function add($id, $title, $description = null) {
-		if (!$id)
-			return false;
-		
-		if (!$description) {
-			$description = $title;
-			$title = $id;
-		}
-		
-		if (isset($GLOBALS['SHOPPING_ORDER_METHODS'][strtolower($id)]))
-			exit($id." order method couldn't be added as it's " .
-				"id is already used by another order method!");
-		
-		if ((defined('SHOPPING_CART_ENABLE_ORDER_METHOD_'.strtoupper($id)) && 
-			!constant('SHOPPING_CART_ENABLE_ORDER_METHOD_'.strtoupper($id))) ||
-			(defined('SHOPPING_CART_ORDER_METHOD_'.strtoupper($id).'_ENABLED') && 
-			!constant('SHOPPING_CART_ORDER_METHOD_'.strtoupper($id).'_ENABLED')) ||
-			(!defined('SHOPPING_CART_ENABLE_ORDER_METHOD_'.strtoupper($id)) && 
-			!defined('SHOPPING_CART_ORDER_METHOD_'.strtoupper($id).'_ENABLED') &&
-			in_array(strtolower($id), 
-				array(
-					'invoicecustomer', 
-					'check', 
-					'paypal', 
-					'ccbill',
-					'alertpay',
-					'authorizedotnet',
-					'2checkout',
-					'moneybookers',
-					'ogone'))))
-			return false;
-		
-		languages::load('shopping');
-		
-		$GLOBALS['SHOPPING_ORDER_METHODS'][strtolower($id)] = array(
-			'Title' => _($title),
-			'Description' => sprintf(_($description),
-				(defined('SHOPPING_CART_ORDER_METHOD_CHECK_TO_NAME')?
-					SHOPPING_CART_ORDER_METHOD_CHECK_TO_NAME:
-					PAGE_TITLE)));
-		
-		languages::unload('shopping');
-		
-		return true;
-	}
-	
-	static function get($methodid = null) {
-		if (!$methodid)
-			return $GLOBALS['SHOPPING_ORDER_METHODS'];
-			
-		if (isset($GLOBALS['SHOPPING_ORDER_METHODS'][$methodid]))
-			return $GLOBALS['SHOPPING_ORDER_METHODS'][$methodid];
-		
-		return null;
-	}
-}
+shoppingOrderMethods::add(
+	'Ogone',
+	_('Credit Card Payment (Ogone)'),
+	_('An extra step will be required trough Ogone.com'));
  
 class shoppingOrderForm extends dynamicForms {
 	function __construct() {
@@ -6026,5 +6022,10 @@ class shoppingProcessedOrders extends shoppingOrders {
 			SHOPPING_ORDER_STATUS_REJECTED));
 	}
 }
+
+modules::register(
+	'shoppingOrders', 
+	_('Shopping Orders'),
+	_('Handle New / Processed orders and display members their orders history'));
 
 ?>

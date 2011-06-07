@@ -11,11 +11,6 @@
  * 
  ****************************************************************************/
 
-modules::register(
-	'contact', 
-	_('Contact Form'), 
-	_('Let people contact you by completing a form'));
-
 class contactForm extends dynamicForms {
 	function __construct() {
 		languages::load('contact');
@@ -278,4 +273,9 @@ class contact extends modules {
 	}
 }
  
+modules::register(
+	'contact', 
+	_('Contact Form'), 
+	_('Let people contact you by completing a form'));
+
 ?>

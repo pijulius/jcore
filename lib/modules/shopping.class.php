@@ -13,11 +13,6 @@
  
 include_once('lib/modules/shoppingcart.class.php');
 
-modules::register(
-	'shopping', 
-	_('Shopping Store'),
-	_('Sell products in a directory like structure'));
-
 class shoppingItemsForm extends dynamicForms {
 	function __construct() {
 		languages::load('shopping');
@@ -6803,5 +6798,10 @@ class shopping extends modules {
 		return $items;
 	}
 }
+
+modules::register(
+	'shopping', 
+	_('Shopping Store'),
+	_('Sell products in a directory like structure'));
 
 ?>

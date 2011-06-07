@@ -11,11 +11,6 @@
  * 
  ****************************************************************************/
 
-modules::register(
-	'members',
-	_('Site Members'), 
-	_('Forms for My Account, Register and Login pages'));
-
 class memberAccountForm extends dynamicForms {
 	function __construct() {
 		languages::load('members');
@@ -508,4 +503,9 @@ class members extends modules {
 	}
 }
  
+modules::register(
+	'members',
+	_('Site Members'), 
+	_('Forms for My Account, Register and Login pages'));
+
 ?>

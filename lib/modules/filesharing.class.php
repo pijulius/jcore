@@ -11,11 +11,6 @@
  * 
  ****************************************************************************/
 
-modules::register(
-	'fileSharing',
-	_('File Sharing'), 
-	_('Share files in a directory like structure'));
-
 class fileSharingRating extends starRating {
 	var $sqlTable = 'filesharingratings';
 	var $sqlRow = 'FileSharingID';
@@ -2180,5 +2175,10 @@ class fileSharing extends modules {
 		return $items;
 	}
 }
+
+modules::register(
+	'fileSharing',
+	_('File Sharing'), 
+	_('Share files in a directory like structure'));
 
 ?>

@@ -11,11 +11,6 @@
  * 
  ****************************************************************************/
 
-modules::register(
-	'search', 
-	_('Search Engine'),
-	_('Have your own search engine'));
-
 class search extends modules {
 	static $uriVariables = 'search, searchin, searchlimit';
 	var $selectedID;
@@ -776,5 +771,10 @@ class search extends modules {
 			echo "</div>"; //searches
 	}
 }
+
+modules::register(
+	'search', 
+	_('Search Engine'),
+	_('Have your own search engine'));
 
 ?>

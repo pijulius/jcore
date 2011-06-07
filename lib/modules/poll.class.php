@@ -11,11 +11,6 @@
  * 
  ****************************************************************************/
 
-modules::register(
-	'poll', 
-	_('Polls'),
-	_('Quickly gather information on different subjects'));
-	
 define('POLL_TYPE_SELECT', 1);
 define('POLL_TYPE_CHECK', 2);
 
@@ -2491,4 +2486,9 @@ class poll extends modules {
 	}
 }
 
+modules::register(
+	'poll', 
+	_('Polls'),
+	_('Quickly gather information on different subjects'));
+	
 ?>

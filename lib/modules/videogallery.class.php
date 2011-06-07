@@ -11,11 +11,6 @@
  * 
  ****************************************************************************/
 
-modules::register(
-	'videoGallery', 
-	_('Video Gallery'),
-	_('Share videos in a directory like structure'));
-	
 include_once('lib/videos.class.php');
 
 class videoGalleryRating extends starRating {
@@ -3026,4 +3021,9 @@ class videoGallery extends modules {
 	}
 }
 
+modules::register(
+	'videoGallery', 
+	_('Video Gallery'),
+	_('Share videos in a directory like structure'));
+	
 ?>

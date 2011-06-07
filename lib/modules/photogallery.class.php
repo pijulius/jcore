@@ -11,11 +11,6 @@
  * 
  ****************************************************************************/
 
-modules::register(
-	'photoGallery', 
-	_('Photo Gallery'),
-	_('Share pictures / photos in a directory like structure'));
-
 class photoGalleryRating extends starRating {
 	var $sqlTable = 'photogalleryratings';
 	var $sqlRow = 'PhotoGalleryID';
@@ -3049,5 +3044,10 @@ class photoGallery extends modules {
 		return $items;
 	}
 }
+
+modules::register(
+	'photoGallery', 
+	_('Photo Gallery'),
+	_('Share pictures / photos in a directory like structure'));
 
 ?>
