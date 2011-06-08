@@ -33,29 +33,36 @@ email::add('ShoppingOrder',
 		"Your Order at %PAGE_TITLE%",
 		"Dear %USERNAME%,\n\n" .
 		"Thank you for your order! Your order information are listed below, " .
-		"please keep it for your record.\n\n" .
+		"please keep it for your record.\n" .
+		"%LINKTOORDER%\n\n\n" .
 		"Your Order/Tracking number is: %ORDERNUMBER%\n" .
 		"Payment Status: %PAYMENTSTATUS%\n\n" .
 		"%LINKTODIGITALGOODS%\n" .
 		"%ORDERITEMS%\n\n\n" .
 		"%ORDERFORM%\n\n\n" .
-		"You can view your orders statuses and/or add further comments to " .
-		"your order at:\n" .
-		"%LINKTOORDERS%\n\n" .
 		"Sincerely,\n" .
 		"%PAGE_TITLE%");
 
 email::add('ShoppingOrderToWebmaster',
 		"New Order at %PAGE_TITLE%",
 		"Dear Order Processor,\n\n" .
-		"A new order has been placed on \"%PAGE_TITLE%\"!\n\n" .
+		"A new order has been placed on \"%PAGE_TITLE%\"!\n" .
+		"%ADMINLINKTOORDER%\n\n\n" .
 		"Order/Tracking number: %ORDERNUMBER%\n" .
 		"Payment Status: %PAYMENTSTATUS%\n" .
 		"%PAYMENTSTATUSNOTE%\n\n\n" .
 		"%ORDERITEMS%\n\n\n" .
 		"%ORDERFORM%\n\n\n" .
-		"You can view/process this order at:\n" .
-		"%SITE_URL%admin/?path=admin/modules/shoppingorders&id=%ORDERID%\n\n" .
+		"Sincerely,\n" .
+		"%PAGE_TITLE%");
+
+email::add('ShoppingItemsLowStock',
+		"Low Stock at %PAGE_TITLE%",
+		"Dear Inventory Manager,\n\n" .
+		"The following products are running low on stock at \"%PAGE_TITLE%\" " .
+		"and may no longer be available for order.\n\n\n" .
+		"%OUTOFSTOCKITEMS%\n\n\n" .
+		"To update product's stocks please click on the links above.\n\n" .
 		"Sincerely,\n" .
 		"%PAGE_TITLE%");
 
@@ -3749,6 +3756,24 @@ class shoppingOrders extends modules {
 	}
 
 	function displayAdminListItemSelected(&$row) {
+		if ($row['PaymentStatus'] == SHOPPING_ORDER_PAYMENT_STATUS_PAID) {
+			tooltip::display( 
+				_("It's now safe to ship the goods if necessary."),
+				TOOLTIP_SUCCESS);
+			
+		} elseif ($row['PaymentStatus'] == SHOPPING_ORDER_PAYMENT_STATUS_CANCELLED) {
+			tooltip::display( 
+				_("IMPORTANT: payment has been cancelled so " .
+					"shipment should be cancelled too!"),
+				TOOLTIP_NOTIFICATION);
+			
+		} else {
+			tooltip::display( 
+				_("IMPORTANT: do NOT ship any goods until payment has been " .
+					"confirmed / processed!"),
+				TOOLTIP_ERROR);
+		}
+		
 		$this->displayCart($row);
 		$this->displayOrderInfo($row);
 		$this->displayOrderMethod($row);
@@ -4958,27 +4983,6 @@ class shoppingOrders extends modules {
 	}
 	
 	static function sendNotificationEmails($orderid) {
-		if (!shoppingOrders::sendNotificationEmail($orderid))
-			return false;
-	
-		if (!defined('SHOPPING_CART_SEND_NOTIFICATION_EMAIL_ON_NEW_ORDER') ||
-			SHOPPING_CART_SEND_NOTIFICATION_EMAIL_ON_NEW_ORDER) 
-		{
-			if (defined('SHOPPING_CART_SEND_NOTIFICATION_EMAIL_TO') &&
-				SHOPPING_CART_SEND_NOTIFICATION_EMAIL_TO)
-				shoppingOrders::sendNotificationEmail($orderid, 
-					'ShoppingOrderToWebmaster', 
-					SHOPPING_CART_SEND_NOTIFICATION_EMAIL_TO);
-			else
-				shoppingOrders::sendNotificationEmail($orderid,
-					'ShoppingOrderToWebmaster',
-					WEBMASTER_EMAIL);
-		}
-		
-		return true;
-	}
-	
-	static function sendNotificationEmail($orderid, $emailid = 'ShoppingOrder', $toemail = null) {
 		if (!(int)$orderid)
 			return false;
 			
@@ -5006,13 +5010,6 @@ class shoppingOrders extends modules {
 		
 		$email = new email();
 		
-		$email->load($emailid);
-		
-		if ($toemail)
-			$email->to = $toemail;
-		else
-			$email->to = $user['Email'];
-		
 		$email->variables = array(
 			'UserName' => $user['UserName'],
 			'OrderID' => $order['ID'],
@@ -5021,6 +5018,8 @@ class shoppingOrders extends modules {
 			'OrderItems' => '',
 			'LinkToDigitalGoods' => '',
 			'LinkToOrders' => shoppingOrders::getURL(),
+			'LinkToOrder' => shoppingOrders::getURL().'&shoppingorderid='.$order['ID'],
+			'AdminLinkToOrder' => SITE_URL."admin/?path=admin/modules/shoppingorders/shoppingneworders&id=".$order['ID'],
 			'PaymentStatus' => '',
 			'PaymentStatusNote' => '');
 		
@@ -5086,16 +5085,18 @@ class shoppingOrders extends modules {
 			"\n"._("Order Method")."\n" .
 			"-----------------------------------------------------------------\n" .
 			$ordermethod['Title']."\n" .
-			$ordermethod['Description'] .
-			($emailid == 'ShoppingOrderToWebmaster'?
-				"\n\n".$order['OrderMethodDetails']:
-				null);
+			$ordermethod['Description'];
 		
 		$email->variables['OrderItems'] .= 
 			_("Items ordered")."\n" .
 			"-----------------------------------------------------------------\n\n";
 		
+		$email->variables['OutOfStockItems'] .= 
+			_("Out of Stock Items")."\n" .
+			"-----------------------------------------------------------------";
+		
 		$digitalgoods = false;
+		$outofstockitems = false;
 		
 		while($orderitem = sql::fetch($orderitems)) {
 			$item = sql::fetch(sql::run(
@@ -5124,6 +5125,20 @@ class shoppingOrders extends modules {
 				$email->variables['OrderItems'] .= 
 					strip_tags(shoppingOrders::constructPrice(
 						$orderitem['Price']))."\n\n";
+			
+			if (defined('SHOPPING_CART_LOW_STOCK_QUANTITY') && 
+				isset($item['AvailableQuantity']) && is_numeric($item['AvailableQuantity']) &&
+				$item['AvailableQuantity'] <= SHOPPING_CART_LOW_STOCK_QUANTITY)
+			{
+				$email->variables['OutOfStockItems'] .= 
+					"\n\n".$item['RefNumber']." - ".
+					$item['Title']."\n" .
+					sprintf(_("Stock left: %s"), $item['AvailableQuantity'])."\n" .
+					SITE_URL."admin/?path=admin/modules/shopping/" .
+						$item['ShoppingID']."/shoppingitems&id=".$item['ID'];
+				
+				$outofstockitems = true;
+			} 
 		}
 		
 		$email->variables['OrderItems'] .= 
@@ -5163,9 +5178,45 @@ class shoppingOrders extends modules {
 				$email->variables['LinkToOrders'] .
 				"\n\n";
 		
-		$emailsent = $email->send();
-		unset($email);
 		
+		$email->load('ShoppingOrder');
+		$email->to = $user['Email'];
+		$emailsent = $email->send();
+		
+		if (!defined('SHOPPING_CART_SEND_NOTIFICATION_EMAIL_ON_NEW_ORDER') ||
+			SHOPPING_CART_SEND_NOTIFICATION_EMAIL_ON_NEW_ORDER) 
+		{
+			$email->reset();
+			
+			if (defined('SHOPPING_CART_SEND_NOTIFICATION_EMAIL_TO') &&
+				SHOPPING_CART_SEND_NOTIFICATION_EMAIL_TO)
+				$email->to = SHOPPING_CART_SEND_NOTIFICATION_EMAIL_TO;
+			else
+				$email->to = WEBMASTER_EMAIL;
+			
+			$email->variables['OrderForm'] .= 
+				"\n\n".$order['OrderMethodDetails'];
+			
+			$email->load('ShoppingOrderToWebmaster');
+			$email->send();
+		}
+		
+		if (defined('SHOPPING_CART_SEND_NOTIFICATION_EMAIL_ON_LOW_STOCK') &&
+			SHOPPING_CART_SEND_NOTIFICATION_EMAIL_ON_LOW_STOCK && $outofstockitems) 
+		{
+			$email->reset();
+			
+			if (defined('SHOPPING_CART_SEND_LOW_STOCK_NOTIFICATION_EMAIL_TO') &&
+				SHOPPING_CART_SEND_LOW_STOCK_NOTIFICATION_EMAIL_TO)
+				$email->to = SHOPPING_CART_SEND_LOW_STOCK_NOTIFICATION_EMAIL_TO;
+			else
+				$email->to = WEBMASTER_EMAIL;
+			
+			$email->load('ShoppingItemsLowStock');
+			$email->send();
+		}
+		
+		unset($email);
 		return $emailsent;
 	}
 	

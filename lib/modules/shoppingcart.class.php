@@ -2965,7 +2965,7 @@ class shoppingCartCoupons {
 	
 	static function getCode() {
 		if (isset($_POST['shoppingcartcoupon']))
-			return strip_tags($_POST['shoppingcartcoupon']);
+			$_SESSION['shoppingcartcoupon'] = strip_tags($_POST['shoppingcartcoupon']);
 		
 		if (isset($_SESSION['shoppingcartcoupon']))
 			return strip_tags($_SESSION['shoppingcartcoupon']);
@@ -3908,6 +3908,11 @@ class shoppingCart extends modules {
 				" ('Shopping_Cart_Email_Notification', '', 0, 3)," .
 				" ('Shopping_Cart_Send_Notification_Email_On_New_Order', '1', 3, 3)," .
 				" ('Shopping_Cart_Send_Notification_Email_To', '', 1, 3)," .
+				(JCORE_VERSION >= '0.9'?
+					" ('Shopping_Cart_Send_Notification_Email_On_Low_Stock', '1', 3, 3)," .
+					" ('Shopping_Cart_Send_Low_Stock_Notification_Email_To', '', 1, 3)," .
+					" ('Shopping_Cart_Low_Stock_Quantity', '5', 1, 3),":
+					null) .
 				" ('Shopping_Cart_Limits', '', 0, 4)," .
 				" ('Shopping_Cart_Minimum_Item_Order', '1', 1, 4)," .
 				" ('Shopping_Cart_Minimum_Order_Price', '1', 1, 4);");

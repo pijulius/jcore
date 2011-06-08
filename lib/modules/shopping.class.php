@@ -1855,7 +1855,23 @@ class shoppingItems {
 					($user?
 						$GLOBALS['USER']->constructUserName($user, __('by %s')):
 						null) .
-					", ".sprintf(__("%s views"), $row['Views']) .
+					", ".sprintf(__("%s views"), $row['Views']);
+		
+		if (is_numeric($row['AvailableQuantity'])) {
+			if (!$row['AvailableQuantity'])
+				echo
+					", <span class='red'>" .
+						_("Out of Stock") .
+					"</span>";
+			elseif (defined('SHOPPING_CART_LOW_STOCK_QUANTITY') &&
+				 $row['AvailableQuantity'] <= SHOPPING_CART_LOW_STOCK_QUANTITY)
+				echo
+					", <span class='hilight'>" .
+						sprintf(_("Stock left: %s"), $row['AvailableQuantity']) .
+					"</span>";
+		}
+		
+		echo
 				"</div>" .
 			"</td>";
 	}
@@ -2315,7 +2331,12 @@ class shoppingItems {
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ShoppingID` = '".admin::getPathID()."'" .
 				" AND `AvailableQuantity` IS NOT NULL " .
-				" AND !`AvailableQuantity`" .
+				" AND (!`AvailableQuantity`" .
+					(defined('SHOPPING_CART_LOW_STOCK_QUANTITY') && 
+					 SHOPPING_CART_LOW_STOCK_QUANTITY?
+					 	" OR `AvailableQuantity` <= '".(int)SHOPPING_CART_LOW_STOCK_QUANTITY."'":
+					 	null) .
+					")" .
 				($this->userPermissionIDs?
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
@@ -2333,7 +2354,7 @@ class shoppingItems {
 			echo 
 				"<p>" .
 					"<b class='red'>".
-						_("Out of Stock Items").
+						_("Low / Out of Stock Items").
 					"</b>" .
 				"</p>";
 			
@@ -2352,7 +2373,12 @@ class shoppingItems {
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ShoppingID` = '".admin::getPathID()."'" .
 				" AND (`AvailableQuantity` IS NULL " .
-					" OR `AvailableQuantity`)" .
+					" OR (`AvailableQuantity`" .
+					(defined('SHOPPING_CART_LOW_STOCK_QUANTITY') && 
+					 SHOPPING_CART_LOW_STOCK_QUANTITY?
+					 	" AND `AvailableQuantity` > '".(int)SHOPPING_CART_LOW_STOCK_QUANTITY."'":
+					 	null) .
+					"))" .
 				($this->userPermissionIDs?
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
