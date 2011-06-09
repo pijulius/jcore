@@ -22,7 +22,7 @@ class _files {
 		FILE_TYPE_IMAGE => '\.(jpg|gif|jpeg|png|bmp)$',
 		FILE_TYPE_VIDEO => '\.(avi|wmv|swf|flv|mov|mp4|webm|ogv|mpeg|mpg|qt|rm)$', 
 		FILE_TYPE_BANNER => '\.(jpg|gif|jpeg|png|bmp|swf)$',
-		FILE_TYPE_AUDIO => '\.(mid|mp3|rmi|wav|wma)$');
+		FILE_TYPE_AUDIO => '\.(mid|mp3|rmi|wav|wma|weba)$');
 	
 	static $mimeTypes = array(
 		"323" => "text/h323",
