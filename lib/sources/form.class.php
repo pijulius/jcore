@@ -87,6 +87,7 @@ class _form {
 	var $footer = null;
 	var $preview = false;
 	var $verifyPassword = true;
+	var $rememberPasswords = false;
 	var $displayDesign = true;
 	var $displayFormElement = true;
 	
@@ -1632,8 +1633,9 @@ class _form {
 							 $element['TooltipText']?
 							 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
 							 	null) .
-							// We do not want password fields to have predefined values
-							//"value='".htmlspecialchars($element['Value'], ENT_QUOTES)."' " .
+							($this->rememberPasswords?
+								"value='".htmlspecialchars($element['Value'], ENT_QUOTES)."' ":
+								null) .
 							$element['Attributes'] .
 							" /> ";
 				}

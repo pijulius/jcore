@@ -10,6 +10,7 @@
  ****************************************************************************/
  
 include_once('lib/tar.class.php');
+include_once('lib/ftpclient.class.php');
 
 class _updates {
 	var $testing = true;
@@ -82,6 +83,17 @@ class _updates {
 			}
 		}
 		
+		echo
+			"<script type='text/javascript'>" .
+				"jQuery('#jcoreupdateprocess').append('" .
+						__("Running update")." ... " .
+						"<span class=\"update-running-process\" style=\"font-weight: bold;\">" .
+						"</span> " .
+					"');" .
+			"</script>";
+		
+		url::flushDisplay();
+		
 		if (!$this->testing) {
 			$settings = new settings();
 			$settings->set('Maintenance_Website_Suspended', '1');
@@ -101,6 +113,9 @@ class _updates {
 			$obcontent,
 			$successfiles);
 		
+		if (!$successfiles)
+			$this->testing = true;
+		
 		ob_start();
 		
 		$obcontent = null;
@@ -113,6 +128,23 @@ class _updates {
 			__("Running SQL Queries"),
 			$obcontent,
 			$successsql);
+		
+		if ($successfiles && $successsql)
+			echo
+				"<script type='text/javascript'>" .
+					"jQuery('#jcoreupdateprocess .update-running-process').html('" .
+							strtoupper(__("Ok"))."');" .
+				"</script>";
+		else
+			echo
+				"<script type='text/javascript'>" .
+					"jQuery('#jcoreupdateprocess .update-running-process').html('<b class=\"red\">" .
+							strtoupper(__("Error")) .
+						"</b>');" .
+				"</script>";
+		
+		if (!$successfiles || ((isset($_POST['ftpuser']) && $_POST['ftpuser']) && $this->testing))
+			$this->displayInstallFTPForm();
 		
 		if (!$successfiles || !$successsql)
 			return false;
@@ -300,8 +332,78 @@ class _updates {
 			return false;
 		}
 		
+		$ftp = null;
+		
+		if (isset($_POST['ftphost']) && $_POST['ftphost'] && 
+			isset($_POST['ftpuser']) && $_POST['ftpuser'])
+		{
+			$ftphost = strip_tags($_POST['ftphost']);
+			$ftpuser = strip_tags($_POST['ftpuser']);
+			$ftppass = isset($_POST['ftppass'])?strip_tags($_POST['ftppass']):null;
+			$ftpport = isset($_POST['ftpport'])?(int)$_POST['ftpport']:21;
+			$ftpssl = isset($_POST['ftpssl'])?(bool)$_POST['ftpssl']:false;
+			
+			$ftp = new ftpClient();
+			$ftp->port = $ftpport;
+			$ftp->ssl = $ftpssl;
+			$ftp->rootDir = null;
+		}
+		
 		echo
 			"<b>".strtoupper(__("Ok"))."</b><br />";
+		
+		if ($ftp) {
+			echo
+				sprintf(__("FTP Connecting to %s"), $ftphost)." ... ";
+			
+			if (!$ftp->connect($ftphost, $ftpuser, $ftppass)) {
+				echo
+					"<b class=\"red\">" .
+						strtoupper(__("Error")) .
+					"</b> (" .
+					($ftp->error?
+						$ftp->error:
+						__("Couldn't connect!")) .
+					")<br />";
+				
+				unset($ftp);
+				return false;
+			}
+			
+			echo
+				"<b>".strtoupper(__("Ok"))."</b><br />" .
+				__("FTP Locate Root directory")." ... ";
+			
+			if ($ftp->exists((defined('JCORE_PATH') && JCORE_PATH?'jcore':'config').'.inc.php')) {
+				$ftp->rootDir = '/';
+				
+			} else {
+				$ftpdirs = $ftp->ls();
+				
+				foreach((array)$ftpdirs as $ftpdir) {
+					if (preg_match('/(\/'.preg_quote($ftpdir, '/').'\/.*$)/', SITE_PATH, $matches)) {
+						if ($ftp->exists($matches[1].(defined('JCORE_PATH') && JCORE_PATH?'jcore':'config').'.inc.php')) {
+							$ftp->rootDir = $matches[1];
+							break;
+						}
+					}
+				}
+			}
+			
+			if (!$ftp->rootDir) {
+				echo
+					"<b class=\"red\">" .
+						strtoupper(__("Error")) .
+					"</b>" .
+					" (".__("Couldn't locate Root directory!").")<br />";
+				
+				unset($ftp);
+				return false;
+			}
+			
+			echo
+				"<b>".strtoupper(__("Ok"))."</b><br />";
+		}
 		
 		echo
 			"<h3>".__("Creating directories")."</h3>";
@@ -316,7 +418,9 @@ class _updates {
 			echo
 				SITE_PATH.$subdir." ... ";
 			
-			if (!@is_dir(SITE_PATH.$subdir) && !dirs::isWritable(SITE_PATH.$subdir)) {
+			if (!@is_dir(SITE_PATH.$subdir) && !dirs::isWritable(SITE_PATH.$subdir) && (!$ftp || 
+				(!$ftp->exists($ftp->rootDir.$subdir) && !$ftp->isWritable($ftp->rootDir.$subdir)))) 
+			{
 				echo
 					"<b class='red'>" .
 						strtoupper(__("Error")) .
@@ -328,9 +432,14 @@ class _updates {
 				
 			} else {
 				if (!$this->testing) {
-					if (@is_dir(SITE_PATH.$subdir) || @mkdir(SITE_PATH.$subdir)) {
-						@chmod(SITE_PATH.$subdir,
-							octdec(substr(trim($directory['mode']), -4))); 
+					if (@is_dir(SITE_PATH.$subdir) || @mkdir(SITE_PATH.$subdir) ||
+						($ftp && $ftp->mkdir($ftp->rootDir.$subdir)))
+					{
+						
+						if (!@chmod(SITE_PATH.$subdir,
+								octdec(substr(trim($directory['mode']), -4))) && $ftp) 
+							$ftp->chmod($ftp->rootDir.$subdir,
+								octdec(substr(trim($directory['mode']), -4))); 
 						
 						echo
 							" <b>".strtoupper(__("Ok"))."</b><br />";
@@ -394,7 +503,9 @@ class _updates {
 				continue;
 			}
 			
-			if (!files::isWritable(SITE_PATH.$subfile)) {
+			if (!files::isWritable(SITE_PATH.$subfile) && (!$ftp || 
+				(!$ftp->isWritable($ftp->rootDir.$subfile)))) 
+			{
 				echo
 					"<b class='red'>" .
 						strtoupper(__("Error")) .
@@ -406,60 +517,74 @@ class _updates {
 				
 			} else {
 				if (!$this->testing) {
-					if ($fp = @fopen(SITE_PATH.$subfile, 'w')) {
-						if (preg_match('/jcore\.inc\.php$/', $subfile)) {
-							$file['file'] = str_replace(
-								'localhost', SQL_HOST, $file['file']);
-							$file['file'] = str_replace(
-								'yourclient_DB', SQL_DATABASE, $file['file']);
-							$file['file'] = str_replace(
-								'yourclient_mysqlusername', SQL_USER, $file['file']);
-							$file['file'] = str_replace(
-								'mysqlpassword', SQL_PASS, $file['file']);
-							$file['file'] = str_replace(
-								'http://yourclient.com/', SITE_URL, $file['file']);
-							$file['file'] = str_replace(
-								'/home/yourclient/public_html/', SITE_PATH, $file['file']);
-							$file['file'] = str_replace(
-								'http://jcore.yourdomain.com/', JCORE_URL, $file['file']);
-							$file['file'] = str_replace(
-								'/var/www/jcore/', JCORE_PATH, $file['file']);
-							
+					if (preg_match('/jcore\.inc\.php$/', $subfile)) {
+						$file['file'] = str_replace(
+							'localhost', SQL_HOST, $file['file']);
+						$file['file'] = str_replace(
+							'yourclient_DB', SQL_DATABASE, $file['file']);
+						$file['file'] = str_replace(
+							'yourclient_mysqlusername', SQL_USER, $file['file']);
+						$file['file'] = str_replace(
+							'mysqlpassword', SQL_PASS, $file['file']);
+						$file['file'] = str_replace(
+							'http://yourclient.com/', SITE_URL, $file['file']);
+						$file['file'] = str_replace(
+							'/home/yourclient/public_html/', SITE_PATH, $file['file']);
+						$file['file'] = str_replace(
+							'http://jcore.yourdomain.com/', JCORE_URL, $file['file']);
+						$file['file'] = str_replace(
+							'/var/www/jcore/', JCORE_PATH, $file['file']);
+						
+						$file['file'] = preg_replace(
+							'/(SQL_PREFIX.*?)\'\'/', '\1\''.SQL_PREFIX.'\'', $file['file']);
+						
+						if (!SEO_FRIENDLY_LINKS)
 							$file['file'] = preg_replace(
-								'/(SQL_PREFIX.*?)\'\'/', '\1\''.SQL_PREFIX.'\'', $file['file']);
+								'/(SEO_FRIENDLY_LINKS.*?,).*?\)/', '\1 false)', $file['file']);
+					}
+					
+					if (preg_match('/config\.inc\.php$/', $subfile)) {
+						$file['file'] = str_replace(
+							'localhost', SQL_HOST, $file['file']);
+						$file['file'] = str_replace(
+							'yourdomain_DB', SQL_DATABASE, $file['file']);
+						$file['file'] = str_replace(
+							'yourdomain_mysqluser', SQL_USER, $file['file']);
+						$file['file'] = str_replace(
+							'mysqlpass', SQL_PASS, $file['file']);
+						$file['file'] = str_replace(
+							'http://yourdomain.com/', SITE_URL, $file['file']);
+						$file['file'] = str_replace(
+							'/home/yourdomain/public_html/', SITE_PATH, $file['file']);
+						
+						$file['file'] = preg_replace(
+							'/(SQL_PREFIX.*?)\'\'/', '\1\''.SQL_PREFIX.'\'', $file['file']);
 							
-							if (!SEO_FRIENDLY_LINKS)
-								$file['file'] = preg_replace(
-									'/(SEO_FRIENDLY_LINKS.*?,).*?\)/', '\1 false)', $file['file']);
+						if (!SEO_FRIENDLY_LINKS)
+							$file['file'] = preg_replace(
+								'/(SEO_FRIENDLY_LINKS.*?,).*?\)/', '\1 false)', $file['file']);
+					}
+					
+					$fp = @fopen(SITE_PATH.$subfile, 'w');
+					
+					if (!$fp && $ftp) {
+						$ftmp = tmpfile();
+						if ($ftmp) {
+							fwrite($ftmp, $file['file']);
+							fseek($ftmp, 0);
+						}
+					}
+					
+					if ($fp || ($ftp && $ftmp && $ftp->save($ftmp, $ftp->rootDir.$subfile))) {
+						if ($fp) {
+							@fwrite($fp, $file['file']);
+							fclose($fp);
 						}
 						
-						if (preg_match('/config\.inc\.php$/', $subfile)) {
-							$file['file'] = str_replace(
-								'localhost', SQL_HOST, $file['file']);
-							$file['file'] = str_replace(
-								'yourdomain_DB', SQL_DATABASE, $file['file']);
-							$file['file'] = str_replace(
-								'yourdomain_mysqluser', SQL_USER, $file['file']);
-							$file['file'] = str_replace(
-								'mysqlpass', SQL_PASS, $file['file']);
-							$file['file'] = str_replace(
-								'http://yourdomain.com/', SITE_URL, $file['file']);
-							$file['file'] = str_replace(
-								'/home/yourdomain/public_html/', SITE_PATH, $file['file']);
-							
-							$file['file'] = preg_replace(
-								'/(SQL_PREFIX.*?)\'\'/', '\1\''.SQL_PREFIX.'\'', $file['file']);
-								
-							if (!SEO_FRIENDLY_LINKS)
-								$file['file'] = preg_replace(
-									'/(SEO_FRIENDLY_LINKS.*?,).*?\)/', '\1 false)', $file['file']);
-						}
-						
-						@fwrite($fp, $file['file']);
-						fclose($fp);
-						
-						@chmod(SITE_PATH.$subfile, 
-							octdec(substr(trim($file['mode']), -4)));
+						if (!@chmod(SITE_PATH.$subfile, 
+								octdec(substr(trim($file['mode']), -4))) && $ftp)
+							$ftp->chmod($ftp->rootDir.$subfile,
+								octdec(substr(trim($file['mode']), -4))); 
 						
 						echo
 							" <b>".strtoupper(__("Ok"))."</b><br />";
@@ -530,6 +655,55 @@ class _updates {
 			"</div>";
 	}
 	
+	function displayInstallFTPForm() {
+		$form = new form(
+			__("Update using FTP"),
+			'updateinstallftp');
+		
+		$form->displayFormElement = false;
+		$form->rememberPasswords = true;
+		
+		$form->add(
+			__('Hostname'),
+			'ftphost',
+			FORM_INPUT_TYPE_TEXT,
+			false,
+			'localhost');
+		$form->setStyle('width: 250px;');
+		
+		$form->add(
+			__('FTP Username'),
+			'ftpuser',
+			FORM_INPUT_TYPE_TEXT);
+		$form->setStyle('width: 150px;');
+		
+		$form->add(
+			__('FTP Password'),
+			'ftppass',
+			FORM_INPUT_TYPE_PASSWORD);
+		$form->setStyle('width: 150px;');
+		
+		$form->add(
+			__('FTP Port'),
+			'ftpport',
+			FORM_INPUT_TYPE_TEXT,
+			false,
+			'21');
+		$form->setStyle('width: 30px;');
+		
+		$form->add(
+			__('Use SSL'),
+			'ftpssl',
+			FORM_INPUT_TYPE_CHECKBOX,
+			false,
+			1);
+		
+		$form->display();
+		unset($form);
+		
+		echo "<br />";
+	}
+	
 	function displayInstallFunctions($installbutton = false) {
 		if ($installbutton)
 			echo
@@ -538,9 +712,9 @@ class _updates {
 					"' class='button submit' /> ";
 		
 		echo
-			"<input type='button' name='refresh' value='" .
+			"<input type='submit' name='refresh' value='" .
 				htmlspecialchars(__("Test Update"), ENT_QUOTES) .
-				"' class='button' onclick=\"window.location.reload();\" />";
+				"' class='button' />";
 	}
 	
 	function displayInstall($update = null) {
@@ -552,6 +726,9 @@ class _updates {
 		
 		if (isset($_POST['install']) && $_POST['install'])
 			$this->testing = false;
+		
+		echo
+			"<form action='".url::uri()."' id='updateinstallform' method='post'>";
 		
 		$success = $this->install($update);
 		
@@ -577,11 +754,10 @@ class _updates {
 				TOOLTIP_ERROR);
 		}
 		
-		if (!$this->testing && $success)
+		if (!$this->testing && $success) {
+			echo "</form>";
 			return true;
-		
-		echo
-			"<form action='".url::uri()."' id='updateinstallform' method='post'>";
+		}
 		
 		$this->displayInstallFunctions($success);
 		

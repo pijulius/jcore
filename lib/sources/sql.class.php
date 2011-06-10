@@ -10,6 +10,7 @@
  ****************************************************************************/
 
 include_once('lib/tooltip.class.php');
+include_once('lib/languages.class.php');
 
 if (!defined('SQL_PREFIX'))
 	define('SQL_PREFIX', '');
