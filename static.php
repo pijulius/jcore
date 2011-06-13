@@ -11,6 +11,8 @@
  
 include_once('config.inc.php'); 
 
+date_default_timezone_set(PAGE_TIMEZONE);
+sql::setTimeZone();
 
 $request = null;
 $ttl = 60*60*24*365;
