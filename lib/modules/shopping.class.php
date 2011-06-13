@@ -4473,8 +4473,14 @@ class shopping extends modules {
 			" `UserID` mediumint(8) unsigned NOT NULL default '1'," .
 			" `OrderID` mediumint(9) NOT NULL default '0'," .
 			" PRIMARY KEY  (`ID`)," .
-			" KEY `Path` (`Path`, `UserID`, `TimeStamp`,`SubCategoryOfID`,`Deactivated`,`OrderID`)," .
-			" KEY `MembersOnly` (`MembersOnly`, `ShowToGuests`)" .
+			" KEY `Path` (`Path`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `TimeStamp` (`TimeStamp`), " .
+			" KEY `SubCategoryOfID` (`SubCategoryOfID`)," .
+			" KEY `Deactivated` (`Deactivated`)," .
+			" KEY `OrderID` (`OrderID`)," .
+			" KEY `MembersOnly` (`MembersOnly`)," .
+			" KEY `ShowToGuests` (`ShowToGuests`)" .
 			" ) ENGINE=MyISAM;");
 		
 		if (sql::error())
@@ -4491,7 +4497,7 @@ class shopping extends modules {
 			" `ShoppingID` smallint(5) unsigned NOT NULL default '1'," .
 			" `Views` int(10) unsigned NOT NULL default '0'," .
 			" `Thumbnail` tinyint(1) unsigned NOT NULL default '0'," .
-			" KEY `ID` (`ID`)," .
+			" PRIMARY KEY (`ID`)," .
 			" KEY `OrderID` (`OrderID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `ShoppingID` (`ShoppingID`)" .
@@ -4504,7 +4510,7 @@ class shopping extends modules {
 			" CREATE TABLE IF NOT EXISTS `{shoppingkeywords}` (" .
 			" `Keyword` VARCHAR( 100 ) NOT NULL default '' ," .
 			" `Counter` SMALLINT UNSIGNED NOT NULL DEFAULT  '0'," .
-			" INDEX (  `Counter` )" .
+			" KEY `Counter` (`Counter`)" .
 			" ) ENGINE = MYISAM ;");
 		
 		if (sql::error())
@@ -4546,7 +4552,11 @@ class shopping extends modules {
 			" `UserID` mediumint(8) unsigned NOT NULL default '1'," .
 			" `OrderID` mediumint(9) NOT NULL default '0'," .
 			" PRIMARY KEY  (`ID`)," .
-			" KEY `Path` (`Path`,`UserID`,`TimeStamp`,`Deactivated`,`OrderID`)," .
+			" KEY `Path` (`Path`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `TimeStamp` (`TimeStamp`)," .
+			" KEY `Deactivated` (`Deactivated`)," .
+			" KEY `OrderID` (`OrderID`)," .
 			" KEY `Keywords` (`Keywords`)," .
 			" KEY `ShoppingID` (`ShoppingID`)," .
 			" KEY `AvailableQuantity` (`AvailableQuantity`)" .
@@ -4564,7 +4574,8 @@ class shopping extends modules {
 			" `Required` tinyint(1) unsigned NOT NULL DEFAULT '0'," .
 			" `OrderID` mediumint(9) NOT NULL DEFAULT '0'," .
 			" PRIMARY KEY (`ID`)," .
-			" KEY `ShoppingItemID` (`ShoppingItemID`,`OrderID`)" .
+			" KEY `ShoppingItemID` (`ShoppingItemID`)," .
+			" KEY `OrderID` (`OrderID`)" .
 			" ) ENGINE=MyISAM;");
 		
 		if (sql::error())
@@ -4602,7 +4613,9 @@ class shopping extends modules {
 			" `Pending` TINYINT( 1 ) UNSIGNED NOT NULL DEFAULT  '0'," .
 			" PRIMARY KEY  (`ID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
-			" KEY `ShoppingItemID` (`ShoppingItemID`,`UserID`,`UserName`)," .
+			" KEY `ShoppingItemID` (`ShoppingItemID`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `UserName` (`UserName`)," .
 			" KEY `Pending` (`Pending`)" .
 			" ) ENGINE=MyISAM;");
 		
@@ -4616,7 +4629,10 @@ class shopping extends modules {
 			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" `Rating` tinyint(1) NOT NULL default '0'," .
-			" KEY `CommentID` (`CommentID`,`UserID`,`IP`,`TimeStamp`)," .
+			" KEY `CommentID` (`CommentID`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `IP` (`IP`)," .
+			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `Rating` (`Rating`)" .
 			" ) ENGINE=MyISAM;");
 		
@@ -4634,7 +4650,7 @@ class shopping extends modules {
 			" `FileSize` int(10) unsigned NOT NULL default '0'," .
 			" `ShoppingItemID` mediumint(8) unsigned NOT NULL default '1'," .
 			" `Downloads` int(10) unsigned NOT NULL default '0'," .
-			" KEY `ID` (`ID`)," .
+			" PRIMARY KEY (`ID`)," .
 			" KEY `OrderID` (`OrderID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `ShoppingItemID` (`ShoppingItemID`)" .
@@ -4654,7 +4670,7 @@ class shopping extends modules {
 			" `ShoppingItemID` mediumint(8) unsigned NOT NULL default '1'," .
 			" `Views` int(10) unsigned NOT NULL default '0'," .
 			" `Thumbnail` tinyint(1) unsigned NOT NULL default '0'," .
-			" KEY `ID` (`ID`)," .
+			" PRIMARY KEY (`ID`)," .
 			" KEY `OrderID` (`OrderID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `ShoppingItemID` (`ShoppingItemID`)" .
@@ -4674,7 +4690,7 @@ class shopping extends modules {
 			" `FileSize` int(10) unsigned NOT NULL default '0'," .
 			" `ShoppingItemID` mediumint(8) unsigned NOT NULL default '1'," .
 			" `Downloads` int(10) unsigned NOT NULL default '0'," .
-			" KEY `ID` (`ID`)," .
+			" PRIMARY KEY (`ID`)," .
 			" KEY `OrderID` (`OrderID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `ShoppingItemID` (`ShoppingItemID`)" .
@@ -4691,7 +4707,10 @@ class shopping extends modules {
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" `Rating` tinyint(1) NOT NULL default '0'," .
 			" KEY `Rating` (`Rating`)," .
-			" KEY `ShoppingItemID` (`ShoppingItemID`,`UserID`,`IP`,`TimeStamp`)" .
+			" KEY `ShoppingItemID` (`ShoppingItemID`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `IP` (`IP`)," .
+			" KEY `TimeStamp` (`TimeStamp`)" .
 			" ) ENGINE=MyISAM;");
 		
 		if (sql::error())

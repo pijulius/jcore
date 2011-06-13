@@ -3869,7 +3869,8 @@ class shoppingCart extends modules {
 			" `Price` decimal(12,2) NOT NULL default '0.00'," .
 			" `Quantity` tinyint(3) unsigned NOT NULL default '0'," .
 			" PRIMARY KEY  (`ID`)," .
-			" KEY `SessionID` (`SessionID`,`TimeStamp`)" .
+			" KEY `SessionID` (`SessionID`)," .
+			" KEY `TimeStamp` (`TimeStamp`)" .
 			" ) ENGINE=MyISAM ;");
 		
 		if (sql::error())
@@ -3930,7 +3931,8 @@ class shoppingCart extends modules {
 			" `UserID` MEDIUMINT UNSIGNED NOT NULL DEFAULT  '0'," .
 			" `Priority` SMALLINT NOT NULL DEFAULT  '0'," .
 			" PRIMARY KEY  (`ID`)," .
-			" KEY `Above` (`Above`,`Below`)," .
+			" KEY `Above` (`Above`)," .
+			" KEY `Below` (`Below`)," .
 			" KEY `UserID` (`UserID`)," .
 			" KEY `Priority` (`Priority`)" .
 			") ENGINE=MyISAM ;");
@@ -3950,8 +3952,10 @@ class shoppingCart extends modules {
 			" `FieldValue` VARCHAR( 255 ) NOT NULL DEFAULT ''," .
 			" `Priority` SMALLINT NOT NULL DEFAULT  '0'," .
 			" PRIMARY KEY  (`ID`)," .
-			" KEY `Above` (`Above`,`Below`)," .
-			" KEY `WeightAbove` (`WeightAbove`,`WeightBelow`)," .
+			" KEY `Above` (`Above`)," .
+			" KEY `Below` (`Below`)," .
+			" KEY `WeightAbove` (`WeightAbove`)," .
+			" KEY `WeightBelow` (`WeightBelow`)," .
 			" KEY `FieldID` (`FieldID`)," .
 			" KEY `Priority` (`Priority`)" .
 			") ENGINE=MyISAM ;");

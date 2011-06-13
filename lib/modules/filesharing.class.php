@@ -278,8 +278,14 @@ class fileSharing extends modules {
 			" `UserID` mediumint(8) unsigned NOT NULL default '1'," .
 			" `OrderID` mediumint(9) NOT NULL default '0'," .
 			" PRIMARY KEY  (`ID`)," .
-			" KEY `Path` (`Path`, `UserID`, `TimeStamp`,`SubFolderOfID`,`Deactivated`,`OrderID`)," .
-			" KEY `MembersOnly` (`MembersOnly`, `ShowToGuests`)" .
+			" KEY `Path` (`Path`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `TimeStamp` (`TimeStamp`)," .
+			" KEY `SubFolderOfID` (`SubFolderOfID`)," .
+			" KEY `Deactivated` (`Deactivated`)," .
+			" KEY `OrderID` (`OrderID`)," .
+			" KEY `MembersOnly` (`MembersOnly`)," .
+			" KEY `ShowToGuests` (`ShowToGuests`)" .
 			" ) ENGINE=MyISAM;");
 		
 		if (sql::error())
@@ -296,7 +302,7 @@ class fileSharing extends modules {
 			" `FileSharingID` smallint(5) unsigned NOT NULL default '1'," .
 			" `Views` int(10) unsigned NOT NULL default '0'," .
 			" `Thumbnail` tinyint(1) unsigned NOT NULL default '0'," .
-			" KEY `ID` (`ID`)," .
+			" PRIMARY KEY (`ID`)," .
 			" KEY `OrderID` (`OrderID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `FileSharingID` (`FileSharingID`)" .
@@ -320,7 +326,9 @@ class fileSharing extends modules {
 			" `Pending` TINYINT( 1 ) UNSIGNED NOT NULL DEFAULT  '0'," .
 			" PRIMARY KEY  (`ID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
-			" KEY `FileSharingID` (`FileSharingID`,`UserID`,`UserName`)," .
+			" KEY `FileSharingID` (`FileSharingID`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `UserName` (`UserName`)," .
 			" KEY `Pending` (`Pending`)" .
 			" ) ENGINE=MyISAM;");
 		
@@ -334,7 +342,10 @@ class fileSharing extends modules {
 			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" `Rating` tinyint(1) NOT NULL default '0'," .
-			" KEY `CommentID` (`CommentID`,`UserID`,`IP`,`TimeStamp`)," .
+			" KEY `CommentID` (`CommentID`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `IP` (`IP`)," .
+			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `Rating` (`Rating`)" .
 			" ) ENGINE=MyISAM;");
 		
@@ -352,7 +363,7 @@ class fileSharing extends modules {
 			" `FileSize` int(10) unsigned NOT NULL default '0'," .
 			" `FileSharingID` smallint(5) unsigned NOT NULL default '1'," .
 			" `Downloads` int(10) unsigned NOT NULL default '0'," .
-			" KEY `ID` (`ID`)," .
+			" PRIMARY KEY (`ID`)," .
 			" KEY `OrderID` (`OrderID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `FileSharingID` (`FileSharingID`)" .
@@ -369,7 +380,10 @@ class fileSharing extends modules {
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" `Rating` tinyint(1) NOT NULL default '0'," .
 			" KEY `Rating` (`Rating`)," .
-			" KEY `FileSharingID` (`FileSharingID`,`UserID`,`IP`,`TimeStamp`)" .
+			" KEY `FileSharingID` (`FileSharingID`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `IP` (`IP`)," .
+			" KEY `TimeStamp` (`TimeStamp`)" .
 			" ) ENGINE=MyISAM;");
 		
 		if (sql::error())

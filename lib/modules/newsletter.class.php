@@ -2375,7 +2375,7 @@ class newsletter extends modules {
 	function installSQL() {
 		sql::run(
 			"CREATE TABLE IF NOT EXISTS `{newsletters}` (" .
-			" `ID` MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ," .
+			" `ID` MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT," .
 			" `UserID` MEDIUMINT UNSIGNED NOT NULL default '0' ," .
 			" `From` VARCHAR( 255 ) NOT NULL default '' ," .
 			" `To` TEXT NULL," .
@@ -2383,7 +2383,9 @@ class newsletter extends modules {
 			" `Message` MEDIUMTEXT NULL," .
 			" `TimeStamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ," .
 			" `EmailsSentOut` MEDIUMINT UNSIGNED NOT NULL default '0' ," .
-			" INDEX ( `TimeStamp`, `UserID` )" .
+			" PRIMARY KEY (`ID`)," .
+			" KEY `TimeStamp` (`TimeStamp`)," .
+			" KEY `UserID` (`UserID`)" .
 			" ) ENGINE=MyISAM;");
 		
 		if (sql::error())
@@ -2391,7 +2393,7 @@ class newsletter extends modules {
 		
 		sql::run(
 			"CREATE TABLE IF NOT EXISTS `{newsletterlists}` (" .
-			" `ID` SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ," .
+			" `ID` SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT ," .
 			" `Title` VARCHAR( 255 ) NOT NULL default '' ," .
 			(JCORE_VERSION >= '0.8'?
 				" `Description` TEXT NULL,":
@@ -2399,6 +2401,7 @@ class newsletter extends modules {
 			" `Path` VARCHAR( 255 ) NOT NULL default '' ," .
 			" `Deactivated` tinyint(1) unsigned NOT NULL default '0'," .
 			" `OrderID` mediumint(9) NOT NULL default '0'," .
+			" PRIMARY KEY (`ID`)," .
 			" KEY `Path` (`Path`)," .
 			" KEY `Deactivated` (`Deactivated`)," .
 			" KEY `OrderID` (`OrderID`)" .
@@ -2425,15 +2428,17 @@ class newsletter extends modules {
 		
 		sql::run(
 			"CREATE TABLE IF NOT EXISTS `{newslettersubscriptions}` (" .
-			" `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ," .
+			" `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT ," .
 			" `Email` VARCHAR( 255 ) NOT NULL default '' ," .
 			" `TimeStamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ," .
 			" `ListID` SMALLINT UNSIGNED NOT NULL default '1'," .
 			" `Confirmed` tinyint(1) unsigned NOT NULL default '0'," .
 			" `ConfirmationCode` VARCHAR(100) NOT NULL default ''," .
+			" PRIMARY KEY (`ID`)," .
 			" KEY `ListID` (`ListID`)," .
 			" KEY `Email` (`Email`)," .
-			" KEY `Confirmed` (`Confirmed`, `ConfirmationCode`)" .
+			" KEY `Confirmed` (`Confirmed`)," .
+			" KEY `ConfirmationCode` (`ConfirmationCode`)" .
 			" ) ENGINE=MyISAM;");
 		
 		if (sql::error())

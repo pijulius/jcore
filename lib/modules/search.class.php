@@ -61,7 +61,7 @@ class search extends modules {
 			" CREATE TABLE IF NOT EXISTS `{searchmodules}` (" .
 			" `ModuleID` MEDIUMINT UNSIGNED NOT NULL DEFAULT '0'," .
 			" `Limit` SMALLINT UNSIGNED NOT NULL DEFAULT '10'," .
-			" INDEX ( `ModuleID` )" .
+			" KEY `ModuleID` (`ModuleID`)" .
 			" ) ENGINE = MYISAM ;");
 		
 		if (sql::error())

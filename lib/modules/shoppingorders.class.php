@@ -2203,9 +2203,11 @@ class shoppingOrders extends modules {
 			" `GiftOrder` tinyint(1) unsigned NOT NULL default '0'," .
 			" `GiftMessage` text NULL," .
 			" PRIMARY KEY  (`ID`)," .
-			" KEY `OrderID` (`OrderID`,`UserID`)," .
+			" KEY `OrderID` (`OrderID`)," .
+			" KEY `UserID` (`UserID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
-			" KEY `OrderStatus` (`OrderStatus`,`PaymentStatus`)" .
+			" KEY `OrderStatus` (`OrderStatus`)," .
+			" KEY `PaymentStatus` (`PaymentStatus`)" .
 			") ENGINE=MyISAM ;");
 		
 		if (sql::error())
@@ -2241,7 +2243,9 @@ class shoppingOrders extends modules {
 			" `Pending` TINYINT( 1 ) UNSIGNED NOT NULL DEFAULT  '0'," .
 			" PRIMARY KEY  (`ID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
-			" KEY `ShoppingItemID` (`ShoppingOrderID`,`UserID`,`UserName`)," .
+			" KEY `ShoppingItemID` (`ShoppingOrderID`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `UserName` (`UserName`)," .
 			" KEY `Pending` (`Pending`)" .
 			") ENGINE=MyISAM ;");
 		
@@ -2255,7 +2259,10 @@ class shoppingOrders extends modules {
 			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" `Rating` tinyint(1) NOT NULL default '0'," .
-			" KEY `CommentID` (`CommentID`,`UserID`,`IP`,`TimeStamp`)," .
+			" KEY `CommentID` (`CommentID`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `IP` (`IP`)," .
+			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `Rating` (`Rating`)" .
 			") ENGINE=MyISAM ;");
 		
@@ -2271,8 +2278,10 @@ class shoppingOrders extends modules {
 			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `StartTimeStamp` TIMESTAMP NOT NULL default CURRENT_TIMESTAMP," .
 			" `FinishTimeStamp` TIMESTAMP NULL DEFAULT NULL," .
-			" PRIMARY KEY  (`ID`)," .
-			" INDEX (  `ShoppingOrderID` ,  `ShoppingItemID` ,  `ShoppingItemDigitalGoodID` )" .
+			" PRIMARY KEY (`ID`)," .
+			" KEY `ShoppingOrderID` (`ShoppingOrderID`)," .
+			" KEY `ShoppingItemID` (`ShoppingItemID`)," .
+			" KEY `ShoppingItemDigitalGoodID` (`ShoppingItemDigitalGoodID`)" .
 			") ENGINE = MYISAM ;");
 		
 		if (sql::error())

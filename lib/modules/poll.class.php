@@ -486,8 +486,13 @@ class poll extends modules {
 			" `UserID` mediumint(8) unsigned NOT NULL default '1'," .
 			" `OrderID` mediumint(9) NOT NULL default '0'," .
 			" PRIMARY KEY  (`ID`)," .
-			" KEY `Path` (`Path`, `UserID`, `TimeStamp`, `Deactivated`, `OrderID`)," .
-			" KEY `MembersOnly` (`MembersOnly`, `ShowToGuests`)" .
+			" KEY `Path` (`Path`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `TimeStamp` (`TimeStamp`)," .
+			" KEY `Deactivated` (`Deactivated`)," .
+			" KEY `OrderID` (`OrderID`)," .
+			" KEY `MembersOnly` (`MembersOnly`)," .
+			" KEY `ShowToGuests` (`ShowToGuests`)" .
 			" ) ENGINE=MyISAM;");
 		
 		if (sql::error())
@@ -519,8 +524,11 @@ class poll extends modules {
 			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" PRIMARY KEY  (`ID`)," .
-			" KEY `PollID` (`PollID`, `AnswerID`)," .
-			" KEY `UserID` (`UserID`, `IP`, `TimeStamp`)" .
+			" KEY `PollID` (`PollID`)," .
+			" KEY `AnswerID` (`AnswerID`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `IP` (`IP`)," .
+			" KEY `TimeStamp` (`TimeStamp`)" .
 			" ) ENGINE=MyISAM;");
 		
 		if (sql::error())
@@ -541,7 +549,9 @@ class poll extends modules {
 			" `Pending` TINYINT( 1 ) UNSIGNED NOT NULL DEFAULT  '0'," .
 			" PRIMARY KEY  (`ID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
-			" KEY `PollID` (`PollID`,`UserName`,`UserID`)," .
+			" KEY `PollID` (`PollID`)," .
+			" KEY `UserName` (`UserName`)," .
+			" KEY `UserID` (`UserID`)," .
 			" KEY `Pending` (`Pending`)" .
 			" ) ENGINE=MyISAM;");
 		
@@ -555,7 +565,10 @@ class poll extends modules {
 			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" `Rating` tinyint(1) NOT NULL default '0'," .
-			" KEY `CommentID` (`CommentID`,`UserID`,`IP`,`TimeStamp`)," .
+			" KEY `CommentID` (`CommentID`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `IP` (`IP`)," .
+			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `Rating` (`Rating`)" .
 			" ) ENGINE=MyISAM;");
 		
@@ -573,7 +586,7 @@ class poll extends modules {
 			" `PollID` smallint(5) unsigned NOT NULL default '1'," .
 			" `Views` int(10) unsigned NOT NULL default '0'," .
 			" `Thumbnail` tinyint(1) unsigned NOT NULL default '0'," .
-			" KEY `ID` (`ID`)," .
+			" PRIMARY KEY (`ID`)," .
 			" KEY `OrderID` (`OrderID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `PollID` (`PollID`)" .
@@ -593,7 +606,7 @@ class poll extends modules {
 			" `FileSize` int(10) unsigned NOT NULL default '0'," .
 			" `PollID` smallint(5) unsigned NOT NULL default '1'," .
 			" `Downloads` int(10) unsigned NOT NULL default '0'," .
-			" KEY `ID` (`ID`)," .
+			" PRIMARY KEY (`ID`)," .
 			" KEY `OrderID` (`OrderID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `PollID` (`PollID`)" .

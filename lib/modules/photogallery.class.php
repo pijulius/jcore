@@ -706,8 +706,14 @@ class photoGallery extends modules {
 			" `UserID` mediumint(8) unsigned NOT NULL default '1'," .
 			" `OrderID` mediumint(9) NOT NULL default '0'," .
 			" PRIMARY KEY  (`ID`)," .
-			" KEY `Path` (`Path`, `UserID`, `TimeStamp`,`SubGalleryOfID`,`Deactivated`,`OrderID`)," .
-			" KEY `MembersOnly` (`MembersOnly`, `ShowToGuests`)" .
+			" KEY `Path` (`Path`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `TimeStamp` (`TimeStamp`)," .
+			" KEY `SubGalleryOfID` (`SubGalleryOfID`)," .
+			" KEY `Deactivated` (`Deactivated`)," .
+			" KEY `OrderID` (`OrderID`)," .
+			" KEY `MembersOnly` (`MembersOnly`)," .
+			" KEY `ShowToGuests` (`ShowToGuests`)" .
 			" ) ENGINE=MyISAM;");
 		
 		if (sql::error())
@@ -724,7 +730,7 @@ class photoGallery extends modules {
 			" `PhotoGalleryID` smallint(5) unsigned NOT NULL default '1'," .
 			" `Views` int(10) unsigned NOT NULL default '0'," .
 			" `Thumbnail` tinyint(1) unsigned NOT NULL default '0'," .
-			" KEY `ID` (`ID`)," .
+			" PRIMARY KEY (`ID`)," .
 			" KEY `OrderID` (`OrderID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `PhotoGalleryID` (`PhotoGalleryID`)" .
@@ -748,7 +754,9 @@ class photoGallery extends modules {
 			" `Pending` TINYINT( 1 ) UNSIGNED NOT NULL DEFAULT  '0'," .
 			" PRIMARY KEY  (`ID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
-			" KEY `PhotoGalleryID` (`PhotoGalleryID`,`UserName`,`UserID`)," .
+			" KEY `PhotoGalleryID` (`PhotoGalleryID`)," .
+			" KEY `UserName` (`UserName`)," .
+			" KEY `UserID` (`UserID`)," .
 			" KEY `Pending` (`Pending`)" .
 			" ) ENGINE=MyISAM;");
 		
@@ -762,7 +770,10 @@ class photoGallery extends modules {
 			" `IP` DECIMAL(39, 0) NOT NULL default '0'," .
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" `Rating` tinyint(1) NOT NULL default '0'," .
-			" KEY `CommentID` (`CommentID`,`UserID`,`IP`,`TimeStamp`)," .
+			" KEY `CommentID` (`CommentID`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `IP` (`IP`)," .
+			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `Rating` (`Rating`)" .
 			" ) ENGINE=MyISAM;");
 		
@@ -780,7 +791,7 @@ class photoGallery extends modules {
 			" `PhotoGalleryID` smallint(5) unsigned NOT NULL default '1'," .
 			" `Views` int(10) unsigned NOT NULL default '0'," .
 			" `Thumbnail` tinyint(1) unsigned NOT NULL default '0'," .
-			" KEY `ID` (`ID`)," .
+			" PRIMARY KEY (`ID`)," .
 			" KEY `OrderID` (`OrderID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `PhotoGalleryID` (`PhotoGalleryID`)" .
@@ -797,7 +808,10 @@ class photoGallery extends modules {
 			" `TimeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP," .
 			" `Rating` tinyint(1) NOT NULL default '0'," .
 			" KEY `Rating` (`Rating`)," .
-			" KEY `PhotoGalleryID` (`PhotoGalleryID`,`UserID`,`IP`,`TimeStamp`)" .
+			" KEY `PhotoGalleryID` (`PhotoGalleryID`)," .
+			" KEY `UserID` (`UserID`)," .
+			" KEY `IP` (`IP`)," .
+			" KEY `TimeStamp` (`TimeStamp`)" .
 			" ) ENGINE=MyISAM;");
 		
 		if (sql::error())
