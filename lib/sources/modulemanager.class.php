@@ -110,6 +110,12 @@ class _moduleManager {
 					__("Refresh") .
 				"</a>",
 				TOOLTIP_SUCCESS);
+			
+			echo
+				"<script type='text/javascript'>" .
+				"jQuery('link[rel=\"stylesheet\"]').each(function () {" .
+					"this.href = this.href+'&reload';});" .
+				"</script>";
 				
 			return true;
 		}
@@ -329,8 +335,8 @@ class _moduleManager {
 			if ($exists && $exists['Installed'])
 				$row['_Installed'] = true;
 			
-			if ($exists && ((JCORE_VERSION >= '0.9' && !$exists['Deactivated']) ||
-				JCORE_VERSION < '0.9' && $exists['Installed']))
+			if ($exists && $exists['Installed'] &&
+				(JCORE_VERSION < '0.9' || !$exists['Deactivated']))
 				$row['_Activated'] = true;
 			
 			if (defined('JCORE_PATH') && JCORE_PATH && 
