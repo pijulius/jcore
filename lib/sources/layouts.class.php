@@ -487,7 +487,7 @@ class _layouts {
 			return sql::fetch(sql::run(
 				" SELECT * FROM `{layouts}`" .
 				" WHERE `ID` = '".(int)$id."'" .
-				" AND !`Deactivated`" .
+				" AND `Deactivated` = 0" .
 				" AND `TemplateID` = '".
 					(template::$selected?
 						(int)template::$selected['ID']:
@@ -495,7 +495,7 @@ class _layouts {
 		
 		return sql::run(
 			" SELECT * FROM `{layouts}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			" AND `TemplateID` = '".
 				(template::$selected?
 					(int)template::$selected['ID']:
@@ -510,7 +510,7 @@ class _layouts {
 		return sql::rows(sql::run(
 			" SELECT `ID` FROM `{layouts}`" .
 			" WHERE `ID` = '".(int)$id."'" .
-			" AND !`Deactivated`" .
+			" AND `Deactivated` = 0" .
 			" AND `TemplateID` = '".
 				(template::$selected?
 					(int)template::$selected['ID']:

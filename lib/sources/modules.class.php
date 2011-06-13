@@ -38,9 +38,9 @@ class _modules {
 			" SELECT * FROM `{".$this->sqlTable."}`, `{modules}` " .
 			" WHERE `".$this->sqlRow."` = '".$this->selectedOwnerID."'" .
 			" AND `ModuleID` = `ID`" .
-			" AND `Installed`" .
+			" AND `Installed` = 1" .
 			(JCORE_VERSION >= '0.9'?
-				" AND !`Deactivated`":
+				" AND `Deactivated` = 0":
 				null) .
 			" ORDER BY `Name`";
 	}
@@ -367,10 +367,10 @@ class _modules {
 			" SELECT * FROM `{modules}`" .
 			" WHERE 1" .
 			(!$skipinstalledcheck?
-				" AND `Installed`":
+				" AND `Installed` = 1":
 				null) .
 			(JCORE_VERSION >= '0.9'?
-				" AND !`Deactivated`":
+				" AND `Deactivated` = 0":
 				null) .
 			" ORDER BY `Name`");
 			
@@ -500,9 +500,9 @@ class _modules {
 		
 		return sql::run(
 			" SELECT * FROM `{modules}`" .
-			" WHERE `Installed`" .
+			" WHERE `Installed` = 1" .
 			(JCORE_VERSION >= '0.9'?
-				" AND !`Deactivated`":
+				" AND `Deactivated` = 0":
 				null) .
 			" ORDER BY `Name`");
 	}
@@ -517,7 +517,7 @@ class _modules {
 		$installed = sql::fetch(sql::run(
 			" SELECT `ID` FROM `{modules}`" .
 			" WHERE `Name` LIKE '".sql::escape($id)."'" .
-			" AND `Installed`"));
+			" AND `Installed` = 1"));
 		
 		if ($installed)
 			return true;
@@ -566,7 +566,7 @@ class _modules {
 				"}`" .
 			" WHERE `ModuleID` = '".$module['ID']."'" .
 			($moduleitemid && JCORE_VERSION >= '0.3'?
-				" AND (`ModuleItemID` = '".(int)$moduleitemid."' OR !`ModuleItemID`)" .
+				" AND (`ModuleItemID` = '".(int)$moduleitemid."' OR `ModuleItemID` = 0)" .
 					" ORDER BY `ModuleItemID` DESC," .
 					" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`":
 				" ORDER BY `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`") .
@@ -628,9 +628,9 @@ class _modules {
 		return sql::count(
 			" SELECT COUNT(*) AS `Rows` " .
 			" FROM `{modules}`" .
-			" WHERE `Installed`" .
+			" WHERE `Installed` = 1" .
 			(JCORE_VERSION >= '0.9'?
-				" AND !`Deactivated`":
+				" AND `Deactivated` = 0":
 				null));
 	}
 	
@@ -640,9 +640,9 @@ class _modules {
 			
 		$modules = sql::run(
 			" SELECT `Name` FROM `{modules}`" .
-			" WHERE `Installed`" .
+			" WHERE `Installed` = 1" .
 			(JCORE_VERSION >= '0.9'?
-				" AND !`Deactivated`":
+				" AND `Deactivated` = 0":
 				null));
 			
 		while($module = sql::fetch($modules)) {

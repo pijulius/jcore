@@ -175,7 +175,7 @@ class shoppingItemDigitalGoods extends attachments {
 		$downloadable = sql::fetch(sql::run(
 			" SELECT `DigitalGoodsExpiration` FROM `{shoppings}`" .
 			" WHERE `ID` = '".$item['ShoppingID']."'" .
-			" AND (!`DigitalGoodsExpiration`" .
+			" AND (`DigitalGoodsExpiration` = 0" .
 				" OR DATEDIFF(NOW(), '".$order['TimeStamp']."')" .
 					" <= `DigitalGoodsExpiration`)"));
 		
@@ -346,9 +346,9 @@ class shoppingItems {
 				$row = sql::fetch(sql::run(
 					" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS `CategoryIDs`" .
 					" FROM `{shoppings}`" .
-					" WHERE !`Deactivated`" .
-					" AND `MembersOnly` " .
-					" AND !`ShowToGuests`" .
+					" WHERE `Deactivated` = 0" .
+					" AND `MembersOnly` = 1 " .
+					" AND `ShowToGuests` = 0" .
 					" LIMIT 1"));
 				
 				if ($row['CategoryIDs'])
@@ -358,7 +358,7 @@ class shoppingItems {
 			$row = sql::fetch(sql::run(
 				" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS `CategoryIDs`" .
 				" FROM `{shoppings}`" .
-				" WHERE !`Deactivated`" .
+				" WHERE `Deactivated` = 0" .
 				($ignorecategories?
 					" AND `ID` NOT IN (".implode(',', $ignorecategories).")":
 					null) .
@@ -378,7 +378,7 @@ class shoppingItems {
 		
 		return
 			" SELECT * FROM `{shoppingitems}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			(!$this->selectedID && $this->selectedShoppingIDs?
 				" AND `ShoppingID` IN (".implode(',',$this->selectedShoppingIDs).")":
 				null) .
@@ -402,16 +402,16 @@ class shoppingItems {
 					null):
 				null) .
 			($this->active?
-				" AND `Views`":
+				" AND `Views` > 0":
 				null) .
 			($this->popular?
-				" AND `NumberOfOrders`":
+				" AND `NumberOfOrders` > 0":
 				null) .
 			($this->discussed?
-				" AND `Comments`":
+				" AND `Comments` > 0":
 				null) .
 			($this->rated?
-				" AND `Rating`":
+				" AND `Rating` > 0":
 				null) .
 			" ORDER BY" .
 			($this->randomize?
@@ -2331,7 +2331,7 @@ class shoppingItems {
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ShoppingID` = '".admin::getPathID()."'" .
 				" AND `AvailableQuantity` IS NOT NULL " .
-				" AND (!`AvailableQuantity`" .
+				" AND (`AvailableQuantity` = 0" .
 					(defined('SHOPPING_CART_LOW_STOCK_QUANTITY') && 
 					 SHOPPING_CART_LOW_STOCK_QUANTITY?
 					 	" OR `AvailableQuantity` <= '".(int)SHOPPING_CART_LOW_STOCK_QUANTITY."'":
@@ -2373,7 +2373,7 @@ class shoppingItems {
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ShoppingID` = '".admin::getPathID()."'" .
 				" AND (`AvailableQuantity` IS NULL " .
-					" OR (`AvailableQuantity`" .
+					" OR (`AvailableQuantity` = 1" .
 					(defined('SHOPPING_CART_LOW_STOCK_QUANTITY') && 
 					 SHOPPING_CART_LOW_STOCK_QUANTITY?
 					 	" AND `AvailableQuantity` > '".(int)SHOPPING_CART_LOW_STOCK_QUANTITY."'":
@@ -3195,7 +3195,7 @@ class shoppingItems {
 		
 		sql::run(
 			" DELETE FROM `{shoppingkeywords}`" .
-			" WHERE !`Counter`");
+			" WHERE `Counter` = 0");
 		
 		return true;
 	}
@@ -3254,7 +3254,7 @@ class shoppingItems {
 			$row = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$options."'" .
-				" AND !`Deactivated`"));
+				" AND `Deactivated` = 0"));
 			
 			if ($row)
 				$this->displayBuyFormOptions($row);
@@ -3827,7 +3827,7 @@ class shoppingItems {
 		$items = sql::run(
 			" SELECT * " .
 			" FROM `{shoppingitems}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			" AND ID != '".$row['ID']."'" .
 			" AND (`Title` REGEXP '".sql::escape(implode('|', $searches))."'" .
 			" OR `Keywords` REGEXP '".sql::escape(implode('|', $searches))."')" .
@@ -3846,10 +3846,10 @@ class shoppingItems {
 			$category = sql::fetch(sql::run(
 				" SELECT `ID` FROM `{shoppings}`" .
 				" WHERE `ID` = '".$item['ShoppingID']."'" .
-				" AND !`Deactivated`" .
+				" AND `Deactivated` = 0" .
 				(!$GLOBALS['USER']->loginok?
-					" AND (!`MembersOnly` " .
-					"	OR `ShowToGuests`)":
+					" AND (`MembersOnly` = 0 " .
+					"	OR `ShowToGuests` = 1)":
 					null)));
 			
 			if (!$category)
@@ -4183,7 +4183,7 @@ class shoppingItems {
 		if ($this->selectedShoppingID) {
 			$selectedcategory = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppings}` " .
-				" WHERE !`Deactivated`" .
+				" WHERE `Deactivated` = 0" .
 				" AND `ID` = '".$this->selectedShoppingID."'"));
 			
 			if (JCORE_VERSION >= '0.6' && !$this->top && 
@@ -4363,10 +4363,10 @@ class shopping extends modules {
 	function SQL() {
 		return
 			" SELECT * FROM `{shoppings}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			(JCORE_VERSION >= '0.5' && !$GLOBALS['USER']->loginok?
-				" AND (!`MembersOnly` " .
-				"	OR `ShowToGuests`)":
+				" AND (`MembersOnly` = 0 " .
+				"	OR `ShowToGuests` = 1)":
 				null) .
 			($this->search?
 				sql::search(
@@ -4374,7 +4374,7 @@ class shopping extends modules {
 					array('Title', 'Description')):
 				((int)$this->selectedID?
 					" AND `SubCategoryOfID` = '".(int)$this->selectedID."'":
-					" AND !`SubCategoryOfID`")) .
+					" AND `SubCategoryOfID` = 0")) .
 			" ORDER BY `OrderID`, `ID`";		
 	}
 	
@@ -5720,7 +5720,7 @@ class shopping extends modules {
 				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
 				null) .
 			(!$this->userPermissionIDs && ~$this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-				" AND !`SubCategoryOfID`":
+				" AND `SubCategoryOfID` = 0":
 				null) .
 			" ORDER BY `OrderID`, `ID`");
 		
@@ -6148,7 +6148,7 @@ class shopping extends modules {
 			" FROM `{shoppings}` " .
 			($categoryid?
 				" WHERE `SubCategoryOfID` = '".$categoryid."'":
-				" WHERE !`SubCategoryOfID`") .
+				" WHERE `SubCategoryOfID` = 0") .
 			" ORDER BY `OrderID`, `ID`");
 		
 		while($row = sql::fetch($rows)) {
@@ -6503,7 +6503,7 @@ class shopping extends modules {
 		$row['_SubCategories'] = sql::count(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{shoppings}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			" AND `SubCategoryOfID` = '".(int)$row['ID']."'");
 		
 		echo 
@@ -6700,7 +6700,7 @@ class shopping extends modules {
 		
 		$row = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppings}` " .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			((int)$this->selectedID?
 				" AND `ID` = '".(int)$this->selectedID."'":
 				" AND `Path` LIKE '".sql::escape($this->arguments)."'") .
@@ -6766,7 +6766,7 @@ class shopping extends modules {
 		if ((int)$this->selectedID) {
 			$row = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppings}`" .
-				" WHERE !`Deactivated`" .
+				" WHERE `Deactivated` = 0" .
 				" AND `ID` = '".(int)$this->selectedID."'" .
 				" LIMIT 1"));
 				

@@ -826,7 +826,7 @@ class _rss {
 	static function displayFeeds() {
 		$rows = sql::run(
 			" SELECT * FROM `{rssfeeds}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			" ORDER BY `OrderID`, `ID`");
 		
 		while ($row = sql::fetch($rows)) {

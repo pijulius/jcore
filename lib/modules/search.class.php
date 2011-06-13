@@ -404,8 +404,8 @@ class search extends modules {
 			" 0 AS `SubItemOfID`," .
 			" 0 AS `PathDeepnes`" .
 			" FROM `{modules}` " .
-			" WHERE `Installed`" .
-			" AND `Searchable`" .
+			" WHERE `Installed` = 1" .
+			" AND `Searchable` = 1" .
 			" ORDER BY `Name`");
 			
 		$tree = array();
@@ -709,8 +709,8 @@ class search extends modules {
 			$module = sql::fetch(sql::run(
 				" SELECT * FROM `{modules}`" .
 				" WHERE `ID` = '".(int)$this->selectedID."'" .
-				" AND `Installed`" .
-				" AND `Searchable`" .
+				" AND `Installed` = 1" .
+				" AND `Searchable` = 1" .
 				" ORDER BY `Name`"));
 			
 			$this->searchIn = 

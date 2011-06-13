@@ -596,14 +596,14 @@ class newsletterLists {
 			" SELECT * FROM `{newsletterlists}`" .
 			" WHERE ID = '".(int)$id."'" .
 			(!$deactivated?
-				" AND !`Deactivated`":
+				" AND `Deactivated` = 0":
 				null) .
 			" ORDER BY `OrderID`"));
 		
 		$rows = sql::run(
 			" SELECT * FROM `{newsletterlists}`" .
 			(!$deactivated?
-				" WHERE !`Deactivated`":
+				" WHERE `Deactivated` = 0":
 				null) .
 			" ORDER BY `OrderID`");
 		
@@ -776,10 +776,10 @@ class newsletterSubscriptions {
 				" `TimeStamp` = `TimeStamp`" .
 				" WHERE 1" .
 				($listid == -1?
-					" AND `Confirmed`":
+					" AND `Confirmed` = 1":
 					null) .
 				($listid == -2?
-					" AND !`Confirmed`":
+					" AND `Confirmed` = 0":
 					null) .
 				($listid > 0?
 					" AND `ListID` = '".(int)$listid."'":
@@ -802,10 +802,10 @@ class newsletterSubscriptions {
 				" DELETE FROM `{newslettersubscriptions}`" .
 				" WHERE 1" .
 				($listid == -1?
-					" AND `Confirmed`":
+					" AND `Confirmed` = 1":
 					null) .
 				($listid == -2?
-					" AND !`Confirmed`":
+					" AND `Confirmed` = 0":
 					null) .
 				($listid > 0?
 					" AND `ListID` = '".(int)$listid."'":
@@ -1292,10 +1292,10 @@ class newsletterSubscriptions {
 			" SELECT * FROM `{newslettersubscriptions}`" .
 			" WHERE 1" .
 			($listid == -1?
-				" AND `Confirmed`":
+				" AND `Confirmed` = 1":
 				null) .
 			($listid == -2?
-				" AND !`Confirmed`":
+				" AND `Confirmed` = 0":
 				null) .
 			($listid > 0?
 				" AND `ListID` = '".(int)$listid."'":
@@ -1497,7 +1497,7 @@ class newsletterSubscriptions {
 	static function cleanUp() {
 		return sql::run(
 			" DELETE FROM `{newslettersubscriptions}`" .
-			" WHERE !`Confirmed` AND `TimeStamp` < DATE_SUB(NOW(), INTERVAL 1 WEEK)");
+			" WHERE `Confirmed` = 0 AND `TimeStamp` < DATE_SUB(NOW(), INTERVAL 1 WEEK)");
 	}
 	
 	static function sendConfirmationEmail($subscriptionid, $emailid = 'NewsletterSubscribe') {
@@ -1753,7 +1753,7 @@ class newsletterEmails {
 				" SELECT `Email`, GROUP_CONCAT(DISTINCT `ConfirmationCode` SEPARATOR '-')" .
 					" AS `ConfirmationCodes`" .
 				" FROM `{newslettersubscriptions}`" .
-				" WHERE `Confirmed`" .
+				" WHERE `Confirmed` = 1" .
 				" GROUP BY `Email`" .
 				" LIMIT ".(int)$limitfrom.", ".(int)$limitemails);
 		else
@@ -1761,7 +1761,7 @@ class newsletterEmails {
 				" SELECT `Email`, GROUP_CONCAT(DISTINCT `ConfirmationCode` SEPARATOR '-')" .
 					" AS `ConfirmationCodes`" .
 				" FROM `{newslettersubscriptions}`" .
-				" WHERE `Confirmed`" .
+				" WHERE `Confirmed` = 1" .
 				" AND `ListID` IN ('".implode("','", $form->get('To'))."')" .
 				" GROUP BY `Email`" .
 				" LIMIT ".(int)$limitfrom.", ".(int)$limitemails);
@@ -2353,7 +2353,7 @@ class newsletterEmails {
 			" DELETE FROM `{newsletters}`" .
 			" WHERE `ID` = '".(int)$id."'" .
 			($ifnoemailssent?
-				" AND !`EmailsSentOut`":
+				" AND `EmailsSentOut` = 0":
 				null));
 		
 		return true;
@@ -2671,8 +2671,8 @@ class newsletter extends modules {
 	function confirmSubscription($confirmationid, $subscribe = true) {
 		$rows = sql::run(
 			" SELECT `ID`, `Email`, `ListID` FROM `{newslettersubscriptions}`" .
-			" WHERE BINARY `ConfirmationCode` IN ('" .
-				implode("', '", explode('-', sql::escape($confirmationid)))."')");
+			" WHERE `ConfirmationCode` IN (BINARY '" .
+				implode("', BINARY '", explode('-', sql::escape($confirmationid)))."')");
 		
 		if (!sql::rows($rows)) {
 			tooltip::display(

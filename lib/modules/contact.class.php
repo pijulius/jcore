@@ -205,7 +205,7 @@ class contact extends modules {
 				
 		$rows = sql::run(
 			" SELECT * FROM `{dynamicforms}`" .
-			" WHERE `FormID` IN ('contact')" .
+			" WHERE `FormID` = 'contact'" .
 			" ORDER BY `Title`");
 		
 		if (sql::rows($rows))

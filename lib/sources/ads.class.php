@@ -29,10 +29,11 @@ class _ads {
 	function SQL() {
 		return
 			" SELECT * FROM `{ads}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE 1" .
 			($this->selectedBlockID?
 				" AND `BlockID` = '".$this->selectedBlockID."'":
 				null) .
+			" AND `Deactivated` = 0" .
 			" AND (`StartDate` IS NULL OR `StartDate` <= CURDATE())" .
 			" AND (`EndDate` IS NULL OR `EndDate` >= CURDATE())" .
 			" AND (`ShowOn` IS NULL OR `ShowOn` LIKE '%".date('w')."%')" .
@@ -397,7 +398,7 @@ class _ads {
 		$deactivatedads = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows` FROM `{ads}` " .
 			" WHERE `BlockID` = '".$row['BlockID']."'" .
-			" AND `Deactivated`"));
+			" AND `Deactivated` = 1"));
 			
 		echo 
 			"<th colspan='2'>" .

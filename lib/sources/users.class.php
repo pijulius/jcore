@@ -1272,7 +1272,7 @@ class _users {
 		if (isset($_COOKIE['memberloginid']))
 			sql::run(
 				" DELETE FROM `{userlogins}`" .
-				" WHERE BINARY `SessionID` = '".$_COOKIE['memberloginid']."'");
+				" WHERE `SessionID` = BINARY '".$_COOKIE['memberloginid']."'");
 		
 		$this->loginok = null;
 		$this->data = null;
@@ -1334,7 +1334,7 @@ class _users {
 			sql::run(
 				" DELETE FROM `{userlogins}`" .
 				" WHERE (`TimeStamp` < DATE_SUB(NOW(), INTERVAL 3 HOUR)" .
-					" AND !`KeepIt`) OR" .
+					" AND `KeepIt` = 0) OR" .
 				" `TimeStamp` < DATE_SUB(NOW(), INTERVAL 7 DAY)");
 			
 			// Delete users which didn't visit our site within at least a month
@@ -1342,8 +1342,8 @@ class _users {
 					
 			$record = sql::fetch(sql::run(
 				" SELECT * FROM `{users}`" .
-				" WHERE BINARY `UserName` = '".sql::escape($member)."'" .
-				" OR BINARY `Email` = '".sql::escape($member)."'" .
+				" WHERE `UserName` = BINARY '".sql::escape($member)."'" .
+				" OR `Email` = '".sql::escape($member)."'" .
 				" LIMIT 1"));
 				
 			if ($record && !$record['Password']) {
@@ -1444,7 +1444,7 @@ class _users {
 				" SELECT *," .
 				" IF(`TimeStamp` < DATE_SUB(NOW(), INTERVAL 7 HOUR) AND `KeepIt` = 1, 'True', NULL) AS `CookieNeedsToBeRefreshed`" .
 				" FROM `{userlogins}`" .
-				" WHERE BINARY `SessionID` = '".sql::escape($_COOKIE['memberloginid'])."'" .
+				" WHERE `SessionID` = BINARY '".sql::escape($_COOKIE['memberloginid'])."'" .
 				" LIMIT 1"));
 						
 			if (!$record) {
@@ -1478,7 +1478,7 @@ class _users {
 			sql::run(
 				" UPDATE `{userlogins}`" .
 				" SET `TimeStamp` = NOW()" .
-				" WHERE BINARY `SessionID` = '".sql::escape($_COOKIE['memberloginid'])."'" .
+				" WHERE `SessionID` = BINARY '".sql::escape($_COOKIE['memberloginid'])."'" .
 				" AND `UserID` = '".$record['UserID']."'");
 					
 			$this->loginok = true;
@@ -1630,7 +1630,7 @@ class _users {
 		
 		return sql::fetch(sql::run(
 			" SELECT * FROM `{userrequests}` " .
-			" WHERE BINARY `RequestID` = '".sql::escape($requestid)."'" .
+			" WHERE `RequestID` = BINARY '".sql::escape($requestid)."'" .
 			" AND `FromIP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'" .
 			" LIMIT 1"));
 	}
@@ -1724,7 +1724,7 @@ class _users {
 		
 		$record = sql::fetch(sql::run(
 			" SELECT * FROM `{userlogins}`" .
-			" WHERE BINARY `SessionID` = '".sql::escape($_COOKIE['memberloginid'])."'" .
+			" WHERE `SessionID` = BINARY '".sql::escape($_COOKIE['memberloginid'])."'" .
 			" AND `FromIP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'" .
 			" LIMIT 1"));
 					
@@ -1773,7 +1773,7 @@ class _users {
 		
 		$users = sql::run(
 			" SELECT * FROM `{users}`" .
-			" WHERE !`Suspended`" .
+			" WHERE `Suspended` = 0" .
 			" AND `Email` = '".sql::escape($values['Email'])."'");
 					
 		if (!sql::rows($users)) {

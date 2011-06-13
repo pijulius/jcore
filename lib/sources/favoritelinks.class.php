@@ -16,7 +16,7 @@ class _favoriteLinks {
 	function SQL() {
 		return
 			" SELECT * FROM `{favoritelinks}` " .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			" ORDER BY `OrderID`, `ID`";		
 	}
 	

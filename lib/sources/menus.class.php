@@ -795,10 +795,10 @@ class _menus {
 						'pages':
 						'menuitems') .
 					"}` " .
-				" WHERE !`Deactivated`" .
+				" WHERE `Deactivated` = 0" .
 				" AND `MenuID` = '".$row['ID']."'" .
 				(JCORE_VERSION < '0.9'?
-					" AND !`Hidden`":
+					" AND `Hidden` = 0":
 					null) .
 				($language?
 					" AND `LanguageID` = '".(int)$language['ID']."'" .
@@ -808,7 +808,7 @@ class _menus {
 							$lang.'/'.$item:
 							$lang)).
 						"'") .
-				" AND (!`ViewableBy` OR " .
+				" AND (`ViewableBy` = 0 OR " .
 					($GLOBALS['USER']->loginok?
 						($GLOBALS['USER']->data['Admin']?
 							" `ViewableBy` IN (2, 3)":

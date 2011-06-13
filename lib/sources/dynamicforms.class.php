@@ -907,7 +907,7 @@ class _dynamicForms extends form {
 				" SELECT * FROM `{dynamicformfields}`" .
 				" WHERE `FormID` = '".$id."'" .
 				" AND `Name` != ''" .
-				" AND `ValueType`" .
+				" AND `ValueType` = 1" .
 				" ORDER BY `OrderID`, `ID`");
 			
 			while($field = sql::fetch($fields)) {
@@ -1326,7 +1326,7 @@ class _dynamicForms extends form {
 			" SELECT * FROM `{dynamicformfields}`" .
 			" WHERE `FormID` = '".$form['ID']."'" .
 			(JCORE_VERSION >= '0.7'?
-				" AND (!`ViewableBy` OR " .
+				" AND (`ViewableBy` = 0 OR " .
 					($GLOBALS['USER']->loginok?
 						($GLOBALS['USER']->data['Admin']?
 							" `ViewableBy` IN (1, 2, 3)":
@@ -1488,7 +1488,7 @@ class _dynamicForms extends form {
 			return sql::run(
 				" SELECT * FROM `{dynamicforms}`" .
 				(!$protected?
-					" WHERE !`Protected`":
+					" WHERE `Protected` = 0":
 					null) .
 				" ORDER BY `FormID`, `ID`");
 		
@@ -1496,7 +1496,7 @@ class _dynamicForms extends form {
 			" SELECT * FROM `{dynamicforms}`" .
 			" WHERE `ID` = '".(int)$id."'" .
 			(!$protected?
-				" AND !`Protected`":
+				" AND `Protected` = 0":
 				null)));
 	}
 	

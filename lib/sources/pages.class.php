@@ -67,7 +67,7 @@ class _pages {
 						'pages':
 						'menuitems') .
 					"}`" .
-				" WHERE !`Deactivated`" .
+				" WHERE `Deactivated` = 0" .
 				" AND `LanguageID` = '".(int)$_GET['languageid']."'" .
 				" AND '".sql::escape($path)."/' LIKE CONCAT(`Path`,'/%')" .
 				" ORDER BY `Path` DESC," .
@@ -973,7 +973,7 @@ class _pages {
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				((int)$subpageof?
 					" AND `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '".(int)$subpageof."'":
-					" AND !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`")) .
+					" AND `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = 0")) .
 			($language?
 				" AND `LanguageID` = '".$language['ID']."'":
 				null) .
@@ -1441,7 +1441,7 @@ class _pages {
 		if (JCORE_VERSION >= '0.9') {
 			$menus = sql::run(
 				" SELECT * FROM `{menus}`" .
-				" WHERE `IncludeNewPages`");
+				" WHERE `IncludeNewPages` = 1");
 			
 			$menuitems = new menuItems();
 			
@@ -1994,7 +1994,7 @@ class _pages {
 					'pages':
 					'menuitems') .
 				"}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			(JCORE_VERSION < '0.9'?
 				" AND `ViewableBy` < 2":
 				null) .
@@ -2007,7 +2007,7 @@ class _pages {
 				" FROM `{posts}` " .
 				" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` IN (" .
 					$row['IDs'].")" .
-				" AND !`Deactivated`" .
+				" AND `Deactivated` = 0" .
 				" ORDER BY `TimeStamp` DESC" .
 				" LIMIT 1"));
 				
@@ -2099,7 +2099,7 @@ class _pages {
 			($pageid?
 				" WHERE `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '" .
 					$pageid."'":
-				" WHERE !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`") .
+				" WHERE `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = 0") .
 			" ORDER BY " .
 				(JCORE_VERSION < '0.9'?
 					(menus::$order?
@@ -2210,9 +2210,9 @@ class _pages {
 					'pages':
 					'menuitems') .
 				"}` " .
-			" WHERE !`Deactivated`" .
-			" AND !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`" .
+			" WHERE `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = 0" .
 			" AND `LanguageID` = '".(int)$languageid."'" .
+			" AND `Deactivated` = 0" .
 			" ORDER BY " .
 				(JCORE_VERSION < '0.9'?
 					(menus::$order?
@@ -2451,11 +2451,11 @@ class _pages {
 		} else {
 			$page = sql::fetch(sql::run(
 				" SELECT * FROM `{pages}` " .
-				" WHERE !`Deactivated`" .
+				" WHERE '".sql::escape($this->arguments)."/' LIKE CONCAT(`Path`,'/%')" .
 				(languages::$selected?
 					" AND `LanguageID` = '".languages::$selected['ID']."'":
 					null) .
-				" AND '".sql::escape($this->arguments)."/' LIKE CONCAT(`Path`,'/%')" .
+				" AND `Deactivated` = 0" .
 				" ORDER BY `Path` DESC, `OrderID`" .
 				" LIMIT 1"));
 		}

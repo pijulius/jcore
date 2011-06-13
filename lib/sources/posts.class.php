@@ -80,7 +80,7 @@ class _posts {
 						'pages':
 						'menuitems') .
 					"}`" .
-				" WHERE `Deactivated`" .
+				" WHERE `Deactivated` = 1" .
 				(!$GLOBALS['USER']->loginok?
 					" OR `".(JCORE_VERSION >= '0.9'?'AccessibleBy':'ViewableBy')."` > 1":
 					null)));
@@ -92,34 +92,11 @@ class _posts {
 		return
 			" SELECT * " .
 			" FROM `{posts}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE 1" .
 			($this->selectedID?
 				" AND `ID` = '".$this->selectedID."'":
-				" AND !`BlockID`") .
-			($searchignorepageids?
-				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` NOT IN (" .
-					$searchignorepageids.")":
 				null) .
-			(JCORE_VERSION >= '0.9'?
-				" AND (`EndDate` IS NULL OR `EndDate` >= CURDATE() OR (`EndDate` < CURDATE() && !`HideExpired`))":
-				null) .
-			(($this->search || $this->searchKeywords) && !$this->selectedID?
-				(JCORE_VERSION >= '0.9'?
-					" AND !`NotSearchable`":
-					null) .
-				sql::search(
-					($this->searchKeywords?
-						$this->searchKeywords.',':
-						$this->search),
-					($this->searchKeywords?
-						array('Keywords'):
-						(JCORE_VERSION >= '0.7'? 
-							dynamicForms::searchableFields('posts'):
-							array('Title', 'Content', 'Keywords'))),
-					($this->searchKeywords?
-						'OR':
-						'AND'), 
-					array('date' => 'TimeStamp')):
+			(!$this->search && !$this->searchKeywords && !$this->selectedID?
 				($page?
 					" AND (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 						$page['ID']."'" .
@@ -134,23 +111,53 @@ class _posts {
 						")":
 						null) .
 					($homepage['ID'] == $page['ID']?
-						" OR (`OnMainPage`" .
+						" OR (`OnMainPage` = 1" .
 						(JCORE_VERSION >= '0.9'?
 							" AND `LanguageID` = '".$page['LanguageID']."'":
 							null) .
-						") OR (!`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
+						") OR (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = 0" .
 						(JCORE_VERSION >= '0.9'?
-							" AND (`LanguageID` = '".$page['LanguageID']."' OR !`LanguageID`)":
+							" AND (`LanguageID` = '".$page['LanguageID']."' OR `LanguageID` = 0)":
 							null) .
 						")":
 						" OR ((`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$homepage['ID']."'" .
-							" OR (!`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
+							" OR (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = 0" .
 							(JCORE_VERSION >= '0.9'?
-								" AND (`LanguageID` = '".$page['LanguageID']."' OR !`LanguageID`)":
+								" AND (`LanguageID` = '".$page['LanguageID']."' OR `LanguageID` = 0)":
 								null) .
-							")) AND `OnMainPage`) ") .
+							")) AND `OnMainPage` = 1) ") .
 					")":
-					null)) .
+					null):
+				null) .
+			($searchignorepageids?
+				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` NOT IN (" .
+					$searchignorepageids.")":
+				null) .
+			(JCORE_VERSION >= '0.9'?
+				" AND (`EndDate` IS NULL OR `EndDate` >= CURDATE() OR (`EndDate` < CURDATE() && `HideExpired` = 0))":
+				null) .
+			(!$this->selectedID?
+				" AND `BlockID` = 0":
+				null) .
+			" AND `Deactivated` = 0" .
+			(($this->search || $this->searchKeywords) && !$this->selectedID?
+				(JCORE_VERSION >= '0.9'?
+					" AND `NotSearchable` = 0":
+					null) .
+				sql::search(
+					($this->searchKeywords?
+						$this->searchKeywords.',':
+						$this->search),
+					($this->searchKeywords?
+						array('Keywords'):
+						(JCORE_VERSION >= '0.7'? 
+							dynamicForms::searchableFields('posts'):
+							array('Title', 'Content', 'Keywords'))),
+					($this->searchKeywords?
+						'OR':
+						'AND'), 
+					array('date' => 'TimeStamp')):
+				null) .
 			" ORDER BY" .
 			($this->randomize?
 				" RAND()":
@@ -176,8 +183,8 @@ class _posts {
 		$selected = sql::fetch(sql::run(
 			" SELECT `ID`, `Title`, `Path`, `Keywords`" .
 			" FROM `{posts}`" .
-			" WHERE !`Deactivated`" .
-			" AND (!`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
+			" WHERE `Deactivated` = 0" .
+			" AND (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = 0" .
 				" OR `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 					(int)$_GET['pageid']."')" .
 			(SEO_FRIENDLY_LINKS && !(int)$_GET['postid']?
@@ -1926,7 +1933,7 @@ class _posts {
 					'pages':
 					'menuitems') .
 				"}`" .
-			" WHERE `Deactivated`" .
+			" WHERE `Deactivated` = 1" .
 			" OR `".(JCORE_VERSION >= '0.9'?'AccessibleBy':'ViewableBy')."` > 1"));
 		
 		if (isset($pageids['PageIDs']) && $pageids['PageIDs'])
@@ -1954,8 +1961,7 @@ class _posts {
 		
 		$rows = sql::run(
 			" SELECT * FROM `{posts}`" .
-			" WHERE !`Deactivated`" .
-			" AND !`BlockID`" .
+			" WHERE 1" .
 			($pageid?
 				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 					(int)$pageid."'":
@@ -1964,6 +1970,8 @@ class _posts {
 				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` NOT IN (" .
 					$ignorepageids.")":
 				null) .
+			" AND `Deactivated` = 0" .
+			" AND `BlockID` = 0" .
 			" ORDER BY `OrderID`, `StartDate`, `ID` DESC" .
 			" LIMIT 10");
 			
@@ -2112,7 +2120,7 @@ class _posts {
 		
 		sql::run(
 			" DELETE FROM `{postkeywords}`" .
-			" WHERE !`Counter`");
+			" WHERE `Counter` = 0");
 		
 		return true;
 	}
@@ -2551,11 +2559,11 @@ class _posts {
 						'pages':
 						'menuitems') .
 					"}` " .
-				" WHERE !`Deactivated`" .
+				" WHERE '".sql::escape($arguments)."/' LIKE CONCAT(`Path`,'/%')" .
+				" AND `Deactivated` = 0" .
 				($this->selectedLanguageID?
 					" AND `LanguageID` = '".$this->selectedLanguageID."'":
 					null) .
-				" AND '".sql::escape($arguments)."/' LIKE CONCAT(`Path`,'/%')" .
 				" ORDER BY `Path` DESC," .
 					(JCORE_VERSION < '0.9'?
 						(menus::$order?
@@ -2626,11 +2634,11 @@ class _posts {
 						'pages':
 						'menuitems') .
 					"}` " .
-				" WHERE !`Deactivated`" .
+				" WHERE '".sql::escape(trim($pagepath, '/'))."/' LIKE CONCAT(`Path`,'/%')" .
+				" AND `Deactivated` = 0" .
 				($this->selectedLanguageID?
 					" AND `LanguageID` = '".$this->selectedLanguageID."'":
 					null) .
-				" AND '".sql::escape(trim($pagepath, '/'))."/' LIKE CONCAT(`Path`,'/%')" .
 				" ORDER BY `Path` DESC," .
 					(JCORE_VERSION < '0.9'?
 						(menus::$order?
@@ -2754,7 +2762,7 @@ class _posts {
 		$posts = sql::run(
 			" SELECT * " .
 			" FROM `{posts}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			" AND ID != '".$row['ID']."'" .
 			" AND (`Title` REGEXP '".sql::escape(implode('|', $searches))."'" .
 			" OR `Keywords` REGEXP '".sql::escape(implode('|', $searches))."')" .
@@ -2779,16 +2787,16 @@ class _posts {
 						'menuitems') .
 					"}`" .
 				" WHERE `ID` = '".$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'" .
-				" AND !`Deactivated`" .
+				" AND `Deactivated` = 0" .
 				" AND (" .
 				(JCORE_VERSION >= '0.9'?
-					"!`AccessibleBy` OR " .
+					"`AccessibleBy` = 0 OR " .
 						($GLOBALS['USER']->loginok?
 							($GLOBALS['USER']->data['Admin']?
 								" `AccessibleBy` IN (2, 3)":
 								" `AccessibleBy` = 2"):
 							" `AccessibleBy` = 1"):
-					"!`ViewableBy` OR " .
+					"`ViewableBy` = 0 OR " .
 						($GLOBALS['USER']->loginok?
 							($GLOBALS['USER']->data['Admin']?
 								" `ViewableBy` IN (2, 3)":
@@ -2803,7 +2811,7 @@ class _posts {
 				$language = sql::fetch(sql::run(
 					" SELECT `ID`, `Path` FROM `{languages}`" .
 					" WHERE `ID` = '".$page['LanguageID']."'" .
-					" AND !`Deactivated`"));
+					" AND `Deactivated` = 0"));
 					
 				if (!$language)
 					continue;
@@ -3224,30 +3232,30 @@ class _posts {
 		$rows = sql::run(
 			" SELECT * " .
 			" FROM `{posts}`" .
-			" WHERE !`Deactivated`" .
-			" AND `BlockID` = '".(int)$blockid."'" .
+			" WHERE `BlockID` = '".(int)$blockid."'" .
 			" AND (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .
 				$this->selectedPageID."'" .
 			(JCORE_VERSION >= '0.9'?
-				" AND (`EndDate` IS NULL OR `EndDate` >= CURDATE() OR (`EndDate` < CURDATE() && !`HideExpired`))":
+				" AND (`EndDate` IS NULL OR `EndDate` >= CURDATE() OR (`EndDate` < CURDATE() && `HideExpired` = 0))":
 				null) .
 			($homepage['ID'] == $page['ID']?
-				" OR (`OnMainPage`" .
+				" OR (`OnMainPage` = 1" .
 				(JCORE_VERSION >= '0.9'?
 					" AND `LanguageID` = '".$page['LanguageID']."'":
 					null) .
-				") OR (!`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
+				") OR (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = 0" .
 				(JCORE_VERSION >= '0.9'?
-					" AND (`LanguageID` = '".$page['LanguageID']."' OR !`LanguageID`)":
+					" AND (`LanguageID` = '".$page['LanguageID']."' OR `LanguageID` = 0)":
 					null) .
 				")":
 				" OR ((`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$homepage['ID']."'" .
-					" OR (!`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
+					" OR (`".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = 0" .
 					(JCORE_VERSION >= '0.9'?
-						" AND (`LanguageID` = '".$page['LanguageID']."' OR !`LanguageID`)":
+						" AND (`LanguageID` = '".$page['LanguageID']."' OR `LanguageID` = 0)":
 						null) .
-					")) AND `OnMainPage`) ") .
+					")) AND `OnMainPage` = 1) ") .
 			" ) " .
+			" AND `Deactivated` = 0" .
 			" ORDER BY" .
 			($homepage['ID'] == $page['ID']?
 				" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = 0,":
@@ -3391,12 +3399,12 @@ class _posts {
 					'pages':
 					'menuitems') .
 				"}` " .
-			" WHERE !`Deactivated`" .
+			" WHERE '".sql::escape($this->arguments)."/' LIKE CONCAT(`Path`,'/%')" .
 			($this->selectedLanguageID?
 				" AND `LanguageID` = '".$this->selectedLanguageID."'":
 				null) .
 			(JCORE_VERSION >= '0.9'?
-				" AND (!`AccessibleBy` OR " .
+				" AND (`AccessibleBy` = 0 OR " .
 					($GLOBALS['USER']->loginok?
 						($GLOBALS['USER']->data['Admin']?
 							" `AccessibleBy` IN (2, 3)":
@@ -3406,14 +3414,14 @@ class _posts {
 							null):
 						" `AccessibleBy` = 1") .
 				" )":
-				" AND (!`ViewableBy` OR " .
+				" AND (`ViewableBy` = 0 OR " .
 					($GLOBALS['USER']->loginok?
 						($GLOBALS['USER']->data['Admin']?
 							" `ViewableBy` IN (2, 3)":
 							" `ViewableBy` = 2"):
 						" `ViewableBy` = 1") .
 				" )") .
-			" AND '".sql::escape($this->arguments)."/' LIKE CONCAT(`Path`,'/%')" .
+			" AND `Deactivated` = 0" .
 			" ORDER BY `Path` DESC," .
 				(JCORE_VERSION < '0.9'?
 					(menus::$order?
@@ -3436,9 +3444,9 @@ class _posts {
 		
 		$post = sql::fetch(sql::run(
 			" SELECT `ID`, `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` FROM `{posts}` " .
-			" WHERE !`Deactivated`" .
-			" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$page['ID']."'" .
+			" WHERE `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$page['ID']."'" .
 			" AND '".sql::escape($this->arguments)."/' LIKE CONCAT(`Path`,'/%')" .
+			" AND `Deactivated` = 0" .
 			" ORDER BY `Path` DESC, `OrderID`" .
 			" LIMIT 1"));
 			

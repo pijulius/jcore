@@ -643,7 +643,7 @@ class shoppingCartDiscounts {
 			" AND ('".sql::escape($amount)."' < `Below`" .
 				" OR `Below` IS NULL)" .
 			(JCORE_VERSION >= '0.5'?
-				" AND (!`UserID` " .
+				" AND (`UserID` = 0 " .
 				($userid?
 					" OR `UserID` = '".(int)$userid."'":
 					null) .
@@ -673,7 +673,7 @@ class shoppingCartDiscounts {
 			" SELECT * FROM `{shoppingcartdiscounts}`" .
 			" WHERE ('".sql::escape($amount)."' <= `Above`) " .
 			(JCORE_VERSION >= '0.5'?
-				" AND (!`UserID` " .
+				" AND (`UserID` = 0 " .
 				($userid?
 					" OR `UserID` = '".(int)$userid."'":
 					null) .
@@ -1071,7 +1071,7 @@ class shoppingCartFees {
 		$rows = sql::run(
 			" SELECT * FROM `{dynamicformfields}`" .
 			" WHERE `FormID` = '".$form['ID']."'" .
-			" AND `ValueType`" .
+			" AND `ValueType` = 1" .
 			" AND `Name` != ''" .
 			" ORDER BY `OrderID`, `Title`");
 		
@@ -1609,7 +1609,7 @@ class shoppingCartFees {
 					" OR `WeightBelow` IS NULL)":
 				null) .
 			(JCORE_VERSION >= '0.5'?
-				" AND (!`FieldID` " .
+				" AND (`FieldID` = 0 " .
 				($fieldquery?
 					$fieldquery:
 					null) .
@@ -1885,7 +1885,7 @@ class shoppingCartTaxes {
 		$rows = sql::run(
 			" SELECT * FROM `{dynamicformfields}`" .
 			" WHERE `FormID` = '".$form['ID']."'" .
-			" AND `ValueType`" .
+			" AND `ValueType` = 1" .
 			" AND `Name` != ''" .
 			" ORDER BY `OrderID`, `Title`");
 		
@@ -2277,7 +2277,7 @@ class shoppingCartTaxes {
 		
 		$row = sql::fetch(sql::run(
 			" SELECT `Tax` FROM `{shoppingcarttaxes}`" .
-			" WHERE (!`FieldID` " .
+			" WHERE (`FieldID` = 0 " .
 				($fieldquery?
 					$fieldquery:
 					null) .
@@ -2925,8 +2925,8 @@ class shoppingCartCoupons {
 		
 		$row = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingcartcoupons}`" .
-			" WHERE BINARY `Coupon` = '".sql::escape($coupon)."'" .
-			" AND !`Deactivated`" .
+			" WHERE `Coupon` = BINARY '".sql::escape($coupon)."'" .
+			" AND `Deactivated` = 0" .
 			" AND (`Quantity` IS NULL OR `Quantity` > 0)" .
 			" AND (`StartDate` IS NULL OR `StartDate` <= CURDATE())" .
 			" AND (`EndDate` IS NULL OR `EndDate` >= CURDATE())" .
@@ -3883,6 +3883,7 @@ class shoppingCart extends modules {
 			" `TypeID` tinyint(1) unsigned NOT NULL default '1'," .
 			" `OrderID` smallint(5) unsigned NOT NULL default '0'," .
 			" PRIMARY KEY  (`ID`)," .
+			" KEY `TypeID` (`TypeID`)" .
 			" KEY `OrderID` (`OrderID`)" .
 			") ENGINE=MyISAM;");
 		
@@ -4381,7 +4382,7 @@ class shoppingCart extends modules {
 		$row = sql::fetch(sql::run(
 			" SELECT SUM(`Price`*`Quantity`) AS `SubTotal`" .
 			" FROM `{shoppingcarts}` " .
-			" WHERE `SessionID` = '".sql::escape(session_id())."'" .
+			" WHERE `SessionID` = BINARY '".sql::escape(session_id())."'" .
 			" LIMIT 1"));
 		
 		return (float)$row['SubTotal'];		
@@ -4399,7 +4400,7 @@ class shoppingCart extends modules {
 			$rows = sql::run(
 				" SELECT `ShoppingItemID`, `Quantity`, `Price`" .
 				" FROM `{shoppingcarts}` " .
-				" WHERE `SessionID` = '".sql::escape(session_id())."'");
+				" WHERE `SessionID` = BINARY '".sql::escape(session_id())."'");
 			
 			while($row = sql::fetch($rows)) {
 				$item = sql::fetch(sql::run(
@@ -4426,14 +4427,14 @@ class shoppingCart extends modules {
 	static function getItems() {
 		return sql::run(
 			" SELECT * FROM `{shoppingcarts}` " .
-			" WHERE `SessionID` = '".sql::escape(session_id())."'" .
+			" WHERE `SessionID` = BINARY '".sql::escape(session_id())."'" .
 			" ORDER BY `ID`");		
 	}
 	
 	static function clear() {
 		return sql::run(
 			" DELETE FROM `{shoppingcarts}` " .
-			" WHERE `SessionID` = '".sql::escape(session_id())."'");		
+			" WHERE `SessionID` = BINARY '".sql::escape(session_id())."'");		
 	}
 	
 	static function cleanUp() {
@@ -4525,7 +4526,7 @@ class shoppingCart extends modules {
 			$item = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$itemid."'" .
-				" AND (`AvailableQuantity` " .
+				" AND (`AvailableQuantity` = 1 " .
 					" OR `AvailableQuantity` IS NULL)" .
 				" LIMIT 1"));
 			
@@ -4540,7 +4541,7 @@ class shoppingCart extends modules {
 			
 			$cartquantity = sql::fetch(sql::run(
 				" SELECT SUM(`Quantity`) AS `Quantity` FROM `{shoppingcarts}`" .
-				" WHERE `SessionID` = '".sql::escape(session_id())."'" .
+				" WHERE `SessionID` = BINARY '".sql::escape(session_id())."'" .
 				" AND `ShoppingItemID` = '".$item['ID']."'"));
 			
 			$totalquantity = (int)$itemquantity;
@@ -4564,7 +4565,7 @@ class shoppingCart extends modules {
 			
 			$category = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppings}`" .
-				" WHERE !`Deactivated`" .
+				" WHERE `Deactivated` = 0" .
 				" AND `ID` = '".$item['ShoppingID']."'"));
 			
 			if (!$category) {
@@ -4758,7 +4759,7 @@ class shoppingCart extends modules {
 				
 				$cartquantity = sql::fetch(sql::run(
 					" SELECT SUM(`Quantity`) AS `Quantity` FROM `{shoppingcarts}`" .
-					" WHERE `SessionID` = '".sql::escape(session_id())."'" .
+					" WHERE `SessionID` = BINARY '".sql::escape(session_id())."'" .
 					" AND `ShoppingItemID` = '".$item['ID']."'" .
 					" AND `ID` != '".(int)$cartid."'"));
 				
@@ -5517,7 +5518,7 @@ class shoppingCart extends modules {
 		if (JCORE_VERSION >= '0.9') {
 			$coupons = sql::run(
 				" SELECT `ID` FROM `shoppingcartcoupons`" .
-				" WHERE !`Deactivated`" .
+				" WHERE `Deactivated` = 0" .
 				" AND (`Quantity` IS NULL OR `Quantity` > 0)" .
 				" AND (`StartDate` IS NULL OR `StartDate` <= CURDATE())" .
 				" AND (`EndDate` IS NULL OR `EndDate` >= CURDATE())" .

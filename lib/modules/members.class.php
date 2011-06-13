@@ -142,7 +142,7 @@ class members extends modules {
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicformfields}` " .
 			" WHERE `FormID` = '".$formid."'" .
-			" AND `Protected`;"));
+			" AND `Protected` = 1;"));
 		
 		if (sql::error())
 			return false;
@@ -183,7 +183,7 @@ class members extends modules {
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicformfields}` " .
 			" WHERE `FormID` = '".$formid."'" .
-			" AND `Protected`;"));
+			" AND `Protected` = 1;"));
 		
 		if (sql::error())
 			return false;

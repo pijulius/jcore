@@ -447,13 +447,13 @@ class poll extends modules {
 	function SQL() {
 		return
 			" SELECT * FROM `{polls}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			((int)$this->selectedID?
 				" AND `ID` = '".(int)$this->selectedID."'":
 				null) .
 			(!$GLOBALS['USER']->loginok?
-				" AND (!`MembersOnly` " .
-				"	OR `ShowToGuests`)":
+				" AND (`MembersOnly` = 0 " .
+				"	OR `ShowToGuests` = 1)":
 				null) .
 			" ORDER BY" .
 			($this->randomize?
@@ -1936,7 +1936,7 @@ class poll extends modules {
 		$poll = sql::fetch(sql::run(
 			" SELECT * FROM `{polls}`" .
 			" WHERE `ID` = '".$pollid."'" .
-			" AND !`Deactivated`"));
+			" AND `Deactivated` = 0"));
 		
 		if (!$poll) {
 			tooltip::display(
@@ -2415,7 +2415,7 @@ class poll extends modules {
 			
 		$poll = sql::fetch(sql::run(
 			" SELECT `ID` FROM `{polls}` " .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			" AND `Path` LIKE '".sql::escape($this->arguments)."'" .
 			" LIMIT 1"));
 		

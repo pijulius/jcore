@@ -238,7 +238,7 @@ class _dynamicFormData {
 				" SELECT `Title`, `Name`" .
 				" FROM `{dynamicformfields}`" .
 				" WHERE `FormID` = '".admin::getPathID()."'" .
-				" AND `DataPreview`" .
+				" AND `DataPreview` = 1" .
 				" ORDER BY `OrderID`, `ID`");
 			
 			while($field = sql::fetch($previewfields)) {
@@ -326,7 +326,7 @@ class _dynamicFormData {
 				" SELECT `Title`, `Name`, `ValueType`, `TypeID` AS `Type`" .
 				" FROM `{dynamicformfields}`" .
 				" WHERE `FormID` = '".admin::getPathID()."'" .
-				" AND `DataPreview`" .
+				" AND `DataPreview` = 1" .
 				" ORDER BY `OrderID`, `ID`");
 			
 			while($field = sql::fetch($previewfields)) {

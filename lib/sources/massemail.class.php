@@ -273,8 +273,8 @@ class _massEmail {
 			if (isset($matches[1]) && $matches[1] == 'ALL-USERS') {
 				$users = sql::run(
 					" SELECT * FROM `{users}`" .
-					" WHERE !`Suspended`" .
-					" AND !`DisableNotificationEmails`" .
+					" WHERE `Suspended` = 0" .
+					" AND `DisableNotificationEmails` = 0" .
 					" ORDER BY `ID`" .
 					" LIMIT ".(int)$limitfrom.", ".(int)$limitemails);
 				
@@ -294,8 +294,8 @@ class _massEmail {
 			} elseif (isset($matches[1]) && $matches[1] == 'ACTIVE-USERS') {
 				$users = sql::run(
 					" SELECT * FROM `{users}`" .
-					" WHERE !`Suspended`" .
-					" AND !`DisableNotificationEmails`" .
+					" WHERE `Suspended` = 0" .
+					" AND `DisableNotificationEmails` = 0" .
 					" AND `LastVisitTimeStamp` > DATE_SUB(NOW(), INTERVAL 1 MONTH)" .
 					" ORDER BY `ID`" .
 					" LIMIT ".(int)$limitfrom.", ".(int)$limitemails);
@@ -874,7 +874,7 @@ class _massEmail {
 			" DELETE FROM `{massemails}`" .
 			" WHERE `ID` = '".(int)$id."'" .
 			($ifnoemailssent?
-				" AND !`EmailsSentOut`":
+				" AND `EmailsSentOut` = 0":
 				null));
 		
 		return true;

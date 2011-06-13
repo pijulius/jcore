@@ -61,11 +61,11 @@ class _blocks {
 				(pages::$selected && pages::$selected['LayoutID'] && 
 				 layouts::exists(pages::$selected['LayoutID'])?
 					" AND `LayoutID` = '".pages::$selected['LayoutID']."'":
-					" AND !`LayoutID`"):
+					" AND `LayoutID` = 0"):
 				null) .
-			" AND !`Deactivated`" .
-			" AND !`SubBlockOfID`" .
-			" AND (!`ViewableBy` OR " .
+			" AND `Deactivated` = 0" .
+			" AND `SubBlockOfID` = 0" .
+			" AND (`ViewableBy` = 0 OR " .
 				($GLOBALS['USER']->loginok?
 					($GLOBALS['USER']->data['Admin']?
 						" `ViewableBy` IN (2, 3)":
@@ -730,7 +730,7 @@ class _blocks {
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				((int)$blockid?
 					" AND `SubBlockOfID` = '".(int)$blockid."'":
-					" AND !`SubBlockOfID`")) .
+					" AND `SubBlockOfID` = 0")) .
 			($layout?
 				" AND `LayoutID` = '".$layout['ID']."'":
 				null) .
@@ -1020,14 +1020,13 @@ class _blocks {
 		if ($values['OrderID'] == '') {
 			$row = sql::fetch(sql::run(
 				" SELECT `OrderID` FROM `{blocks}` " .
-				" WHERE 1" .
+				" WHERE `SubBlockOfID` = '".(int)$values['SubBlockOfID']."'" .
 				(JCORE_VERSION >= '0.7'?
 					" AND `TemplateID` = '".
 						(template::$selected?
 							(int)template::$selected['ID']:
 							0)."'":
 					null) .
-				" AND `SubBlockOfID` = '".(int)$values['SubBlockOfID']."'" .
 				" ORDER BY `OrderID` DESC"));
 			
 			$values['OrderID'] = (int)$row['OrderID']+1;
@@ -1037,14 +1036,13 @@ class _blocks {
 				" UPDATE `{blocks}` SET " .
 				" `OrderID` = `OrderID` + 1," .
 				" `CacheTimeStamp` = `CacheTimeStamp`" .
-				" WHERE 1" .
+				" WHERE `SubBlockOfID` = '".(int)$values['SubBlockOfID']."'" .
 				(JCORE_VERSION >= '0.7'?
 					" AND `TemplateID` = '".
 						(template::$selected?
 							(int)template::$selected['ID']:
 							0)."'":
 					null) .
-				" AND `SubBlockOfID` = '".(int)$values['SubBlockOfID']."'" .
 				" AND `OrderID` >= '".(int)$values['OrderID']."'");
 		}
 		
@@ -1155,15 +1153,14 @@ class _blocks {
 		{
 			$othermainblock = sql::fetch(sql::run(
 				" SELECT * FROM `{blocks}`" .
-				" WHERE 1" .
+				" WHERE `TypeID` = '".BLOCK_TYPE_MAIN_CONTENT."'" .
+				" AND `ID` != '".(int)$id."'" .
 				(JCORE_VERSION >= '0.7'?
 					" AND `TemplateID` = '".
 						(template::$selected?
 							(int)template::$selected['ID']:
 							0)."'":
 					null) .
-				" AND `ID` != '".(int)$id."'" .
-				" AND `TypeID` = '".BLOCK_TYPE_MAIN_CONTENT."'" .
 				" LIMIT 1"));
 			
 			if (!$othermainblock) {
@@ -1332,17 +1329,16 @@ class _blocks {
 		if ($maincontentblocks) {
 			$othermainblock = sql::fetch(sql::run(
 				" SELECT * FROM `{blocks}`" .
-				" WHERE 1" .
+				" WHERE `TypeID` = '".BLOCK_TYPE_MAIN_CONTENT."'" .
+				" AND `ID` NOT IN ('" .
+					implode("','", $maincontentblocks) .
+					"')" .
 				(JCORE_VERSION >= '0.7'?
 					" AND `TemplateID` = '".
 						(template::$selected?
 							(int)template::$selected['ID']:
 							0)."'":
 					null) .
-				" AND `ID` NOT IN ('" .
-					implode("','", $maincontentblocks) .
-					"')" .
-				" AND `TypeID` = '".BLOCK_TYPE_MAIN_CONTENT."'" .
 				" LIMIT 1"));
 			
 			if (!$othermainblock) {
@@ -1373,16 +1369,15 @@ class _blocks {
 	{
 		$rows = sql::run(
 			" SELECT * FROM `{blocks}` " .
-			" WHERE 1" .
+			($blockid?
+				" WHERE `SubBlockOfID` = '".$blockid."'":
+				" WHERE `SubBlockOfID` = 0") .
 			(JCORE_VERSION >= '0.7'?
 				" AND `TemplateID` = '".
 					(template::$selected?
 						(int)template::$selected['ID']:
 						0)."'":
 				null) .
-			($blockid?
-				" AND `SubBlockOfID` = '".$blockid."'":
-				" AND !`SubBlockOfID`") .
 			" ORDER BY" .
 			(JCORE_VERSION >= '0.9'?
 				" `LayoutID`,":
@@ -1671,7 +1666,7 @@ class _blocks {
 				" IF(DATE_SUB(NOW(), INTERVAL `CacheRefreshTime` MINUTE) > `CacheTimeStamp`, 1, 0) AS `CacheExpired`" .
 				" FROM `{blocks}`": 
 				" SELECT * FROM `{blocks}`") .
-			" WHERE 1" .
+			" WHERE `SubBlockOfID` = '".(int)$block['ID']."'" .
 			(JCORE_VERSION >= '0.7'?
 				" AND `TemplateID` = '".
 					(template::$selected && (WEBSITE_TEMPLATE_SETFORADMIN ||
@@ -1680,9 +1675,8 @@ class _blocks {
 						0) .
 					"'":
 				null) .
-			" AND !`Deactivated`" .
-			" AND `SubBlockOfID` = '".(int)$block['ID']."'" .
-			" AND (!`ViewableBy` OR " .
+			" AND `Deactivated` = 0" .
+			" AND (`ViewableBy` = 0 OR " .
 				($GLOBALS['USER']->loginok?
 					($GLOBALS['USER']->data['Admin']?
 						" `ViewableBy` IN (2, 3)":
@@ -1727,16 +1721,15 @@ class _blocks {
 				" IF(DATE_SUB(NOW(), INTERVAL `CacheRefreshTime` MINUTE) > `CacheTimeStamp`, 1, 0) AS `CacheExpired`" .
 				" FROM `{blocks}`": 
 				" SELECT * FROM `{blocks}`") .
-			" WHERE 1" .
+			" WHERE `BlockID` LIKE '".sql::escape($this->arguments)."'" .
 			(JCORE_VERSION >= '0.7'?
 				" AND `TemplateID` = '".
 					(template::$selected?
 						(int)template::$selected['ID']:
 						0)."'":
 				null) .
-			" AND !`Deactivated`" .
-			" AND `BlockID` LIKE '".sql::escape($this->arguments)."'" .
-			" AND (!`ViewableBy` OR " .
+			" AND `Deactivated` = 0" .
+			" AND (`ViewableBy` = 0 OR " .
 				($GLOBALS['USER']->loginok?
 					($GLOBALS['USER']->data['Admin']?
 						" `ViewableBy` IN (2, 3)":

@@ -53,7 +53,7 @@ class _languages {
 	function SQL() {
 		return
 			" SELECT * FROM `{languages}` " .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			" ORDER BY" .
 			(JCORE_VERSION >= '0.7'?
 				" `OrderID`,":
@@ -74,10 +74,9 @@ class _languages {
 		
 		$selected = sql::fetch(sql::run(
 			" SELECT * FROM `{languages}`" .
-			" WHERE 1 " .
 			(SEO_FRIENDLY_LINKS && !(int)$_GET['languageid']?
-				" AND '".sql::escape(url::path())."/' LIKE CONCAT(`Path`,'/%')":
-				" AND `ID` = '".(int)$_GET['languageid']."'") .
+				" WHERE '".sql::escape(url::path())."/' LIKE CONCAT(`Path`,'/%')":
+				" WHERE `ID` = '".(int)$_GET['languageid']."'") .
 			" ORDER BY `Path` DESC" .
 			" LIMIT 1"));
 			
@@ -89,7 +88,7 @@ class _languages {
 		if (!$selected)
 			$selected = sql::fetch(sql::run(
 				" SELECT * FROM `{languages}`" .
-				" WHERE `Default`" .
+				" WHERE `Default` = 1" .
 				" LIMIT 1"));
 		
 		if ($selected) {
@@ -930,7 +929,7 @@ class _languages {
 	static function getDefault() {
 		$row = sql::fetch(sql::run(
 			" SELECT * FROM `{languages}`" .
-			" WHERE `Default`" .
+			" WHERE `Default` = 1" .
 			" LIMIT 1"));
 		
 		return $row;

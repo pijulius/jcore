@@ -3466,7 +3466,7 @@ class shoppingOrders extends modules {
 		if ($shoppingid) {
 			$category = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppings}` " .
-				" WHERE !`Deactivated`" .
+				" WHERE `Deactivated` = 0" .
 				" AND `ID` = '".$shoppingid."'"));
 				
 			if (!$category['Items']) {
@@ -3524,7 +3524,7 @@ class shoppingOrders extends modules {
 		
 		$rows = sql::run(
 			" SELECT * FROM `{shoppingitems}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			($shoppingid && !$shoppingids?
 				" AND `ShoppingID` = '".$shoppingid."'":
 				null) .
@@ -4198,13 +4198,13 @@ class shoppingOrders extends modules {
 					null) .
 				"-`Discount`+`Fee`) AS `Total`" .
 			" FROM `{shoppingorders}`" .
-			" WHERE DATE(`TimeStamp`) >= " .
+			" WHERE `TimeStamp` >= " .
 				($startdate?
-					"'".sql::escape($startdate)."'":
-					"DATE_FORMAT(NOW(), '%Y-%m-01')") .
+					"'".sql::escape($startdate)." 00:00:00'":
+					"DATE_FORMAT(NOW(), '%Y-%m-01 00:00:00')") .
 			($enddate?
-				" AND DATE(`TimeStamp`) <= " .
-					"'".sql::escape($enddate)."'":
+				" AND `TimeStamp` <= " .
+					"'".sql::escape($enddate)." 23:59:59'":
 				null) .
 			" AND `PaymentStatus` = '".SHOPPING_ORDER_PAYMENT_STATUS_PAID."'" .
 			" LIMIT 1"));
@@ -4270,13 +4270,13 @@ class shoppingOrders extends modules {
 		
 		$rows = sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
-			" WHERE DATE(`TimeStamp`) >= " .
+			" WHERE `TimeStamp` >= " .
 				($startdate?
-					"'".sql::escape($startdate)."'":
-					"DATE_FORMAT(NOW(), '%Y-%m-01')") .
+					"'".sql::escape($startdate)." 00:00:00'":
+					"DATE_FORMAT(NOW(), '%Y-%m-01 00:00:00')") .
 			($enddate?
-				" AND DATE(`TimeStamp`) <= " .
-					"'".sql::escape($enddate)."'":
+				" AND `TimeStamp` <= " .
+					"'".sql::escape($enddate)." 23:59:59'":
 				null) .
 			" ORDER BY `ID` DESC" .
 			" LIMIT ".$paging->limit);
@@ -4309,13 +4309,13 @@ class shoppingOrders extends modules {
 				" SUM(`Fee`) AS `Fee`," .
 				" SUM(`Discount`) AS `Discount`" .
 				" FROM `{shoppingorders}`" .
-				" WHERE DATE(`TimeStamp`) >= " .
+				" WHERE `TimeStamp` >= " .
 					($startdate?
-						"'".sql::escape($startdate)."'":
-						"DATE_FORMAT(NOW(), '%Y-%m-01')") .
+						"'".sql::escape($startdate)." 00:00:00'":
+						"DATE_FORMAT(NOW(), '%Y-%m-01 00:00:00')") .
 				($enddate?
-					" AND DATE(`TimeStamp`) <= " .
-						"'".sql::escape($enddate)."'":
+					" AND `TimeStamp` <= " .
+						"'".sql::escape($enddate)." 23:59:59'":
 					null) .
 				" LIMIT 1"));
 			
@@ -4497,13 +4497,13 @@ class shoppingOrders extends modules {
 			" FROM `{shoppingorders}`" .
 			" LEFT JOIN `{shoppingorderitems}` ON `{shoppingorderitems}`.`ShoppingOrderID` = " .
 				"`{shoppingorders}`.`ID`" .
-			" WHERE DATE(`{shoppingorders}`.`TimeStamp`) >= " .
+			" WHERE `{shoppingorders}`.`TimeStamp` >= " .
 				($startdate?
-					"'".sql::escape($startdate)."'":
-					"DATE_FORMAT(NOW(), '%Y-%m-01')") .
+					"'".sql::escape($startdate)." 00:00:00'":
+					"DATE_FORMAT(NOW(), '%Y-%m-01 00:00:00')") .
 			($enddate?
-				" AND DATE(`{shoppingorders}`.`TimeStamp`) <= " .
-					"'".sql::escape($enddate)."'":
+				" AND `{shoppingorders}`.`TimeStamp` <= " .
+					"'".sql::escape($enddate)." 23:59:59'":
 				null) .
 			" GROUP BY `ShoppingItemID`");
 		
@@ -4649,13 +4649,13 @@ class shoppingOrders extends modules {
 			" SELECT `ShoppingItemID` FROM `{shoppingorders}`" .
 			" LEFT JOIN `{shoppingorderitems}` ON `{shoppingorderitems}`.`ShoppingOrderID` = " .
 				"`{shoppingorders}`.`ID`" .
-			" WHERE DATE(`{shoppingorders}`.`TimeStamp`) >= " .
+			" WHERE `{shoppingorders}`.`TimeStamp` >= " .
 				($startdate?
-					"'".sql::escape($startdate)."'":
-					"DATE_FORMAT(NOW(), '%Y-%m-01')") .
+					"'".sql::escape($startdate)." 00:00:00'":
+					"DATE_FORMAT(NOW(), '%Y-%m-01 00:00:00')") .
 			($enddate?
-				" AND DATE(`{shoppingorders}`.`TimeStamp`) <= " .
-					"'".sql::escape($enddate)."'":
+				" AND `{shoppingorders}`.`TimeStamp` <= " .
+					"'".sql::escape($enddate)." 23:59:59'":
 				null) .
 			" GROUP BY `ShoppingItemID`");
 		
@@ -5373,8 +5373,8 @@ class shoppingOrders extends modules {
 		$items = sql::run(
 			" SELECT * FROM `{shoppingitems}`" .
 			" WHERE `ID` IN (".$orderitems['ItemIDs'].")" .
-			" AND !`Deactivated`" .
-			" AND `DigitalGoods`");
+			" AND `Deactivated` = 0" .
+			" AND `DigitalGoods` = 1");
 		
 		if (!sql::rows($items))
 			return;
@@ -5399,7 +5399,7 @@ class shoppingOrders extends modules {
 			$downloadable = sql::fetch(sql::run(
 				" SELECT `DigitalGoodsExpiration` FROM `{shoppings}`" .
 				" WHERE `ID` = '".$item['ShoppingID']."'" .
-				" AND (!`DigitalGoodsExpiration`" .
+				" AND (`DigitalGoodsExpiration` = 0" .
 					" OR DATEDIFF(NOW(), '".$row['TimeStamp']."')" .
 						" <= `DigitalGoodsExpiration`)"));
 			

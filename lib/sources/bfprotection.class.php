@@ -135,16 +135,15 @@ class _BFProtection {
 		if (!BRUTE_FORCE_PROTECTION_ENABLED)
 			return false;
 		
-		$row = sql::fetch(sql::run(
+		$rows = sql::run(
 			" SELECT `IP` FROM `{bfprotectionbans}`" .
 			" WHERE `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'" .
-			" AND (UNIX_TIMESTAMP(`EndTimeStamp`) - UNIX_TIMESTAMP(NOW()))/60 > ".
-				(int)$this->protectionTimeMinutes));
+			" AND `EndTimeStamp` > DATE_ADD(NOW(), INTERVAL ".(int)$this->protectionTimeMinutes." MINUTE)");
 			
 		// If ip is banned for more than protectionTimeMinutes we exit the whole code/site as the 
 		// ip should be banned
 		 
-		if ($row)
+		if (sql::rows($rows))
 			exit();
 		
 		$this->get($_SERVER['REMOTE_ADDR']);

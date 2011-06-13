@@ -107,6 +107,18 @@ class _sql {
 	}
 	
 	static function run($query, $debug = false) {
+		// Uncomment this if you would like to see queries that need optimization
+		/*if (preg_match('/^ *?SELECT.*?WHERE/i', $query) && !preg_match('/`\{TMP[a-zA-Z0-9]+\}`/', $query) &&
+			$explains = @mysql_query('EXPLAIN '.sql::prefixTable($query), sql::$link))
+		{
+			$explain = sql::fetch($explains);
+			if (!$explain['key'] && !$explain['possible_keys'] && 
+				!in_array($explain['Extra'], array(
+					'Impossible WHERE noticed after reading const tables',
+					'Select tables optimized away')))
+				$debug = true;
+		}*/
+		
 		if (!trim($query))
 			return false;
 		
@@ -168,7 +180,7 @@ class _sql {
 		return mysql_real_escape_string($string, sql::$link);
 	}
 	
-	static function count($tblkey = '`ID`', $debug = false) {
+	static function count($tblkey = '*', $debug = false) {
 		if (sql::$lastQuery) {
 			$query = sql::$lastQuery;
 			preg_match("/FROM (.*?) (GROUP|ORDER|LIMIT)/is", $query, $found);

@@ -71,9 +71,9 @@ class fileSharingAttachments extends attachments {
 			$row = sql::fetch(sql::run(
 				" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS `FolderIDs`" .
 				" FROM `{filesharings}`" .
-				" WHERE !`Deactivated`" .
-				" AND `MembersOnly` " .
-				" AND !`ShowToGuests`" .
+				" WHERE `Deactivated` = 0" .
+				" AND `MembersOnly` = 1 " .
+				" AND `ShowToGuests` = 0" .
 				" LIMIT 1"));
 					
 			if ($row['FolderIDs'])
@@ -83,7 +83,7 @@ class fileSharingAttachments extends attachments {
 		$row = sql::fetch(sql::run(
 			" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS `FolderIDs`" .
 			" FROM `{filesharings}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			($ignorefolders?
 				" AND `ID` NOT IN (".implode(',', $ignorefolders).")":
 				null) .
@@ -237,10 +237,10 @@ class fileSharing extends modules {
 	function SQL() {
 		return
 			" SELECT * FROM `{filesharings}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			(!$GLOBALS['USER']->loginok?
-				" AND (!`MembersOnly` " .
-				"	OR `ShowToGuests`)":
+				" AND (`MembersOnly` = 0 " .
+				"	OR `ShowToGuests` = 1)":
 				null) .
 			($this->search?
 				sql::search(
@@ -248,7 +248,7 @@ class fileSharing extends modules {
 					array('Title', 'Description')):
 				((int)$this->selectedID?
 					" AND `SubFolderOfID` = '".(int)$this->selectedID."'":
-					" AND !`SubFolderOfID`")) .
+					" AND `SubFolderOfID` = 0")) .
 			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`";
 	}
 	
@@ -1282,7 +1282,7 @@ class fileSharing extends modules {
 				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
 				null) .
 			(!$this->userPermissionIDs && ~$this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-				" AND !`SubFolderOfID`":
+				" AND `SubFolderOfID` = 0":
 				null) .
 			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
 		
@@ -1657,7 +1657,7 @@ class fileSharing extends modules {
 			" FROM `{filesharings}` " .
 			($folderid?
 				" WHERE `SubFolderOfID` = '".$folderid."'":
-				" WHERE !`SubFolderOfID`") .
+				" WHERE `SubFolderOfID` = 0") .
 			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
 		
 		while($row = sql::fetch($rows)) {
@@ -1932,7 +1932,7 @@ class fileSharing extends modules {
 		$row['_SubFolders'] = sql::count(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{filesharings}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			" AND `SubFolderOfID` = '".(int)$row['ID']."'");
 		
 		echo 
@@ -2082,7 +2082,7 @@ class fileSharing extends modules {
 		
 		$folder = sql::fetch(sql::run(
 			" SELECT * FROM `{filesharings}` " .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			((int)$this->selectedID?
 				" AND `ID` = '".(int)$this->selectedID."'":
 				" AND `Path` LIKE '".sql::escape($this->arguments)."'") .
@@ -2168,7 +2168,7 @@ class fileSharing extends modules {
 		if ((int)$this->selectedID) {
 			$row = sql::fetch(sql::run(
 				" SELECT * FROM `{filesharings}`" .
-				" WHERE !`Deactivated`" .
+				" WHERE `Deactivated` = 0" .
 				" AND `ID` = '".(int)$this->selectedID."'" .
 				" LIMIT 1"));
 			

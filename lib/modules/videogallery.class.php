@@ -71,9 +71,9 @@ class videoGalleryVideos extends videos {
 			$row = sql::fetch(sql::run(
 				" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS `FolderIDs`" .
 				" FROM `{videogalleries}`" .
-				" WHERE !`Deactivated`" .
-				" AND `MembersOnly` " .
-				" AND !`ShowToGuests`" .
+				" WHERE `Deactivated` = 0" .
+				" AND `MembersOnly` = 1 " .
+				" AND `ShowToGuests` = 0" .
 				" LIMIT 1"));
 				
 			if ($row['FolderIDs'])
@@ -83,7 +83,7 @@ class videoGalleryVideos extends videos {
 		$row = sql::fetch(sql::run(
 			" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS `FolderIDs`" .
 			" FROM `{videogalleries}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			($ignorefolders?
 				" AND `ID` NOT IN (".implode(',', $ignorefolders).")":
 				null) .
@@ -708,14 +708,14 @@ class videoGallery extends modules {
 	function SQL() {
 		return
 			" SELECT * FROM `{videogalleries}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			(!$GLOBALS['USER']->loginok?
-				" AND (!`MembersOnly` " .
-				"	OR `ShowToGuests`)":
+				" AND (`MembersOnly` = 0 " .
+				"	OR `ShowToGuests` = 1)":
 				null) .
 			((int)$this->selectedID?
 				" AND `SubGalleryOfID` = '".(int)$this->selectedID."'":
-				" AND !`SubGalleryOfID`") .
+				" AND `SubGalleryOfID` = 0") .
 			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`";
 	}
 	
@@ -2000,7 +2000,7 @@ class videoGallery extends modules {
 				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
 				null) .
 			(!$this->userPermissionIDs && ~$this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-				" AND !`SubGalleryOfID`":
+				" AND `SubGalleryOfID` = 0":
 				null) .
 			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
 		
@@ -2451,7 +2451,7 @@ class videoGallery extends modules {
 			" FROM `{videogalleries}` " .
 			($galleryid?
 				" WHERE `SubGalleryOfID` = '".$galleryid."'":
-				" WHERE !`SubGalleryOfID`") .
+				" WHERE `SubGalleryOfID` = 0") .
 			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
 		
 		while($row = sql::fetch($rows)) {
@@ -2763,7 +2763,7 @@ class videoGallery extends modules {
 		$row['_SubGalleries'] = sql::count(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{videogalleries}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			" AND `SubGalleryOfID` = '".(int)$row['ID']."'");
 		
 		echo 
@@ -2926,7 +2926,7 @@ class videoGallery extends modules {
 		
 		$gallery = sql::fetch(sql::run(
 			" SELECT * FROM `{videogalleries}` " .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			((int)$this->selectedID?
 				" AND `ID` = '".(int)$this->selectedID."'":
 				" AND `Path` LIKE '".sql::escape($this->arguments)."'") .
@@ -3013,7 +3013,7 @@ class videoGallery extends modules {
 		if ((int)$this->selectedID) {
 			$row = sql::fetch(sql::run(
 				" SELECT * FROM `{videogalleries}`" .
-				" WHERE !`Deactivated`" .
+				" WHERE `Deactivated` = 0" .
 				" AND `ID` = '".(int)$this->selectedID."'" .
 				" LIMIT 1"));
 				

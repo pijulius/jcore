@@ -71,9 +71,9 @@ class photoGalleryPictures extends pictures {
 			$row = sql::fetch(sql::run(
 				" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS `FolderIDs`" .
 				" FROM `{photogalleries}`" .
-				" WHERE !`Deactivated`" .
-				" AND `MembersOnly` " .
-				" AND !`ShowToGuests`" .
+				" WHERE `Deactivated` = 0" .
+				" AND `MembersOnly` = 1 " .
+				" AND `ShowToGuests` = 0" .
 				" LIMIT 1"));
 				
 			if ($row['FolderIDs'])
@@ -83,7 +83,7 @@ class photoGalleryPictures extends pictures {
 		$row = sql::fetch(sql::run(
 			" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS `FolderIDs`" .
 			" FROM `{photogalleries}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			($ignorefolders?
 				" AND `ID` NOT IN (".implode(',', $ignorefolders).")":
 				null) .
@@ -662,14 +662,14 @@ class photoGallery extends modules {
 	function SQL() {
 		return
 			" SELECT * FROM `{photogalleries}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			(JCORE_VERSION >= '0.5' && !$GLOBALS['USER']->loginok?
-				" AND (!`MembersOnly` " .
-				"	OR `ShowToGuests`)":
+				" AND (`MembersOnly` = 0 " .
+				"	OR `ShowToGuests` = 1)":
 				null) .
 			((int)$this->selectedID?
 				" AND `SubGalleryOfID` = '".(int)$this->selectedID."'":
-				" AND !`SubGalleryOfID`") .
+				" AND `SubGalleryOfID` = 0") .
 			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`";
 	}
 	
@@ -1973,7 +1973,7 @@ class photoGallery extends modules {
 				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
 				null) .
 			(!$this->userPermissionIDs && ~$this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-				" AND !`SubGalleryOfID`":
+				" AND `SubGalleryOfID` = 0":
 				null) .
 			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
 		
@@ -2471,7 +2471,7 @@ class photoGallery extends modules {
 			" FROM `{photogalleries}` " .
 			($galleryid?
 				" WHERE `SubGalleryOfID` = '".$galleryid."'":
-				" WHERE !`SubGalleryOfID`") .
+				" WHERE `SubGalleryOfID` = 0") .
 			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
 		
 		while($row = sql::fetch($rows)) {
@@ -2787,7 +2787,7 @@ class photoGallery extends modules {
 		$row['_SubGalleries'] = sql::count(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{photogalleries}`" .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			" AND `SubGalleryOfID` = '".(int)$row['ID']."'");
 		
 		echo 
@@ -2950,7 +2950,7 @@ class photoGallery extends modules {
 		
 		$gallery = sql::fetch(sql::run(
 			" SELECT * FROM `{photogalleries}` " .
-			" WHERE !`Deactivated`" .
+			" WHERE `Deactivated` = 0" .
 			((int)$this->selectedID?
 				" AND `ID` = '".(int)$this->selectedID."'":
 				" AND `Path` LIKE '".sql::escape($this->arguments)."'") .
@@ -3037,7 +3037,7 @@ class photoGallery extends modules {
 		if ((int)$this->selectedID) {
 			$row = sql::fetch(sql::run(
 				" SELECT * FROM `{photogalleries}`" .
-				" WHERE !`Deactivated`" .
+				" WHERE `Deactivated` = 0" .
 				" AND `ID` = '".(int)$this->selectedID."'" .
 				" LIMIT 1"));
 				

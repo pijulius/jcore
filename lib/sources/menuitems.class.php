@@ -28,15 +28,15 @@ class _menuItems {
 		if (JCORE_VERSION >= '0.9')
 			return 
 				" SELECT * FROM `{menuitems}`" .
-				" WHERE !`Deactivated`" .
+				" WHERE `Deactivated` = 0" .
 				" AND `MenuID` = '".(int)$this->selectedMenuID."'" .
 				" AND `LanguageID` = '".
 					(languages::$selected?
 						(int)languages::$selected['ID']:
 						0) .
 					"'" .
-				" AND !`SubMenuItemOfID`" .
-				" AND (!`ViewableBy` OR " .
+				" AND `SubMenuItemOfID` = 0" .
+				" AND (`ViewableBy` = 0 OR " .
 					($GLOBALS['USER']->loginok?
 						($GLOBALS['USER']->data['Admin']?
 							" `ViewableBy` IN (2, 3)":
@@ -54,16 +54,16 @@ class _menuItems {
 					'pages':
 					'menuitems') .
 				"}`" .
-			" WHERE !`Deactivated`" .
-			" AND !`Hidden`" .
+			" WHERE `Deactivated` = 0" .
+			" AND `Hidden` = 0" .
 			" AND `MenuID` = '".(int)$this->selectedMenuID."'" .
 			" AND `LanguageID` = '".
 				(languages::$selected?
 					(int)languages::$selected['ID']:
 					0) .
 				"'" .
-			" AND !`".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."`" .
-			" AND (!`ViewableBy` OR " .
+			" AND `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = 0" .
+			" AND (`ViewableBy` = 0 OR " .
 				($GLOBALS['USER']->loginok?
 					($GLOBALS['USER']->data['Admin']?
 						" `ViewableBy` IN (2, 3)":
@@ -533,7 +533,7 @@ class _menuItems {
 			" WHERE `MenuID` = '".$this->selectedMenuID."'" .
 			((int)$menuid?
 				" AND `SubMenuItemOfID` = '".(int)$menuid."'":
-				" AND !`SubMenuItemOfID`") .
+				" AND `SubMenuItemOfID` = 0") .
 			($language?
 				" AND `LanguageID` = '".$language['ID']."'":
 				null) .
@@ -1046,7 +1046,7 @@ class _menuItems {
 			($submenuof?
 				" AND `SubMenuItemOfID` = '" .
 					$submenuof."'":
-				" AND !`SubMenuItemOfID`") .
+				" AND `SubMenuItemOfID` = 0") .
 			" ORDER BY `LanguageID`, `OrderID`");
 		
 		$arelanguages = false;
@@ -1192,7 +1192,7 @@ class _menuItems {
 					" AND `MenuID` != '".$row['MenuID']."'":
 					null) .
 				" AND `LanguageID` = '".$row['LanguageID']."'" .
-				" AND !`Deactivated`" .
+				" AND `Deactivated` = 0" .
 				" ORDER BY `Path` DESC"));
 			
 			if ($aliaspages) {
@@ -1246,7 +1246,7 @@ class _menuItems {
 		if (JCORE_VERSION >= '0.9') {
 			$rows = sql::run(
 				" SELECT * FROM `{menuitems}`" .
-				" WHERE !`Deactivated`" .
+				" WHERE `Deactivated` = 0" .
 				" AND `MenuID` = '".(int)$this->selectedMenuID."'" .
 				" AND `LanguageID` = '".
 					(languages::$selected?
@@ -1255,7 +1255,7 @@ class _menuItems {
 					"'" .
 				" AND `SubMenuItemOfID` = '" .
 					(int)$row['ID']."'" .
-				" AND (!`ViewableBy` OR " .
+				" AND (`ViewableBy` = 0 OR " .
 					($GLOBALS['USER']->loginok?
 						($GLOBALS['USER']->data['Admin']?
 							" `ViewableBy` IN (2, 3)":
@@ -1274,8 +1274,8 @@ class _menuItems {
 						'pages':
 						'menuitems') .
 					"}`" .
-				" WHERE !`Deactivated`" .
-				" AND !`Hidden`" .
+				" WHERE `Deactivated` = 0" .
+				" AND `Hidden` = 0" .
 				" AND `MenuID` = '".(int)$this->selectedMenuID."'" .
 				" AND `LanguageID` = '".
 					(languages::$selected?
@@ -1284,7 +1284,7 @@ class _menuItems {
 					"'" .
 				" AND `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = '" .
 					(int)$row['ID']."'" .
-				" AND (!`ViewableBy` OR " .
+				" AND (`ViewableBy` = 0 OR " .
 					($GLOBALS['USER']->loginok?
 						($GLOBALS['USER']->data['Admin']?
 							" `ViewableBy` IN (2, 3)":

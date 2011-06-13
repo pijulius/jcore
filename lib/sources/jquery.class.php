@@ -215,9 +215,9 @@ class _jQuery {
 					", `jQueryPlugins`":
 					null) .
 				" FROM `{modules}`" .
-				" WHERE `Installed`" .
+				" WHERE `Installed` = 1" .
 				(JCORE_VERSION >= '0.9'?
-					" AND !`Deactivated`":
+					" AND `Deactivated` = 0":
 					null));
 				
 			while($module = sql::fetch($modules)) {

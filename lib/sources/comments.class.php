@@ -90,7 +90,7 @@ class _comments {
 				null) .
 			($commentid?
 				" AND `SubCommentOfID` = '".(int)$commentid."'":
-				" AND !`SubCommentOfID`") .
+				" AND `SubCommentOfID` = 0") .
 			(defined('MODERATED_COMMENTS') && MODERATED_COMMENTS?
 				 (defined('MODERATED_COMMENTS_PENDING_MINUTES') && 
 				  MODERATED_COMMENTS_PENDING_MINUTES?
@@ -100,7 +100,7 @@ class _comments {
 					null) .
 				 (defined('MODERATED_COMMENTS_BY_APPROVAL') && 
 				  MODERATED_COMMENTS_BY_APPROVAL?
-					" AND (!`Pending`" .
+					" AND (`Pending` = 0" .
 					" OR `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."')":
 					null):
 				null) .
@@ -974,7 +974,7 @@ class _comments {
 			" SELECT * FROM `{".$this->sqlTable."}` " .
 			($commentid?
 				" WHERE `SubCommentOfID` = '".$commentid."'":
-				" WHERE !`SubCommentOfID`") .
+				" WHERE `SubCommentOfID` = 0") .
 			" ORDER BY `ID`");
 		
 		while($row = sql::fetch($rows)) {

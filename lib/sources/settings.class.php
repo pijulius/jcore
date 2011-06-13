@@ -157,7 +157,7 @@ class _settings {
 		
 		$rows = sql::run(
 			" SELECT * FROM `{".$this->sqlTable."}`" .
-			" WHERE !`TypeID`" .
+			" WHERE `TypeID` = 0" .
 			" ORDER BY `OrderID`, `ID`");
 		
 		if (JCORE_VERSION >= '0.6')
@@ -208,7 +208,7 @@ class _settings {
 			$settings = sql::run(
 				" SELECT * FROM `{".$this->sqlTable."}`" .
 				" WHERE `OrderID` = '".$row['OrderID']."'" .
-				" AND `TypeID`" .
+				" AND `TypeID` > 0" .
 				" AND `TypeID` != '".SETTINGS_TYPE_HIDDEN."'");
 			
 			while ($setting = sql::fetch($settings)) {	
@@ -395,7 +395,7 @@ class _settings {
 	function defineSettings() {
 		$rows = sql::run(
 			" SELECT * FROM `{".$this->sqlTable."}`" .
-			" WHERE `TypeID`");
+			" WHERE `TypeID` > 0");
 			
 		if (!$rows)
 			return false;

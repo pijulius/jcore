@@ -236,7 +236,7 @@ class _templateExporter {
 						0) .
 					"'":
 				null) .
-			" AND !`SubBlockOfID`" .
+			" AND `SubBlockOfID` = 0" .
 			" ORDER BY `OrderID`");
 		
 		while($block = sql::fetch($blocks))
