@@ -830,7 +830,7 @@ class _posts {
 		return true;
 	}
 	
-	function displayAdminAvailableKeywords() {
+	function displayAdminAvailableKeywords($targetfield = '#neweditpostform #entryKeywords') {
 		$search = null;
 		
 		if (isset($_POST['ajaxsearch']))
@@ -907,9 +907,9 @@ class _posts {
 					"<td align='center'>" .
 						"<a href='javascript://' " .
 							"onclick=\"" .
-								"jQuery('#neweditpostform #entryKeywords').val(" .
-									"jQuery('#neweditpostform #entryKeywords').val()+" .
-									"(jQuery('#neweditpostform #entryKeywords').val()?', ':'')+" .
+								"jQuery('".$targetfield."').val(" .
+									"jQuery('".$targetfield."').val()+" .
+									"(jQuery('".$targetfield."').val()?', ':'')+" .
 									"'".htmlspecialchars($row['Keyword'], ENT_QUOTES)."');" .
 									"jQuery(this).closest('.posts-add-keywords-list').find('input[type=search]').first().focus();" .
 								"\" class='add-link'>" .

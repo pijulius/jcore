@@ -357,7 +357,15 @@ class _pages {
 			$form->setStyle('width: 250px;');
 			$form->setTooltipText(__("e.g. oranges, lemons, limes"));
 			$form->addAdditionalText(
-				"<br /><span class='comment'>" .
+				"<br />" .
+				"<a href='".url::uri('request, keywords') .
+					"&amp;request=".url::path() .
+					"&amp;keywords=1' " .
+					"class='posts-add-keyword add-link ajax-content-link' " .
+					"title='".htmlspecialchars(__("Add Keyword"), ENT_QUOTES)."'>" .
+					__("Add Keyword") .
+				"</a>" .
+				" <span class='comment'>" .
 				__("(automatically show posts with these keywords)") .
 				"</span>");
 		}
@@ -2320,6 +2328,22 @@ class _pages {
 				'&amp;languageid='.$language['ID']:
 				null) .
 			'&amp;pageid='.$row['ID'];
+	}
+	
+	function ajaxRequest() {
+		$keywords = null;
+		
+		if (isset($_GET['keywords']))
+			$keywords = $_GET['keywords'];
+		
+		if ($keywords) {
+			$posts = new posts();
+			$posts->displayAdminAvailableKeywords('#neweditpageform #entryPostKeywords');
+			unset($posts);
+			return true;
+		}
+		
+		return true;
 	}
 	
 	static function displayModules($pageid) {
