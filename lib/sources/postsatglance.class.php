@@ -54,7 +54,7 @@ class _postsAtGlance extends posts {
 			(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID'), 
 			array('0'));
 		
-		if (JCORE_VERSION >= '0.9') {
+		if (JCORE_VERSION >= '0.9' && $languages = languages::get()) {
 			$form->edit(
 				'LanguageID',
 				__('Language'),
@@ -65,12 +65,11 @@ class _postsAtGlance extends posts {
 				'LanguageID', 
 				'', '');
 			
-			if ($languages = languages::get())
-				while($language = sql::fetch($languages))
-					$form->addValue(
-						'LanguageID',
-						$language['ID'], 
-						$language['Title']);
+			while($language = sql::fetch($languages))
+				$form->addValue(
+					'LanguageID',
+					$language['ID'], 
+					$language['Title']);
 		}
 	}
 	
