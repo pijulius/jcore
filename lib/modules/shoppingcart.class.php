@@ -3883,7 +3883,7 @@ class shoppingCart extends modules {
 			" `TypeID` tinyint(1) unsigned NOT NULL default '1'," .
 			" `OrderID` smallint(5) unsigned NOT NULL default '0'," .
 			" PRIMARY KEY  (`ID`)," .
-			" KEY `TypeID` (`TypeID`)" .
+			" KEY `TypeID` (`TypeID`)," .
 			" KEY `OrderID` (`OrderID`)" .
 			") ENGINE=MyISAM;");
 		
