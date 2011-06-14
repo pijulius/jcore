@@ -2373,7 +2373,7 @@ class shoppingItems {
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ShoppingID` = '".admin::getPathID()."'" .
 				" AND (`AvailableQuantity` IS NULL " .
-					" OR (`AvailableQuantity` = 1" .
+					" OR (`AvailableQuantity` > 0" .
 					(defined('SHOPPING_CART_LOW_STOCK_QUANTITY') && 
 					 SHOPPING_CART_LOW_STOCK_QUANTITY?
 					 	" AND `AvailableQuantity` > '".(int)SHOPPING_CART_LOW_STOCK_QUANTITY."'":

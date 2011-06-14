@@ -1071,7 +1071,7 @@ class shoppingCartFees {
 		$rows = sql::run(
 			" SELECT * FROM `{dynamicformfields}`" .
 			" WHERE `FormID` = '".$form['ID']."'" .
-			" AND `ValueType` = 1" .
+			" AND `ValueType` > 0" .
 			" AND `Name` != ''" .
 			" ORDER BY `OrderID`, `Title`");
 		
@@ -1885,7 +1885,7 @@ class shoppingCartTaxes {
 		$rows = sql::run(
 			" SELECT * FROM `{dynamicformfields}`" .
 			" WHERE `FormID` = '".$form['ID']."'" .
-			" AND `ValueType` = 1" .
+			" AND `ValueType` > 0" .
 			" AND `Name` != ''" .
 			" ORDER BY `OrderID`, `Title`");
 		
@@ -4526,7 +4526,7 @@ class shoppingCart extends modules {
 			$item = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$itemid."'" .
-				" AND (`AvailableQuantity` = 1 " .
+				" AND (`AvailableQuantity` > 0 " .
 					" OR `AvailableQuantity` IS NULL)" .
 				" LIMIT 1"));
 			

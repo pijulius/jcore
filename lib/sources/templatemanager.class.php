@@ -1039,7 +1039,7 @@ class _templateManager {
 		
 		$rows = sql::run(
 			" SELECT * FROM `{posts}`" .
-			" WHERE `BlockID` = 1" .
+			" WHERE `BlockID` > 0" .
 			" ORDER BY `BlockID`, `OrderID`, `ID`");
 		
 		$ids = sql::fetch(sql::run(

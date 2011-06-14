@@ -907,7 +907,7 @@ class _dynamicForms extends form {
 				" SELECT * FROM `{dynamicformfields}`" .
 				" WHERE `FormID` = '".$id."'" .
 				" AND `Name` != ''" .
-				" AND `ValueType` = 1" .
+				" AND `ValueType` > 0" .
 				" ORDER BY `OrderID`, `ID`");
 			
 			while($field = sql::fetch($fields)) {
