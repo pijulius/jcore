@@ -210,7 +210,7 @@ class _updates {
 			}
 			
 			if ($this->testing) {
-				preg_match_all('/(((CREATE|ALTER|RENAME) TABLE|INSERT INTO|UPDATE|DELETE|SELECT .*? FROM) [a-zA-Z0-9\_\- ]*?)`([a-zA-Z0-9\_\-]*?)`/',
+				preg_match_all('/(((CREATE|ALTER|RENAME) TABLE|INSERT INTO|UPDATE|DELETE|SELECT[ \r\n\t]+.*?[ \r\n\t]+FROM) [a-zA-Z0-9\_\- ]*?)`([a-zA-Z0-9\_\-]*?)`/s',
 					$query, $matches);
 				
 				foreach($matches[4] as $tmptable) {
@@ -231,18 +231,18 @@ class _updates {
 			}
 			
 			$query = preg_replace(
-				'/(((DROP|CREATE|ALTER) TABLE|INSERT INTO|UPDATE|DELETE|SELECT .*? FROM) [a-zA-Z0-9\_\- ]*?)`([a-zA-Z0-9\_\-]*?)`/',
+				'/(((DROP|CREATE|ALTER) TABLE|INSERT INTO|UPDATE|DELETE|SELECT[ \r\n\t]+.*?[ \r\n\t]+FROM) [a-zA-Z0-9\_\- ]*?)`([a-zA-Z0-9\_\-]*?)`/s',
 				'\1`{\4'.($this->testing?'TMP':null).'}`',
 				$query);
 			
 			$query = preg_replace(
-				'/(RENAME TABLE [a-zA-Z0-9\_\- ]*?)`([a-zA-Z0-9\_\-]*?)`( TO )`([a-zA-Z0-9\_\-]*?)`/',
+				'/(RENAME TABLE [a-zA-Z0-9\_\- ]*?)`([a-zA-Z0-9\_\-]*?)`([ \r\n\t]+TO[ \r\n\t]+)`([a-zA-Z0-9\_\-]*?)`/s',
 				'\1`{\2'.($this->testing?'TMP':null).'}`\3`{\4'.($this->testing?'TMP':null).'}`',
 				$query);
 			
 			if ($this->testing) {
 				$query = str_replace('CREATE TABLE ', 'CREATE TEMPORARY TABLE ', $query);
-				$query = preg_replace('/RENAME TABLE (.*?) TO (.*)/', 'ALTER TABLE \1 RENAME TO \2', $query);
+				$query = preg_replace('/RENAME TABLE (.*?)[ \r\n\t]+TO[ \r\n\t]+(.*)/', 'ALTER TABLE \1 RENAME TO \2', $query);
 			}
 			
 			$splittedquery = null;
