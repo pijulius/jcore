@@ -6,7 +6,7 @@
  *  URI: http://jcore.net
  *  Description: Implements a directory like structure to share files. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
- *  Version: 0.8
+ *  Version: 0.9
  *  Tags: file sharing module, gpl, lgpl, mpl
  * 
  ****************************************************************************/

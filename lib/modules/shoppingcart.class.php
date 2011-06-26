@@ -6,7 +6,7 @@
  *  URI: http://jcore.net
  *  Description: Allow people to put together their shopping carts and checkout/place order. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
- *  Version: 0.8
+ *  Version: 0.9
  *  Tags: shopping cart module, gpl, lgpl, mpl
  * 
  ****************************************************************************/

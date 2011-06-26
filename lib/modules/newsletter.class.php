@@ -6,7 +6,7 @@
  *  URI: http://jcore.net
  *  Description: Create newsletter lists with subscribers and send newsletters. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
- *  Version: 0.3
+ *  Version: 0.4
  *  Tags: newsletter module, gpl, lgpl, mpl
  * 
  ****************************************************************************/

@@ -6,7 +6,7 @@
  *  URI: http://jcore.net
  *  Description: Share files in a directory/gallery like strcture. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
- *  Version: 0.8
+ *  Version: 0.9
  *  Tags: photo gallery module, gpl, lgpl, mpl
  * 
  ****************************************************************************/
