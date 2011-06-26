@@ -2610,7 +2610,7 @@ class shoppingCartCoupons {
 		
 		if ($row['DiscountPercent'] && $row['DiscountValue']) {
 			echo 
-				sprintf(_("%s till %s"),
+				sprintf(_("%s up to %s"),
 					$row['DiscountPercent']."%<span class='comment'>&nbsp;",
 					"&nbsp;</span>".shoppingCart::constructPrice($row['DiscountValue']));
 		
