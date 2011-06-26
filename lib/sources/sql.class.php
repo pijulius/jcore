@@ -306,6 +306,15 @@ class _sql {
 		if (!isset($message))
 			$message = __("Could not establish a connection to the database.");
 		
+		if (((SQL_DATABASE == 'yourclient_DB' && SQL_USER == 'yourclient_mysqlusername' && 
+			SQL_PASS == 'mysqlpassword') ||
+			(SQL_DATABASE == 'yourdomain_DB' && SQL_USER == 'yourdomain_mysqluser' &&
+			SQL_PASS == 'mysqlpass')) && @file_exists('install.php'))
+		{
+			header('Location: install.php');
+			exit();
+		}
+		
 		exit(
 			"<html>" .
 			"<head>" .
