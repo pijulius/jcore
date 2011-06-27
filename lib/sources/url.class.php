@@ -131,7 +131,7 @@ class _url {
 	}
 	
 	static function args($notincludeargs = null) {
-		$uri = parse_url($_SERVER['REQUEST_URI']);
+		$uri = @parse_url($_SERVER['REQUEST_URI']);
 		
 		if (!isset($uri['query']))
 			return null;
@@ -190,7 +190,7 @@ class _url {
 					'?':
 					null);
 		
-		$uri = parse_url($_SERVER['REQUEST_URI']);
+		$uri = @parse_url($_SERVER['REQUEST_URI']);
 		
 		if ($notincludeargs == 'ALL')
 			return (isset($uri['path'])?$uri['path']:'');
@@ -261,7 +261,7 @@ class _url {
 	}
 	
 	static function parse($url) {
-		return parse_url($url);
+		return @parse_url($url);
 	}
 	
 	static function parseLinks($content) {
@@ -308,7 +308,7 @@ class _url {
 	}
 	
 	static function rootDomain($url = null) {
-		$url = parse_url($url?$url:url::site());
+		$url = @parse_url($url?$url:url::site());
 		
 		if (!isset($url['host']))
 			return null;
