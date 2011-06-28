@@ -199,10 +199,7 @@ class _jQuery {
 		
 		if (JCORE_VERSION < '0.6')
 			echo 
-				@file_get_contents('lib/jquery/' .
-					(JCORE_VERSION < '0.5'?
-						'jquery-1.3.2.js':
-						'jquery.js'), 
+				@file_get_contents('lib/jquery/jquery.js', 
 					FILE_USE_INCLUDE_PATH)."\n";
 		
 		echo
@@ -351,10 +348,7 @@ class _jQuery {
 		ob_start(array('jQuery', 'compress'));
 		
 		echo 
-			@file_get_contents('lib/jquery/' .
-				(JCORE_VERSION < '0.5'?
-					'jquery-1.3.2.js':
-					'jquery.js'), 
+			@file_get_contents('lib/jquery/jquery.js', 
 				FILE_USE_INCLUDE_PATH)."\n";
 		
 		ob_end_flush();
