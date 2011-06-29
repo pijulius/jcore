@@ -260,8 +260,8 @@ class _url {
 		return true;
 	}
 	
-	static function parse($url) {
-		return @parse_url($url);
+	static function parse($url, $component = -1) {
+		return @parse_url($url, $component);
 	}
 	
 	static function parseLinks($content) {
