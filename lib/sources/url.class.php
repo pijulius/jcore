@@ -487,7 +487,10 @@ class _url {
 		if (!$search)
 			return;
 		
+		$searchstr = $search;
 		$searches = array();
+		$keywords = array();
+		$commands = array();
 		
 		$tooltipcontent = 
 			__("Searching for").": ";
@@ -497,17 +500,25 @@ class _url {
 		else
 			$separator = ' ';
 		
-		preg_match_all('/(".+?"|[^'.$separator.']+)('.$separator.'|$)/', trim($search), $matches);
-		$keywords = $matches[1];
+		if (preg_match_all('/([^ :]+:(".+?"|[^ ]+)( |$))/', $search, $matches))
+			$commands = $matches[1];
+		
+		foreach($commands as $command)
+			$search = str_replace($command, '', $search);
+		
+		if (preg_match_all('/(".+?"|[^'.$separator.']+)('.$separator.'|$)/', trim($search), $matches))
+			$keywords = $matches[1];
+		
+		$keywords = array_merge($keywords, $commands);
 		
 		foreach($keywords as $key => $searchtag) {
-			if (!trim($searchtag))
+			if (!$searchtag = trim($searchtag))
 				continue;
 			
-			if (in_array(trim($searchtag), $searches))
+			if (in_array($searchtag, $searches))
 				continue;
 			
-			$searches[] = trim($searchtag);
+			$searches[] = $searchtag;
 			$tooltipcontent .= 
 				"<a href='".url::uri('search').
 					"&amp;search=" .
@@ -520,9 +531,9 @@ class _url {
 									(!$key?'('.$separator.'|$)':'').
 								'/i', 
 								'', 
-								$search))) .
+								$searchstr))) .
 					"'>".
-				strtoupper(trim($searchtag, ' ":'))."</a>" .
+				strtoupper($searchtag)."</a>" .
 				"<sup class='red'>x</sup> &nbsp;";
 		}
 		

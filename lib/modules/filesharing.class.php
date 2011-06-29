@@ -1703,7 +1703,7 @@ class fileSharing extends modules {
 		$url = modules::getOwnerURL('fileSharing', $id);
 		
 		if (!$url)
-			return url::site().'?';
+			return url::uri(fileSharing::$uriVariables);
 		
 		return $url;	
 	}

@@ -156,7 +156,9 @@ class _posts {
 					($this->searchKeywords?
 						'OR':
 						'AND'), 
-					array('date' => 'TimeStamp')):
+					array(
+						'date' => 'TimeStamp',
+						'key' => 'Keywords')):
 				null) .
 			" ORDER BY" .
 			($this->randomize?
@@ -2235,11 +2237,7 @@ class _posts {
 					$language['Path'].'/':
 					null) .
 				$page['Path'].'/' .
-				$row['Path'] .
-				($this->selectedPageID == $this->selectedPage['ID'] &&
-				 url::arg('postslimit')?
-					'?'.url::arg('postslimit'):
-					null);
+				$row['Path'];
 			
 		return 
 			url::site().'index.php?' .
@@ -2248,10 +2246,6 @@ class _posts {
 				null) .
 			'&amp;pageid='.$page['ID'].
 			'&amp;postid='.$row['ID'];
-			($this->selectedPageID == $this->selectedPage['ID'] &&
-			 url::arg('postslimit')?
-				'&amp;'.url::arg('postslimit'):
-				null);
 	}
 	
 	function generatePageLink(&$row) {
@@ -2278,24 +2272,14 @@ class _posts {
 				($language?
 					$language['Path'].'/':
 					null) .
-				$page['Path'].
-				($this->selectedID == $row['ID'] &&
-				 $this->selectedPageID == $page['ID'] &&
-				 url::arg('postslimit')?
-					'?'.url::arg('postslimit'):
-					null);
+				$page['Path'];
 		
 		return 
 			url::site().'index.php?' .
 			($language?
 				'&amp;languageid='.$language['ID']:
 				null) .
-			'&amp;pageid='.$page['ID'] .
-			($this->selectedID == $row['ID'] &&
-			 $this->selectedPageID == $page['ID'] &&
-			 url::arg('postslimit')?
-				'&amp;'.url::arg('postslimit'):
-				null);
+			'&amp;pageid='.$page['ID'];
 	}
 	
 	function generateCSSClass(&$row) {
@@ -2535,8 +2519,11 @@ class _posts {
 	
 	function displayKeywordsCloudLink(&$row) {
 		echo  
-			"<a href='".$row['_SearchURL']."&amp;search=".
-				urlencode('"'.trim($row['Keyword']).'"') .
+			"<a href='".$row['_SearchURL'] .
+				(strpos($row['_SearchURL'], '?') === false?
+					'?':
+					'&amp;') .
+				"search=key:".urlencode('"'.trim($row['Keyword']).'"') .
 				"&amp;searchin=posts' " .
 				"style='font-size: ".$row['_FontPercent']."%;'>" .
 				ucfirst(trim($row['Keyword'])) .
@@ -2554,7 +2541,7 @@ class _posts {
 		
 		if ($arguments)
 			$page = sql::fetch(sql::run(
-				" SELECT `ID` FROM `{" .
+				" SELECT `ID`, `LanguageID`, `Path` FROM `{" .
 					(JCORE_VERSION >= '0.8'?
 						'pages':
 						'menuitems') .
@@ -2606,7 +2593,10 @@ class _posts {
 		
 		echo "<div class='post-keywords-cloud'>";
 		
-		$searchurl = modules::getOwnerURL('Search');
+		if ($page)
+			$searchurl = pages::generateLink($page);
+		else
+			$searchurl = modules::getOwnerURL('Search');
 		
 		if (!$searchurl)
 			$searchurl = url::site()."index.php?";
@@ -2660,11 +2650,11 @@ class _posts {
 				echo ", ";
 			
 			echo  
-				"<a href='".$row['_PageLink']."?search=".
-					($this->search?
-						urlencode($this->search.","):
-						null) .
-					urlencode('"'.trim($word).'"') .
+				"<a href='".$row['_PageLink'] .
+					(strpos($row['_PageLink'], '?') === false?
+						'?':
+						'&amp;') .
+					"search=key:".urlencode('"'.trim($word).'"') .
 					"&amp;searchin=posts" .
 					"' class='keyword'>" .
 					ucfirst(trim($word)) .
@@ -2684,7 +2674,7 @@ class _posts {
 	function displayFunctions(&$row) {
 		if ($this->selectedID == $row['ID']) {
 			echo
-				"<a href='".$row['_PageLink']."' class='back comment'>" .
+				"<a href='".$row['_BackLink']."' class='back comment'>" .
 					"<span>".
 					__("Back").
 					"</span>" .
@@ -3305,6 +3295,22 @@ class _posts {
 			$row['_Link'] = $this->generateLink($row);
 			$row['_PageLink'] = $pagelink;
 			$row['_CSSClass'] = $cssclass;
+			$row['_BackLink'] = $pagelink;
+			
+			if ($this->selectedPageID == $pageid && url::arg('postslimit')) {
+				if ($this->selectedID == $row['ID'])
+					$row['_BackLink'] .= 
+					 	(strpos($row['_BackLink'], '?') === false?
+					 		'?':
+							'&amp;') .
+						url::arg('postslimit');
+				
+				$row['_Link'] .= 
+				 	(strpos($row['_Link'], '?') === false?
+				 		'?':
+						'&amp;') .
+					url::arg('postslimit');
+			}
 			
 			if ($i == 1)
 				$row['_CSSClass'] .= ' first';
@@ -3560,6 +3566,22 @@ class _posts {
 			$row['_Link'] = $this->generateLink($row);
 			$row['_PageLink'] = $pagelink;
 			$row['_CSSClass'] = $cssclass;
+			$row['_BackLink'] = $pagelink;
+			
+			if ($this->selectedPageID == $pageid && url::arg('postslimit')) {
+				if ($this->selectedID == $row['ID'])
+					$row['_BackLink'] .= 
+					 	(strpos($row['_BackLink'], '?') === false?
+					 		'?':
+							'&amp;') .
+						url::arg('postslimit');
+				
+				$row['_Link'] .= 
+				 	(strpos($row['_Link'], '?') === false?
+				 		'?':
+						'&amp;') .
+					url::arg('postslimit');
+			}
 			
 			if ($i == 1)
 				$row['_CSSClass'] .= ' first';

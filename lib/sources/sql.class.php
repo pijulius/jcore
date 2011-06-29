@@ -211,7 +211,7 @@ class _sql {
 	static function search($search, $fields = array('Title'), $type = 'AND', 
 		$commandfields = array()) 
 	{
-		if (!trim($search) || !is_array($fields) || !count($fields))
+		if (!trim($search))
 			return null;
 			
 		if (strpos($search, ',') !== false) {
@@ -222,68 +222,75 @@ class _sql {
 			$search = trim($search);
 		}
 		
-		$query = null;
+		$searchquery = null;
+		$commandquery = null;
+		
+		$keywords = array();
 		$commands = array();
 		
-		preg_match_all('/(".+?"|[^'.$separator.']+)('.$separator.'|$)/', trim($search), $matches);
-		$keywords = $matches[1];
+		if (preg_match_all('/([^ :]+:(".+?"|[^ ]+)( |$))/', $search, $matches))
+			$commands = $matches[1];
+		
+		foreach($commands as $command) {
+			$search = str_replace($command, '', $search);
+			@list($commandid, $commanddata) = explode(":", $command);
+			
+			if (!isset($commandfields[$commandid]) || !$commandfields[$commandid])
+				continue;
+			
+			if ($commandquery)
+				$commandquery .= " ".$type;
+		
+			$commandquery .= " `".$commandfields[$commandid]."` LIKE '%".
+				sql::escape(trim($commanddata, ' "'))."%'";
+		}
+		
+		if ($commandquery)
+			$commandquery = " (".$commandquery.") ";
+		
+		if (preg_match_all('/(".+?"|[^'.$separator.']+)('.$separator.'|$)/', $search, $matches))
+			$keywords = $matches[1];
 		
 		if (count($keywords) > 21)
 			$keywords = array_slice($keywords, 0, 21);
 		
-		foreach($fields as $field) {
-			if (!$field)
-				continue;
-			
-			if ($query)
-				$query .= " OR";
-			
-			$keywordsquery = null;
-			
-			foreach($keywords as $keyword) {
-				if (strpos(trim($keyword), ':') === 0) {
-					$commands[] = trim($keyword, ' :');
+		if (is_array($fields) && count($fields) && count($keywords)) {
+			foreach($fields as $field) {
+				if (!$field)
 					continue;
+				
+				if ($searchquery)
+					$searchquery .= " OR";
+				
+				$keywordsquery = null;
+				
+				foreach($keywords as $keyword) {
+					if ($keywordsquery)
+						$keywordsquery .= " ".$type;
+				
+					$keywordsquery .= " `".$field."` LIKE '%".
+						sql::escape(trim($keyword, ' "'))."%'";
 				}
 				
 				if ($keywordsquery)
-					$keywordsquery .= " ".$type;
-			
-				$keywordsquery .= " `".$field."` LIKE '%".
-					sql::escape(trim($keyword, ' "'))."%'";
+					$searchquery .= " (".$keywordsquery.") ";
 			}
-			
-			if ($keywordsquery)
-				$query .= " (".$keywordsquery.") ";
 		}
 		
-		if (count($commandfields) && count($commands)) {
-			if ($query)
-				$query .= " AND";
-			
-			$commandsquery = null;
-			
-			foreach($commands as $command) {
-				list($commandid, $commanddata) = explode("=", $command);
-				
-				if (!isset($commandfields[$commandid]) || !$commandfields[$commandid])
-					continue;
-				
-				if ($commandsquery)
-					$commandsquery .= " ".$type;
-			
-				$commandsquery .= " `".$commandfields[$commandid]."` LIKE '%".
-					sql::escape(trim($commanddata, ' "'))."%'";
-			}
-			
-			if ($commandsquery)
-				$query .= " (".$commandsquery.") ";
-		}
+		if (!$commandquery && !$searchquery)
+			return " AND (NOT 1)";
 		
-		if (!$query)
-			return null;
-		
-		return " AND (".$query.")";
+		return " AND (" .
+			($commandquery?
+				" (".$commandquery.")":
+				null) .
+			($commandquery && $searchquery?
+				" AND ":
+				null) .
+			($searchquery?
+				" (".$searchquery.")":
+				null) .
+			")";
 	}
 	
 	static function lastQuery() {

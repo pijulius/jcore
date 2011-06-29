@@ -4938,7 +4938,7 @@ class shoppingOrders extends modules {
 		$url = modules::getOwnerURL('shoppingOrders');
 		
 		if (!$url)
-			return url::site().'?';
+			return url::uri('shoppingorderid');
 		
 		return $url;	
 	}

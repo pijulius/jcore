@@ -1875,7 +1875,7 @@ class poll extends modules {
 		$url = modules::getOwnerURL('poll', $id);
 		
 		if (!$url)
-			return url::site().'?';
+			return url::uri(poll::$uriVariables);
 		
 		return $url;	
 	}

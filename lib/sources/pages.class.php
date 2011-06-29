@@ -2308,7 +2308,7 @@ class _pages {
 		return explode(',', $pages['IDs']);
 	}
 	
-	function generateLink(&$row) {
+	static function generateLink(&$row) {
 		$language = languages::$selected;
 		
 		if ($row['LanguageID'] && (!$language || $language['ID'] != $row['LanguageID']))

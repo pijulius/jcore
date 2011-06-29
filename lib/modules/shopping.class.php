@@ -392,7 +392,10 @@ class shoppingItems {
 					(JCORE_VERSION >= '0.7'? 
 						dynamicForms::searchableFields('shoppingitems'):
 						array('Title', 'Description', 'Keywords')),
-					($this->similar?'OR':'AND')) .
+					($this->similar?'OR':'AND'),
+					array(
+						'date' => 'TimeStamp',
+						'key' => 'Keywords')) .
 				($categories?
 					" OR (`ShoppingID` IN (".implode(',', $categories)."))":
 					null) .
@@ -3291,9 +3294,6 @@ class shoppingItems {
 				null) .
 			($this->selectedShoppingID?
 				'&amp;shoppingid='.$this->selectedShoppingID:
-				null) .
-			(url::arg('shoppingitemslimit')?
-				'&amp;'.url::arg('shoppingitemslimit'):
 				null);
 	}
 	
@@ -3415,7 +3415,7 @@ class shoppingItems {
 	
 	function displayKeywordsCloudLink(&$row) {
 		echo  
-			"<a href='".$this->shoppingURL."&amp;search=".
+			"<a href='".$this->shoppingURL."&amp;search=key:".
 				urlencode('"'.trim($row['Keyword']).'"') .
 				"&amp;searchin=modules/shopping/shoppingitems' " .
 				"style='font-size: ".$row['_FontPercent']."%;'>" .
@@ -3465,11 +3465,11 @@ class shoppingItems {
 				echo ", ";
 			
 			echo  
-				"<a href='".$row['_CategoryLink']."&amp;search=".
-					($this->search?
-						urlencode($this->search.","):
-						null) .
-					urlencode('"'.trim($word).'"') .
+				"<a href='".$row['_CategoryLink'] .
+					(strpos($row['_CategoryLink'], '?') === false?
+						'?':
+						'&amp;') .
+					"search=key:".urlencode('"'.trim($word).'"') .
 					"&amp;searchin=modules/shopping/shoppingitems" .
 					"'>" .
 					ucfirst(trim($word)) .
@@ -3511,7 +3511,7 @@ class shoppingItems {
 	function displayItemFunctions(&$row) {
 		if ($this->selectedID == $row['ID']) {
 			echo
-				"<a href='".$row['_CategoryLink']."' class='back comment'>".
+				"<a href='".$row['_BackLink']."' class='back comment'>".
 					"<span>" .
 					__("Back").
 					"</span>" .
@@ -4250,7 +4250,24 @@ class shoppingItems {
 		while ($row = sql::fetch($rows)) {
 			$row['_ItemNumber'] = $i;
 			$row['_Link'] = $this->generateLink($row);
-			$row['_CategoryLink'] = $this->generateCategoryLink($row);
+			$row['_CategoryLink'] = shopping::getURL($row['ShoppingID']) .
+				'&amp;shoppingid='.$row['ShoppingID'];
+			$row['_BackLink'] = $this->generateCategoryLink($row);
+			
+			if (url::arg('shoppingitemslimit')) {
+				if ($this->selectedID == $row['ID'])
+					$row['_BackLink'] .= 
+					 	(strpos($row['_BackLink'], '?') === false?
+					 		'?':
+							'&amp;') .
+						url::arg('shoppingitemslimit');
+				
+				$row['_Link'] .= 
+				 	(strpos($row['_Link'], '?') === false?
+				 		'?':
+						'&amp;') .
+					url::arg('shoppingitemslimit');
+			}
 			
 			$row['_CSSClass'] = null;
 			
@@ -6194,7 +6211,7 @@ class shopping extends modules {
 		$url = modules::getOwnerURL('shopping', $id);
 		
 		if (!$url)
-			return url::site().'?';
+			return url::uri(shoppingItems::$uriVariables);
 		
 		return $url;	
 	}
