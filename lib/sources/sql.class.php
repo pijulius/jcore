@@ -316,7 +316,8 @@ class _sql {
 		if (((SQL_DATABASE == 'yourclient_DB' && SQL_USER == 'yourclient_mysqlusername' && 
 			SQL_PASS == 'mysqlpassword') ||
 			(SQL_DATABASE == 'yourdomain_DB' && SQL_USER == 'yourdomain_mysqluser' &&
-			SQL_PASS == 'mysqlpass')) && @file_exists('install.php'))
+			SQL_PASS == 'mysqlpass')) && @file_exists('install.php') &&
+			isset($_SERVER['HTTP_USER_AGENT']) && $_SERVER['HTTP_USER_AGENT'])
 		{
 			header('Location: install.php');
 			exit();
