@@ -323,6 +323,11 @@ class _languages {
 							__("Locale") .
 							"</span>" .
 						"</th>" .
+						"<th>" .
+							"<span class='nowrap'>".
+							__("Language") .
+							"</span>" .
+						"</th>" .
 					"</tr>" .
 					"</thead>" .
 					"<tbody>";
@@ -335,7 +340,15 @@ class _languages {
 				if (!is_dir($dir.'/'.$file) || strpos($file, '.') === 0)
 					continue;
 				
-				$dirs[$file] = $file;
+				$language = __('unknown/file');
+				
+				if (preg_match('/X-Poedit-Language: ([a-zA-Z0-9-_\. \(\)]+)/i', 
+					@file_get_contents($dir.$file.'/LC_MESSAGES/messages.po', false, null, -1, 1024), $matches))
+           			$language = $matches[1];
+				
+				$dirs[$file] = array(
+					'Title' => $language,
+					'Location' => $file);
 			}
 			
 			closedir($dh);
@@ -349,7 +362,15 @@ class _languages {
 					if (!is_dir($dir.'/'.$file) || strpos($file, '.') === 0)
 						continue;
 					
-					$dirs[$file] = $file;
+					$language = __('unknown/file');
+					
+					if (preg_match('/X-Poedit-Language: ([a-zA-Z0-9-_\. \(\)]+)/i', 
+						@file_get_contents($dir.$file.'/LC_MESSAGES/messages.po', false, null, -1, 1024), $matches))
+            			$language = $matches[1];
+					
+					$dirs[$file] = array(
+						'Title' => $language,
+						'Location' => $file);
 				}
 				
 				closedir($dh);
@@ -362,21 +383,21 @@ class _languages {
 		$paging->ajax = true;
 		$paging->setTotalItems(count($dirs));
 		
-		asort($dirs);
+		ksort($dirs);
 		$dirs = array_slice($dirs, $paging->getStart(), 10);
 		
 		if (!is_array($dirs))
 			$dirs = array();
 		
 		$i = 1;	
-		foreach($dirs as $dir => $title) {
+		foreach($dirs as $language) {
 			echo
 				"<tr".($i%2?" class='pair'":NULL).">" .
 					"<td align='center'>" .
 						"<a href='javascript://' " .
 							"onclick=\"" .
 								"jQuery('#neweditlanguageform #entryLocale').val('" .
-									htmlspecialchars($dir, ENT_QUOTES)."');" .
+									htmlspecialchars($language['Location'], ENT_QUOTES)."');" .
 								(JCORE_VERSION >= '0.7'?
 									"jQuery(this).closest('.tipsy').hide();":
 									"jQuery(this).closest('.qtip').qtip('hide');") .
@@ -385,7 +406,10 @@ class _languages {
 						"</a>" .
 					"</td>" .
 					"<td class='auto-width'>" .
-						"<b>".$title."</b> " .
+						"<b>".$language['Location']."</b> " .
+					"</td>" .
+					"<td>" .
+						$language['Title'] .
 					"</td>" .
 				"</tr>";
 			
