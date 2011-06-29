@@ -411,7 +411,13 @@ class _moduleManager {
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
 		
-		$localmodules = array();
+		$modules = array();
+		$activemodules = array();
+		
+		$rows = modules::get();
+		while ($row = sql::fetch($rows))
+			$activemodules[strtolower($row['Name'])] = true;
+		
 		$d = dir(SITE_PATH.'lib/modules');
 		
 		while (false !== ($entry = $d->read())) {
@@ -421,7 +427,7 @@ class _moduleManager {
 			if (is_file(SITE_PATH.'lib/modules/'.$entry) &&
 				preg_match('/(.*)\.class\.php$/', $entry, $matches))
 			{
-				$localmodules[strtolower(preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '', $matches[1]))] = 
+				$modules[strtolower(preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '', $matches[1]))] = 
 					SITE_PATH.'lib/modules/'.$entry;
 				continue;
 			}
@@ -429,14 +435,13 @@ class _moduleManager {
 			if (is_dir(SITE_PATH.'lib/modules/'.$entry) &&
 				is_file(SITE_PATH.'lib/modules/'.$entry.'/'.$entry.'.class.php'))
 			{
-				$localmodules[strtolower(preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '', $entry))] = 
+				$modules[strtolower(preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '', $entry))] = 
 					SITE_PATH.'lib/modules/'.$entry.'/'.$entry.'.class.php';
 				continue;
 			}
 		}
 		
 		$d->close();
-		$globalmodules = array();
 		
 		if (defined('JCORE_PATH') && JCORE_PATH) {
 			$d = dir(JCORE_PATH.'lib/modules');
@@ -448,10 +453,10 @@ class _moduleManager {
 					preg_match('/(.*)\.class\.php$/', $entry, $matches))
 				{
 					$moduleid = strtolower(preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '', $matches[1]));
-					if (isset($localmodules[$moduleid]))
+					if (isset($modules[$moduleid]))
 						continue;
 					
-					$globalmodules[$moduleid] = 
+					$modules[$moduleid] = 
 						JCORE_PATH.'lib/modules/'.$entry;
 					continue;
 				}
@@ -460,10 +465,10 @@ class _moduleManager {
 					is_file(JCORE_PATH.'lib/modules/'.$entry.'/'.$entry.'.class.php'))
 				{
 					$moduleid = strtolower(preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '', $entry));
-					if (isset($localmodules[$moduleid]))
+					if (isset($modules[$moduleid]))
 						continue;
 					
-					$globalmodules[$moduleid] = 
+					$modules[$moduleid] = 
 						JCORE_PATH.'lib/modules/'.$entry.'/'.$entry.'.class.php';
 					continue;
 				}
@@ -472,10 +477,8 @@ class _moduleManager {
 			$d->close();
 		}
 		
-		ksort($localmodules);
-		ksort($globalmodules);
-		
-		$modules = array_merge($localmodules, $globalmodules);
+		ksort($modules);
+		$modules = array_merge($activemodules, $modules);
 		
 		if (count($modules))
 			$this->displayAdminList($modules);
