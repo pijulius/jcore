@@ -339,35 +339,35 @@ class _attachments {
 			$noorderid = true;
 		
 		$i = 1;
-		foreach($files as $key => $file) {
-			if (!$filename = $this->upload($file, $this->rootPath.'/')) {
-				$failedfiles[] = $filenames[$key];
+		foreach($filenames as $key => $filename) {
+			if (!$newfilename = $this->upload(@$files[$key], $this->rootPath.'/')) {
+				$failedfiles[] = $filename;
 				continue;
 			}
 			
-			$form->set('File', $filename);
+			$form->set('File', $newfilename);
 			$form->set('Title',
 				($customtitle?
 					$customtitle .
 					(count($filenames) > 1?
 						' ('.$i.')':
 						null):
-					preg_replace('/(.*)\..*/', '\1', $filenames[$key])));
+					preg_replace('/(.*)\..*/', '\1', $filename)));
 			
 			$form->set('FileSize', 
-				@filesize($this->rootPath.$this->subFolder.'/'.$filename));
+				@filesize($this->rootPath.$this->subFolder.'/'.$newfilename));
 			$form->set('HumanMimeType', 
-				@files::humanMimeType($this->rootPath.$this->subFolder.'/'.$filename));
+				@files::humanMimeType($this->rootPath.$this->subFolder.'/'.$newfilename));
 			
 			if ($noorderid)
 				$form->set('OrderID', $i);
 			
 			if (!$newid = $this->add($form->getPostArray())) {
-				$failedfiles[] = $filenames[$key];
+				$failedfiles[] = $filename;
 				continue;
 			}
 			
-			$successfiles[] = $filenames[$key];
+			$successfiles[] = $filename;
 			$i++;
 		}
 		

@@ -123,19 +123,17 @@ class _fileManager {
 			return true;
 		}
 		
-		$filenames = $form->get('Files');
+		$files = $form->getFile('Files');
 		$successfiles = null;
 		$failedfiles = null;
 		
-		foreach($form->getFile('Files') as $key => $file) {
-			if (!$filename = $this->upload($file, 
-					$this->rootPath.$this->selectedPath)) 
-			{
-				$failedfiles[] = $filenames[$key];
+		foreach($form->get('Files') as $key => $filename) {
+			if (!$this->upload(@$files[$key], $this->rootPath.$this->selectedPath)) {
+				$failedfiles[] = $filename;
 				continue;
 			}
 			
-			$successfiles[] = $filenames[$key];
+			$successfiles[] = $filename;
 		}
 		
 		if ($failedfiles && count($failedfiles)) {

@@ -262,8 +262,17 @@ class _files {
  			if (isset($matches[1]))
 	 			$filearrayid = $matches[1];
 	 		
- 			if (!isset($_FILES[$fileid]))
+ 			if (!isset($_FILES[$fileid])) {
+				tooltip::display(
+					sprintf(__("File couldn't be saved! This usually means that your " .
+						"file is larger than the allowed upload limit (%s) or something " .
+						"went wrong while saving the file to it's permanent place. Please " .
+						"try again or contact webmaster."),
+							files::humanSize(files::getUploadMaxFilesize())), 
+					TOOLTIP_ERROR);
+				
  				return false;
+ 			}
  			
 	 		if (isset($filearrayid)) {
 	 			$file = $_FILES[$fileid]['tmp_name'][$filearrayid];

@@ -518,11 +518,11 @@ class _pictures {
 			$noorderid = true;
 		
 		$i = 1;
-		foreach($files as $key => $file) {
-			if (!$filename = $this->upload(
-					$file, $this->rootPath, $thumbnail, $watermark, $sharpen)) 
+		foreach($filenames as $key => $filename) {
+			if (!$newfilename = $this->upload(
+					@$files[$key], $this->rootPath, $thumbnail, $watermark, $sharpen)) 
 			{
-				$failedfiles[] = $filenames[$key];
+				$failedfiles[] = $filename;
 				continue;
 			}
 			
@@ -530,26 +530,26 @@ class _pictures {
 				$this->uploadThumbnail(
 					$form->getFile('ThumbnailFile'),
 					$this->rootPath,
-					$filename);
+					$newfilename);
 			
-			$form->set('File', $filename);
+			$form->set('File', $newfilename);
 			$form->set('Title',
 				($customtitle?
 					$customtitle .
 					(count($filenames) > 1?
 						' ('.$i.')':
 						null):
-					preg_replace('/(.*)\..*/', '\1', $filenames[$key])));
+					preg_replace('/(.*)\..*/', '\1', $filename)));
 			
 			if ($noorderid)
 				$form->set('OrderID', $i);
 			
 			if (!$mnewid = $this->add($form->getPostArray())) {
-				$failedfiles[] = $filenames[$key];
+				$failedfiles[] = $filename;
 				continue;
 			}
 			
-			$successfiles[] = $filenames[$key];
+			$successfiles[] = $filename;
 			$i++;
 		}
 		
