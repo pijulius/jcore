@@ -73,8 +73,7 @@ class _settings {
 		if ($table)
 			$this->sqlTable = $table;
 		
-		if (class_exists('languages'))
-			$this->textsDomain = languages::$selectedTextsDomain;
+		$this->textsDomain = languages::$selectedTextsDomain;
 	}
 	
 	// ************************************************   Admin Part
@@ -109,7 +108,10 @@ class _settings {
 			}
 			
 			tooltip::display(
-				__("Settings have been successfully updated."),
+				__("Settings have been successfully updated.")." " .
+				"<a href='".url::uri('ALL').'?'.url::arg('path')."'>" .
+					__("Refresh") .
+				"</a>",
 				TOOLTIP_SUCCESS);
 			
 			return true;
@@ -410,6 +412,9 @@ class _settings {
 		// Definitions needed for compatiblity between jcore versions
 		if (JCORE_VERSION <= '0.1' && !defined('AJAX_PAGING'))
 			define('AJAX_PAGING', false);
+		
+		if (defined('MANUAL_GETTEXT') && MANUAL_GETTEXT && $this->sqlTable == 'settings')
+			include_once('lib/gettext/gettext.inc');
 		
 		return true;
 	}
