@@ -2150,7 +2150,7 @@ class _pages {
 						'ID' => 0,
 						'Title' => $menu['Title'],
 						(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID') => 0,
-						'MenuID' => $menu['ID'],
+						'MenuID' => $row['MenuID'],
 						'PathDeepnes' => 0);
 				}
 			}
