@@ -429,7 +429,8 @@ class _modules {
 				'Title' => ucwords(preg_replace('/-|_/', ' ', $module)),
 				'Description' => '');
 		
-		if (@is_dir(SITE_PATH.'lib/modules/'.$module))
+		if (@is_dir(SITE_PATH.'lib/modules/'.$module) || (defined('JCORE_PATH') &&
+			JCORE_PATH && @is_dir(JCORE_PATH.'lib/modules/'.$module)))
 			include_once('lib/modules/'.$module.'/'.$module.'.class.php');
 		else
 			include_once('lib/modules/'.$module.'.class.php');
