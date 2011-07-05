@@ -927,6 +927,7 @@ class _attachments {
 	function displayTitle(&$row) {
 		echo
 			"<a href='".$row['_Link']."' " .
+				"class='attachment-title' " .
 				"title='".htmlspecialchars(sprintf(__("Download %s"), 
 					$row['Title']), ENT_QUOTES)."'>" .
 				$row['Title'] . 

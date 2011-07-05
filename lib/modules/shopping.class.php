@@ -4045,6 +4045,14 @@ class shoppingItems {
 				(isset($row['_CSSClass'])?
 					" ".$row['_CSSClass']:
 					null) .
+				($row['Price'] == 0 ||
+				(JCORE_VERSION >= '0.7' && $row['SpecialPrice'] && $row['SpecialPrice'] == 0 &&
+				 (!$row['SpecialPriceStartDate'] || 
+					$row['SpecialPriceStartDate'] <= date('Y-m-d')) &&
+				 (!$row['SpecialPriceEndDate'] || 
+					$row['SpecialPriceEndDate'] >= date('Y-m-d')))?
+					" free":
+					null) .
 				"'>";
 			
 		echo
@@ -4100,6 +4108,14 @@ class shoppingItems {
 					null) .
 				" shopping-item".$row['ID']."" .
 				" shopping-item-num".$row['_ItemNumber'] .
+				($row['Price'] == 0 ||
+				(JCORE_VERSION >= '0.7' && $row['SpecialPrice'] && $row['SpecialPrice'] == 0 &&
+				 (!$row['SpecialPriceStartDate'] || 
+					$row['SpecialPriceStartDate'] <= date('Y-m-d')) &&
+				 (!$row['SpecialPriceEndDate'] || 
+					$row['SpecialPriceEndDate'] >= date('Y-m-d')))?
+					" free":
+					null) .
 				(isset($row['_CSSClass'])?
 					" ".$row['_CSSClass']:
 					null) .
