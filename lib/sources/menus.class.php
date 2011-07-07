@@ -83,7 +83,11 @@ class _menus {
 		$disabledblocks = array();
 		
 		$menublocks = sql::run(
-			" SELECT `ID`, `SubBlockOfID` FROM `{blocks}`" .
+			" SELECT `ID`, `SubBlockOfID`" .
+			(JCORE_VERSION >= '0.9'?
+				", `LayoutID`":
+				null) .
+			" FROM `{blocks}`" .
 			" WHERE `TypeID` = '".BLOCK_TYPE_MENU."'" .
 			(JCORE_VERSION >= '0.7'?
 				" AND `TemplateID` = '".

@@ -250,7 +250,11 @@ class _posts {
 				$disabledblocks = array();
 				
 				$postblocks = sql::run(
-					" SELECT `ID`, `SubBlockOfID` FROM `{blocks}`" .
+					" SELECT `ID`, `SubBlockOfID`" .
+					(JCORE_VERSION >= '0.9'?
+						", `LayoutID`":
+						null) .
+					" FROM `{blocks}`" .
 					" WHERE `TypeID` = '".BLOCK_TYPE_CONTENT."'" .
 					(JCORE_VERSION >= '0.7'?
 						" AND `TemplateID` = '".

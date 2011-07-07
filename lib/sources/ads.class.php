@@ -86,7 +86,11 @@ class _ads {
 		$disabledblocks = array();
 		
 		$adblocks = sql::run(
-			" SELECT `ID`, `SubBlockOfID` FROM `{blocks}`" .
+			" SELECT `ID`, `SubBlockOfID`" .
+			(JCORE_VERSION >= '0.9'?
+				", `LayoutID`":
+				null) .
+			" FROM `{blocks}`" .
 			" WHERE `TypeID` = '".BLOCK_TYPE_AD."'" .
 			(JCORE_VERSION >= '0.7'?
 				" AND `TemplateID` = '".

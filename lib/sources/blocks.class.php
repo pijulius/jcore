@@ -1273,7 +1273,8 @@ class _blocks {
 				$row['ViewableBy'] != $values['ViewableBy'])
 				$updatesql[] = " `ViewableBy` = '".(int)$values['ViewableBy']."'";
 			
-			if (JCORE_VERSION >= '0.9' && $block['LayoutID'] != $values['LayoutID'] &&
+			if (JCORE_VERSION >= '0.9' && isset($values['LayoutID']) &&
+				$block['LayoutID'] != $values['LayoutID'] &&
 				$row['LayoutID'] != $values['LayoutID'])
 				$updatesql[] = " `LayoutID` = ".(int)$values['LayoutID'];
 			
