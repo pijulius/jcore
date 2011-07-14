@@ -5025,6 +5025,7 @@ class shoppingOrders extends modules {
 			'OrderNumber' => $order['OrderID'],
 			'OrderForm' => '',
 			'OrderItems' => '',
+			'OutOfStockItems' => '',
 			'LinkToDigitalGoods' => '',
 			'LinkToOrders' => shoppingOrders::getURL(),
 			'LinkToOrder' => shoppingOrders::getURL().'&shoppingorderid='.$order['ID'],

@@ -3514,7 +3514,7 @@ class shoppingCartCheckoutForm extends dynamicForms {
 					return;
 				}
 				
-				$this->title .= $GLOBALS['SHOPPING_ORDER_METHODS'][$this->get('ordermethod')]['Title'];
+				$this->title .= shoppingOrderMethods::$available[$this->get('ordermethod')]['Title'];
 				
 				$ordermethodclass = 'shoppingOrderMethod'.
 					$this->get('ordermethod');
