@@ -221,6 +221,7 @@ class _moduleManager {
 			"<td class='auto-width'>" .
 				"<div class='admin-content-preview' style='padding-left: 0;'>" .
 					"<h2 class='module-name' style='margin: 0;'>" .
+						htmlspecialchars(
 						($row['_Name']?
 							$row['_Name']:
 							($row['Title']?
@@ -228,27 +229,28 @@ class _moduleManager {
 								ucfirst($row['ID']))) .
 						($row['_Version']?
 							" (".$row['_Version'].")":
-							null) .
+							null)) .
 					"</h2>" .
 					($row['_Author']?
 						"<div class='template-details'>" .
-							sprintf(__("by %s"), $row['_Author']) .
+							sprintf(__("by %s"), 
+								htmlspecialchars($row['_Author'])) .
 							($row['_URI']?
-								" (".url::parseLinks($row['_URI']).")":
+								" (".url::parseLinks(strip_tags($row['_URI'])).")":
 								null) .
 						"</div>":
 						null) .
 					"<div class='template-description'>" .
 						"<p>" .
 							($row['_Description']?
-								url::parseLinks($row['_Description']):
-								url::parseLinks($row['Description'])) .
+								url::parseLinks(nl2br(htmlspecialchars($row['_Description']))):
+								url::parseLinks(nl2br(htmlspecialchars($row['Description'])))) .
 						"</p>" .
 					"</div>" .
 					($row['_Tags']?
 						"<div class='template-tags'><b>" .
 							__("Tags").":</b> " .
-							$row['_Tags'] .
+							htmlspecialchars($row['_Tags']) .
 						"</div>":
 						null) .
 					"<div class='template-location'><b>" .
@@ -774,10 +776,10 @@ class _moduleManager {
 		$values['_Tags'] = '';
 		
 		foreach($variables as $variable) {
-			preg_match('/\/\*.*?'.$variable.': (.*?)(\r|\n).*?\*\//si', $data, $matches);
+			preg_match('/\/\*.*?'.$variable.': (.*?)((\r|\n) ?\*|\*\/).*?\*\//si', $data, $matches);
 			
 			if (isset($matches[1]))
-				$values['_'.$variable] = trim($matches[1]);
+				$values['_'.$variable] = trim($matches[1], " \r\n");
 		}
 		
 		return $values;
