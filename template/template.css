@@ -846,6 +846,7 @@ input.button:hover {
 
 .post {
 	margin-bottom: 20px;
+	display: block;
 }
 
 .post-title {
