@@ -6695,8 +6695,8 @@ class shopping extends modules {
 			$items = new shoppingItems();
 			$items->shoppingURL = shopping::getURL();
 			
-			if (isset($matches[2]))
-				$items->keywordsCloudLimit = (int)$matches[2];
+			if ($this->limit)
+				$items->keywordsCloudLimit = $this->limit;
 			
 			$items->displayKeywordsCloud();
 			unset($items);

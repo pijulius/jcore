@@ -3403,8 +3403,8 @@ class _posts {
 		if (preg_match('/(^|\/)keywords($|\/)/', $this->arguments)) {
 			$this->arguments = preg_replace('/(^|\/)keywords($|\/)/', '\2', $this->arguments);
 			
-			if (isset($matches[2]))
-				$this->keywordsCloudLimit = (int)$matches[2];
+			if ($this->limit)
+				$this->keywordsCloudLimit = $this->limit;
 			
 			$this->displayKeywordsCloud($this->arguments);
 			return true;
