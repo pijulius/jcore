@@ -708,10 +708,13 @@ class _menus {
 	
 	function displayOne(&$row, $language = null, $menuitem = null) {
 		echo
-			"<nav " .
+			"<" .
+			(IE_BROWSER < 9?
+				"div":
+				"nav") .
 				(JCORE_VERSION >= '0.5' && $this->arguments?
-					"class":
-					"id") .
+					" class":
+					" id") .
 				"='".$row['Name']."_outer'>" .
 				"<" .
 				(JCORE_VERSION >= '0.5'?
@@ -731,7 +734,11 @@ class _menus {
 					'ul':
 					'div') .
 				">" .
-			"</nav>";
+			"</" .
+			(IE_BROWSER < 9?
+				"div":
+				"nav") .
+			">";
 	}
 	
 	function displayArguments() {

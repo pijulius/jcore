@@ -2121,7 +2121,7 @@ class poll extends modules {
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
 		echo
-			calendar::datetime($row['TimeStamp']);
+			calendar::datetime($row['TimeStamp'])." ";
 					
 		$GLOBALS['USER']->displayUserName($user, __('by %s'));
 		

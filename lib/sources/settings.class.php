@@ -21,6 +21,15 @@ define('SETTINGS_TYPE_TIMESTAMP', 8);
 define('SETTINGS_TYPE_PASSWORD', 9);
 define('SETTINGS_TYPE_COLOR', 10);
 
+define('D_OPTIMIZATION', 1);
+define('D_NOTIFICATION', 2);
+define('D_WARNING', 4);
+define('D_ERROR', 8);
+define('D_ALL', 9);
+
+if (!defined('DEBUG'))
+	define('DEBUG', null);
+
 if (!defined('MOBILE_BROWSER')) {
 	if (preg_match('/android|avantgo|blackberry|blazer|compal|elaine|fennec|' .
 		'hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|' .
@@ -60,6 +69,41 @@ if (!defined('MOBILE_BROWSER')) {
 	} else {
 		define('MOBILE_BROWSER', false);
 	}
+}
+
+if (!defined('IE_BROWSER')) {
+	if(preg_match('/msie\s(\d+)/i', $_SERVER['HTTP_USER_AGENT'], $array))
+		define('IE_BROWSER', $array[1]);
+	else
+		define('IE_BROWSER', false);
+}
+
+if (!defined('FF_BROWSER')) {
+	if(preg_match('/firefox\/(\d+)/i', $_SERVER['HTTP_USER_AGENT'], $array))
+		define('FF_BROWSER', $array[1]);
+	else
+		define('FF_BROWSER', false);
+}
+
+if (!defined('O_BROWSER')) {
+	if(preg_match('/opera(\s|\/)(\d+)/i', $_SERVER['HTTP_USER_AGENT'], $array))
+		define('O_BROWSER', $array[2]);
+	else
+		define('O_BROWSER', false);
+}
+
+if (!defined('CH_BROWSER')) {
+	if(preg_match('/chrome\/(\d+)/i', $_SERVER['HTTP_USER_AGENT'], $array))
+		define('CH_BROWSER', $array[1]);
+	else
+		define('CH_BROWSER', false);
+}
+
+if (!defined('SF_BROWSER')) {
+	if(preg_match('/safari\/(\d+)/i', $_SERVER['HTTP_USER_AGENT'], $array))
+		define('SF_BROWSER', $array[1]);
+	else
+		define('SF_BROWSER', false);
 }
 
 include_once('lib/sql.class.php');

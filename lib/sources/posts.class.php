@@ -32,6 +32,7 @@ class _posts {
 	var $limit = 0;
 	var $keywordsCloudLimit = 21;
 	var $randomize = false;
+	var $latests = false;
 	var $ignorePaging = false;
 	var $showPaging = true;
 	var $format = null;
@@ -166,7 +167,7 @@ class _posts {
 				($this->search && !$this->selectedID?
 					" `Views` DESC,":
 					null) .
-				(JCORE_VERSION >= '0.8' && $page && trim($page['PostKeywords'])?
+				($this->latests || (JCORE_VERSION >= '0.8' && $page && trim($page['PostKeywords']))?
 					" `TimeStamp` DESC,":
 					null) .
 				($homepage['ID'] == $page['ID']?
@@ -2851,7 +2852,10 @@ class _posts {
 	
 	function displayFormat(&$row) {
 		echo
-			"<article" .
+			"<" .
+			(IE_BROWSER < 9?
+				"div":
+				"article") .
 				(!isset($this->arguments)?
 					" id='post".$row['ID']."'":
 					null) .
@@ -2866,12 +2870,15 @@ class _posts {
 					null) .
 				"'>";
 		
+		$parts = preg_split('/%([a-z0-9-_]+?)%/', $this->format, null, PREG_SPLIT_DELIM_CAPTURE);
+		
+		if (!in_array('description', $parts))
+			$row['PartialContent'] = 1;
+		
 		ob_start();
 		$this->displayFunctions($row);
 		$links = ob_get_contents();
 		ob_end_clean();
-		
-		$parts = preg_split('/%([a-z0-9-_]+?)%/', $this->format, null, PREG_SPLIT_DELIM_CAPTURE);
 		
 		foreach($parts as $part) {
 			switch($part) {
@@ -3028,7 +3035,11 @@ class _posts {
 				"<div class='separator bottom'></div>";
 			
 		echo
-			"</article>";
+			"</" .
+			(IE_BROWSER < 9?
+				"div":
+				"article") .
+			">";
 		
 		if ($this->selectedID == $row['ID'] && $row['EnableComments'])
 			$this->displayComments($row);
@@ -3036,7 +3047,10 @@ class _posts {
 	
 	function displayOne(&$row) {
 		echo
-			"<article" .
+			"<" .
+			(IE_BROWSER < 9?
+				"div":
+				"article") .
 				(!isset($this->arguments)?
 					" id='post".$row['ID']."'":
 					null) .
@@ -3109,14 +3123,21 @@ class _posts {
 				"<div class='separator bottom'></div>";
 			
 		echo
-			"</article>";
+			"</" .
+			(IE_BROWSER < 9?
+				"div":
+				"article") .
+			">";
 	}
 	
 	function displaySelected(&$row) {
 		$this->incViews($row);
 		
 		echo
-			"<article" .
+			"<" .
+			(IE_BROWSER < 9?
+				"div":
+				"article") .
 				(!isset($this->arguments)?
 					" id='post".$row['ID']."'":
 					null) .
@@ -3210,7 +3231,11 @@ class _posts {
 			"<div class='separator bottom'></div>";
 			
 		echo
-			"</article>";
+			"</" .
+			(IE_BROWSER < 9?
+				"div":
+				"article") .
+			">";
 			
 		if ($this->selectedID == $row['ID'] && $row['EnableComments'])
 			$this->displayComments($row);
@@ -3343,6 +3368,7 @@ class _posts {
 		
 		if (preg_match('/(^|\/)latest($|\/)/', $this->arguments)) {
 			$this->arguments = preg_replace('/(^|\/)latest($|\/)/', '\2', $this->arguments);
+			$this->latests = true;
 			$this->ignorePaging = true;
 			$this->showPaging = false;
 			$this->limit = 1;
@@ -3367,17 +3393,11 @@ class _posts {
 		if (preg_match('/(^|\/)keyword\/(.*?)($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)keyword\/.*?($|\/)/', '\2', $this->arguments);
 			$this->searchKeywords = trim($matches[2]);
-			
-			$this->selectedPageID = null;
-			$this->selectedID = null;
 		}
 		
 		if (preg_match('/(^|\/)search\/(.*?)($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)search\/.*?($|\/)/', '\2', $this->arguments);
 			$this->search = trim($matches[2]);
-			
-			$this->selectedPageID = null;
-			$this->selectedID = null;
 		}
 		
 		if (preg_match('/(^|\/)keywords($|\/)/', $this->arguments)) {
@@ -3397,11 +3417,11 @@ class _posts {
 			return true;
 		}
 		
-		if (!$this->arguments)
-			return false;
-		
 		$this->selectedPageID = null;
 		$this->selectedID = null;
+		
+		if (!$this->arguments)
+			return false;
 		
 		$page = sql::fetch(sql::run(
 			" SELECT `ID`, `Path` FROM `{" .

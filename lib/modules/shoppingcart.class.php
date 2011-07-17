@@ -5642,6 +5642,8 @@ class shoppingCart extends modules {
 		
 		if ($this->similarItemsSearch)
 			$shoppingitems->randomize = true;
+		else
+			$shoppingitems->latests = true;
 		
 		$shoppingitems->showPaging = false;
 		$shoppingitems->display();

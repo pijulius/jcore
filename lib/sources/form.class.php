@@ -245,7 +245,11 @@ class _form {
 			$this->elements[$elementid]['Name'] = "scimagecode";
 			$this->elements[$elementid]['Type'] = $type;
 			$this->elements[$elementid]['Required'] = true;
-			$this->elements[$elementid]['Value'] = $value;
+			$this->elements[$elementid]['OriginalValue'] = $value;
+			$this->elements[$elementid]['Value'] = 
+				(isset($GLOBALS['_'.strtoupper($this->method)]['scimagecode'])?
+					$GLOBALS['_'.strtoupper($this->method)]['scimagecode']:
+					null);
 					
 			if (!isset($this->elements[$elementid]['Attributes']))
 				$this->elements[$elementid]['Attributes'] = '';

@@ -107,8 +107,8 @@ class _sql {
 	}
 	
 	static function run($query, $debug = false) {
-		// Uncomment this if you would like to see queries that need optimization
-		/*if (preg_match('/^ *?SELECT.*?WHERE/i', $query) && !preg_match('/`\{TMP[a-zA-Z0-9]+\}`/', $query) &&
+		if (DEBUG & D_OPTIMIZATION &&
+			preg_match('/^ *?SELECT.*?WHERE/i', $query) && !preg_match('/`\{TMP[a-zA-Z0-9]+\}`/', $query) &&
 			$explains = @mysql_query('EXPLAIN '.sql::prefixTable($query), sql::$link))
 		{
 			$explain = sql::fetch($explains);
@@ -117,7 +117,7 @@ class _sql {
 					'Impossible WHERE noticed after reading const tables',
 					'Select tables optimized away')))
 				$debug = true;
-		}*/
+		}
 		
 		if (!trim($query))
 			return false;

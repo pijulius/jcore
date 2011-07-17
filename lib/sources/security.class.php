@@ -593,7 +593,7 @@ class _security {
 		global $_COOKIE;
 		
 		if ($scimagecode && $_COOKIE['scimagestr'] && 
-			$_COOKIE['scimagestr'] == md5(WEBMASTER_EMAIL.$scimagecode)) 
+			$_COOKIE['scimagestr'] == md5(SITE_PATH.WEBMASTER_EMAIL.SQL_USER.$scimagecode)) 
 		{
 			return true;
 		}
@@ -745,7 +745,7 @@ class _security {
 		else
 			$text = security::strRand($codelength, false);
 		
-		setcookie ("scimagestr", md5(WEBMASTER_EMAIL.$text));
+		setcookie ("scimagestr", md5(SITE_PATH.WEBMASTER_EMAIL.SQL_USER.$text));
 		
 		$bbox = @imagettfbbox($fontsize, 0, $ttffont, $text);
 		if ($bbox[4] < 0)

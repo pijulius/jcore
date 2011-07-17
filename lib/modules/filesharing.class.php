@@ -2044,8 +2044,8 @@ class fileSharing extends modules {
 		}
 					
 		echo
-			"</div>" .
-			"<div class='clear-both'></div>";
+				"<div class='clear-both'></div>" .
+			"</div>";
 		
 		$this->displayFolders();
 		

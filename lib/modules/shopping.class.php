@@ -299,6 +299,7 @@ class shoppingItems {
 	var $search = null;
 	var $format = null;
 	var $randomize = false;
+	var $latests = false;
 	var $active = false;
 	var $popular = false;
 	var $discussed = false;
@@ -419,11 +420,11 @@ class shoppingItems {
 			" ORDER BY" .
 			($this->randomize?
 				" RAND()":
-				($this->search && !$this->selectedID?
+				($this->active || ($this->search && !$this->selectedID)?
 					" `Views` DESC,":
 					null) .
-				($this->active?
-					" `Views` DESC,":
+				($this->latests?
+					" `TimeStamp` DESC,":
 					null) .
 				($this->popular?
 					" `NumberOfOrders` DESC,":
@@ -434,7 +435,7 @@ class shoppingItems {
 				($this->rated?
 					" `Rating` DESC,":
 					null) .
-				" `OrderID`, `TimeStamp` DESC");
+				" `OrderID`, `ID` DESC");
 	}
 	
 	// ************************************************   Admin Part
@@ -4444,7 +4445,7 @@ class shopping extends modules {
 				" (".$formid.", 'Title', 'Title', 1, 1, 1, 1, '', '', '', '', 'width: 350px;', 1, 1)," .
 				" (".$formid.", 'Description', 'Description', 19, 6, 0, 1, '', '', '', '', 'height: 400px;', 2, 1)," .
 				" (".$formid.", 'Item Options', '', 13, 0, 0, 0, '', '', '', '', '', 3, 0)," .
-				" (".$formid.", 'Price', 'Price', 1, 12, 1, 0, '', 'e.g. 170', '', '', 'width: 80px;', 4, 1)," .
+				" (".$formid.", 'Price', 'Price', 1, 12, 0, 0, '', 'e.g. 170', '', '', 'width: 80px;', 4, 1)," .
 				" (".$formid.", 'Special Price', 'SpecialPrice', 1, 12, 0, 0, '', 'e.g. 150', '', '', 'width: 80px;', 5, 1)," .
 				" (".$formid.", 'Special Price Starts', 'SpecialPriceStartDate', 17, 5, 0, 0, '', '', '', '', 'width: 100px;', 6, 1)," .
 				" (".$formid.", 'Special Price Ends', 'SpecialPriceEndDate', 17, 5, 0, 0, '', '', '', '', 'width: 100px;', 7, 1)," .
@@ -6492,6 +6493,7 @@ class shopping extends modules {
 		$shoppingitems->showPaging = $this->showPaging;
 		$shoppingitems->ajaxPaging = $this->ajaxPaging;
 		$shoppingitems->randomize = $this->randomizeItems;
+		$shoppingitems->latests = $this->latestItems;
 		$shoppingitems->active = $this->activeItems;
 		$shoppingitems->popular = $this->popularItems;
 		$shoppingitems->discussed = $this->discussedItems;
@@ -6630,8 +6632,8 @@ class shopping extends modules {
 			}
 		
 			echo
-				"</div>" .
-				"<div class='clear-both'></div>";
+					"<div class='clear-both'></div>" .
+				"</div>";
 		
 			if (!$this->selectedItemID)
 				$this->displaySubCategories($row);
@@ -6850,6 +6852,7 @@ class shopping extends modules {
 			$shoppingitems->showPaging = $this->showPaging;
 			$shoppingitems->ajaxPaging = $this->ajaxPaging;
 			$shoppingitems->randomize = $this->randomizeItems;
+			$shoppingitems->latests = $this->latestItems;
 			$shoppingitems->active = $this->activeItems;
 			$shoppingitems->popular = $this->popularItems;
 			$shoppingitems->discussed = $this->discussedItems;

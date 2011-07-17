@@ -2879,8 +2879,8 @@ class videoGallery extends modules {
 		}
 		
 		echo
-				"</div>" .
-				"<div class='clear-both'></div>";
+					"<div class='clear-both'></div>" .
+				"</div>";
 		
 		$this->displayGalleries();
 		$this->displayVideos($row);
