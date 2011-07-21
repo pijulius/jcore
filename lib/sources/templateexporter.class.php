@@ -247,7 +247,7 @@ class _templateExporter {
  * 
  *  Name: '.$details['Name'].'
  *  URI: '.$details['URI'].'
- *  Description: '.preg_replace('/(\r\n|\r|\n)/', ' ', $details['Description']).' 
+ *  Description: '.$details['Description'].' 
  *  Author: '.$details['Author'].'
  *  Version: '.$details['Version'].'
  *  Tags: '.$details['Tags'].'
@@ -289,8 +289,8 @@ class _templateExporter {
 						'Description', 'URI', 'Name');
 					
 					foreach($variables as $variable) {
-						if (preg_match('/(\/\*.*?'.$variable.':) .*?((\r|\n).*?\*\/)/si', $templatephp))
-							$templatephp = preg_replace('/(\/\*.*?'.$variable.':) .*?((\r|\n).*?\*\/)/si', 
+						if (preg_match('/(\/\*.*?'.$variable.':) .*?(((\r|\n) ?\*|\*\/).*?\*\/)/si', $templatephp))
+							$templatephp = preg_replace('/(\/\*.*?'.$variable.':) .*?(((\r|\n) ?\*|\*\/).*?\*\/)/si', 
 								'\1 '.$details[$variable].'\2', $templatephp);
 						else
 							$templatephp = preg_replace('/(\/\*.*?(\r|\n))(.*?\*\/)/si', 
