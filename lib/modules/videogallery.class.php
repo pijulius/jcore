@@ -87,9 +87,11 @@ class videoGalleryVideos extends videos {
 			($ignorefolders?
 				" AND `ID` NOT IN (".implode(',', $ignorefolders).")":
 				null) .
-			sql::search(
-				$this->search,
-				array('Title', 'Description')) .
+			(!$this->latests?
+				sql::search(
+					$this->search,
+					array('Title', 'Description')):
+				null) .
 			" LIMIT 1"));
 			
 		if ($row['FolderIDs']) {
@@ -103,9 +105,11 @@ class videoGalleryVideos extends videos {
 		return
 			" SELECT * FROM `{" .$this->sqlTable."}`" .
 			" WHERE ((1" .
-			sql::search(
-				$this->search,
-				array('Title', 'Location')) .
+			(!$this->latests?
+				sql::search(
+					$this->search,
+					array('Title', 'Location')):
+				null) .
 			" )" .
 			($folders?
 				" OR (`".$this->sqlRow."` IN (".implode(',', $folders)."))":
@@ -473,7 +477,7 @@ class videoGalleryYouTubeVideos extends videoGalleryVideos {
 	}
 	
 	function display() {
-		if ($this->selectedID) {
+		if ($this->selectedID && !$this->latests) {
 			$row = array(
 				'ID' => "yt".$this->selectedID,
 				'Location' => "http://www.youtube.com/v/".$this->selectedID."?");
@@ -498,22 +502,24 @@ class videoGalleryYouTubeVideos extends videoGalleryVideos {
 		if (!$this->limit)
 			$this->limit = 50;
 		
-		$paging = new paging($this->limit);
-		
-		if ($this->ajaxPaging) {
-			$paging->ajax = true;
-			$paging->otherArgs = "&amp;request=".$this->uriRequest .
-				($this->sqlRow?
-					"&amp;".strtolower($this->sqlRow)."=".$this->selectedOwnerID:
-					null);
+		if (!$this->latests) {
+			$paging = new paging($this->limit);
+			
+			if ($this->ajaxPaging) {
+				$paging->ajax = true;
+				$paging->otherArgs = "&amp;request=".$this->uriRequest .
+					($this->sqlRow?
+						"&amp;".strtolower($this->sqlRow)."=".$this->selectedOwnerID:
+						null);
+			}
+			
+			$paging->track(strtolower(get_class($this)).'limit');
 		}
 		
-		$paging->track(strtolower(get_class($this)).'limit');
-		
-		if ($this->ignorePaging && $this->limit)
+		if (($this->ignorePaging || $this->latests) && $this->limit)
 			$gallery['YouTubeAPIURL'] .= "&max-results=".$this->limit;
 		
-		if (!$this->ignorePaging) {
+		if (!$this->ignorePaging && !$this->latests) {
 			list($offset, $limit) = explode(',', $paging->limit);
 			$gallery['YouTubeAPIURL'] .= "&start-index=".($offset+1) .
 				"&max-results=".$limit;
@@ -529,16 +535,17 @@ class videoGalleryYouTubeVideos extends videoGalleryVideos {
 			'<media:thumbnail.*?url=.([^ \'"]+0\.jpg).*?' .
 			'<\/entry>/is', $data, $newestvideo);
 	
+		$totalitems = 0;
 		if (isset($matches[1]))
-			$paging->setTotalItems((int)$matches[1]);
+			$totalitems = (int)$matches[1];
 		
-		if (!$paging->getStart())
+		if (!$this->latests)
+			$paging->setTotalItems($totalitems);
+		
+		if (!$this->latests && !$paging->getStart())
 			sql::run(
 				" UPDATE `{" .$this->sqlOwnerTable . "}` SET" .
-				" `Videos` = '" .
-					(isset($matches[1])?
-						(int)$matches[1]:
-						0)."'," .
+				" `Videos` = '".$totalitems."'," .
 				(JCORE_VERSION >= '0.8'?
 					" `PreviewPicURL` = '" .
 						(isset($newestvideo[1])?
@@ -548,7 +555,7 @@ class videoGalleryYouTubeVideos extends videoGalleryVideos {
 				" `TimeStamp` = `TimeStamp`" .
 				" WHERE `ID` = '".(int)$this->selectedOwnerID."'");
 		
-		if (!$paging->items) {
+		if (!$totalitems) {
 			if (!isset($matches[1]) && $data)
 				tooltip::display(
 					sprintf(_("Couldn't fetch video list. Error: %s"),
@@ -600,7 +607,10 @@ class videoGalleryYouTubeVideos extends videoGalleryVideos {
 				isset($rows[7][$key]))
 				$row['Title'] = $rows[7][$key];
 			
-			$this->displayOne($row);
+			if ($this->format)
+				$this->displayFormated($row);
+			else
+				$this->displayOne($row);
 			
 			if ($this->columns == $i) {
 				echo "<div class='clear-both'></div>";
@@ -613,14 +623,17 @@ class videoGalleryYouTubeVideos extends videoGalleryVideos {
 		echo
 			"<div class='clear-both'></div>";
 		
-		if (!$this->randomize && $this->showPaging)
+		if ($this->showPaging && !$this->randomize && !$this->latests)
 			$paging->display();
 		
 		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //videos
 		
-		return $paging->items;
+		if ($this->latests)
+			return true;
+		
+		return $totalitems;
 	}
 }
 
@@ -637,14 +650,23 @@ class videoGalleryComments extends comments {
 		
 		$this->selectedOwner = _('Gallery');
 		$this->uriRequest = "modules/videogallery/".$this->uriRequest;
-		
-		if ($GLOBALS['ADMIN'])
-			$this->commentURL = videoGallery::getURL().
-				"&videogalleryid=".admin::getPathID();
 	}
 	
 	function __destruct() {
 		languages::unload('videogallery');
+	}
+	
+	static function getCommentURL($comment = null) {
+		if ($comment)
+			return videoGallery::getURL($comment['VideoGalleryID']).
+				"&videogalleryid=".$comment['VideoGalleryID'];
+		
+		if ($GLOBALS['ADMIN'])
+			return videoGallery::getURL(admin::getPathID()).
+				"&videogalleryid=".admin::getPathID();
+		
+		return 
+			parent::getCommentURL();
 	}
 }
 
@@ -676,12 +698,14 @@ class videoGalleryIcons extends pictures {
 class videoGallery extends modules {
 	static $uriVariables = 'videoid, videogalleryid, videogallerylimit, videogalleryvideoslimit, videogalleryyoutubevideoslimit, videogalleryrating, rate, ajax, request';
 	var $searchable = true;
+	var $format = null;
 	var $limit = 0;
 	var $limitGalleries = 0;
 	var $selectedID;
 	var $search = null;
 	var $ignorePaging = false;
 	var $showPaging = true;
+	var $latests = false;
 	var $ajaxPaging = AJAX_PAGING;
 	var $ajaxRequest = null;
 	var $randomizeVideos = false;
@@ -2661,7 +2685,9 @@ class videoGallery extends modules {
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
 		echo
-			calendar::datetime($row['TimeStamp'])." ";
+			"<span class='details-date'>" .
+			calendar::datetime($row['TimeStamp']) .
+			" </span>";
 					
 		$GLOBALS['USER']->displayUserName($user, __('by %s'));
 	}
@@ -2678,9 +2704,9 @@ class videoGallery extends modules {
 			"</p>";
 	}
 	
-	function displayVideos(&$row) {
-		if ((!isset($row['YouTubeAPIURL']) || !$row['YouTubeAPIURL']) &&
-			!$row['Videos'])
+	function displayVideos(&$row = null) {
+		if ($row && !$row['Videos'] && 
+			(!isset($row['YouTubeAPIURL']) || !$row['YouTubeAPIURL']))
 			return;
 		
 		if (isset($row['YouTubeAPIURL']) && $row['YouTubeAPIURL'])
@@ -2696,12 +2722,18 @@ class videoGallery extends modules {
 				htmlspecialchars(_("You need to be logged in to view this video. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
 		
+		if ($row) {
+			$videos->selectedOwnerID = $row['ID'];
+			$videos->columns = $row['Columns'];
+			$videos->limit = $row['Limit'];
+		} else {
+			$videos->latests = true;
+			$videos->format = $this->format;
+		}
+		
 		$videos->ignorePaging = $this->ignorePaging;
 		$videos->showPaging = $this->showPaging;
 		$videos->ajaxPaging = $this->ajaxPaging;
-		$videos->selectedOwnerID = $row['ID'];
-		$videos->columns = $row['Columns'];
-		$videos->limit = $row['Limit'];
 		$videos->randomize = $this->randomizeVideos;
 		
 		if ($this->limit)
@@ -2711,12 +2743,20 @@ class videoGallery extends modules {
 		unset($videos);
 	}
 	
-	function displayComments(&$row) {
-		$gallerycomments = new videoGalleryComments();
-		$gallerycomments->guestComments = $row['EnableGuestComments'];
-		$gallerycomments->selectedOwnerID = $row['ID'];
-		$gallerycomments->display();
-		unset($gallerycomments);
+	function displayComments(&$row = null) {
+		$comments = new videoGalleryComments();
+		
+		if ($row) {
+			$comments->guestComments = $row['EnableGuestComments'];
+			$comments->selectedOwnerID = $row['ID'];
+		} else {
+			$comments->latests = true;
+			$comments->limit = $this->limit;
+			$comments->format = $this->format;
+		}
+		
+		$comments->display();
+		unset($comments);
 	}
 	
 	function displayRating(&$row) {
@@ -2908,9 +2948,15 @@ class videoGallery extends modules {
 		
 		if (preg_match('/(^|\/)latest($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)latest($|\/)/', '\2', $this->arguments);
+			$this->latests = true;
 			$this->ignorePaging = true;
 			$this->showPaging = false;
 			$this->limit = 1;
+		}
+		
+		if (preg_match('/(^|\/)format\/(.*?)($|[^<]\/[^>])/', $this->arguments, $matches)) {
+			$this->arguments = preg_replace('/(^|\/)format\/.*?($|[^<]\/[^>])/', '\2', $this->arguments);
+			$this->format = trim($matches[2]);
 		}
 		
 		if (preg_match('/(^|\/)([0-9]+?)\/ajax($|\/)/', $this->arguments, $matches)) {
@@ -2923,6 +2969,18 @@ class videoGallery extends modules {
 			$this->arguments = preg_replace('/(^|\/)[0-9]+?($|\/)/', '\2', $this->arguments);
 			$this->limit = (int)$matches[2];
 		}
+		
+		if (preg_match('/(^|\/)comments($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)comments($|\/)/', '\2', $this->arguments);
+			$this->ignorePaging = true;
+			$this->showPaging = false;
+			
+			$this->displayComments();
+			return true;
+		}
+		
+		if (!$this->arguments && $this->latests)
+			return false;
 		
 		$gallery = sql::fetch(sql::run(
 			" SELECT * FROM `{videogalleries}` " .
@@ -2954,8 +3012,10 @@ class videoGallery extends modules {
 		ob_end_clean();
 		
 		unset($videos);
-		url::displaySearch($this->search, $itemsfound);
-	
+		
+		if (!isset($this->arguments))
+			url::displaySearch($this->search, $itemsfound);
+		
 		echo
 			"<div class='videogallery'>" .
 			$content .
@@ -3010,7 +3070,7 @@ class videoGallery extends modules {
 		if (!$this->limitGalleries && $this->owner['Limit'])
 			$this->limitGalleries = $this->owner['Limit'];
 		
-		if ((int)$this->selectedID) {
+		if (!$this->latests && (int)$this->selectedID) {
 			$row = sql::fetch(sql::run(
 				" SELECT * FROM `{videogalleries}`" .
 				" WHERE `Deactivated` = 0" .
@@ -3020,17 +3080,23 @@ class videoGallery extends modules {
 			return $this->displaySelected($row);
 		}
 		
-		if ($this->search)
+		if (!$this->latests && $this->search)
 			return $this->displaySearch();
 		
 		echo 
 			"<div class='videogallery'>";
 		
-		$items = $this->displayGalleries();
+		if ($this->latests)
+			$this->displayVideos();
+		else
+			$items = $this->displayGalleries();
 		
 		echo
 			"</div>";
-			
+		
+		if ($this->latests)
+			return true;
+		
 		return $items;
 	}
 }

@@ -1960,14 +1960,23 @@ class shoppingOrderComments extends comments {
 		
 		$this->selectedOwner = _('Order');
 		$this->uriRequest = "modules/shoppingorders/".$this->uriRequest;
-		
-		if ($GLOBALS['ADMIN'])
-			$this->commentURL = shoppingOrders::getURL().
-				"&shoppingorderid=".admin::getPathID();
 	}
 	
 	function __destruct() {
 		languages::unload('shopping');
+	}
+	
+	static function getCommentURL($comment = null) {
+		if ($comment)
+			return shoppingOrders::getURL().
+				"&shoppingorderid=".$comment['ShoppingOrderID'];
+		
+		if ($GLOBALS['ADMIN'])
+			return shoppingOrders::getURL().
+				"&shoppingorderid=".admin::getPathID();
+		
+		return 
+			parent::getCommentURL();
 	}
 }
 
@@ -5438,12 +5447,19 @@ class shoppingOrders extends modules {
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
 		echo
-			calendar::datetime($row['TimeStamp'])." ";
+			"<span class='details-date'>" .
+			calendar::datetime($row['TimeStamp']) .
+			" </span>";
 				
 		$GLOBALS['USER']->displayUserName($user, __('by %s'));
 		
 		echo
-			", " ._($this->status2Text($row['OrderStatus']));
+			"<span class='details-separator separator-1'>" .
+			", " .
+			"</span>" .
+			"<span class='order-status'>" .
+				_($this->status2Text($row['OrderStatus'])) .
+			"</span>";
 	}
 	
 	function displayDescription(&$row) {
@@ -6021,6 +6037,9 @@ class shoppingOrders extends modules {
 				null));
 		
 		$paging->setTotalItems(sql::count());
+		
+		echo
+			"<div class='shopping-orders-list'>";
 				
 		if (!sql::rows($rows))
 			tooltip::display(
@@ -6028,6 +6047,9 @@ class shoppingOrders extends modules {
 					TOOLTIP_NOTIFICATION);
 		else
 			$this->displayList($rows);
+		
+		echo
+			"</div>";
 		
 		if (!$this->selectedID && $this->showPaging)
 			$paging->display();

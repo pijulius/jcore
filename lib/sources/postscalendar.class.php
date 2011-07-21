@@ -30,8 +30,8 @@ class _postsCalendar extends monthCalendar {
 		{
 			$search = trim(strip_tags($_GET['search']));
 			
-			if (preg_match('/.*?:date=([0-9\-]+)/', $search))
-				$this->time = strtotime(preg_replace('/.*?:date=([0-9\-]+)/', '\1', 
+			if (preg_match('/.*?date:([0-9\-]+)/', $search))
+				$this->time = strtotime(preg_replace('/.*?date:([0-9\-]+)/', '\1', 
 					$search));
 		}
 	}

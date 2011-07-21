@@ -20,6 +20,8 @@ if (!defined('PICTURE_WATERMARK_POSITION'))
 
 class _pictures {
 	var $limit = 0;
+	var $latests = false;
+	var $format = null;
 	var $ignorePaging = false;
 	var $showPaging = true;
 	var $randomize = false;
@@ -58,13 +60,16 @@ class _pictures {
 		return
 			" SELECT * FROM `{" .$this->sqlTable."}`" .
 			" WHERE 1" .
-			($this->sqlRow?
+			($this->sqlRow && !$this->latests?
 				" AND `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
 				null) .
 			" ORDER BY" .
 			($this->randomize?
 				" RAND()":
-				" `OrderID`, `ID` DESC");
+				($this->latests?
+					" `TimeStamp` DESC,":
+					" `OrderID`,") .
+				" `ID` DESC");
 	}
 	
 	// ************************************************   Admin Part
@@ -1661,6 +1666,25 @@ class _pictures {
 		return true;
 	}
 	
+	function generateLink(&$row) {
+		if ($this->customLink) {
+			if (is_array($this->customLink))
+				$link = $this->customLink[$row['ID']];
+			else
+				$link = $this->customLink;
+			
+		} elseif ($row['URL']) {
+			$link = url::generateLink($row['URL']);
+			
+		} else {
+			$link = url::uri().
+				"&amp;request=".$this->uriRequest .
+				"&amp;view=".$row['ID']."&amp;ajax=1";
+		}
+		
+		return $link;
+	}
+	
 	function incViews(&$row) {
 		sql::run(
 			" UPDATE `{" .$this->sqlTable."}` SET " .
@@ -1710,11 +1734,13 @@ class _pictures {
 	
 	function displayDetails(&$row) {
 		echo
-			calendar::date($row['TimeStamp']);
-					
+			"<span class='details-date'>" .
+				calendar::date($row['TimeStamp']) .
+			"</span>";
+		
 		if (JCORE_VERSION >= '0.5' && $row['Views'])
 			echo
-				"<span class='picture-details-separator separator-1'>" .
+				"<span class='details-separator separator-1'>" .
 					", " .
 				"</span>" .
 				"<span class='picture-views-number'>" .
@@ -1722,24 +1748,83 @@ class _pictures {
 				"</span>";
 	}
 	
+	function displayFormated(&$row) {
+		if (!isset($row['_Link']) || $row['_Link'])
+			$row['_Link'] = $this->generateLink($row);
+		
+		echo
+			"<div " .
+				(JCORE_VERSION < '0.6'?
+					"id='picture".$row['ID']."' ":
+					null) .
+				"class='picture " .
+				(JCORE_VERSION >= '0.6'?
+					"picture".$row['ID']." picture-num".$row['_PictureNumber']:
+					"picture".$row['_PictureNumber']) .
+				"'>";
+		
+		$parts = preg_split('/%([a-z0-9-_]+?)%/', $this->format, null, PREG_SPLIT_DELIM_CAPTURE);
+		
+		foreach($parts as $part) {
+			switch($part) {
+				case 'picture':
+					echo
+						"<a href='".$row['_Link']."' " .
+							"title='".htmlspecialchars($row['Title'], ENT_QUOTES)."' " .
+							(strpos($row['URL'], '://') !== false && !$this->customLink?
+								"target='_blank' ":
+								null) .
+							(!$row['URL'] && !$this->customLink?
+								"rel='lightbox[".strtolower(get_class($this))."".$this->selectedOwnerID."]'":
+								null) .
+							">";
+					
+					$this->displayPicture($row);
+					
+					echo
+						"</a>";
+					break;
+				
+				case 'title':
+					echo
+						"<div class='picture-title'>";
+					
+					$this->displayTitle($row);
+					
+					echo
+						"</div>";
+					break;
+				
+				case 'details':
+					echo
+						"<div class='picture-details comment'>";
+					
+					$this->displayDetails($row);
+					
+					echo
+						"</div>";
+					break;
+				
+				case 'link':
+					echo $row['_Link'];
+					break;
+				
+				default:
+					echo $part;
+					break;
+			}
+		}
+		
+		echo
+			"</div>";
+	}
+	
 	function displayOne(&$row) {
 		if (!$row['Location'])
 			return;
 		
-		if ($this->customLink) {
-			if (is_array($this->customLink))
-				$row['_Link'] = $this->customLink[$row['ID']];
-			else
-				$row['_Link'] = $this->customLink;
-			
-		} elseif ($row['URL']) {
-			$row['_Link'] = url::generateLink($row['URL']);
-			
-		} elseif (!isset($row['_Link']) || !$row['_Link']) {
-			$row['_Link'] = url::uri().
-				"&amp;request=".$this->uriRequest .
-				"&amp;view=".$row['ID']."&amp;ajax=1";
-		}
+		if (!isset($row['_Link']) || !$row['_Link'])
+			$row['_Link'] = $this->generateLink($row);
 		
 		if (!isset($row['_ThumbnailLocation']) || !$row['_ThumbnailLocation'])
 			$row['_ThumbnailLocation'] = $this->rootURL.
@@ -1796,32 +1881,35 @@ class _pictures {
 			return false;
 		}
 		
-		$paging = new paging($this->limit);
-		
-		if ($this->ajaxPaging) {
-			$paging->ajax = true;
-			$paging->otherArgs = "&amp;request=".$this->uriRequest .
-				($this->sqlRow?
-					"&amp;".strtolower($this->sqlRow)."=".$this->selectedOwnerID:
-					null);
+		if (!$this->latests) {
+			$paging = new paging($this->limit);
+			
+			if ($this->ajaxPaging) {
+				$paging->ajax = true;
+				$paging->otherArgs = "&amp;request=".$this->uriRequest .
+					($this->sqlRow?
+						"&amp;".strtolower($this->sqlRow)."=".$this->selectedOwnerID:
+						null);
+			}
+			
+			$paging->track(strtolower(get_class($this)).'limit');
+			
+			if ($this->ignorePaging)
+				$paging->reset();
 		}
-		
-		$paging->track(strtolower(get_class($this)).'limit');
-		
-		if ($this->ignorePaging)
-			$paging->reset();
 		
 		$rows = sql::run(
 			$this->SQL() .
-			($this->ignorePaging?
+			($this->ignorePaging || $this->latests?
 				($this->limit?
 					" LIMIT ".$this->limit:
 					null):
 				" LIMIT ".$paging->limit));
 		
-		$paging->setTotalItems(sql::count());
+		if (!$this->latests)
+			$paging->setTotalItems(sql::count());
 		
-		if (!$paging->items)
+		if (!sql::rows($rows))
 			return false;
 		
 		if (!$this->ajaxRequest)
@@ -1833,8 +1921,12 @@ class _pictures {
 		$i = 1;
 		while ($row = sql::fetch($rows)) {
 			$row['_PictureNumber'] = $i;
+			$row['_Link'] = $this->generateLink($row);
 			
-			$this->displayOne($row);
+			if ($this->format)
+				$this->displayFormated($row);
+			else
+				$this->displayOne($row);
 			
 			if ($this->columns == $i) {
 				echo "<div class='clear-both'></div>";
@@ -1847,12 +1939,15 @@ class _pictures {
 		echo
 			"<div class='clear-both'></div>";
 		
-		if (!$this->randomize && $this->showPaging)
+		if ($this->showPaging && !$this->randomize && !$this->latests)
 			$paging->display();
 		
 		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //pictures
+		
+		if ($this->latests)
+			return true;
 		
 		return $paging->items;
 	}

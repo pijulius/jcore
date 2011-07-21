@@ -25,29 +25,19 @@ class _postComments extends comments {
 		
 		$this->selectedOwner = __('Post');
 		$this->uriRequest = "posts/".$this->uriRequest;
+	}
+	
+	static function getCommentURL($comment = null) {
+		if ($comment)
+			return
+				posts::getPostURL($comment['PostID']);
 		
-		if ($GLOBALS['ADMIN']) {
-			$pageid = admin::getPathID(2);
-			$postid = admin::getPathID();
-			
-			if (!$pageid && $postid) {
-				$post = sql::fetch(sql::run(
-					" SELECT `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
-					" FROM `{posts}` WHERE `ID` = '".(int)$postid."'"));
-				
-				if ($post) {
-					$pageid = $post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')];
-					
-					if (!$pageid)
-						$pageid = pages::getHomeID();
-				}
-			}
-			
-			if ($postid && $pageid)
-				$this->commentURL = SITE_URL .
-					"?pageid=".$pageid . 
-					"&postid=".$postid;
-		}
+		if ($GLOBALS['ADMIN'])
+			return 
+				posts::getPostURL(admin::getPathID());
+		
+		return 
+			parent::getCommentURL();
 	}
 }
 

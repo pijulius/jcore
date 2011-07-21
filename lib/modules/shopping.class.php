@@ -246,15 +246,24 @@ class shoppingItemComments extends comments {
 		
 		$this->selectedOwner = _('Item');
 		$this->uriRequest = "modules/shopping/".$this->uriRequest;
-		
-		if ($GLOBALS['ADMIN'])
-			$this->commentURL = shopping::getURL().
-				"&shoppingid=".admin::getPathID(2) .
-				"&shoppingitemid=".admin::getPathID();
 	}
 	
 	function __destruct() {
 		languages::unload('shopping');
+	}
+	
+	static function getCommentURL($comment = null) {
+		if ($comment)
+			return shopping::getURL().
+				"&shoppingitemid=".$comment['ShoppingItemID'];
+		
+		if ($GLOBALS['ADMIN'])
+			return shopping::getURL(admin::getPathID(2)).
+				"&shoppingid=".admin::getPathID(2) .
+				"&shoppingitemid=".admin::getPathID();
+		
+		return 
+			parent::getCommentURL();
 	}
 }
 
@@ -3313,13 +3322,15 @@ class shoppingItems {
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
 		echo
-			calendar::datetime($row['TimeStamp'])." ";
+			"<span class='details-date'>" .
+			calendar::datetime($row['TimeStamp']) .
+			" </span>";
 				
 		$GLOBALS['USER']->displayUserName($user, __('by %s'));
 		
 		if ($row['Views'])
 			echo
-				"<span class='shopping-item-details-separator separator-1'>" .
+				"<span class='details-separator separator-1'>" .
 					", " .
 				"</span>" .
 				"<span class='shopping-item-views-number'>" .
@@ -3327,7 +3338,7 @@ class shoppingItems {
 				"</span>";
 		
 		echo
-			"<span class='shopping-item-details-separator separator-2'>" .
+			"<span class='details-separator separator-2'>" .
 				", " .
 			"</span>";
 
@@ -3343,9 +3354,20 @@ class shoppingItems {
 				"</span>";
 	}
 	
-	function displayPictures(&$row) {
+	function displayPictures(&$row = null) {
 		$pictures = new shoppingItemPictures();
-		$pictures->selectedOwnerID = $row['ID'];
+		
+		if ($row) {
+			$pictures->selectedOwnerID = $row['ID'];
+		} else {
+			$pictures->latests = true;
+			$pictures->limit = $this->limit;
+			$pictures->format = $this->format;
+			$pictures->ignorePaging = $this->ignorePaging;
+			$pictures->showPaging = $this->showPaging;
+			$pictures->ajaxPaging = $this->ajaxPaging;
+		}
+		
 		$pictures->display();
 		unset($pictures);
 	}
@@ -3407,9 +3429,20 @@ class shoppingItems {
 		}
 	}
 	
-	function displayAttachments(&$row) {
+	function displayAttachments(&$row = null) {
 		$attachments = new shoppingItemAttachments();
-		$attachments->selectedOwnerID = $row['ID'];
+		
+		if ($row) {
+			$attachments->selectedOwnerID = $row['ID'];
+		} else {
+			$attachments->latests = true;
+			$attachments->limit = $this->limit;
+			$attachments->format = $this->format;
+			$attachments->ignorePaging = $this->ignorePaging;
+			$attachments->showPaging = $this->showPaging;
+			$attachments->ajaxPaging = $this->ajaxPaging;
+		}
+		
 		$attachments->display();
 		unset($attachments);
 	}
@@ -3803,10 +3836,18 @@ class shoppingItems {
 			"</div>";
 	}
 	
-	function displayComments(&$row) {
+	function displayComments(&$row = null) {
 		$comments = new shoppingItemComments();
-		$comments->guestComments = $row['EnableGuestComments'];
-		$comments->selectedOwnerID = $row['ID'];
+		
+		if ($row) {
+			$comments->guestComments = $row['EnableGuestComments'];
+			$comments->selectedOwnerID = $row['ID'];
+		} else {
+			$comments->latests = true;
+			$comments->limit = $this->limit;
+			$comments->format = $this->format;
+		}
+		
 		$comments->display();
 		unset($comments);
 	}
@@ -3879,7 +3920,7 @@ class shoppingItems {
 			"</div>";
 	}
 	
-	function displayFormat(&$row) {
+	function displayFormated(&$row) {
 		echo
 			"<div class='shopping-item" .
 				($this->selectedID == $row['ID']?
@@ -4254,7 +4295,8 @@ class shoppingItems {
 		$paging->setTotalItems(sql::count());
 		
 		if ($this->search && !$this->selectedID && 
-			!$this->ajaxRequest && !$this->similar)
+			!$this->ajaxRequest && !$this->similar &&
+			!isset($this->arguments))
 			url::displaySearch($this->search, $paging->items);
 		
 		if (!$this->ajaxRequest)
@@ -4294,7 +4336,7 @@ class shoppingItems {
 				$row['_CSSClass'] .= ' last';
 			
 			if ($this->format)
-				$this->displayFormat($row);
+				$this->displayFormated($row);
 			elseif ($row['ID'] == $this->selectedID || $this->fullItems)
 				$this->displaySelected($row);
 			else
@@ -6441,7 +6483,9 @@ class shopping extends modules {
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
 		echo
-			calendar::datetime($row['TimeStamp'])." ";
+			"<span class='details-date'>" .
+			calendar::datetime($row['TimeStamp']) .
+			" </span>";
 					
 		$GLOBALS['USER']->displayUserName($user, __('by %s'));
 	}
@@ -6474,20 +6518,28 @@ class shopping extends modules {
 		}
 	}
 	
-	function displayItems(&$row) {
+	function displayItems(&$row = null) {
 		$shoppingitems = new shoppingItems();
 		
 		if (isset($row['HideSubgroupItems']) && $row['HideSubgroupItems'])
 			$shoppingitems->subgroupItems = false;
 		
-		$shoppingitems->selectedShoppingID = $row['ID'];
-		$shoppingitems->limit = $row['Limit'];
+		if ($row) {
+			$shoppingitems->selectedShoppingID = $row['ID'];
+			$shoppingitems->limit = $row['Limit'];
+		} else {
+			$this->latestItems = true;
+			$this->ignorePaging = true;
+			$this->showPaging = false;
+		}
 		
 		if ($this->limit)
 			$shoppingitems->limit = $this->limit;
 	
+		$shoppingitems->shoppingURL = $this->shoppingURL;
+		
 		if ($this->topItems)
-			$shoppingitems->shoppingURL = shopping::getURL($row['ID']);
+			$shoppingitems->shoppingURL = shopping::getURL(($row?$row['ID']:null));
 		
 		$shoppingitems->ignorePaging = $this->ignorePaging;
 		$shoppingitems->showPaging = $this->showPaging;
@@ -6663,6 +6715,47 @@ class shopping extends modules {
 			$this->ignorePaging = true;
 			$this->showPaging = false;
 			$this->limit = 1;
+			
+			if (JCORE_VERSION >= '0.9')
+				$this->topItems = true;
+		}
+		
+		if (preg_match('/(^|\/)active($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)active($|\/)/', '\2', $this->arguments);
+			$this->activeItems = true;
+			
+			if (JCORE_VERSION >= '0.9')
+				$this->topItems = true;
+		}
+		
+		if (preg_match('/(^|\/)popular($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)popular($|\/)/', '\2', $this->arguments);
+			$this->popularItems = true;
+			
+			if (JCORE_VERSION >= '0.9')
+				$this->topItems = true;
+		}
+		
+		if (preg_match('/(^|\/)discussed($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)discussed($|\/)/', '\2', $this->arguments);
+			$this->discussedItems = true;
+			
+			if (JCORE_VERSION >= '0.9')
+				$this->topItems = true;
+		}
+		
+		if (preg_match('/(^|\/)rated($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)rated($|\/)/', '\2', $this->arguments);
+			$this->ratedItems = true;
+			
+			if (JCORE_VERSION >= '0.9')
+				$this->topItems = true;
+		}
+		
+		if (preg_match('/(^|\/)top($|\/)/', $this->arguments) || $this->topItems) {
+			$this->arguments = preg_replace('/(^|\/)top($|\/)/', '\2', $this->arguments);
+			$this->topItems = true;
+			$this->shoppingURL = shopping::getURL();
 		}
 		
 		if (preg_match('/(^|\/)([0-9]+?)\/ajax($|\/)/', $this->arguments, $matches)) {
@@ -6704,30 +6797,58 @@ class shopping extends modules {
 			return true;
 		}
 		
-		if (preg_match('/(^|\/)active($|\/)/', $this->arguments)) {
-			$this->arguments = preg_replace('/(^|\/)active($|\/)/', '\2', $this->arguments);
-			$this->activeItems = true;
+		if (preg_match('/(^|\/)pictures($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)pictures($|\/)/', '\2', $this->arguments);
+			$this->ignorePaging = true;
+			$this->showPaging = false;
+			
+			$shoppingitems = new shoppingItems();
+			$shoppingitems->limit = $this->limit;
+			$shoppingitems->shoppingURL = shopping::getURL();
+			$shoppingitems->ignorePaging = true;
+			$shoppingitems->showPaging = false;
+			$shoppingitems->latests = true;
+			$shoppingitems->format = $this->itemsFormat;
+			$shoppingitems->displayPictures();
+			unset($shoppingitems);
+			
+			return true;
 		}
 		
-		if (preg_match('/(^|\/)popular($|\/)/', $this->arguments)) {
-			$this->arguments = preg_replace('/(^|\/)popular($|\/)/', '\2', $this->arguments);
-			$this->popularItems = true;
+		if (preg_match('/(^|\/)attachments($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)attachments($|\/)/', '\2', $this->arguments);
+			$this->ignorePaging = true;
+			$this->showPaging = false;
+			
+			$shoppingitems = new shoppingItems();
+			$shoppingitems->limit = $this->limit;
+			$shoppingitems->shoppingURL = shopping::getURL();
+			$shoppingitems->ignorePaging = true;
+			$shoppingitems->showPaging = false;
+			$shoppingitems->latests = true;
+			$shoppingitems->format = $this->itemsFormat;
+			$shoppingitems->displayAttachments();
+			unset($shoppingitems);
+			
+			return true;
 		}
 		
-		if (preg_match('/(^|\/)discussed($|\/)/', $this->arguments)) {
-			$this->arguments = preg_replace('/(^|\/)discussed($|\/)/', '\2', $this->arguments);
-			$this->discussedItems = true;
-		}
-		
-		if (preg_match('/(^|\/)rated($|\/)/', $this->arguments)) {
-			$this->arguments = preg_replace('/(^|\/)rated($|\/)/', '\2', $this->arguments);
-			$this->ratedItems = true;
-		}
-		
-		if (preg_match('/(^|\/)top($|\/)/', $this->arguments)) {
-			$this->arguments = preg_replace('/(^|\/)top($|\/)/', '\2', $this->arguments);
-			$this->topItems = true;
-			$this->shoppingURL = shopping::getURL();
+		if (preg_match('/(^|\/)comments($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)comments($|\/)/', '\2', $this->arguments);
+			$this->ignorePaging = true;
+			$this->showPaging = false;
+			
+			$shoppingitems = new shoppingItems();
+			$shoppingitems->limit = $this->limit;
+			$shoppingitems->shoppingURL = shopping::getURL();
+			$shoppingitems->ignorePaging = true;
+			$shoppingitems->showPaging = false;
+			$shoppingitems->latests = true;
+			$shoppingitems->format = $this->itemsFormat;
+			$shoppingitems->displayComments();
+			unset($shoppingitems);
+			
+			return true;
 		}
 		
 		if (!$this->arguments && !(int)$this->selectedID)
@@ -6814,12 +6935,14 @@ class shopping extends modules {
 		if ($this->search)
 			return $this->displaySearch();
 		
-		$rows = sql::run(
-			$this->SQL());
-			
-		$items = sql::rows($rows);
-		if (!$items)
-			return false;
+		if (!$this->topItems) {
+			$rows = sql::run(
+				$this->SQL());
+				
+			$items = sql::rows($rows);
+			if (!$items)
+				return false;
+		}
 			
 		echo 
 			"<div class='shopping'>";
@@ -6844,38 +6967,15 @@ class shopping extends modules {
 			$this->discussedItems || $this-> ratedItems ||
 			$this->topItems)
 		{	
-			$shoppingitems = new shoppingItems();
-			
-			$shoppingitems->limit = $this->limit;
-			$shoppingitems->shoppingURL = $this->shoppingURL;
-			$shoppingitems->ignorePaging = $this->ignorePaging;
-			$shoppingitems->showPaging = $this->showPaging;
-			$shoppingitems->ajaxPaging = $this->ajaxPaging;
-			$shoppingitems->randomize = $this->randomizeItems;
-			$shoppingitems->latests = $this->latestItems;
-			$shoppingitems->active = $this->activeItems;
-			$shoppingitems->popular = $this->popularItems;
-			$shoppingitems->discussed = $this->discussedItems;
-			$shoppingitems->rated = $this->ratedItems;
-			$shoppingitems->top = $this->topItems;
-			$shoppingitems->format = $this->itemsFormat;
-			
-			if ($this->topItems) {
-				if (!$shoppingitems->limit)
-					$shoppingitems->limit = 10;
-				
-				$shoppingitems->showPaging = false;
-				$shoppingitems->selectedID = null;
-				$shoppingitems->search = null;
-			}
-		
-			$shoppingitems->display();
-			unset($shoppingitems);
+			$this->displayItems();
 		}
 		
 		echo 
 			"</div>";
-			
+		
+		if ($this->topItems)
+			return true;
+		
 		return $items;
 	}
 }

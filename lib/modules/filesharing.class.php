@@ -87,9 +87,11 @@ class fileSharingAttachments extends attachments {
 			($ignorefolders?
 				" AND `ID` NOT IN (".implode(',', $ignorefolders).")":
 				null) .
-			sql::search(
-				$this->search,
-				array('Title', 'Description')) .
+			(!$this->latests?
+				sql::search(
+					$this->search,
+					array('Title', 'Description')):
+				null) .
 			" LIMIT 1"));
 		
 		if ($row['FolderIDs']) {
@@ -103,9 +105,11 @@ class fileSharingAttachments extends attachments {
 		return
 			" SELECT * FROM `{" .$this->sqlTable."}`" .
 			" WHERE ((1" .
-			sql::search(
-				$this->search,
-				array('Title', 'Location')) .
+			(!$this->latests?
+				sql::search(
+					$this->search,
+					array('Title', 'Location')):
+				null) .
 			" )" .
 			($folders?
 				" OR (`".$this->sqlRow."` IN (".implode(',', $folders)."))":
@@ -167,14 +171,23 @@ class fileSharingComments extends comments {
 		
 		$this->selectedOwner = _('Folder');
 		$this->uriRequest = "modules/filesharing/".$this->uriRequest;
-		
-		if ($GLOBALS['ADMIN'])
-			$this->commentURL = fileSharing::getURL().
-				"&filesharingid=".admin::getPathID();
 	}
 	
 	function __destruct() {
 		languages::unload('filesharing');
+	}
+	
+	static function getCommentURL($comment = null) {
+		if ($comment)
+			return fileSharing::getURL($comment['FileSharingID']).
+				"&filesharingid=".$comment['FileSharingID'];
+		
+		if ($GLOBALS['ADMIN'])
+			return fileSharing::getURL(admin::getPathID()).
+				"&filesharingid=".admin::getPathID();
+		
+		return 
+			parent::getCommentURL();
 	}
 }
 
@@ -206,12 +219,14 @@ class fileSharingIcons extends pictures {
 class fileSharing extends modules {
 	static $uriVariables = 'filesharingid, filesharinglimit, filesharingattachmentslimit, filesharingrating, rate, ajax, request';
 	var $searchable = true;
+	var $format = null;
 	var $limit = 0;
 	var $limitFolders = 0;
 	var $selectedID;
 	var $search = null;
 	var $ignorePaging = false;
 	var $showPaging = true;
+	var $latests = false;
 	var $attachmentsPath;
 	var $ajaxPaging = AJAX_PAGING;
 	var $ajaxRequest = null;
@@ -1840,7 +1855,9 @@ class fileSharing extends modules {
 		$user = $GLOBALS['USER']->get($row['UserID']);
 			
 		echo
-			calendar::datetime($row['TimeStamp'])." ";
+			"<span class='details-date'>" .
+			calendar::datetime($row['TimeStamp']) .
+			" </span>";
 					
 		$GLOBALS['USER']->displayUserName($user, __('by %s'));
 	}
@@ -1857,35 +1874,49 @@ class fileSharing extends modules {
 			"</p>";
 	}
 	
-	function displayAttachments(&$row) {
+	function displayAttachments(&$row = null) {
 		$attachments = new fileSharingAttachments();
+		
+		if ($row) {
+			$attachments->selectedOwnerID = $row['ID'];
+			$attachments->limit = $row['Limit'];
+		} else {
+			$attachments->latests = true;
+			$attachments->format = $this->format;
+		}
 		
 		$attachments->ignorePaging = $this->ignorePaging;
 		$attachments->showPaging = $this->showPaging;
 		$attachments->ajaxPaging = $this->ajaxPaging;
-		$attachments->selectedOwnerID = $row['ID'];
-		$attachments->limit = $row['Limit'];
 		
 		if ($this->limit)
 			$attachments->limit = $this->limit;
 	
-		if ($row['MembersOnly'] && !$GLOBALS['USER']->loginok)
+		if (isset($row['MembersOnly']) && $row['MembersOnly'] && !$GLOBALS['USER']->loginok)
 			$attachments->customLink = 
 				"javascript:jQuery.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
 				htmlspecialchars(_("You need to be logged in to download this file. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
-	
+		
 		$attachments->display();
 		unset($attachments);
 	}
 	
-	function displayComments(&$row) {
-		$filesharingcomments = new fileSharingComments();
-		$filesharingcomments->guestComments = $row['EnableGuestComments'];
-		$filesharingcomments->selectedOwnerID = $row['ID'];
-		$filesharingcomments->display();
-		unset($filesharingcomments);
+	function displayComments(&$row = null) {
+		$comments = new fileSharingComments();
+		
+		if ($row) {
+			$comments->guestComments = $row['EnableGuestComments'];
+			$comments->selectedOwnerID = $row['ID'];
+		} else {
+			$comments->latests = true;
+			$comments->limit = $this->limit;
+			$comments->format = $this->format;
+		}
+		
+		$comments->display();
+		unset($comments);
 	}
 	
 	function displayRating(&$row) {
@@ -2070,15 +2101,39 @@ class fileSharing extends modules {
 		
 		if (preg_match('/(^|\/)latest($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)latest($|\/)/', '\2', $this->arguments);
+			$this->latests = true;
 			$this->ignorePaging = true;
 			$this->showPaging = false;
 			$this->limit = 1;
+		}
+		
+		if (preg_match('/(^|\/)format\/(.*?)($|[^<]\/[^>])/', $this->arguments, $matches)) {
+			$this->arguments = preg_replace('/(^|\/)format\/.*?($|[^<]\/[^>])/', '\2', $this->arguments);
+			$this->format = trim($matches[2]);
+		}
+		
+		if (preg_match('/(^|\/)([0-9]+?)\/ajax($|\/)/', $this->arguments, $matches)) {
+			$this->arguments = preg_replace('/\/ajax/', '', $this->arguments);
+			$this->ignorePaging = true;
+			$this->ajaxPaging = true;
 		}
 		
 		if (preg_match('/(^|\/)([0-9]+?)($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)[0-9]+?($|\/)/', '\2', $this->arguments);
 			$this->limit = (int)$matches[2];
 		}
+		
+		if (preg_match('/(^|\/)comments($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)comments($|\/)/', '\2', $this->arguments);
+			$this->ignorePaging = true;
+			$this->showPaging = false;
+			
+			$this->displayComments();
+			return true;
+		}
+		
+		if (!$this->arguments && $this->latests)
+			return false;
 		
 		$folder = sql::fetch(sql::run(
 			" SELECT * FROM `{filesharings}` " .
@@ -2109,8 +2164,10 @@ class fileSharing extends modules {
 		ob_end_clean();
 		
 		unset($attachments);
-		url::displaySearch($this->search, $itemsfound);
-			
+		
+		if (!isset($this->arguments))
+			url::displaySearch($this->search, $itemsfound);
+		
 		echo
 			"<div class='file-sharing'>" .
 			$content .
@@ -2165,7 +2222,7 @@ class fileSharing extends modules {
 		if (!$this->limitFolders && $this->owner['Limit'])
 			$this->limitFolders = $this->owner['Limit'];
 			
-		if ((int)$this->selectedID) {
+		if (!$this->latests && (int)$this->selectedID) {
 			$row = sql::fetch(sql::run(
 				" SELECT * FROM `{filesharings}`" .
 				" WHERE `Deactivated` = 0" .
@@ -2175,17 +2232,23 @@ class fileSharing extends modules {
 			return $this->displaySelected($row);
 		}
 		
-		if ($this->search)
+		if (!$this->latests && $this->search)
 			return $this->displaySearch();
 		
 		echo 
 			"<div class='file-sharing'>";
 		
-		$items = $this->displayFolders();
+		if ($this->latests)
+			$this->displayAttachments();
+		else
+			$items = $this->displayFolders();
 		
 		echo 
 			"</div>";
-			
+		
+		if ($this->latests)
+			return true;
+		
 		return $items;
 	}
 }

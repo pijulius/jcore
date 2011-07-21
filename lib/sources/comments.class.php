@@ -68,10 +68,13 @@ class _comments {
 	var $defaultRating = 8;
 	var $uriRequest;
 	var $commentURL;
+	var $format = null;
+	var $limit = 0;
+	var $latests = false;
 	var $ajaxRequest = null;
 	
 	function __construct() {
-		$this->commentURL = str_replace('&amp;', '&', url::get());
+		$this->commentURL = $this->getCommentURL();
 		$this->uriRequest = strtolower(get_class($this));
 		
 		if ($this->sqlRow && isset($_GET[strtolower($this->sqlRow)]))
@@ -85,12 +88,14 @@ class _comments {
 		return
 			" SELECT * FROM `{" . $this->sqlTable . "}`" .
 			" WHERE 1" .
-			($this->sqlRow?
+			($this->sqlRow && !$this->latests?
 				" AND `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
 				null) .
-			($commentid?
-				" AND `SubCommentOfID` = '".(int)$commentid."'":
-				" AND `SubCommentOfID` = 0") .
+			(!$this->latests?
+				($commentid?
+					" AND `SubCommentOfID` = '".(int)$commentid."'":
+					" AND `SubCommentOfID` = 0"):
+				null) .
 			(defined('MODERATED_COMMENTS') && MODERATED_COMMENTS?
 				 (defined('MODERATED_COMMENTS_PENDING_MINUTES') && 
 				  MODERATED_COMMENTS_PENDING_MINUTES?
@@ -104,7 +109,11 @@ class _comments {
 					" OR `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."')":
 					null):
 				null) .
-			" ORDER BY `ID`";
+			" ORDER BY " .
+			($this->latests?
+				" `TimeStamp` DESC,":
+				" `TimeStamp`,") .
+			" `ID`";
 	}
 	
 	// ************************************************   Admin Part
@@ -815,7 +824,8 @@ class _comments {
 				"CommentSection" => $this->selectedOwner,
 				"CommentBy" => $values['UserName'],
 				"CommentBody" => $values['Comment'],
-				"CommentURL" => $this->commentURL."#comment".(int)$newid);
+				"CommentURL" => str_replace('&amp;', '&', 
+					$this->commentURL)."#comment".(int)$newid);
 		
 		if ($this->sqlOwnerTable) {
 			$selectedowner = sql::fetch(sql::run(
@@ -921,7 +931,8 @@ class _comments {
 				"CommentSection" => $this->selectedOwner,
 				"CommentBy" => $values['UserName'],
 				"CommentBody" => $values['Comment'],
-				"CommentURL" => $this->commentURL."#comment".(int)$id);
+				"CommentURL" => str_replace('&amp;', '&', 
+					$this->commentURL)."#comment".(int)$id);
 			
 			if ($this->sqlOwnerTable) {
 				$selectedowner = sql::fetch(sql::run(
@@ -1033,6 +1044,20 @@ class _comments {
 	}
 	
 	// ************************************************   Client Part
+	static function getCommentURL($comment = null) {
+		return url::get();
+	}
+	
+	static function generateTeaser($description) {
+		$teaser = strip_tags($description);
+		
+		if (strlen($teaser) <= 130)
+			return $teaser;
+		
+		list($teaser) = explode('<sep>', wordwrap($teaser, 130, '<sep>'));
+		return $teaser." ...";
+	}
+	
 	function rate($id, $rating = 0) {
 		if (!$this->guestComments && !$GLOBALS['USER']->loginok) {
 			tooltip::display(
@@ -1290,7 +1315,7 @@ class _comments {
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{" . $this->sqlTable . "}`" .
-			($this->sqlRow?
+			($this->sqlRow && !$this->latests?
 				" WHERE `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
 				null) .
 			" LIMIT 1"));
@@ -1578,13 +1603,22 @@ class _comments {
 	
 	function displayDetails(&$row) {
 		echo
+			"<span class='details-date'>" .
 			calendar::dateTime($row['TimeStamp']) .
-			" (<i>#".$row['ID']."</i>) ";
+			" </span>" .
+			"<span class='comment-id'>" .
+				"(<i>#".$row['ID']."</i>)" .
+			" </span>";
 				
 		$GLOBALS['USER']->displayUserName($row['_User'], __('by %s'));
 		
-		if ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin'])
+		if ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin']) {
+			echo
+				"<span class='comment-ip'> ";
 			$this->displayIP($row);
+			echo
+				"</span>";
+		}
 		
 		$this->displayIsPending($row);
 	}
@@ -1607,7 +1641,10 @@ class _comments {
 				echo 
 					"<div class='sub-comment'>";
 			
-			$this->displayOne($subrow);
+			if ($this->format)
+				$this->displayFormated($subrow);
+			else
+				$this->displayOne($subrow);
 			
 			if ($subrow['SubCommentOfID'])
 				echo 
@@ -1620,6 +1657,137 @@ class _comments {
 			return $GLOBALS['USER']->displayAvatar($row['UserID']);
 		
 		return $GLOBALS['USER']->displayAvatar($row['Email']);
+	}
+	
+	function displayFormated(&$row) {
+		if ($row['UserID']) {
+			$row['_User'] = $GLOBALS['USER']->get($row['UserID']);
+			$row['_User']['DisplayUserName'] = $row['UserName'];
+		} else {
+			$row['_User']['UserName'] = $row['UserName'];
+			$row['_User']['Email'] = '';
+			$row['_User']['ID'] = 0;
+			
+			if (isset($row['Email']))
+				$row['_User']['Email'] = $row['Email'];
+		}
+		
+		if (JCORE_VERSION >= '0.8') {
+			$rating = $this->defaultRating+$row['Rating'];
+			
+			if ($rating > 10)
+				$rating = 10;
+			
+			if ($rating < 1)
+				$rating = 1;
+			
+		} elseif ($row['Rating']) {
+			$rating = $row['Rating'];
+			
+		} else {
+			$rating = $this->defaultRating;
+		}
+		
+		if (!$this->latests)
+			echo 
+				"<a name='comment".$row['ID']."'></a>";
+		
+		echo
+			"<div class='comment-entry comment-rating-".$rating .
+				(isset($row['_User']['Admin']) && $row['_User']['Admin']?
+					" site-owner":
+					null) .
+				"'>";
+		
+		$parts = preg_split('/%([a-z0-9-_]+?)%/', $this->format, null, PREG_SPLIT_DELIM_CAPTURE);
+		
+		foreach($parts as $part) {
+			switch($part) {
+				case 'title':
+					if ($this->sqlRow) {
+						echo
+							"<h3 class='comment-title'>";
+						
+						$owner = sql::fetch(sql::run(
+							" SELECT `".$this->sqlOwnerField."` FROM `{" .$this->sqlOwnerTable . "}`" .
+							" WHERE `ID` = '".$row[$this->sqlRow]."'"));
+						
+						echo 
+							$owner[$this->sqlOwnerField] .
+							"</h3>";
+					}
+					
+					break;
+				
+				case 'avatar':
+					if (JCORE_VERSION >= '0.7') {
+						echo
+							"<div class='comment-avatar'>";
+						
+						$this->displayAvatar($row);
+						
+						echo
+							"</div>";
+					}
+					
+					break;
+				
+				case 'teaser':
+					echo
+						"<div class='comment-text'>" .
+							comments::generateTeaser($row['Comment']) .
+						"</div>";
+					break;
+					
+				case 'comment':
+					echo
+						"<div class='comment-text'>";
+					
+					$this->displayComment($row);
+					
+					echo
+						"</div>";
+					break;
+				
+				case 'details':
+					echo
+						"<div class='comment-details comment'>";
+					
+					$this->displayDetails($row);
+					
+					echo
+						"</div>";
+					break;
+				
+				case 'links':
+					echo
+						"<div class='comment-functions'>";
+					
+					if (!$this->latests) {
+						$this->displayFunctions($row);
+						$this->displayRating($row);
+					}
+					
+					echo
+						"</div>";
+					break;
+				
+				case 'link':
+					echo $this->getCommentURL($row).'#comment'.$row['ID'];
+					break;
+				
+				default:
+					echo $part;
+					break;
+			}
+		}
+		
+		echo
+				"<div class='clear-both'></div>" .
+			"</div>";
+		
+		if (!$this->latests)
+			$this->displaySubComments($row);
 	}
 	
 	function displayOne(&$row) {
@@ -1651,8 +1819,11 @@ class _comments {
 			$rating = $this->defaultRating;
 		}
 		
-		echo 
-			"<a name='comment".$row['ID']."'></a>" .
+		if (!$this->latests)
+			echo 
+				"<a name='comment".$row['ID']."'></a>";
+		
+		echo
 			"<div class='comment-entry comment-rating-".$rating .
 				(isset($row['_User']['Admin']) && $row['_User']['Admin']?
 					" site-owner":
@@ -1683,8 +1854,10 @@ class _comments {
 				"</div>" .
 				"<div class='comment-functions'>";
 		
-		$this->displayFunctions($row);
-		$this->displayRating($row);
+		if (!$this->latests) {
+			$this->displayFunctions($row);
+			$this->displayRating($row);
+		}
 		
 		echo
 				"</div>" .
@@ -1696,7 +1869,8 @@ class _comments {
 				"</div>" .
 			"</div>";
 		
-		$this->displaySubComments($row);
+		if (!$this->latests)
+			$this->displaySubComments($row);
 	}
 	
 	function displayTitle() {
@@ -1728,80 +1902,89 @@ class _comments {
 			$edit = (int)$_POST['CommentID'];
 		
 		echo 
-			"<div class='comments'>" .
+			"<div class='comments'>";
+		
+		if (!$this->latests) {
+			echo
 				"<a name='comments'></a>";
 		
-		$form = new form(
-			($replyto?
-				sprintf(__("Reply To comment #%s"), $replyto):
-				($edit?
-					sprintf(__("Edit comment #%s"), $edit):
-					__("New Comment"))),
-			'newcomment');
-		
-		if ($replyto) {	
+			$form = new form(
+				($replyto?
+					sprintf(__("Reply To comment #%s"), $replyto):
+					($edit?
+						sprintf(__("Edit comment #%s"), $edit):
+						__("New Comment"))),
+				'newcomment');
+			
+			if ($replyto) {	
+				$form->add(
+					__('Reply To'),
+					'SubCommentOfID',
+					FORM_INPUT_TYPE_HIDDEN,
+					false,
+					$replyto);
+			}
+			
+			if ($edit) {	
+				$form->add(
+					__('Edit Comment'),
+					'CommentID',
+					FORM_INPUT_TYPE_HIDDEN,
+					false,
+					$edit);
+			}
+			
 			$form->add(
-				__('Reply To'),
-				'SubCommentOfID',
-				FORM_INPUT_TYPE_HIDDEN,
-				false,
-				$replyto);
+				__("You can use some HTML tags, such as &lt;b&gt;, &lt;i&gt;, " .
+					"&lt;a&gt;, &lt;em&gt;, &lt;blockquote&gt;, &lt;code&gt;"),
+				null,
+				FORM_STATIC_TEXT);
+		
+			$this->setupForm($form);
+			$form->addSubmitButtons();
+			
+			if ($replyto) {
+				$form->add(
+					__('Cancel Reply'),
+					'cancel',
+					 FORM_INPUT_TYPE_BUTTON);
+				$form->addAttributes("onclick=\"window.location='".
+					str_replace('&amp;', '&', url::uri())."'\"");
+			}
+			
+			if ($edit) {
+				$form->add(
+					__('Cancel Edit'),
+					'cancel',
+					 FORM_INPUT_TYPE_BUTTON);
+				$form->addAttributes("onclick=\"window.location='".
+					str_replace('&amp;', '&', url::uri())."'\"");
+			}
+			
+			if (!$GLOBALS['USER']->loginok)
+				$form->addAdditionalText(
+					'UserName',
+					"(<a href='?request=users&amp;quicklogin=1&amp;anchor=newcomment' " .
+						"class='ajax-content-link'>" .
+						__("Login") .
+					"</a>)");
+			
+			$this->verify($form);
 		}
 		
-		if ($edit) {	
-			$form->add(
-				__('Edit Comment'),
-				'CommentID',
-				FORM_INPUT_TYPE_HIDDEN,
-				false,
-				$edit);
-		}
-		
-		$form->add(
-			__("You can use some HTML tags, such as &lt;b&gt;, &lt;i&gt;, " .
-				"&lt;a&gt;, &lt;em&gt;, &lt;blockquote&gt;, &lt;code&gt;"),
-			null,
-			FORM_STATIC_TEXT);
-	
-		$this->setupForm($form);
-		$form->addSubmitButtons();
-		
-		if ($replyto) {
-			$form->add(
-				__('Cancel Reply'),
-				'cancel',
-				 FORM_INPUT_TYPE_BUTTON);
-			$form->addAttributes("onclick=\"window.location='".
-				str_replace('&amp;', '&', url::uri())."'\"");
-		}
-		
-		if ($edit) {
-			$form->add(
-				__('Cancel Edit'),
-				'cancel',
-				 FORM_INPUT_TYPE_BUTTON);
-			$form->addAttributes("onclick=\"window.location='".
-				str_replace('&amp;', '&', url::uri())."'\"");
-		}
-		
-		if (!$GLOBALS['USER']->loginok)
-			$form->addAdditionalText(
-				'UserName',
-				"(<a href='?request=users&amp;quicklogin=1&amp;anchor=newcomment' " .
-					"class='ajax-content-link'>" .
-					__("Login") .
-				"</a>)");
-		
-		$this->verify($form);
-						
 		$rows = sql::run(
-			$this->SQL());
+			$this->SQL() .
+			($this->limit?
+				" LIMIT ".$this->limit:
+				null));
 		
-		echo 
-			"<h3 class='comments-title'>";
-		$this->displayTitle();
-		echo
-			"</h3>";
+		if (!$this->latests) {
+			echo 
+				"<h3 class='comments-title'>";
+			$this->displayTitle();
+			echo
+				"</h3>";
+		}
 		
 		if (!sql::rows($rows)) {
 			tooltip::display(
@@ -1812,26 +1995,32 @@ class _comments {
 			echo
 				"<div class='comment-entries'>";
 			
-			while($row = sql::fetch($rows))
-				$this->displayOne($row);
+			while($row = sql::fetch($rows)) {
+				if ($this->format)
+					$this->displayFormated($row);
+				else
+					$this->displayOne($row);
+			}
 			
 			echo
 				"</div>";
 		}
 		
-		if ($this->guestComments || $GLOBALS['USER']->loginok) {
-			echo
-				"<a name='newcomment'></a>";
+		if (!$this->latests) {
+			if ($this->guestComments || $GLOBALS['USER']->loginok) {
+				echo
+					"<a name='newcomment'></a>";
+				
+				$this->displayForm($form);
+				
+			} else {
+				tooltip::display(
+					__("Only registered users can comment."),
+					TOOLTIP_NOTIFICATION);
+			}
 			
-			$this->displayForm($form);
-			
-		} else {
-			tooltip::display(
-				__("Only registered users can comment."),
-				TOOLTIP_NOTIFICATION);
+			unset($form);
 		}
-		
-		unset($form);
 		
 		echo "</div>";
 	}

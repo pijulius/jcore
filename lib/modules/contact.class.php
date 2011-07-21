@@ -22,6 +22,15 @@ class contactForm extends dynamicForms {
 	function __destruct() {
 		languages::unload('contact');
 	}
+	
+	function verify($customdatahandling = false) {
+		if (!$this->successMessage)
+			$this->successMessage = 
+				_("<b>Thank you for contacting us.</b><br /> " .
+					"Your message has been successfully sent.");
+		
+		return parent::verify($customdatahandling);
+	}
 }
 
 class contact extends modules {
@@ -236,18 +245,6 @@ class contact extends modules {
 				"<div style='display: none;'>" .
 					"<iframe src='".url::uri()."&amp;request=security&amp;regeneratesessionid=1&amp;ajax=1'></iframe>" .
 				"</div>";
-		
-		if ($form->successMessage) {
-			tooltip::display(
-				_($form->successMessage),
-				TOOLTIP_SUCCESS);
-			return true;
-		}
-		
-		tooltip::display(
-			_("<b>Thank you for contacting us.</b><br /> " .
-				"Your message has been successfully sent."),
-			TOOLTIP_SUCCESS);
 		
 		return true;
 	}

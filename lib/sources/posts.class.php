@@ -33,6 +33,9 @@ class _posts {
 	var $keywordsCloudLimit = 21;
 	var $randomize = false;
 	var $latests = false;
+	var $active = false;
+	var $discussed = false;
+	var $rated = false;
 	var $ignorePaging = false;
 	var $showPaging = true;
 	var $format = null;
@@ -161,14 +164,29 @@ class _posts {
 						'date' => 'TimeStamp',
 						'key' => 'Keywords')):
 				null) .
+			($this->active?
+				" AND `Views` > 0":
+				null) .
+			($this->discussed?
+				" AND `Comments` > 0":
+				null) .
+			($this->rated?
+				" AND `Rating` > 0":
+				null) .
 			" ORDER BY" .
 			($this->randomize?
 				" RAND()":
-				($this->search && !$this->selectedID?
+				($this->active || ($this->search && !$this->selectedID)?
 					" `Views` DESC,":
 					null) .
 				($this->latests || (JCORE_VERSION >= '0.8' && $page && trim($page['PostKeywords']))?
 					" `TimeStamp` DESC,":
+					null) .
+				($this->discussed?
+					" `Comments` DESC,":
+					null) .
+				($this->rated?
+					" `Rating` DESC,":
 					null) .
 				($homepage['ID'] == $page['ID']?
 					" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = 0,":
@@ -2215,7 +2233,65 @@ class _posts {
 		return posts::$selected['ID'];
 	}
 	
+	static function getPostURL($post = null) {
+		if (!$post)
+			return url::get();
+		
+		if (!is_array($post))
+			$post = sql::fetch(sql::run(
+				" SELECT `ID`, `Path`, `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
+				" FROM `{posts}`" .
+				" WHERE `ID` = '".(int)$post."'"));
+		
+		$page = pages::$selected;
+		$language = languages::$selected;
+		
+		if (!$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])
+			$page = pages::getHome();
+		elseif ($page['ID'] != $post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])
+			$page = sql::fetch(sql::run(
+				" SELECT `ID`, `Path`, `LanguageID` FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE `ID` = '".$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'"));
+		
+		if ($language['ID'] != $page['LanguageID'])
+			$language = sql::fetch(sql::run(
+				" SELECT `ID`, `Path` FROM `{languages}`" .
+				" WHERE `ID` = '".$page['LanguageID']."'"));
+		
+		if (SEO_FRIENDLY_LINKS)
+			return 
+				url::site() .
+				($language?
+					$language['Path'].'/':
+					null) .
+				$page['Path'].'/' .
+				$post['Path'];
+			
+		return 
+			url::site().'index.php?' .
+			($language?
+				'&amp;languageid='.$language['ID']:
+				null) .
+			'&amp;pageid='.$page['ID'].
+			'&amp;postid='.$post['ID'];
+	}
+	
 	function generateLink(&$row) {
+		if (isset($row['_PageLink']) && $row['_PageLink']) {
+			if (SEO_FRIENDLY_LINKS)
+				return 
+					$row['_PageLink'].'/' .
+					$row['Path'];
+				
+			return
+				$row['_PageLink'] . 
+				'&amp;postid='.$row['ID'];
+		}
+		
 		$language = $this->selectedLanguage;
 		$page = $this->selectedPage;
 		
@@ -2375,13 +2451,15 @@ class _posts {
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
 		echo
-			calendar::datetime($row['TimeStamp'])." ";
+			"<span class='details-date'>" .
+			calendar::datetime($row['TimeStamp']) .
+			" </span>";
 		
 		$GLOBALS['USER']->displayUserName($user, __('by %s'));
 		
 		if ((JCORE_VERSION < '0.6' || !$row['URL']) && $row['Views'])
 			echo
-				"<span class='post-details-separator separator-1'>" .
+				"<span class='details-separator separator-1'>" .
 				", " .
 				"</span>" .
 				"<span class='post-views-number'>" .
@@ -2413,9 +2491,20 @@ class _posts {
 		}
 	}
 	
-	function displayPictures(&$row) {
+	function displayPictures(&$row = null) {
 		$pictures = new postPictures();
-		$pictures->selectedOwnerID = $row['ID'];
+		
+		if ($row) {
+			$pictures->selectedOwnerID = $row['ID'];
+		} else {
+			$pictures->latests = true;
+			$pictures->limit = $this->limit;
+			$pictures->format = $this->format;
+			$pictures->ignorePaging = $this->ignorePaging;
+			$pictures->showPaging = $this->showPaging;
+			$pictures->ajaxPaging = $this->ajaxPaging;
+		}
+		
 		$pictures->display();
 		unset($pictures);
 	}
@@ -2507,17 +2596,36 @@ class _posts {
 		unset($rating);	
 	}
 	
-	function displayAttachments(&$row) {
+	function displayAttachments(&$row = null) {
 		$attachments = new postAttachments();
-		$attachments->selectedOwnerID = $row['ID'];
+		
+		if ($row) {
+			$attachments->selectedOwnerID = $row['ID'];
+		} else {
+			$attachments->latests = true;
+			$attachments->limit = $this->limit;
+			$attachments->format = $this->format;
+			$attachments->ignorePaging = $this->ignorePaging;
+			$attachments->showPaging = $this->showPaging;
+			$attachments->ajaxPaging = $this->ajaxPaging;
+		}
+		
 		$attachments->display();
 		unset($attachments);
 	}
 	
-	function displayComments(&$row) {
+	function displayComments(&$row = null) {
 		$comments = new postComments();
-		$comments->guestComments = $row['EnableGuestComments'];
-		$comments->selectedOwnerID = $row['ID'];
+		
+		if ($row) {
+			$comments->guestComments = $row['EnableGuestComments'];
+			$comments->selectedOwnerID = $row['ID'];
+		} else {
+			$comments->latests = true;
+			$comments->limit = $this->limit;
+			$comments->format = $this->format;
+		}
+		
 		$comments->display();
 		unset($comments);
 	}
@@ -2850,7 +2958,7 @@ class _posts {
 			"</div>";
 	}
 	
-	function displayFormat(&$row) {
+	function displayFormated(&$row) {
 		echo
 			"<" .
 			(IE_BROWSER < 9?
@@ -2988,6 +3096,13 @@ class _posts {
 							$links .
 							"<div class='clear-both'></div>" .
 							"</div>";
+					break;
+				
+				case 'link':
+					echo
+						(JCORE_VERSION >= '0.6' && $row['URL']?
+							url::generateLink($row['URL']):
+							$row['_Link']);
 					break;
 				
 				case 'rating':
@@ -3374,6 +3489,30 @@ class _posts {
 			$this->limit = 1;
 		}
 		
+		if (preg_match('/(^|\/)active($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)active($|\/)/', '\2', $this->arguments);
+			$this->active = true;
+			$this->ignorePaging = true;
+			$this->showPaging = false;
+			$this->limit = 1;
+		}
+		
+		if (preg_match('/(^|\/)discussed($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)discussed($|\/)/', '\2', $this->arguments);
+			$this->discussed = true;
+			$this->ignorePaging = true;
+			$this->showPaging = false;
+			$this->limit = 1;
+		}
+		
+		if (preg_match('/(^|\/)rated($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)rated($|\/)/', '\2', $this->arguments);
+			$this->rated = true;
+			$this->ignorePaging = true;
+			$this->showPaging = false;
+			$this->limit = 1;
+		}
+		
 		if (preg_match('/(^|\/)([0-9]+?)\/ajax($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/\/ajax/', '', $this->arguments);
 			$this->ignorePaging = true;
@@ -3414,6 +3553,33 @@ class _posts {
 			$this->arguments = preg_replace('/(^|\/)calendar($|\/)/', '\2', $this->arguments);
 			
 			$this->displayCalendar($this->arguments);
+			return true;
+		}
+		
+		if (preg_match('/(^|\/)pictures($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)pictures($|\/)/', '\2', $this->arguments);
+			$this->ignorePaging = true;
+			$this->showPaging = false;
+			
+			$this->displayPictures();
+			return true;
+		}
+		
+		if (preg_match('/(^|\/)attachments($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)attachments($|\/)/', '\2', $this->arguments);
+			$this->ignorePaging = true;
+			$this->showPaging = false;
+			
+			$this->displayAttachments();
+			return true;
+		}
+		
+		if (preg_match('/(^|\/)comments($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)comments($|\/)/', '\2', $this->arguments);
+			$this->ignorePaging = true;
+			$this->showPaging = false;
+			
+			$this->displayComments();
 			return true;
 		}
 		
@@ -3553,7 +3719,7 @@ class _posts {
 		
 		$paging->setTotalItems(sql::count());
 		
-		if ($this->search && !$this->selectedID && !$this->ajaxRequest)
+		if ($this->search && !$this->selectedID && !$this->ajaxRequest && !isset($this->arguments))
 			url::displaySearch($this->search, $paging->items);
 		
 		if (!$this->ajaxRequest)
@@ -3587,10 +3753,10 @@ class _posts {
 			}
 			
 			$row['_PostNumber'] = $i;
-			$row['_Link'] = $this->generateLink($row);
 			$row['_PageLink'] = $pagelink;
-			$row['_CSSClass'] = $cssclass;
 			$row['_BackLink'] = $pagelink;
+			$row['_Link'] = $this->generateLink($row);
+			$row['_CSSClass'] = $cssclass;
 			
 			if ($this->selectedPageID == $pageid && url::arg('postslimit')) {
 				if ($this->selectedID == $row['ID'])
@@ -3613,7 +3779,7 @@ class _posts {
 				$row['_CSSClass'] .= ' last';
 			
 			if ($this->format)
-				$this->displayFormat($row);
+				$this->displayFormated($row);
 			elseif ($this->search || ($row['PartialContent'] && 
 				$row['ID'] != $this->selectedID))
 				$this->displayOne($row);

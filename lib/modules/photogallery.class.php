@@ -87,9 +87,11 @@ class photoGalleryPictures extends pictures {
 			($ignorefolders?
 				" AND `ID` NOT IN (".implode(',', $ignorefolders).")":
 				null) .
-			sql::search(
-				$this->search,
-				array('Title', 'Description')) .
+			(!$this->latests?
+				sql::search(
+					$this->search,
+					array('Title', 'Description')):
+				null) .
 			" LIMIT 1"));
 			
 		if ($row['FolderIDs']) {
@@ -103,9 +105,11 @@ class photoGalleryPictures extends pictures {
 		return
 			" SELECT * FROM `{" .$this->sqlTable."}`" .
 			" WHERE ((1" .
-			sql::search(
-				$this->search,
-				array('Title', 'Location')) .
+			(!$this->latests?
+				sql::search(
+					$this->search,
+					array('Title', 'Location')):
+				null) .
 			" )" .
 			($folders?
 				" OR (`".$this->sqlRow."` IN (".implode(',', $folders)."))":
@@ -450,22 +454,24 @@ class photoGalleryPicasaPictures extends photoGalleryPictures {
 		if (!$this->limit)
 			$this->limit = 50;
 		
-		$paging = new paging($this->limit);
-		
-		if ($this->ajaxPaging) {
-			$paging->ajax = true;
-			$paging->otherArgs = "&amp;request=".$this->uriRequest .
-				($this->sqlRow?
-					"&amp;".strtolower($this->sqlRow)."=".$this->selectedOwnerID:
-					null);
+		if (!$this->latests) {
+			$paging = new paging($this->limit);
+			
+			if ($this->ajaxPaging) {
+				$paging->ajax = true;
+				$paging->otherArgs = "&amp;request=".$this->uriRequest .
+					($this->sqlRow?
+						"&amp;".strtolower($this->sqlRow)."=".$this->selectedOwnerID:
+						null);
+			}
+			
+			$paging->track(strtolower(get_class($this)).'limit');
 		}
 		
-		$paging->track(strtolower(get_class($this)).'limit');
-		
-		if ($this->ignorePaging && $this->limit)
+		if (($this->ignorePaging || $this->latests) && $this->limit)
 			$gallery['PicasaAPIURL'] .= "&max-results=".$this->limit;
 		
-		if (!$this->ignorePaging) {
+		if (!$this->ignorePaging && !$this->latests) {
 			list($offset, $limit) = explode(',', $paging->limit);
 			$gallery['PicasaAPIURL'] .= "&start-index=".($offset+1) .
 				"&max-results=".$limit;
@@ -488,16 +494,17 @@ class photoGalleryPicasaPictures extends photoGalleryPictures {
 			'<media:thumbnail.*?url=.([^ \'"]+).*?' .
 			'<\/entry>/is', $data, $newestphoto);
 		
+		$totalitems = 0;
 		if (isset($matches[1]))
-			$paging->setTotalItems((int)$matches[1]);
+			$totalitems = (int)$matches[1];
 		
-		if (!$paging->getStart())
+		if (!$this->latests)
+			$paging->setTotalItems($totalitems);
+		
+		if (!$this->latests && !$paging->getStart())
 			sql::run(
 				" UPDATE `{" .$this->sqlOwnerTable . "}` SET" .
-				" `Pictures` = '" .
-					(isset($matches[1])?
-						(int)$matches[1]:
-						0)."'," .
+				" `Pictures` = '".$totalitems."'," .
 				(JCORE_VERSION >= '0.8'?
 					" `PreviewPicURL` = '" .
 						(isset($newestphoto[1])?
@@ -507,7 +514,7 @@ class photoGalleryPicasaPictures extends photoGalleryPictures {
 				" `TimeStamp` = `TimeStamp`" .
 				" WHERE `ID` = '".(int)$this->selectedOwnerID."'");
 		
-		if (!$paging->items) {
+		if (!$totalitems) {
 			if (!isset($matches[1]) && $data)
 				tooltip::display(
 					sprintf(_("Couldn't fetch photo list. Error: %s"),
@@ -551,7 +558,10 @@ class photoGalleryPicasaPictures extends photoGalleryPictures {
 				isset($rows[7][$key]))
 				$row['Title'] = $rows[7][$key];
 			
-			$this->displayOne($row);
+			if ($this->format)
+				$this->displayFormated($row);
+			else
+				$this->displayOne($row);
 			
 			if ($this->columns == $i) {
 				echo "<div class='clear-both'></div>";
@@ -565,12 +575,15 @@ class photoGalleryPicasaPictures extends photoGalleryPictures {
 		echo
 			"<div class='clear-both'></div>";
 		
-		if (!$this->randomize && $this->showPaging)
+		if ($this->showPaging && !$this->randomize && !$this->latests)
 			$paging->display();
 		
 		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //pictures
+		
+		if ($this->latests)
+			return true;
 		
 		return $paging->items;
 	}
@@ -589,14 +602,23 @@ class photoGalleryComments extends comments {
 		
 		$this->selectedOwner = _('Gallery');
 		$this->uriRequest = "modules/photogallery/".$this->uriRequest;
-		
-		if ($GLOBALS['ADMIN'])
-			$this->commentURL = photoGallery::getURL().
-				"&photogalleryid=".admin::getPathID();
 	}
 	
 	function __destruct() {
 		languages::unload('photogallery');
+	}
+	
+	static function getCommentURL($comment = null) {
+		if ($comment)
+			return photoGallery::getURL($comment['PhotoGalleryID']).
+				"&photogalleryid=".$comment['PhotoGalleryID'];
+		
+		if ($GLOBALS['ADMIN'])
+			return photoGallery::getURL(admin::getPathID()).
+				"&photogalleryid=".admin::getPathID();
+		
+		return 
+			parent::getCommentURL();
 	}
 }
 
@@ -628,12 +650,14 @@ class photoGalleryIcons extends pictures {
 class photoGallery extends modules {
 	static $uriVariables = 'photogalleryid, photogallerylimit, photogallerypictureslimit, photogallerypicasapictureslimit, photogalleryrating, rate, ajax, request';
 	var $searchable = true;
+	var $format = null;
 	var $limit = 0;
 	var $limitGalleries = 0;
 	var $selectedID;
 	var $search = null;
 	var $ignorePaging = false;
 	var $showPaging = true;
+	var $latests = false;
 	var $ajaxPaging = AJAX_PAGING;
 	var $ajaxRequest = null;
 	var $picturesPath;
@@ -2685,7 +2709,9 @@ class photoGallery extends modules {
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
 		echo
-			calendar::datetime($row['TimeStamp'])." ";
+			"<span class='details-date'>" .
+			calendar::datetime($row['TimeStamp']) .
+			" </span>";
 					
 		$GLOBALS['USER']->displayUserName($user, __('by %s'));
 	}
@@ -2702,9 +2728,9 @@ class photoGallery extends modules {
 			"</p>";
 	}
 	
-	function displayPictures(&$row) {
-		if ((!isset($row['PicasaAPIURL']) || !$row['PicasaAPIURL']) &&
-			!$row['Pictures'])
+	function displayPictures(&$row = null) {
+		if ($row && !$row['Pictures'] && 
+			(!isset($row['PicasaAPIURL']) || !$row['PicasaAPIURL']))
 			return;
 		
 		if (isset($row['PicasaAPIURL']) && $row['PicasaAPIURL'])
@@ -2720,27 +2746,41 @@ class photoGallery extends modules {
 				htmlspecialchars(_("You need to be logged in to view this picture. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
 		
+		if ($row) {
+			$pictures->selectedOwnerID = $row['ID'];
+			$pictures->columns = $row['Columns'];
+			$pictures->limit = $row['Limit'];
+		} else {
+			$pictures->latests = true;
+			$pictures->format = $this->format;
+		}
+		
 		$pictures->ignorePaging = $this->ignorePaging;
 		$pictures->showPaging = $this->showPaging;
 		$pictures->ajaxPaging = $this->ajaxPaging;
-		$pictures->selectedOwnerID = $row['ID'];
-		$pictures->columns = $row['Columns'];
-		$pictures->limit = $row['Limit'];
 		$pictures->randomize = $this->randomizePictures;
 		
 		if ($this->limit)
 			$pictures->limit = $this->limit;
-	
+		
 		$pictures->display();
 		unset($pictures);
 	}
 	
-	function displayComments(&$row) {
-		$gallerycomments = new photoGalleryComments();
-		$gallerycomments->guestComments = $row['EnableGuestComments'];
-		$gallerycomments->selectedOwnerID = $row['ID'];
-		$gallerycomments->display();
-		unset($gallerycomments);
+	function displayComments(&$row = null) {
+		$comments = new photoGalleryComments();
+		
+		if ($row) {
+			$comments->guestComments = $row['EnableGuestComments'];
+			$comments->selectedOwnerID = $row['ID'];
+		} else {
+			$comments->latests = true;
+			$comments->limit = $this->limit;
+			$comments->format = $this->format;
+		}
+		
+		$comments->display();
+		unset($comments);
 	}
 	
 	function displayRating(&$row) {
@@ -2932,9 +2972,15 @@ class photoGallery extends modules {
 		
 		if (preg_match('/(^|\/)latest($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)latest($|\/)/', '\2', $this->arguments);
+			$this->latests = true;
 			$this->ignorePaging = true;
 			$this->showPaging = false;
 			$this->limit = 1;
+		}
+		
+		if (preg_match('/(^|\/)format\/(.*?)($|[^<]\/[^>])/', $this->arguments, $matches)) {
+			$this->arguments = preg_replace('/(^|\/)format\/.*?($|[^<]\/[^>])/', '\2', $this->arguments);
+			$this->format = trim($matches[2]);
 		}
 		
 		if (preg_match('/(^|\/)([0-9]+?)\/ajax($|\/)/', $this->arguments, $matches)) {
@@ -2947,6 +2993,18 @@ class photoGallery extends modules {
 			$this->arguments = preg_replace('/(^|\/)[0-9]+?($|\/)/', '\2', $this->arguments);
 			$this->limit = (int)$matches[2];
 		}
+		
+		if (preg_match('/(^|\/)comments($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)comments($|\/)/', '\2', $this->arguments);
+			$this->ignorePaging = true;
+			$this->showPaging = false;
+			
+			$this->displayComments();
+			return true;
+		}
+		
+		if (!$this->arguments && $this->latests)
+			return false;
 		
 		$gallery = sql::fetch(sql::run(
 			" SELECT * FROM `{photogalleries}` " .
@@ -2978,8 +3036,10 @@ class photoGallery extends modules {
 		ob_end_clean();
 		
 		unset($pictures);
-		url::displaySearch($this->search, $itemsfound);
-	
+		
+		if (!isset($this->arguments))
+			url::displaySearch($this->search, $itemsfound);
+		
 		echo
 			"<div class='photogallery'>" .
 			$content .
@@ -3034,7 +3094,7 @@ class photoGallery extends modules {
 		if (!$this->limitGalleries && $this->owner['Limit'])
 			$this->limitGalleries = $this->owner['Limit'];
 		
-		if ((int)$this->selectedID) {
+		if (!$this->latests && (int)$this->selectedID) {
 			$row = sql::fetch(sql::run(
 				" SELECT * FROM `{photogalleries}`" .
 				" WHERE `Deactivated` = 0" .
@@ -3044,17 +3104,23 @@ class photoGallery extends modules {
 			return $this->displaySelected($row);
 		}
 		
-		if ($this->search)
+		if (!$this->latests && $this->search)
 			return $this->displaySearch();
 		
 		echo 
 			"<div class='photogallery'>";
 		
-		$items = $this->displayGalleries();
+		if ($this->latests)
+			$this->displayPictures();
+		else
+			$items = $this->displayGalleries();
 		
 		echo 
 			"</div>";
-			
+		
+		if ($this->latests)
+			return true;
+		
 		return $items;
 	}
 }

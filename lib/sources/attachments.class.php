@@ -14,6 +14,8 @@ include_once('lib/calendar.class.php');
 
 class _attachments {
 	var $limit = 0;
+	var $latests = false;
+	var $format = null;
 	var $ignorePaging = false;
 	var $showPaging = true;
 	var $sqlTable;
@@ -46,10 +48,14 @@ class _attachments {
 		return
 			" SELECT * FROM `{" .$this->sqlTable . "}`" .
 			" WHERE 1" .
-			($this->sqlRow?
+			($this->sqlRow && !$this->latests?
 				" AND `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
 				null) .
-			" ORDER BY `OrderID`, `ID` DESC";
+			" ORDER BY " .
+			($this->latests?
+				" `TimeStamp` DESC,":
+				" `OrderID`,") .
+			" `ID` DESC";
 	}
 	
 	// ************************************************   Admin Part
@@ -898,6 +904,25 @@ class _attachments {
 		return true;
 	}
 	
+	function generateLink(&$row) {
+		if ($this->customLink) {
+			if (is_array($this->customLink))
+				$link = $this->customLink[$row['ID']];
+			else
+				$link = $this->customLink;
+			
+		} elseif (isset($row['URL']) && $row['URL']) {
+			$link = url::generateLink($row['URL']);
+			
+		} else {
+			$link = url::uri().
+				"&amp;request=".$this->uriRequest .
+				"&amp;download=".$row['ID']."&amp;ajax=1";
+		}
+		
+		return $link;
+	}
+	
 	function ajaxRequest() {
 		$download = null;
 		
@@ -941,8 +966,10 @@ class _attachments {
 	
 	function displayDetails(&$row) {
 		echo
-			$row['HumanMimeType'] .
-			"<span class='attachment-details-separator separator-1'>" .
+			"<span class='attachment-type'>" .
+				$row['HumanMimeType'] .
+			"</span>" .
+			"<span class='details-separator separator-1'>" .
 				", " .
 			"</span>";
 		
@@ -952,7 +979,7 @@ class _attachments {
 					sprintf(__("%s downloads"), 
 						$row['Downloads']) .
 				"</span>" .
-				"<span class='attachment-details-separator separator-2'>" .
+				"<span class='details-separator separator-2'>" .
 					", " .
 				"</span>";
 		
@@ -963,22 +990,67 @@ class _attachments {
 			"</span>";
 	}
 	
-	function displayOne(&$row) {
-		if ($this->customLink) {
-			if (is_array($this->customLink))
-				$row['_Link'] = $this->customLink[$row['ID']];
-			else
-				$row['_Link'] = $this->customLink;
-			
-		} elseif (isset($row['URL']) && $row['URL']) {
-			$row['_Link'] = url::generateLink($row['URL']);
-			
-		} else {
-			$row['_Link'] = url::uri().
-				"&amp;request=".$this->uriRequest .
-				"&amp;download=".$row['ID']."&amp;ajax=1";
-		}
+	function displayFormated(&$row) {
+		if (!isset($row['_Link']) || $row['_Link'])
+			$row['_Link'] = $this->generateLink($row);
+		
+		echo
+			"<div " .
+				(JCORE_VERSION < '0.6'?
+					"id='attachment".$row['ID']."' ":
+					null) .
+				"class='attachment attachment".$row['ID']."'>";
+		
+		$parts = preg_split('/%([a-z0-9-_]+?)%/', $this->format, null, PREG_SPLIT_DELIM_CAPTURE);
+		
+		foreach($parts as $part) {
+			switch($part) {
+				case 'icon':
+					$this->displayIcon($row);
+					break;
 				
+				case 'title':
+					$this->displayTitle($row);
+					break;
+				
+				case 'size':
+					echo
+						"<span class='attachment-size'> ";
+					
+					$this->displaySize($row);
+					
+					echo
+						"</span>";
+					break;
+					
+				case 'details':
+					echo
+						"<div class='attachment-details comment'>";
+					
+					$this->displayDetails($row);
+					
+					echo
+						"</div>";
+					break;
+				
+				case 'link':
+					echo $row['_Link'];
+					break;
+				
+				default:
+					echo $part;
+					break;
+			}
+		}
+		
+		echo
+			"</div>";
+	}
+	
+	function displayOne(&$row) {
+		if (!isset($row['_Link']) || $row['_Link'])
+			$row['_Link'] = $this->generateLink($row);
+		
 		echo
 			"<div " .
 				(JCORE_VERSION < '0.6'?
@@ -1014,33 +1086,36 @@ class _attachments {
 			return false;
 		}
 		
-		$paging = new paging($this->limit);
-		
-		if ($this->ajaxPaging) {
-			$paging->ajax = true;
-			$paging->otherArgs = 
-				"&amp;request=".$this->uriRequest .
-				($this->sqlRow?
-					"&amp;".strtolower($this->sqlRow)."=".$this->selectedOwnerID:
-					null);
+		if (!$this->latests) {
+			$paging = new paging($this->limit);
+			
+			if ($this->ajaxPaging) {
+				$paging->ajax = true;
+				$paging->otherArgs = 
+					"&amp;request=".$this->uriRequest .
+					($this->sqlRow?
+						"&amp;".strtolower($this->sqlRow)."=".$this->selectedOwnerID:
+						null);
+			}
+			
+			$paging->track(strtolower(get_class($this)).'limit');
+			
+			if ($this->ignorePaging)
+				$paging->reset();
 		}
-		
-		$paging->track(strtolower(get_class($this)).'limit');
-		
-		if ($this->ignorePaging)
-			$paging->reset();
 		
 		$rows = sql::run(
 			$this->SQL() .
-			($this->ignorePaging?
+			($this->ignorePaging || $this->latests?
 				($this->limit?
 					" LIMIT ".$this->limit:
 					null):
 				" LIMIT ".$paging->limit));
 		
-		$paging->setTotalItems(sql::count());
+		if (!$this->latests)
+			$paging->setTotalItems(sql::count());
 		
-		if (!$paging->items)
+		if (!sql::rows($rows))
 			return false;
 		
 		if (!$this->ajaxRequest)
@@ -1056,18 +1131,27 @@ class _attachments {
 					" (".__("click to download").")" .
 				"</div>";
 		
-		while ($row = sql::fetch($rows))
-			$this->displayOne($row);
+		while ($row = sql::fetch($rows)) {
+			$row['_Link'] = $this->generateLink($row);
+			
+			if ($this->format)
+				$this->displayFormated($row);
+			else
+				$this->displayOne($row);
+		}
 		
 		echo
 			"<div class='clear-both'></div>";
 		
-		if ($this->showPaging)
+		if ($this->showPaging && !$this->latests)
 			$paging->display();
 		
 		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //attachments
+		
+		if ($this->latests)
+			return true;
 		
 		return $paging->items;
 	}

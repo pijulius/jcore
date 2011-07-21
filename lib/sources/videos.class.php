@@ -14,6 +14,8 @@ include_once('lib/calendar.class.php');
 
 class _videos {
 	var $limit = 0;
+	var $latests = false;
+	var $format = null;
 	var $ignorePaging = false;
 	var $showPaging = true;
 	var $randomize = false;
@@ -53,15 +55,18 @@ class _videos {
 		return
 			" SELECT * FROM `{" .$this->sqlTable."}`" .
 			" WHERE 1" .
-			($this->selectedID?
+			($this->selectedID && !$this->latests?
 				" AND `ID` = '".$this->selectedID."'":
-				($this->sqlRow?
+				($this->sqlRow && !$this->latests?
 					" AND `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
 					null)) .
 			" ORDER BY" .
 			($this->randomize?
 				" RAND()":
-				" `OrderID`, `ID` DESC");
+				($this->latests?
+					" `TimeStamp` DESC,":
+					" `OrderID`,") .
+				" `ID` DESC");
 	}
 	
 	// ************************************************   Admin Part
@@ -1083,6 +1088,21 @@ class _videos {
 		return true;
 	}
 	
+	function generateLink(&$row) {
+		$link = url::uri('videoid').
+			"&amp;request=".$this->uriRequest .
+			"&amp;videoid=".$row['ID'];
+		
+		if ($this->customLink) {
+			if (is_array($this->customLink))
+				$link = $this->customLink[$row['ID']];
+			else
+				$link = $this->customLink;
+		}
+		
+		return $link;
+	}
+		
 	function incViews(&$row) {
 		sql::run(
 			" UPDATE `{" .$this->sqlTable. "}` SET " .
@@ -1123,17 +1143,8 @@ class _videos {
 	}
 	
 	function displayPreview(&$row) {
-		if (!isset($row['_Link']) || !$row['_Link'])
-			$row['_Link'] = url::uri('videoid').
-				"&amp;request=".$this->uriRequest .
-				"&amp;videoid=".$row['ID'];
-		
-		if ($this->customLink) {
-			if (is_array($this->customLink))
-				$row['_Link'] = $this->customLink[$row['ID']];
-			else
-				$row['_Link'] = $this->customLink;
-		}
+		if (!isset($row['_Link']) || $row['_Link'])
+			$row['_Link'] = $this->generateLink($row);
 		
 		echo
 			"<a href='".$row['_Link']."' " .
@@ -1157,11 +1168,13 @@ class _videos {
 	
 	function displayDetails(&$row) {
 		echo
-			calendar::date($row['TimeStamp']);
-					
+			"<span class='details-date'>" .
+				calendar::date($row['TimeStamp']) .
+			"</span>";
+		
 		if (JCORE_VERSION >= '0.5' && $row['Views'])
 			echo
-				"<span class='video-details-separator separator-1'>" .
+				"<span class='details-separator separator-1'>" .
 					", " .
 				"</span>" .
 				"<span class='video-views-number'>" .
@@ -1323,6 +1336,56 @@ class _videos {
 		return $this->displayLocalVideo($row);
 	}
 	
+	function displayFormated(&$row) {
+		if (!isset($row['_Link']) || $row['_Link'])
+			$row['_Link'] = $this->generateLink($row);
+		
+		echo
+			"<div class='video".$row['ID']." video-preview video-preview-num" .
+				$row['_VideoNumber']."'>";
+		
+		$parts = preg_split('/%([a-z0-9-_]+?)%/', $this->format, null, PREG_SPLIT_DELIM_CAPTURE);
+		
+		foreach($parts as $part) {
+			switch($part) {
+				case 'preview':
+					$this->displayPreview($row);
+					break;
+				
+				case 'title':
+					echo
+						"<div class='video-title'>";
+					
+					$this->displayTitle($row);
+					
+					echo
+						"</div>";
+					break;
+				
+				case 'details':
+					echo
+						"<div class='video-details comment'>";
+					
+					$this->displayDetails($row);
+					
+					echo
+						"</div>";
+					break;
+				
+				case 'link':
+					echo $row['_Link'];
+					break;
+				
+				default:
+					echo $part;
+					break;
+			}
+		}
+		
+		echo
+			"</div>";
+	}
+	
 	function displaySelected(&$row) {
 		if (!security::isBot())
 			$this->incViews($row);
@@ -1379,7 +1442,7 @@ class _videos {
 			return false;
 		}
 		
-		if ($this->selectedID) {
+		if ($this->selectedID && !$this->latests) {
 			$row = sql::fetch(sql::run(
 				$this->SQL() .
 				" LIMIT 1"));
@@ -1393,34 +1456,35 @@ class _videos {
 			url::delargs('videoid');
 		}
 		
-		$paging = new paging($this->limit);
-		
-		if ($this->ajaxPaging) {
-			$paging->ajax = true;
-			$paging->otherArgs = "&amp;request=".$this->uriRequest .
-				($this->sqlRow?
-					"&amp;".strtolower($this->sqlRow)."=".$this->selectedOwnerID:
-					null);
+		if (!$this->latests) {
+			$paging = new paging($this->limit);
+			
+			if ($this->ajaxPaging) {
+				$paging->ajax = true;
+				$paging->otherArgs = "&amp;request=".$this->uriRequest .
+					($this->sqlRow?
+						"&amp;".strtolower($this->sqlRow)."=".$this->selectedOwnerID:
+						null);
+			}
+			
+			$paging->track(strtolower(get_class($this)).'limit');
+			
+			if (!$this->selectedID && $this->ignorePaging)
+				$paging->reset();
 		}
-		
-		$paging->track(strtolower(get_class($this)).'limit');
-		
-		if (!$this->selectedID && $this->ignorePaging)
-			$paging->reset();
 		
 		$rows = sql::run(
 			$this->SQL() .
-			(!$this->selectedID?
-				($this->ignorePaging?
-					($this->limit?
-						" LIMIT ".$this->limit:
-						null):
-					" LIMIT ".$paging->limit):
-				null));
+			($this->ignorePaging || $this->latests?
+				($this->limit?
+					" LIMIT ".$this->limit:
+					null):
+				" LIMIT ".$paging->limit));
 		
-		$paging->setTotalItems(sql::count());
+		if (!$this->latests)
+			$paging->setTotalItems(sql::count());
 		
-		if (!$paging->items)
+		if (!sql::rows($rows))
 			return false;
 		
 		if (!$this->ajaxRequest)
@@ -1432,8 +1496,12 @@ class _videos {
 		$i = 1;
 		while ($row = sql::fetch($rows)) {
 			$row['_VideoNumber'] = $i;
+			$row['_Link'] = $this->generateLink($row);
 			
-			$this->displayOne($row);
+			if ($this->format)
+				$this->displayFormated($row);
+			else
+				$this->displayOne($row);
 			
 			if ($this->columns == $i) {
 				echo "<div class='clear-both'></div>";
@@ -1446,12 +1514,15 @@ class _videos {
 		echo
 			"<div class='clear-both'></div>";
 		
-		if (!$this->randomize && $this->showPaging)
+		if ($this->showPaging && !$this->randomize && !$this->latests)
 			$paging->display();
 		
 		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //videos
+		
+		if ($this->latests)
+			return true;
 		
 		return $paging->items;
 	}

@@ -73,14 +73,23 @@ class pollComments extends comments {
 		
 		$this->selectedOwner = _('Poll');
 		$this->uriRequest = "modules/poll/".$this->uriRequest;
-		
-		if ($GLOBALS['ADMIN'])
-			$this->commentURL = poll::getURL().
-				"&pollid=".admin::getPathID();
 	}
 	
 	function __destruct() {
 		languages::unload('poll');
+	}
+	
+	static function getCommentURL($comment = null) {
+		if ($comment)
+			return poll::getURL($comment['PollID']).
+				"&pollid=".$comment['PollID'];
+		
+		if ($GLOBALS['ADMIN'])
+			return poll::getURL(admin::getPathID()).
+				"&pollid=".admin::getPathID();
+		
+		return 
+			parent::getCommentURL();
 	}
 }
 
@@ -425,7 +434,9 @@ class pollAnswers {
 class poll extends modules {
 	static $uriVariables = 'pollid, rate';
 	var $limit = 0;
+	var $format = null;
 	var $selectedID;
+	var $votedOnID;
 	var $randomize = false;
 	var $ignorePaging = false;
 	var $showPaging = true;
@@ -438,6 +449,9 @@ class poll extends modules {
 		
 		if (isset($_GET['pollid']))
 			$this->selectedID = (int)$_GET['pollid'];
+		
+		if (isset($_POST['pollanswers']))
+			$this->votedOnID = (int)key((array)$_POST['pollanswers']);
 	}
 	
 	function __destruct() {
@@ -2023,7 +2037,7 @@ class poll extends modules {
 			_("Thank you for your vote."),
 			TOOLTIP_SUCCESS);
 		
-		if ($this->ajaxRequest) {
+		if (!$poll['HideResults'] && $this->ajaxRequest) {
 			$poll['Votes'] += $votes;
 			
 			echo
@@ -2042,6 +2056,7 @@ class poll extends modules {
 				echo
 					"jQuery('.poll-answer".$answer['ID']."').each(function() {" .
 						"var jthis = jQuery(this);" .
+						"jthis.find('.poll-answer-progressbar, .poll-answer-title .comment').show();" .
 						"jthis.find('.poll-answer-progressbar-value').animate({'width': '" .
 							$percentage."%'}, 'slow').find('span').text('" .
 							$percentage."%');" .
@@ -2121,13 +2136,15 @@ class poll extends modules {
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
 		echo
-			calendar::datetime($row['TimeStamp'])." ";
+			"<span class='details-date'>" .
+			calendar::datetime($row['TimeStamp']) .
+			" </span>";
 					
 		$GLOBALS['USER']->displayUserName($user, __('by %s'));
 		
 		if (isset($row['VotingsClosed']) && $row['VotingsClosed']) {
 			echo
-				"<span class='poll-details-separator separator-1'>" .
+				"<span class='details-separator separator-1'>" .
 				", " .
 				"</span>" .
 				"<span class='poll-closed-text'>" .
@@ -2180,10 +2197,18 @@ class poll extends modules {
 		unset($attachments);
 	}
 	
-	function displayComments(&$row) {
+	function displayComments(&$row = null) {
 		$comments = new pollComments();
-		$comments->guestComments = $row['EnableGuestComments'];
-		$comments->selectedOwnerID = $row['ID'];
+		
+		if ($row) {
+			$comments->guestComments = $row['EnableGuestComments'];
+			$comments->selectedOwnerID = $row['ID'];
+		} else {
+			$comments->latests = true;
+			$comments->limit = $this->limit;
+			$comments->format = $this->format;
+		}
+		
 		$comments->display();
 		unset($comments);
 	}
@@ -2217,6 +2242,123 @@ class poll extends modules {
 				"name='pollvote' value='".htmlspecialchars(_("Vote"), ENT_QUOTES)."' />";
 	}
 	
+	function displayFormated(&$row) {
+		echo 
+			"<div class='poll one" .
+				" poll".$row['ID']."" .
+				" poll-num".$row['_PollNumber'] .
+				(isset($row['_CSSClass'])?
+					" ".$row['_CSSClass']:
+					null) .
+				(isset($row['VotingsClosed']) && $row['VotingsClosed']?
+					" closed":
+					null) .
+				($row['ID'] == $this->votedOnID?
+					" votedon":
+					null) .
+				"'>" .
+			"<form action='".url::uri("request") .
+				"&amp;request=modules/poll' class='ajax-form' method='post'>";
+		
+		$parts = preg_split('/%([a-z0-9-_]+?)%/', $this->format, null, PREG_SPLIT_DELIM_CAPTURE);
+		
+		foreach($parts as $part) {
+			switch($part) {
+				case 'title':
+					echo
+						"<h2 class='poll-title'>";
+					
+					$this->displayTitle($row);
+					
+					echo
+						"</h2>";
+					break;
+				
+				case 'details':
+					echo
+						"<div class='poll-details comment'>";
+					
+					$this->displayDetails($row);
+					
+					echo
+						"</div>";
+					break;
+				
+				case 'preview':
+					if ($row['Pictures'])
+						$this->displayLatestPicture($row);
+					break;
+				
+				case 'pictures':
+					if ($row['Pictures'])
+						$this->displayPictures($row);
+					break;
+				
+				case 'description':
+					if ($row['Description']) {
+						echo
+							"<div class='poll-description'>";
+						
+						$this->displayDescription($row);
+						
+						echo
+							"</div>";
+					}
+					break;
+				
+				case 'attachments':
+					if ($row['Attachments'])
+						$this->displayAttachments($row);
+					break;
+				
+				case 'answers':
+					$this->displayAnswers($row);
+					break;
+				
+				case 'buttons':
+					if (!isset($row['VotingsClosed']) || !$row['VotingsClosed']) {
+						echo
+							"<div class='poll-vote-button'>";
+						
+						$this->displayVoteButton($row);
+						
+						echo
+							"</div>";
+					}
+					break;
+				
+				case 'comments':
+					if ($row['EnableComments']) {
+						echo
+							"<div class='poll-links'>";
+						
+						$this->displayFunctions($row);
+						
+						echo
+							"<div class='clear-both'></div>" .
+							"</div>";
+					}
+					break;
+				
+				case 'link':
+					echo $row['_Link'];
+					break;
+				
+				default:
+					echo $part;
+					break;
+			}
+		}
+		
+		echo
+				"<div class='spacer bottom'></div>" .
+				"<div class='separator bottom'></div>";
+		
+		echo
+			"</form>" .
+			"</div>";
+	}
+	
 	function displayOne(&$row) {
 		echo 
 			"<div class='poll one" .
@@ -2227,6 +2369,9 @@ class poll extends modules {
 					null) .
 				(isset($row['VotingsClosed']) && $row['VotingsClosed']?
 					" closed":
+					null) .
+				($row['ID'] == $this->votedOnID?
+					" votedon":
 					null) .
 				"'>" .
 			"<form action='".url::uri("request") .
@@ -2397,6 +2542,11 @@ class poll extends modules {
 			$this->limit = 1;
 		}
 		
+		if (preg_match('/(^|\/)format\/(.*?)($|[^<]\/[^>])/', $this->arguments, $matches)) {
+			$this->arguments = preg_replace('/(^|\/)format\/.*?($|[^<]\/[^>])/', '\2', $this->arguments);
+			$this->format = trim($matches[2]);
+		}
+		
 		if (preg_match('/(^|\/)([0-9]+?)\/ajax($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/\/ajax/', '', $this->arguments);
 			$this->ignorePaging = true;
@@ -2406,6 +2556,15 @@ class poll extends modules {
 		if (preg_match('/(^|\/)([0-9]+?)($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)[0-9]+?($|\/)/', '\2', $this->arguments);
 			$this->limit = (int)$matches[2];
+		}
+		
+		if (preg_match('/(^|\/)comments($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)comments($|\/)/', '\2', $this->arguments);
+			$this->ignorePaging = true;
+			$this->showPaging = false;
+			
+			$this->displayComments();
+			return true;
 		}
 		
 		$this->selectedID = null;
@@ -2480,7 +2639,9 @@ class poll extends modules {
 			if ($i == $total)
 				$row['_CSSClass'] .= ' last';
 			
-			if ($row['ID'] == $this->selectedID)
+			if ($this->format)
+				$this->displayFormated($row);
+			elseif ($row['ID'] == $this->selectedID)
 				$this->displaySelected($row);
 			else
 				$this->displayOne($row);
