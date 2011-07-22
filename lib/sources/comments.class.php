@@ -72,6 +72,8 @@ class _comments {
 	var $limit = 0;
 	var $latests = false;
 	var $ajaxRequest = null;
+	var $adminPath = null;
+	var $userPermissionType = 0;
 	
 	function __construct() {
 		$this->commentURL = $this->getCommentURL();
@@ -82,6 +84,20 @@ class _comments {
 		
 		if (JCORE_VERSION >= '0.6')
 			$this->defaultRating = 7;
+		
+		if ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin']) {
+			if (!$this->adminPath) {
+				$userpermission = array(
+					'PermissionType' => USER_PERMISSION_TYPE_WRITE);
+			} else {
+				include_once('lib/userpermissions.class.php');
+				
+				$userpermission = userPermissions::check(
+					$GLOBALS['USER']->data['ID'], $this->adminPath);
+			}
+			
+			$this->userPermissionType = $userpermission['PermissionType'];
+		}
 	}
 	
 	function SQL($commentid = null) {
@@ -104,7 +120,8 @@ class _comments {
 					" OR `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."')":
 					null) .
 				 (defined('MODERATED_COMMENTS_BY_APPROVAL') && 
-				  MODERATED_COMMENTS_BY_APPROVAL?
+				  MODERATED_COMMENTS_BY_APPROVAL && (!$GLOBALS['USER']->loginok ||
+				  !$GLOBALS['USER']->data['Admin'] || ~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE)?
 					" AND (`Pending` = 0" .
 					" OR `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."')":
 					null):
@@ -449,12 +466,12 @@ class _comments {
 				nl2br($row['Comment']) .
 				"<div class='spacer'></div>" .
 				"<div class='comment' style='padding-left: 10px;'>" .
-					calendar::datetime($row['TimeStamp']);
+					calendar::datetime($row['TimeStamp']) .
+				" (".security::long2ip($row['IP']).") ";
 		
 		$this->displayIsPending($row);
 		
 		echo
-				" (".security::long2ip($row['IP']).")" .
 				"</div>" .
 				"</div>" .
 			"</td>";
@@ -827,6 +844,8 @@ class _comments {
 				"CommentURL" => str_replace('&amp;', '&', 
 					$this->commentURL)."#comment".(int)$newid);
 		
+		$selectedowner = null;
+		
 		if ($this->sqlOwnerTable) {
 			$selectedowner = sql::fetch(sql::run(
 				" SELECT * FROM `{" .$this->sqlOwnerTable . "}`" .
@@ -839,46 +858,54 @@ class _comments {
 		if (!$GLOBALS['USER']->data['Admin'])
 			$email->send();
 		
-		if ($this->sqlOwnerTable) {
+		if ($selectedowner) {
 			sql::run(
 				" UPDATE `{".$this->sqlOwnerTable."}` SET " .
 				" `".$this->sqlOwnerCountField."` = `".$this->sqlOwnerCountField."` + 1," .
 				" `TimeStamp` = `TimeStamp`" .
 				" WHERE `ID` = '".$this->selectedOwnerID."'");
-				
-			if ($selectedowner['UserID'] &&
-				$selectedowner['UserID'] != $GLOBALS['USER']->data['ID']) 
-			{
-				$email->reset();
-				$user = $GLOBALS['USER']->get($selectedowner['UserID']);
-				
-				if ($user && $user['Email'] != WEBMASTER_EMAIL) {
-					$email->load('CommentReply');
-					$email->toUser = $user;
-					$email->send();
-				}
+		}
+		
+		if (defined('MODERATED_COMMENTS') && MODERATED_COMMENTS &&
+			defined('MODERATED_COMMENTS_BY_APPROVAL') && MODERATED_COMMENTS_BY_APPROVAL)
+		{
+			unset($email);
+			return $newid;
+		}
+		
+		if ($selectedowner && isset($selectedowner['UserID']) && $selectedowner['UserID'] &&
+			$selectedowner['UserID'] != $GLOBALS['USER']->data['ID'])
+		{
+			$email->reset();
+			$user = $GLOBALS['USER']->get($selectedowner['UserID']);
+			
+			if ($user && $user['Email'] != WEBMASTER_EMAIL) {
+				$email->load('CommentReply');
+				$email->toUser = $user;
+				$email->send();
 			}
+		}
+		
+		if (isset($values['SubCommentOfID']) && (int)$values['SubCommentOfID']) {
+			$email->reset();
+			$replytocomment = sql::fetch(sql::run(
+				" SELECT * FROM `{".$this->sqlTable."}` " .
+				" WHERE `ID` = '".(int)$values['SubCommentOfID']."'"));
+			
+			if ($replytocomment['UserID'] && 
+				(!$selectedowner || !isset($selectedowner['UserID']) ||
+				$replytocomment['UserID'] != $selectedowner['UserID']) && 
+				$replytocomment['UserID'] != $GLOBALS['USER']->data['ID']) 
+			{
+				$email->load('CommentReply');
+				$email->toUserID = $replytocomment['UserID'];
+				$email->send();
 				
-			if (isset($values['SubCommentOfID']) && (int)$values['SubCommentOfID']) {
-				$email->reset();
-				$replytocomment = sql::fetch(sql::run(
-					" SELECT * FROM `{".$this->sqlTable."}` " .
-					" WHERE `ID` = '".(int)$values['SubCommentOfID']."'"));
-				
-				if ($replytocomment['UserID'] &&
-					$replytocomment['UserID'] != $selectedowner['UserID'] && 
-					$replytocomment['UserID'] != $GLOBALS['USER']->data['ID']) 
-				{
-					$email->load('CommentReply');
-					$email->toUserID = $replytocomment['UserID'];
-					$email->send();
-					
-				} elseif (isset($replytocomment['Email']) && $replytocomment['Email']) {
-					$email->load('CommentReply');
-					$email->variables['UserName'] = $replytocomment['UserName'];
-					$email->to = $replytocomment['Email'];
-					$email->send();
-				}
+			} elseif (isset($replytocomment['Email']) && $replytocomment['Email']) {
+				$email->load('CommentReply');
+				$email->variables['UserName'] = $replytocomment['UserName'];
+				$email->to = $replytocomment['Email'];
+				$email->send();
 			}
 		}
 			
@@ -953,6 +980,16 @@ class _comments {
 	function delete($id) {
 		if (!$id)
 			return false;
+		
+		if (defined('MODERATED_COMMENTS') && MODERATED_COMMENTS &&
+			defined('MODERATED_COMMENTS_BY_APPROVAL') && 
+			MODERATED_COMMENTS_BY_APPROVAL)
+		{
+			sql::run(
+				" DELETE FROM `{".$this->sqlTable."}`" .
+				" WHERE `Pending` = 1" .
+				" AND `TimeStamp` < DATE_SUB(NOW(), INTERVAL 1 MONTH)");
+		}
 		
 		foreach($this->getSubComments($id) as $subcomment)
 			sql::run(
@@ -1040,12 +1077,84 @@ class _comments {
 			return false;
 		}
 		
+		if (!defined('MODERATED_COMMENTS') || !MODERATED_COMMENTS ||
+			!defined('MODERATED_COMMENTS_BY_APPROVAL') ||
+			!MODERATED_COMMENTS_BY_APPROVAL)
+			return true;
+		
+		$comment = sql::fetch(sql::run(
+			" SELECT * FROM `{".$this->sqlTable."}` " .
+			" WHERE `ID` = '".(int)$id."'"));
+		
+		$email = new email();
+		$email->variables = array(
+				"CommentSectionTitle" => '', 
+				"CommentSection" => $this->selectedOwner,
+				"CommentBy" => $comment['UserName'],
+				"CommentBody" => $comment['Comment'],
+				"CommentURL" => str_replace('&amp;', '&', 
+					$this->commentURL)."#comment".(int)$id);
+		
+		$selectedowner = null;
+		
+		if ($this->sqlOwnerTable) {
+			$selectedowner = sql::fetch(sql::run(
+				" SELECT * FROM `{" .$this->sqlOwnerTable . "}`" .
+				" WHERE `ID` = '".$this->selectedOwnerID."'"));
+			
+			$email->variables["CommentSectionTitle"] = 
+					$selectedowner[$this->sqlOwnerField];
+		}
+		
+		if ($selectedowner && isset($selectedowner['UserID']) && $selectedowner['UserID'] &&
+			$selectedowner['UserID'] != $GLOBALS['USER']->data['ID'])
+		{
+			$email->reset();
+			$user = $GLOBALS['USER']->get($selectedowner['UserID']);
+			
+			if ($user && $user['Email'] != WEBMASTER_EMAIL) {
+				$email->load('CommentReply');
+				$email->toUser = $user;
+				$email->send();
+			}
+		}
+		
+		if (isset($comment['SubCommentOfID']) && (int)$comment['SubCommentOfID']) {
+			$email->reset();
+			$replytocomment = sql::fetch(sql::run(
+				" SELECT * FROM `{".$this->sqlTable."}` " .
+				" WHERE `ID` = '".(int)$comment['SubCommentOfID']."'"));
+			
+			if ($replytocomment['UserID'] && 
+				(!$selectedowner || !isset($selectedowner['UserID']) ||
+				$replytocomment['UserID'] != $selectedowner['UserID']) && 
+				$replytocomment['UserID'] != $GLOBALS['USER']->data['ID']) 
+			{
+				$email->load('CommentReply');
+				$email->toUserID = $replytocomment['UserID'];
+				$email->send();
+				
+			} elseif (isset($replytocomment['Email']) && $replytocomment['Email']) {
+				$email->load('CommentReply');
+				$email->variables['UserName'] = $replytocomment['UserName'];
+				$email->to = $replytocomment['Email'];
+				$email->send();
+			}
+		}
+			
+		unset($email);
+		
 		return true;
 	}
 	
 	// ************************************************   Client Part
 	static function getCommentURL($comment = null) {
-		return url::get();
+		$url = url::get();
+		
+		if ($pos = strpos($url, '#'))
+			return substr($url, 0, $pos);
+		
+		return $url;
 	}
 	
 	static function generateTeaser($description) {
@@ -1160,6 +1269,7 @@ class _comments {
 	function verify(&$form) {
 		$commentid = null;
 		$delete = null;
+		$approve = false;
 		
 		if (isset($_GET[strtolower(get_class($this))]))
 			$commentid = (int)$_GET[strtolower(get_class($this))];
@@ -1167,6 +1277,9 @@ class _comments {
 		if (isset($_GET['delete']))
 			$delete = $_GET['delete'];
 			
+		if (isset($_POST['approve']))
+			$approve = $_POST['approve'];
+		
 		if ($delete) {
 			if (!$GLOBALS['USER']->loginok ||
 				!$GLOBALS['USER']->data['Admin'])
@@ -1175,6 +1288,13 @@ class _comments {
 					__("Only administrators can delete comments."),
 					TOOLTIP_ERROR);
 				
+				return false;
+			}
+			
+			if (~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
+				tooltip::display(
+					__("You do not have permission to access this path!"),
+					TOOLTIP_ERROR);
 				return false;
 			}
 			
@@ -1220,6 +1340,22 @@ class _comments {
 				return false;
 			}
 			
+			if ($GLOBALS['USER']->data['ID'] != $comment['UserID'] &&
+				~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE) 
+			{
+				tooltip::display(
+					__("You do not have permission to access this path!"),
+					TOOLTIP_ERROR);
+				return false;
+			}
+			
+			if (defined('MODERATED_COMMENTS') && MODERATED_COMMENTS &&
+				defined('MODERATED_COMMENTS_BY_APPROVAL') && 
+				MODERATED_COMMENTS_BY_APPROVAL && $approve && 
+				$comment['Pending'] && $GLOBALS['USER']->data['Admin'] &&
+				$this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
+				$this->approve($commentid);
+			
 			if (!$this->edit($commentid, $form->getPostArray()))
 				return false;
 			
@@ -1243,6 +1379,26 @@ class _comments {
 			TOOLTIP_SUCCESS);
 		
 		return $newid;
+	}
+	
+	function isPending(&$row) {
+		if (!defined('MODERATED_COMMENTS') || !MODERATED_COMMENTS)
+			return false;
+		
+		if (defined('MODERATED_COMMENTS_BY_APPROVAL') &&
+			MODERATED_COMMENTS_BY_APPROVAL && $row['Pending'])
+			return true;
+			
+		if (defined('MODERATED_COMMENTS_PENDING_MINUTES') &&
+			MODERATED_COMMENTS_PENDING_MINUTES)
+		{ 
+			$commenttime = strtotime($row['TimeStamp']);
+			
+			if ($commenttime > time()-(int)MODERATED_COMMENTS_PENDING_MINUTES*60)
+				return $commenttime;
+		}
+		
+		return false;
 	}
 	
 	function ajaxRequest() {
@@ -1446,6 +1602,18 @@ class _comments {
 		
 		$this->setupForm($form);
 		
+		if ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin'] &&
+			$this->userPermissionType & USER_PERMISSION_TYPE_WRITE && $this->isPending($comment) &&
+			defined('MODERATED_COMMENTS_BY_APPROVAL') && MODERATED_COMMENTS_BY_APPROVAL)
+		{
+			$form->add(
+				__('Approve'),
+				'approve',
+				FORM_INPUT_TYPE_CHECKBOX,
+				false,
+				1);
+		}
+		
 		$form->setValue('CommentID', $commentid);
 		$form->setValue('UserName', $comment['UserName']);
 		$form->setValue('Comment', $comment['Comment']);
@@ -1461,15 +1629,15 @@ class _comments {
 	}
 	
 	function displayFunctions(&$row) {
-		if ($GLOBALS['USER']->loginok && 
-			$GLOBALS['USER']->data['Admin'])
+		if ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin'] &&
+			$this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 		{
-			echo	
+			echo
 				"<a class='comment-delete comment confirm-link' " .
 					"href='".url::uri(strtolower(get_class($this)).', ' .
 							comments::$uriVariables).
 						"&amp;".strtolower(get_class($this))."=".$row['ID'] .
-						"&amp;delete=1' " .
+						"&amp;delete=1#comments' " .
 					"title=\"".
 						htmlspecialchars(__("Delete comment and all it's subcomments"), ENT_QUOTES)."\">" .
 					"<span>" .
@@ -1478,17 +1646,20 @@ class _comments {
 				"</a>";
 		}
 		
-		if ($GLOBALS['USER']->loginok && 
-			($row['UserID'] == $GLOBALS['USER']->data['ID'] ||
-			$GLOBALS['USER']->data['Admin']))
+		if ($GLOBALS['USER']->loginok && ($row['UserID'] == $GLOBALS['USER']->data['ID'] ||
+			($GLOBALS['USER']->data['Admin'] && $this->userPermissionType & USER_PERMISSION_TYPE_WRITE)))
 		{
-			echo	
+			echo
 				"<a class='comment-edit ajax-content-link comment' " .
 					"href='".url::uri(strtolower(get_class($this)).', ' .
 							comments::$uriVariables).
 						"&amp;request=".$this->uriRequest .
 						"&amp;".strtolower(get_class($this))."=".$row['ID'] .
-						"&amp;edit=1' " .
+						"&amp;edit=1" .
+						(JCORE_VERSION > '0.9'?
+							"#newcomment":
+							null) .
+						"' " .
 					"title='".htmlspecialchars(__("Edit this comment"), ENT_QUOTES)."'>" .
 					"<span>" .
 						__("Edit") .
@@ -1503,7 +1674,11 @@ class _comments {
 							comments::$uriVariables).
 						"&amp;request=".$this->uriRequest .
 						"&amp;".strtolower(get_class($this))."=".$row['ID'] .
-						"&amp;reply=1' " .
+						"&amp;reply=1" .
+						(JCORE_VERSION > '0.9'?
+							"#newcomment":
+							null) .
+						"' " .
 					"title='".htmlspecialchars(__("Reply to this comment"), ENT_QUOTES)."'>" .
 					"<span>" .
 						__("Reply") .
@@ -1566,11 +1741,11 @@ class _comments {
 	}
 	
 	function displayIsPending(&$row) {
-		if (!defined('MODERATED_COMMENTS') || !MODERATED_COMMENTS)
+		if (!$pending = $this->isPending($row))
 			return;
 		
 		if (defined('MODERATED_COMMENTS_BY_APPROVAL') &&
-			MODERATED_COMMENTS_BY_APPROVAL && $row['Pending'])
+			MODERATED_COMMENTS_BY_APPROVAL && $pending)
 		{
 			echo
 				" <span class='red' title='" .
@@ -1580,16 +1755,12 @@ class _comments {
 				")</span>";
 			
 		} elseif (defined('MODERATED_COMMENTS_PENDING_MINUTES') &&
-			MODERATED_COMMENTS_PENDING_MINUTES)
+			MODERATED_COMMENTS_PENDING_MINUTES && $pending)
 		{
-			$commenttime = strtotime($row['TimeStamp']);
-			if ($commenttime <= time()-(int)MODERATED_COMMENTS_PENDING_MINUTES*60)
-				return;
-			
 			echo
 				" <span class='red' title='" .
 					htmlspecialchars(sprintf(__("Will be visible to the public in %s minutes."),
-						ceil(($commenttime - (time()-(int)MODERATED_COMMENTS_PENDING_MINUTES*60))/60)), ENT_QUOTES) .
+						ceil(($pending - (time()-(int)MODERATED_COMMENTS_PENDING_MINUTES*60))/60)), ENT_QUOTES) .
 					"'>(" .
 					__("Pending")."!" .
 				")</span>";
@@ -1610,14 +1781,14 @@ class _comments {
 				"(<i>#".$row['ID']."</i>)" .
 			" </span>";
 				
-		$GLOBALS['USER']->displayUserName($row['_User'], __('by %s'));
+		$GLOBALS['USER']->displayUserName($row['_User'], __('by %s').' ');
 		
 		if ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin']) {
 			echo
-				"<span class='comment-ip'> ";
+				"<span class='comment-ip'>";
 			$this->displayIP($row);
 			echo
-				"</span>";
+				" </span>";
 		}
 		
 		$this->displayIsPending($row);
@@ -1825,6 +1996,9 @@ class _comments {
 		
 		echo
 			"<div class='comment-entry comment-rating-".$rating .
+				($this->isPending($row)?
+					" pending":
+					null) .
 				(isset($row['_User']['Admin']) && $row['_User']['Admin']?
 					" site-owner":
 					null) .
@@ -1901,6 +2075,14 @@ class _comments {
 		if (isset($_POST['CommentID']))
 			$edit = (int)$_POST['CommentID'];
 		
+		if (!$replyto && isset($_GET['postcomments']) && $_GET['postcomments'] &&
+			isset($_GET['reply']) && $_GET['reply'])
+			$replyto = (int)$_GET['postcomments'];
+		
+		if (!$edit && isset($_GET['postcomments']) && $_GET['postcomments'] &&
+			isset($_GET['edit']) && $_GET['edit'])
+			$edit = (int)$_GET['postcomments'];
+		
 		echo 
 			"<div class='comments'>";
 		
@@ -1969,7 +2151,33 @@ class _comments {
 						__("Login") .
 					"</a>)");
 			
-			$this->verify($form);
+			$verifyok = $this->verify($form);
+			
+			if ($edit) {
+				$comment = sql::fetch(sql::run(
+					" SELECT * FROM `{".$this->sqlTable."}` " .
+					" WHERE `ID` = '".(int)$edit."'"));
+				
+				if ($verifyok || !$form->submitted())
+					$form->setValues($comment);
+				
+				if ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin'] &&
+					$this->userPermissionType & USER_PERMISSION_TYPE_WRITE && $this->isPending($comment) &&
+					defined('MODERATED_COMMENTS_BY_APPROVAL') && MODERATED_COMMENTS_BY_APPROVAL)
+				{
+					$form->insert(
+						'newcommentsubmit',
+						__('Approve'),
+						'approve',
+						FORM_INPUT_TYPE_CHECKBOX,
+						false,
+						1,
+						FORM_INSERT_BEFORE);
+				}
+			}
+			
+			if ($edit && ($verifyok || !$form->submitted()))
+				$form->setValues($comment);
 		}
 		
 		$rows = sql::run(
