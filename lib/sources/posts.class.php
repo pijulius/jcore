@@ -3674,61 +3674,66 @@ class _posts {
 				$this->limit = $this->selectedPage['Limit'];
 		}
 		
-		if (preg_match('/(\?|&)search=/i', url::referer(true)) && $this->selectedID) {
-			tooltip::display(
-				"<a href='".url::referer(true)."'>".__("Back")."</a> " .
-				__("to search results."),
-				TOOLTIP_NOTIFICATION);
-		}
-		
-		$paging = new paging($this->limit);
-		
-		if ($this->ajaxPaging) {
-			$paging->ajax = true;
-			$paging->otherArgs = "&amp;request=posts" .
-				($this->selectedPageID?
-					"/".$this->selectedPageID:
-					null) .
-				(isset($this->arguments)?
-					"&amp;arguments=".urlencode($this->arguments) .
-					($this->arguments && $this->limit?
-						"/":
+		if (!$this->latests) {
+			if (preg_match('/(\?|&)search=/i', url::referer(true)) && $this->selectedID) {
+				tooltip::display(
+					"<a href='".url::referer(true)."'>".__("Back")."</a> " .
+					__("to search results."),
+					TOOLTIP_NOTIFICATION);
+			}
+			
+			$paging = new paging($this->limit);
+			
+			if ($this->ajaxPaging) {
+				$paging->ajax = true;
+				$paging->otherArgs = "&amp;request=posts" .
+					($this->selectedPageID?
+						"/".$this->selectedPageID:
 						null) .
-					$this->limit:
-					null);
+					(isset($this->arguments)?
+						"&amp;arguments=".urlencode($this->arguments) .
+						($this->arguments && $this->limit?
+							"/":
+							null) .
+						$this->limit:
+						null);
+			}
+			
+			$paging->track(strtolower(get_class($this)) .
+				($this->search?
+					'search':
+					null) .
+				'limit');
+			
+			if (!$this->selectedID && $this->ignorePaging)
+				$paging->reset();
 		}
-		
-		$paging->track(strtolower(get_class($this)) .
-			($this->search?
-				'search':
-				null) .
-			'limit');
-		
-		if (!$this->selectedID && $this->ignorePaging)
-			$paging->reset();
 		
 		$rows = sql::run(
 			$this->SQL() .
-			(!$this->selectedID?
-				($this->ignorePaging?
-					($this->limit?
-						" LIMIT ".$this->limit:
-						null):
-					" LIMIT ".$paging->limit):
-				null));
+			($this->ignorePaging || $this->latests?
+				($this->limit?
+					" LIMIT ".$this->limit:
+					null):
+				" LIMIT ".$paging->limit) .
+			null);
 		
-		$paging->setTotalItems(sql::count());
+		if (!$this->latests)
+			$paging->setTotalItems(sql::count());
 		
 		if ($this->search && !$this->selectedID && !$this->ajaxRequest && !isset($this->arguments))
 			url::displaySearch($this->search, $paging->items);
 		
-		if (!$this->ajaxRequest)
-			echo
-				"<div class='posts'>";
-		
 		$i = 1;
 		$total = sql::rows($rows);
 		$pageid = $this->selectedPageID;
+		
+		if (!$total)
+			return false;
+		
+		if (!$this->ajaxRequest)
+			echo
+				"<div class='posts'>";
 		
 		$cssclass = null;
 		$pagelink = null;
@@ -3789,12 +3794,15 @@ class _posts {
 			$i++;
 		}
 		
-		if (!$this->selectedID && !$this->randomize && $this->showPaging)
+		if (!$this->selectedID && !$this->randomize && $this->showPaging && !$this->latests)
 			$paging->display();
 		
 		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //posts
+		
+		if ($this->latests)
+			return true;
 		
 		return $paging->items;
 	}
