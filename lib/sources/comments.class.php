@@ -867,7 +867,8 @@ class _comments {
 		}
 		
 		if (defined('MODERATED_COMMENTS') && MODERATED_COMMENTS &&
-			defined('MODERATED_COMMENTS_BY_APPROVAL') && MODERATED_COMMENTS_BY_APPROVAL)
+			defined('MODERATED_COMMENTS_BY_APPROVAL') && MODERATED_COMMENTS_BY_APPROVAL &&
+			(!$GLOBALS['USER']->loginok || !$GLOBALS['USER']->data['Admin']))
 		{
 			unset($email);
 			return $newid;
