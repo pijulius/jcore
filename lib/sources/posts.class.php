@@ -2980,7 +2980,8 @@ class _posts {
 		
 		$parts = preg_split('/%([a-z0-9-_]+?)%/', $this->format, null, PREG_SPLIT_DELIM_CAPTURE);
 		
-		if (!in_array('description', $parts))
+		if (strpos($this->format, '%description%') === false &&
+			strpos($this->format, '%body%') === false)
 			$row['PartialContent'] = 1;
 		
 		ob_start();
@@ -3058,7 +3059,7 @@ class _posts {
 						echo
 							"<div class='post-content'>";
 						
-						if ($row['PartialContent']) {
+						if ($row['PartialContent'] && $row['ID'] != $this->selectedID) {
 							$row['Content'] = posts::generateTeaser($row['Content']);
 							$this->displayContent($row);
 						} else {
@@ -3083,7 +3084,7 @@ class _posts {
 					break;
 					
 				case 'body':
-					if ($row['PartialContent'])
+					if ($row['PartialContent'] && $row['ID'] != $this->selectedID)
 						$this->displayTeaserBody($row);
 					else
 						$this->displayBody($row);
