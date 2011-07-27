@@ -2643,7 +2643,8 @@ class newsletter extends modules {
 		$url = modules::getOwnerURL('newsletter');
 		
 		if (!$url)
-			return url::uri('subscribe, unsubscribe');
+			return url::site() .
+				url::uri('subscribe, unsubscribe');
 		
 		return $url;	
 	}

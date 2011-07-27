@@ -438,7 +438,8 @@ class search extends modules {
 		$url = modules::getOwnerURL('Search');
 		
 		if (!$url)
-			return url::uri(search::$uriVariables).
+			return url::site() .
+				url::uri(search::$uriVariables).
 				"&amp;searchin=posts";
 		
 		return $url;	

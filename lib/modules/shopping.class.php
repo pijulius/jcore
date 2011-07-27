@@ -6348,7 +6348,8 @@ class shopping extends modules {
 		$url = modules::getOwnerURL('shopping', $id);
 		
 		if (!$url)
-			return url::uri(shoppingItems::$uriVariables);
+			return url::site() .
+				url::uri(shoppingItems::$uriVariables);
 		
 		return $url;	
 	}

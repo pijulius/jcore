@@ -2574,7 +2574,8 @@ class photoGallery extends modules {
 		$url = modules::getOwnerURL('photoGallery', $id);
 		
 		if (!$url)
-			return url::uri(photoGallery::$uriVariables);
+			return url::site() .
+				url::uri(photoGallery::$uriVariables);
 		
 		return $url;	
 	}

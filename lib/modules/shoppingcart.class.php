@@ -4356,7 +4356,8 @@ class shoppingCart extends modules {
 		$url = modules::getOwnerURL('ShoppingCart');
 		
 		if (!$url)
-			return url::uri(shoppingCart::$uriVariables);
+			return url::site() .
+				url::uri(shoppingCart::$uriVariables);
 		
 		return $url;	
 	}

@@ -2554,7 +2554,8 @@ class videoGallery extends modules {
 		$url = modules::getOwnerURL('videoGallery', $id);
 		
 		if (!$url)
-			return url::uri(videoGallery::$uriVariables);
+			return url::site() .
+				url::uri(videoGallery::$uriVariables);
 		
 		return $url;	
 	}
