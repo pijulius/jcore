@@ -31,6 +31,17 @@ class videoGalleryRating extends starRating {
 	function __destruct() {
 		languages::unload('videogallery');
 	}
+	
+	function ajaxRequest() {
+		if (!videoGallery::checkAccess((int)$this->selectedOwnerID)) {
+			$gallery = new videoGallery();
+			$gallery->displayLogin();
+			unset($gallery);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
+	}
 }
 
 class videoGalleryVideos extends videos {
@@ -155,6 +166,17 @@ class videoGalleryVideos extends videos {
 		}
 		
 		return videos::download($id);
+	}
+	
+	function ajaxRequest() {
+		if (!videoGallery::checkAccess((int)$this->selectedOwnerID)) {
+			$gallery = new videoGallery();
+			$gallery->displayLogin();
+			unset($gallery);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
 	}
 	
 	function displayGalleryPreview($gallery) {
@@ -667,6 +689,17 @@ class videoGalleryComments extends comments {
 		
 		return 
 			parent::getCommentURL();
+	}
+	
+	function ajaxRequest() {
+		if (!videoGallery::checkAccess((int)$this->selectedOwnerID)) {
+			$gallery = new videoGallery();
+			$gallery->displayLogin();
+			unset($gallery);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
 	}
 }
 
@@ -2526,11 +2559,17 @@ class videoGallery extends modules {
 		return $url;	
 	}
 	
-	static function verifyPermission($row) {
-		if (!$row)
-			return true;
-			
+	static function checkAccess($row) {
 		if ($GLOBALS['USER']->loginok)
+			return true;
+		
+		if ($row && !is_array($row))
+			$row = sql::fetch(sql::run(
+				" SELECT `MembersOnly`, `ShowToGuests`" .
+				" FROM `{videogalleries}`" .
+				" WHERE `ID` = '".(int)$row."'"));
+		
+		if (!$row)
 			return true;
 		
 		if ($row['MembersOnly'] && !$row['ShowToGuests'])
@@ -2872,7 +2911,7 @@ class videoGallery extends modules {
 	}
 	
 	function displaySelected(&$row) {
-		if (!videoGallery::verifyPermission($row)) {
+		if (!$this->checkAccess($row)) {
 			$this->displayLogin();
 			return false;
 		}

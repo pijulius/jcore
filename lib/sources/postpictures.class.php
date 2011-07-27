@@ -26,6 +26,17 @@ class _postPictures extends pictures {
 		$this->selectedOwner = __('Post');
 		$this->uriRequest = "posts/".$this->uriRequest;
 	}
+	
+	function ajaxRequest() {
+		if (!posts::checkAccess($this->selectedOwnerID)) {
+			$page = new pages();
+			$page->displayLogin();
+			unset($page);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
+	}
 }
 
 ?>

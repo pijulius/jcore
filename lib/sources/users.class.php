@@ -2379,6 +2379,9 @@ class _users {
 	}
 	
 	function displayLogin() {
+		if (requests::$ajax)
+			return $this->displayQuickLogin();
+		
 		$form = new form(
 			__('Member Login'),
 			'memberlogin');

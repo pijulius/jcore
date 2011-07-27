@@ -39,6 +39,17 @@ class _postComments extends comments {
 		return 
 			parent::getCommentURL();
 	}
+	
+	function ajaxRequest() {
+		if (!posts::checkAccess($this->selectedOwnerID)) {
+			$page = new pages();
+			$page->displayLogin();
+			unset($page);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
+	}
 }
 
 ?>

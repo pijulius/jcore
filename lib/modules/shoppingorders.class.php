@@ -1978,6 +1978,17 @@ class shoppingOrderComments extends comments {
 		return 
 			parent::getCommentURL();
 	}
+	
+	function ajaxRequest() {
+		if (shoppingOrders::checkAccess($this->selectedOwnerID)) {
+			$orders = new shoppingOrders();
+			$orders->displayLogin();
+			unset($orders);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
+	}
 }
 
 class shoppingOrderItems {
@@ -5237,6 +5248,35 @@ class shoppingOrders extends modules {
 		
 		unset($email);
 		return $emailsent;
+	}
+	
+	static function checkAccess($row) {
+		if (!$GLOBALS['USER']->loginok)
+			return false;
+		
+		if ($row && !is_array($row))
+			$row = sql::fetch(sql::run(
+				" SELECT `UserID`" .
+				" FROM `{shoppingorders}`" .
+				" WHERE `ID` = '".(int)$row."'"));
+		
+		if (!$row)
+			return true;
+		
+		$permission = null;
+		
+		if ($GLOBALS['USER']->data['Admin']) {
+			include_once('lib/userpermissions.class.php');
+			
+			$permission = userPermissions::check($GLOBALS['USER']->data['ID'], 
+				$this->adminPath);
+		}
+		
+		if ((!$GLOBALS['USER']->data['Admin'] || !$permission['PermissionType']) && 
+			$GLOBALS['USER']->data['ID'] != $row['UserID'])
+			return false;
+		
+		return true;
 	}
 	
 	function ajaxRequest() {

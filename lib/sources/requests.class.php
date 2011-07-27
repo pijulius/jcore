@@ -14,6 +14,9 @@ include_once('lib/ads.class.php');
 
 class _requests {
 	static $result = null;
+	static $path = '';
+	static $ajax = false;
+	
 	var $variable = 'request';
 	var $method = 'get';
 	
@@ -57,19 +60,16 @@ class _requests {
 	}
 	
 	function display() {
-		$request = null;
-		$ajax = null;
-		
 		if (isset($GLOBALS['_'.strtoupper($this->method)][$this->variable]))
-			$request = $GLOBALS['_'.strtoupper($this->method)][$this->variable];
+			requests::$path = $GLOBALS['_'.strtoupper($this->method)][$this->variable];
 		
 		if (isset($GLOBALS['_'.strtoupper($this->method)]['ajax']))
-			$ajax = $GLOBALS['_'.strtoupper($this->method)]['ajax'];
+			requests::$ajax = $GLOBALS['_'.strtoupper($this->method)]['ajax'];
 		
-		if (!$request)
+		if (!requests::$path)
 			return;
 		
-		$requests = explode('/', preg_replace('/(^|\/)[0-9]+/', '', $request));
+		$requests = explode('/', preg_replace('/(^|\/)[0-9]+/', '', requests::$path));
 		$classname = null;
 		
 		switch($requests[0]) {
@@ -126,7 +126,7 @@ class _requests {
 				
 				include_once('lib/admin.class.php');
 				
-				$userpermission = userPermissions::check($GLOBALS['USER']->data['ID'], $request);
+				$userpermission = userPermissions::check($GLOBALS['USER']->data['ID'], requests::$path);
 				if (!$userpermission['PermissionType'])
 					break;
 				
@@ -148,13 +148,13 @@ class _requests {
 		}
 		
 		if (!class_exists($classname) || 
-			($ajax && !method_exists($classname,'ajaxRequest')) ||
-			(!$ajax && !method_exists($classname,'request')))
+			(requests::$ajax && !method_exists($classname,'ajaxRequest')) ||
+			(!requests::$ajax && !method_exists($classname,'request')))
 		{
 			unset($GLOBALS['_'.strtoupper($this->method)][$this->variable]);
 			url::setURI(url::uri($this->variable));
 			
-			if ($ajax) {
+			if (requests::$ajax) {
 				tooltip::display(
 					__("Invalid or not enough permission to access this request!"),
 					TOOLTIP_ERROR);
@@ -168,13 +168,13 @@ class _requests {
 		
 		$class = new $classname;
 		
-		$class->uriRequest = $request;
+		$class->uriRequest = requests::$path;
 		$class->ajaxRequest = false;
 		
 		ob_start();
 		$requestsuccess = false;
 		
-		if ($ajax) {
+		if (requests::$ajax) {
 			$class->ajaxRequest = true;
 			$requestsuccess = $class->ajaxRequest();
 			
@@ -187,7 +187,7 @@ class _requests {
 		
 		unset($class);
 		
-		if ($ajax && $requestsuccess) {
+		if (requests::$ajax && $requestsuccess) {
 			requests::displayResult();
 			sql::logout();
 			exit();

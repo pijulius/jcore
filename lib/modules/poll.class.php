@@ -35,6 +35,17 @@ class pollPictures extends pictures {
 	function __destruct() {
 		languages::unload('poll');
 	}
+	
+	function ajaxRequest() {
+		if (!poll::checkAccess($this->selectedOwnerID)) {
+			$poll = new poll();
+			$poll->displayLogin();
+			unset($poll);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
+	}
 }
 
 class pollAttachments extends attachments {
@@ -57,6 +68,17 @@ class pollAttachments extends attachments {
 	
 	function __destruct() {
 		languages::unload('poll');
+	}
+	
+	function ajaxRequest() {
+		if (!poll::checkAccess($this->selectedOwnerID)) {
+			$poll = new poll();
+			$poll->displayLogin();
+			unset($poll);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
 	}
 }
 
@@ -90,6 +112,17 @@ class pollComments extends comments {
 		
 		return 
 			parent::getCommentURL();
+	}
+	
+	function ajaxRequest() {
+		if (!poll::checkAccess($this->selectedOwnerID)) {
+			$poll = new poll();
+			$poll->displayLogin();
+			unset($poll);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
 	}
 }
 
@@ -1894,13 +1927,19 @@ class poll extends modules {
 		return $url;	
 	}
 	
-	static function verifyPermission($row) {
-		if (!$row)
-			return true;
-			
+	static function checkAccess($row) {
 		if ($GLOBALS['USER']->loginok)
 			return true;
 		
+		if ($row && !is_array($row))
+			$row = sql::fetch(sql::run(
+				" SELECT `MembersOnly`, `ShowToGuests`" .
+				" FROM `{polls}`" .
+				" WHERE `ID` = '".(int)$row."'"));
+		
+		if (!$row)
+			return true;
+			
 		if ($row['MembersOnly'] && !$row['ShowToGuests'])
 			return false;
 		
@@ -2440,7 +2479,7 @@ class poll extends modules {
 	}
 	
 	function displaySelected(&$row) {
-		if (!poll::verifyPermission($row)) {
+		if (!$this->checkAccess($row)) {
 			$this->displayLogin();
 			return false;
 		}

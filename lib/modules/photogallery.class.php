@@ -29,6 +29,17 @@ class photoGalleryRating extends starRating {
 	function __destruct() {
 		languages::unload('photogallery');
 	}
+	
+	function ajaxRequest() {
+		if (JCORE_VERSION >= '0.5' && !photoGallery::checkAccess((int)$this->selectedOwnerID)) {
+			$gallery = new photoGallery();
+			$gallery->displayLogin();
+			unset($gallery);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
+	}
 }
 
 class photoGalleryPictures extends pictures {
@@ -168,6 +179,17 @@ class photoGalleryPictures extends pictures {
 		}
 		
 		return parent::download($id, $force);
+	}
+	
+	function ajaxRequest() {
+		if (JCORE_VERSION >= '0.5' && !photoGallery::checkAccess((int)$this->selectedOwnerID)) {
+			$gallery = new photoGallery();
+			$gallery->displayLogin();
+			unset($gallery);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
 	}
 	
 	function displayGalleryPreview($gallery) {
@@ -619,6 +641,17 @@ class photoGalleryComments extends comments {
 		
 		return 
 			parent::getCommentURL();
+	}
+	
+	function ajaxRequest() {
+		if (JCORE_VERSION >= '0.5' && !photoGallery::checkAccess((int)$this->selectedOwnerID)) {
+			$gallery = new photoGallery();
+			$gallery->displayLogin();
+			unset($gallery);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
 	}
 }
 
@@ -2546,11 +2579,17 @@ class photoGallery extends modules {
 		return $url;	
 	}
 	
-	static function verifyPermission($row) {
-		if (!$row)
-			return true;
-			
+	static function checkAccess($row) {
 		if ($GLOBALS['USER']->loginok)
+			return true;
+		
+		if ($row && !is_array($row))
+			$row = sql::fetch(sql::run(
+				" SELECT `MembersOnly`, `ShowToGuests`" .
+				" FROM `{photogalleries}`" .
+				" WHERE `ID` = '".(int)$row."'"));
+		
+		if (!$row)
 			return true;
 		
 		if ($row['MembersOnly'] && !$row['ShowToGuests'])
@@ -2738,14 +2777,6 @@ class photoGallery extends modules {
 		else
 			$pictures = new photoGalleryPictures();
 		
-		if (isset($row['MembersOnly']) && $row['MembersOnly'] && 
-			!$GLOBALS['USER']->loginok)
-			$pictures->customLink = 
-				"javascript:jQuery.jCore.tooltip.display(\"" .
-				"<div class=\\\"tooltip error\\\"><span>" .
-				htmlspecialchars(_("You need to be logged in to view this picture. " .
-					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
-		
 		if ($row) {
 			$pictures->selectedOwnerID = $row['ID'];
 			$pictures->columns = $row['Columns'];
@@ -2896,7 +2927,7 @@ class photoGallery extends modules {
 	}
 	
 	function displaySelected(&$row) {
-		if (JCORE_VERSION >= '0.5' && !photoGallery::verifyPermission($row)) {
+		if (JCORE_VERSION >= '0.5' && !$this->checkAccess($row)) {
 			$this->displayLogin();
 			return false;
 		}

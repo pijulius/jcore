@@ -29,6 +29,17 @@ class fileSharingRating extends starRating {
 	function __destruct() {
 		languages::unload('filesharing');
 	}
+	
+	function ajaxRequest() {
+		if (!fileSharing::checkAccess((int)$this->selectedOwnerID)) {
+			$folder = new fileSharing();
+			$folder->displayLogin();
+			unset($folder);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
+	}
 }
 
 class fileSharingAttachments extends attachments {
@@ -156,6 +167,17 @@ class fileSharingAttachments extends attachments {
 		
 		return attachments::download($id);
 	}
+	
+	function ajaxRequest() {
+		if (!fileSharing::checkAccess((int)$this->selectedOwnerID)) {
+			$folder = new fileSharing();
+			$folder->displayLogin();
+			unset($folder);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
+	}
 }
 
 class fileSharingComments extends comments {
@@ -188,6 +210,17 @@ class fileSharingComments extends comments {
 		
 		return 
 			parent::getCommentURL();
+	}
+	
+	function ajaxRequest() {
+		if (!fileSharing::checkAccess((int)$this->selectedOwnerID)) {
+			$folder = new fileSharing();
+			$folder->displayLogin();
+			unset($folder);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
 	}
 }
 
@@ -1723,13 +1756,19 @@ class fileSharing extends modules {
 		return $url;	
 	}
 	
-	static function verifyPermission($row) {
-		if (!$row)
-			return true;
-			
+	static function checkAccess($row) {
 		if ($GLOBALS['USER']->loginok)
 			return true;
 		
+		if ($row && !is_array($row))
+			$row = sql::fetch(sql::run(
+				" SELECT `MembersOnly`, `ShowToGuests`" .
+				" FROM `{filesharings}`" .
+				" WHERE `ID` = '".(int)$row."'"));
+		
+		if (!$row)
+			return true;
+			
 		if ($row['MembersOnly'] && !$row['ShowToGuests'])
 			return false;
 		
@@ -2029,7 +2068,7 @@ class fileSharing extends modules {
 	}
 	
 	function displaySelected(&$row = null) {
-		if (!fileSharing::verifyPermission($row)) {
+		if (!$this->checkAccess($row)) {
 			$this->displayLogin();
 			return false;
 		}

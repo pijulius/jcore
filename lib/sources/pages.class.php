@@ -2078,6 +2078,34 @@ class _pages {
 		}
 	}
 	
+	static function checkAccess($row) {
+		if ($row && !is_array($row))
+			$row = sql::fetch(sql::run(
+				" SELECT `".(JCORE_VERSION >= '0.9'?'AccessibleBy':'ViewableBy')."`" .
+				" FROM `{pages}`" .
+				" WHERE `ID` = '".(int)$row."'"));
+		
+		if (!$row)
+			return true;
+		
+		if (JCORE_VERSION >= '0.9') {
+			if (($row['AccessibleBy'] > PAGE_GUESTS_ONLY && !$GLOBALS['USER']->loginok) ||
+				($row['AccessibleBy'] == PAGE_ADMINS_ONLY && !$GLOBALS['USER']->data['Admin']) ||
+				($row['AccessibleBy'] > 10 && !$GLOBALS['USER']->data['Admin'] &&
+				 $GLOBALS['USER']->data['GroupID'] != $row['AccessibleBy']-10)) 
+			{
+				return false;
+			}
+			
+		} else {
+			if ($row['ViewableBy'] > PAGE_GUESTS_ONLY && !$GLOBALS['USER']->loginok) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
 	static function isHome($id, $languageid = 0) {
 		if (!$id)
 			return true;
@@ -2533,32 +2561,18 @@ class _pages {
 			$page['LanguageID'] != languages::$selected['ID'])
 			return false;
 		
-		if (JCORE_VERSION >= '0.9') {
-			if (($page['AccessibleBy'] > PAGE_GUESTS_ONLY && !$GLOBALS['USER']->loginok) ||
-				($page['AccessibleBy'] == PAGE_ADMINS_ONLY && !$GLOBALS['USER']->data['Admin']) ||
-				($page['AccessibleBy'] > 10 && !$GLOBALS['USER']->data['Admin'] &&
-				 $GLOBALS['USER']->data['GroupID'] != $page['AccessibleBy']-10)) 
-			{
+		if (!$this->checkAccess($page)) {
+			if (JCORE_VERSION >= '0.7')
 				$this->displaySelected($page);
-				
-				if (!$GLOBALS['USER']->loginok)
-					$this->displayLogin();
-				else
-					tooltip::display(
-						__("You do not have permission to access this page!"),
-						TOOLTIP_NOTIFICATION);
-				
-				return true;
-			}
 			
-		} else {
-			if ($page['ViewableBy'] > PAGE_GUESTS_ONLY && !$GLOBALS['USER']->loginok) {
-				if (JCORE_VERSION >= '0.7')
-					$this->displaySelected($page);
-				
+			if (!$GLOBALS['USER']->loginok)
 				$this->displayLogin();
-				return true;
-			}
+			else
+				tooltip::display(
+					__("You do not have permission to access this page!"),
+					TOOLTIP_NOTIFICATION);
+			
+			return true;
 		}
 		
 		$posts = new posts();

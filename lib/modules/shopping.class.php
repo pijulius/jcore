@@ -62,6 +62,17 @@ class shoppingItemRating extends starRating {
 	function __destruct() {
 		languages::unload('shopping');
 	}
+	
+	function ajaxRequest() {
+		if (!shoppingItems::checkAccess((int)$this->selectedOwnerID)) {
+			$category = new shopping();
+			$category->displayLogin();
+			unset($category);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
+	}
 }
 
 class shoppingItemDigitalGoods extends attachments {
@@ -206,6 +217,17 @@ class shoppingItemDigitalGoods extends attachments {
 		
 		return $downloaded;
 	}
+	
+	function ajaxRequest() {
+		if (!shoppingItems::checkAccess((int)$this->selectedOwnerID)) {
+			$category = new shopping();
+			$category->displayLogin();
+			unset($category);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
+	}
 }
 
 class shoppingItemAttachments extends attachments {
@@ -230,6 +252,17 @@ class shoppingItemAttachments extends attachments {
 	
 	function __destruct() {
 		languages::unload('shopping');
+	}
+	
+	function ajaxRequest() {
+		if (!shoppingItems::checkAccess((int)$this->selectedOwnerID)) {
+			$category = new shopping();
+			$category->displayLogin();
+			unset($category);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
 	}
 }
 
@@ -265,6 +298,17 @@ class shoppingItemComments extends comments {
 		return 
 			parent::getCommentURL();
 	}
+	
+	function ajaxRequest() {
+		if (!shoppingItems::checkAccess((int)$this->selectedOwnerID)) {
+			$category = new shopping();
+			$category->displayLogin();
+			unset($category);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
+	}
 }
 
 class shoppingItemPictures extends pictures {
@@ -289,6 +333,17 @@ class shoppingItemPictures extends pictures {
 	
 	function __destruct() {
 		languages::unload('shopping');
+	}
+	
+	function ajaxRequest() {
+		if (!shoppingItems::checkAccess((int)$this->selectedOwnerID)) {
+			$category = new shopping();
+			$category->displayLogin();
+			unset($category);
+			return true;
+		}
+		
+		return parent::ajaxRequest();
 	}
 }
 
@@ -3178,6 +3233,22 @@ class shoppingItems {
 		return true;
 	}
 	
+	static function checkAccess($row) {
+		if ($GLOBALS['USER']->loginok)
+			return true;
+		
+		if ($row && !is_array($row))
+			$row = sql::fetch(sql::run(
+				" SELECT `ShoppingID`" .
+				" FROM `{shoppingitems}`" .
+				" WHERE `ID` = '".(int)$row."'"));
+		
+		if (!$row)
+			return true;
+			
+		return shopping::checkAccess($row['ShoppingID']);
+	}
+	
 	function updateKeywordsCloud($newkeywords = null, $oldkeywords = null) {
 		if (trim($oldkeywords)) {
 			$oldkeywords = array_map('trim', explode(',', $oldkeywords));
@@ -3277,6 +3348,13 @@ class shoppingItems {
 		
 		if ($keywords) {
 			$this->displayAdminAvailableKeywords();
+			return true;
+		}
+		
+		if (!shopping::checkAccess((int)$this->selectedShoppingID)) {
+			$category = new shopping();
+			$category->displayLogin();
+			unset($category);
 			return true;
 		}
 		
@@ -3990,7 +4068,7 @@ class shoppingItems {
 					break;
 					
 				case 'description':
-					if ($row['Content']) {
+					if ($row['Description']) {
 						echo
 							"<div class='shopping-item-content'>";
 						
@@ -4014,10 +4092,10 @@ class shoppingItems {
 					break;
 					
 				case 'body':
-					if ($row['PartialContent'])
-						$this->displayTeaserBody($row);
-					else
+					if ($row['ID'] == $this->selectedID || $this->fullItems)
 						$this->displayBody($row);
+					else
+						$this->displayTeaserBody($row);
 					break;
 				
 				case 'links':
@@ -6275,13 +6353,19 @@ class shopping extends modules {
 		return $url;	
 	}
 	
-	static function verifyPermission($row) {
-		if (!$row)
-			return true;
-			
+	static function checkAccess($row) {
 		if ($GLOBALS['USER']->loginok)
 			return true;
 		
+		if ($row && !is_array($row))
+			$row = sql::fetch(sql::run(
+				" SELECT `MembersOnly`, `ShowToGuests`" .
+				" FROM `{shoppings}`" .
+				" WHERE `ID` = '".(int)$row."'"));
+		
+		if (!$row)
+			return true;
+			
 		if ($row['MembersOnly'] && !$row['ShowToGuests'])
 			return false;
 		
@@ -6646,7 +6730,7 @@ class shopping extends modules {
 	}
 	
 	function displaySelected(&$row) {
-		if (JCORE_VERSION >= '0.5' && !shopping::verifyPermission($row)) {
+		if (JCORE_VERSION >= '0.5' && !$this->checkAccess($row)) {
 			$this->displayLogin();
 			return false;
 		}

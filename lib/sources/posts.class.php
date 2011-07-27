@@ -2201,6 +2201,19 @@ class _posts {
 	}
 	
 	// ************************************************   Client Part
+	static function checkAccess($row) {
+		if ($row && !is_array($row))
+			$row = sql::fetch(sql::run(
+				" SELECT `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
+				" FROM `{posts}`" .
+				" WHERE `ID` = '".(int)$row."'"));
+		
+		if (!$row)
+			return true;
+		
+		return pages::checkAccess($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]);
+	}
+	
 	static function generateTeaser($description) {
 		if (stripos($description, '<div style="page-break-after: always') !== false)
 			preg_match('/(.*?)(<div style="page-break-after: always)/is', $description, $matches);
@@ -2426,6 +2439,13 @@ class _posts {
 		
 		if (preg_match('/[0-9]/', $this->uriRequest))
 			$this->selectedPageID = url::getPathID(0, $this->uriRequest);
+		
+		if (!pages::checkAccess($this->selectedPageID)) {
+			$page = new pages();
+			$page->displayLogin();
+			unset($page);
+			return true;
+		}
 		
 		$this->ajaxPaging = true;
 		$this->display();
