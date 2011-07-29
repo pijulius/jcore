@@ -5518,7 +5518,7 @@ class shoppingCart extends modules {
 		
 		if (JCORE_VERSION >= '0.9') {
 			$coupons = sql::run(
-				" SELECT `ID` FROM `shoppingcartcoupons`" .
+				" SELECT `ID` FROM `{shoppingcartcoupons}`" .
 				" WHERE `Deactivated` = 0" .
 				" AND (`Quantity` IS NULL OR `Quantity` > 0)" .
 				" AND (`StartDate` IS NULL OR `StartDate` <= CURDATE())" .
