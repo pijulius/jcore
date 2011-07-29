@@ -2263,7 +2263,8 @@ class shoppingOrders extends modules {
 			" `Pending` TINYINT( 1 ) UNSIGNED NOT NULL DEFAULT  '0'," .
 			" PRIMARY KEY  (`ID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
-			" KEY `ShoppingItemID` (`ShoppingOrderID`)," .
+			" KEY `ShoppingOrderID` (`ShoppingOrderID`)," .
+			" KEY `SubCommentOfID` (`SubCommentOfID`)," .
 			" KEY `UserID` (`UserID`)," .
 			" KEY `UserName` (`UserName`)," .
 			" KEY `Pending` (`Pending`)" .

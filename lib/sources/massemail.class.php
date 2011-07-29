@@ -468,7 +468,7 @@ class _massEmail {
 		admin::displayItemData(
 			"<hr />");
 		admin::displayItemData(
-			nl2br($row['Message']));
+			nl2br(url::parseLinks($row['Message'])));
 	}
 	
 	function displayAdminList(&$rows) {
@@ -601,7 +601,7 @@ class _massEmail {
 		echo
 				"<div class='form-entry form-entry-Message preview'>" .
 					"<div class='admin-content-preview'>" .
-						nl2br($form->get('Message')) .
+						nl2br(url::parseLinks($form->get('Message'))) .
 					"</div>" .
 				"</div>" .
 			"</div>";

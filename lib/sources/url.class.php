@@ -140,7 +140,7 @@ class _url {
 			return str_replace('&', '&amp;', $uri['query']);
 		
 		$args = explode('&', $uri['query']);
-		$notincludeargs = explode(",", str_replace(" ", "", $notincludeargs));
+		$notincludeargs = explode(",", str_replace(" ", "", trim($notincludeargs, ' ,')));
 		
 		$rargs = null;
 		foreach($args as $arg) {
@@ -199,7 +199,7 @@ class _url {
 			return (isset($uri['path'])?$uri['path']:'').'?';
 		
 		$args = explode('&', $uri['query']);
-		$notincludeargs = explode(",", str_replace(" ", "", $notincludeargs));
+		$notincludeargs = explode(",", str_replace(" ", "", trim($notincludeargs, ' ,')));
 		
 		$rargs = null;
 		foreach($args as $arg) {

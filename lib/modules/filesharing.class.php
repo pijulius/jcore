@@ -375,6 +375,7 @@ class fileSharing extends modules {
 			" PRIMARY KEY  (`ID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `FileSharingID` (`FileSharingID`)," .
+			" KEY `SubCommentOfID` (`SubCommentOfID`)," .
 			" KEY `UserID` (`UserID`)," .
 			" KEY `UserName` (`UserName`)," .
 			" KEY `Pending` (`Pending`)" .

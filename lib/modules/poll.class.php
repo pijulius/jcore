@@ -597,6 +597,7 @@ class poll extends modules {
 			" PRIMARY KEY  (`ID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `PollID` (`PollID`)," .
+			" KEY `SubCommentOfID` (`SubCommentOfID`)," .
 			" KEY `UserName` (`UserName`)," .
 			" KEY `UserID` (`UserID`)," .
 			" KEY `Pending` (`Pending`)" .

@@ -4664,7 +4664,8 @@ class shopping extends modules {
 			" CREATE TABLE IF NOT EXISTS `{shoppingkeywords}` (" .
 			" `Keyword` VARCHAR( 100 ) NOT NULL default '' ," .
 			" `Counter` SMALLINT UNSIGNED NOT NULL DEFAULT  '0'," .
-			" KEY `Counter` (`Counter`)" .
+			" KEY `Counter` (`Counter`)," .
+			" KEY `Keyword` (`Keyword`)" .
 			" ) ENGINE = MYISAM ;");
 		
 		if (sql::error())
@@ -4768,6 +4769,7 @@ class shopping extends modules {
 			" PRIMARY KEY  (`ID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `ShoppingItemID` (`ShoppingItemID`)," .
+			" KEY `SubCommentOfID` (`SubCommentOfID`)," .
 			" KEY `UserID` (`UserID`)," .
 			" KEY `UserName` (`UserName`)," .
 			" KEY `Pending` (`Pending`)" .

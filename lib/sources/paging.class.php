@@ -149,6 +149,9 @@ class _paging {
 		if ($this->ignoreArgs)
 			$args .= ", ".$this->ignoreArgs;
 		
+		if ($this->ajax)
+			$args .= ", ajax";
+		
 		$limit = $this->parse($this->limit);
 		
 		$totalpagenum = ceil($this->items/$limit['Limit']);

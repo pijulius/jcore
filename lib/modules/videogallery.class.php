@@ -743,6 +743,7 @@ class videoGallery extends modules {
 	static $uriVariables = 'videoid, videogalleryid, videogallerylimit, videogalleryvideoslimit, videogalleryyoutubevideoslimit, videogalleryrating, rate, ajax, request';
 	var $searchable = true;
 	var $format = null;
+	var $columns = 0;
 	var $limit = 0;
 	var $limitGalleries = 0;
 	var $selectedID;
@@ -869,6 +870,7 @@ class videoGallery extends modules {
 			" PRIMARY KEY  (`ID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `VideoGalleryID` (`VideoGalleryID`)," .
+			" KEY `SubCommentOfID` (`SubCommentOfID`)," .
 			" KEY `UserName` (`UserName`)," .
 			" KEY `UserID` (`UserID`)," .
 			" KEY `Pending` (`Pending`)" .
@@ -2790,6 +2792,9 @@ class videoGallery extends modules {
 		if ($this->limit)
 			$videos->limit = $this->limit;
 	
+		if ($this->columns)
+			$pictures->columns = $this->columns;
+		
 		$videos->display();
 		unset($videos);
 	}
@@ -3008,6 +3013,11 @@ class videoGallery extends modules {
 		if (preg_match('/(^|\/)format\/(.*?)($|[^<]\/[^>])/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)format\/.*?($|[^<]\/[^>])/', '\2', $this->arguments);
 			$this->format = trim($matches[2]);
+		}
+		
+		if (preg_match('/(^|\/)columns\/([0-9]+?)($|\/)/', $this->arguments, $matches)) {
+			$this->arguments = preg_replace('/(^|\/)columns\/[0-9]+?($|\/)/', '\2', $this->arguments);
+			$this->columns = (int)$matches[2];
 		}
 		
 		if (preg_match('/(^|\/)([0-9]+?)\/ajax($|\/)/', $this->arguments, $matches)) {
