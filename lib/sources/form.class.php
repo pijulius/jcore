@@ -676,12 +676,8 @@ class _form {
 			'<a><b><i><u><span><br><hr><em><blockquote><code><strong>');
 		
 		$content = preg_replace(
-			'/<(\/?blockquote|strong|code|span|br|hr|em|b|i|u).*?( ?\/?)>/i', 
+			'/<(\/?blockquote|strong|code|span|br|hr|em|b|i|u).*?(( (href|class)=(\'|")((ht|f)tps?:\/\/[^\'"]*?|[a-zA-Z0-9-_\/]*?)(\'|"))| ?\/?)>/i', 
 			'<\1\2>', $content);
-		
-		$content = preg_replace(
-			'/<(\/?a).*?(( href=(\'|")(ht|f)tps?:\/\/.*?(\'|"))| ?\/?)>/i', 
-			'<\1\3>', $content);
 		
 		return trim($content);
 	}
