@@ -6370,7 +6370,7 @@ class shopping extends modules {
 		if ($row['MembersOnly'] && !$row['ShowToGuests'])
 			return false;
 		
-		return true;
+		return $row;
 	}
 	
 	static function getOptions() {

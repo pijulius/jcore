@@ -182,11 +182,21 @@ class photoGalleryPictures extends pictures {
 	}
 	
 	function ajaxRequest() {
-		if (JCORE_VERSION >= '0.5' && !photoGallery::checkAccess((int)$this->selectedOwnerID)) {
-			$gallery = new photoGallery();
-			$gallery->displayLogin();
-			unset($gallery);
-			return true;
+		if (JCORE_VERSION >= '0.5') {
+			if (!$row = photoGallery::checkAccess((int)$this->selectedOwnerID)) {
+				$gallery = new photoGallery();
+				$gallery->displayLogin();
+				unset($gallery);
+				return true;
+			}
+			
+			if (isset($row['MembersOnly']) && $row['MembersOnly'] && 
+				!$GLOBALS['USER']->loginok)
+				$this->customLink = 
+					"javascript:jQuery.jCore.tooltip.display(\"" .
+					"<div class=\\\"tooltip error\\\"><span>" .
+					htmlspecialchars(_("You need to be logged in to view this picture. " .
+						"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
 		}
 		
 		return parent::ajaxRequest();
@@ -573,8 +583,11 @@ class photoGalleryPicasaPictures extends photoGalleryPictures {
 			$row['URL'] = "";
 			$row['Views'] = 0;
 			$row['_PictureNumber'] = $i;
-			$row['_Link'] = $rows[2][$key];
 			$row['_ThumbnailLocation'] = $rows[5][$key];
+			$row['_Link'] = 
+				($this->customLink?
+					$this->customLink:
+					$rows[2][$key]);
 			
 			if ((!$row['Title'] || strlen($row['Title']) > 100) &&
 				isset($rows[7][$key]))
@@ -2596,7 +2609,7 @@ class photoGallery extends modules {
 		if ($row['MembersOnly'] && !$row['ShowToGuests'])
 			return false;
 		
-		return true;
+		return $row;
 	}
 	
 	function ajaxRequest() {
@@ -2777,6 +2790,14 @@ class photoGallery extends modules {
 			$pictures = new photoGalleryPicasaPictures();
 		else
 			$pictures = new photoGalleryPictures();
+		
+		if (isset($row['MembersOnly']) && $row['MembersOnly'] && 
+			!$GLOBALS['USER']->loginok)
+			$pictures->customLink = 
+				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"<div class=\\\"tooltip error\\\"><span>" .
+				htmlspecialchars(_("You need to be logged in to view this picture. " .
+					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
 		
 		if ($row) {
 			$pictures->selectedOwnerID = $row['ID'];

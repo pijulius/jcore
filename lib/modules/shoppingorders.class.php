@@ -5277,7 +5277,7 @@ class shoppingOrders extends modules {
 			$GLOBALS['USER']->data['ID'] != $row['UserID'])
 			return false;
 		
-		return true;
+		return $row;
 	}
 	
 	function ajaxRequest() {

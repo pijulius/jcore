@@ -1944,7 +1944,7 @@ class poll extends modules {
 		if ($row['MembersOnly'] && !$row['ShowToGuests'])
 			return false;
 		
-		return true;
+		return $row;
 	}
 	
 	static function type2Text($type) {

@@ -1773,7 +1773,7 @@ class fileSharing extends modules {
 		if ($row['MembersOnly'] && !$row['ShowToGuests'])
 			return false;
 		
-		return true;
+		return $row;
 	}
 	
 	function ajaxRequest() {

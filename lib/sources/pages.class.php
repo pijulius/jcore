@@ -2103,7 +2103,7 @@ class _pages {
 			}
 		}
 		
-		return true;
+		return $row;
 	}
 	
 	static function isHome($id, $languageid = 0) {

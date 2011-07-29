@@ -169,12 +169,20 @@ class videoGalleryVideos extends videos {
 	}
 	
 	function ajaxRequest() {
-		if (!videoGallery::checkAccess((int)$this->selectedOwnerID)) {
+		if (!$row = videoGallery::checkAccess((int)$this->selectedOwnerID)) {
 			$gallery = new videoGallery();
 			$gallery->displayLogin();
 			unset($gallery);
 			return true;
 		}
+		
+		if (isset($row['MembersOnly']) && $row['MembersOnly'] && 
+			!$GLOBALS['USER']->loginok)
+			$this->customLink = 
+				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"<div class=\\\"tooltip error\\\"><span>" .
+				htmlspecialchars(_("You need to be logged in to view this video. " .
+					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
 		
 		return parent::ajaxRequest();
 	}
@@ -621,9 +629,12 @@ class videoGalleryYouTubeVideos extends videoGalleryVideos {
 			$row['TimeStamp'] = date('Y-m-d H:i:s', strtotime($rows[1][$key]));
 			$row['Views'] = 0;
 			$row['_VideoNumber'] = $i;
-			$row['_Link'] = url::uri('videoid').
-				"&amp;request=".$this->uriRequest .
-				"&amp;videoid=".urlencode($id);
+			$row['_Link'] = 
+				($this->customLink?
+					$this->customLink:
+					url::uri('videoid').
+						"&amp;request=".$this->uriRequest .
+						"&amp;videoid=".urlencode($id));
 			
 			if ((!$row['Title'] || strlen($row['Title']) > 100) &&
 				isset($rows[7][$key]))
@@ -2576,7 +2587,7 @@ class videoGallery extends modules {
 		if ($row['MembersOnly'] && !$row['ShowToGuests'])
 			return false;
 		
-		return true;
+		return $row;
 	}
 	
 	function ajaxRequest() {
