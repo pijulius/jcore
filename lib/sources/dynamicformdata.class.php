@@ -10,16 +10,23 @@
  ****************************************************************************/
  
 class _dynamicFormData {
+	var $formID = 0;
 	var $storageSQLTable;
 	var $storagePath;
 	var $storageURL;
 	var $storageSubFolder;
 	var $adminPath = 'admin/content/dynamicforms/dynamicformdata';
 	
-	function __construct() {
+	function __construct($formid = null) {
 		$this->storageSubFolder = date('Ym');
 		$this->storagePath = SITE_PATH.'sitefiles/file/';
 		$this->storageURL = url::site().'sitefiles/file/';
+		
+		if ($formid) {
+			$form = dynamicForms::getForm($formid);
+			$this->formID = $form['ID'];
+			$this->storageSQLTable = $form['SQLTable'];
+		}
 	}
 	
 	// ************************************************   Admin Part
@@ -86,9 +93,7 @@ class _dynamicFormData {
 			$ids = (array)$_POST['ids'];
 		
 		if ($deleteall) {
-			$owner = sql::fetch(sql::run(
-				" SELECT * FROM `{dynamicforms}`" .
-				" WHERE `ID` = '".admin::getPathID()."'"));
+			$owner = dynamicForms::getForm($this->formID);
 			
 			sql::run(
 				" DELETE FROM `{".$this->storageSQLTable."}`" .
@@ -109,9 +114,7 @@ class _dynamicFormData {
 		}
 		
 		if ($exportall) {
-			$owner = sql::fetch(sql::run(
-				" SELECT * FROM `{dynamicforms}`" .
-				" WHERE `ID` = '".admin::getPathID()."'"));
+			$owner = dynamicForms::getForm($this->formID);
 			
 			if (!$file = $this->export(
 				($search?
@@ -237,7 +240,7 @@ class _dynamicFormData {
 			$previewfields = sql::run(
 				" SELECT `Title`, `Name`" .
 				" FROM `{dynamicformfields}`" .
-				" WHERE `FormID` = '".admin::getPathID()."'" .
+				" WHERE `FormID` = '".$this->formID."'" .
 				" AND `DataPreview` = 1" .
 				" ORDER BY `OrderID`, `ID`");
 			
@@ -325,7 +328,7 @@ class _dynamicFormData {
 			$previewfields = sql::run(
 				" SELECT `Title`, `Name`, `ValueType`, `TypeID` AS `Type`" .
 				" FROM `{dynamicformfields}`" .
-				" WHERE `FormID` = '".admin::getPathID()."'" .
+				" WHERE `FormID` = '".$this->formID."'" .
 				" AND `DataPreview` = 1" .
 				" ORDER BY `OrderID`, `ID`");
 			
@@ -375,7 +378,7 @@ class _dynamicFormData {
 			switch($element['ValueType']) {
 				case FORM_VALUE_TYPE_BOOL:
 					echo 
-						($element['Name']?
+						($row[$element['Name']]?
 							__('Yes'):
 							__('No'));
 					break;
@@ -604,10 +607,10 @@ class _dynamicFormData {
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
 		
-		$owner = sql::fetch(sql::run(
-			" SELECT * FROM `{dynamicforms}`" .
-			" WHERE `ID` = '".admin::getPathID()."'"));
-			
+		if (!$this->formID)
+			$this->formID = admin::getPathID();
+		
+		$owner = dynamicForms::getForm($this->formID);
 		$this->storageSQLTable = $owner['SQLTable'];
 		
 		echo

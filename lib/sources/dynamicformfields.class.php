@@ -15,8 +15,17 @@ define('DYNAMIC_FORM_FIELD_USERS_ONLY', 2);
 define('DYNAMIC_FORM_FIELD_ADMINS_ONLY', 3);
 
 class _dynamicFormFields {
+	var $formID = null;
 	var $storageSQLTable;
 	var $adminPath = 'admin/content/dynamicforms/dynamicformfields';
+	
+	function __construct($formid = null) {
+		if ($formid) {
+			$form = dynamicForms::getForm($formid);
+			$this->formID = $form['ID'];
+			$this->storageSQLTable = $form['SQLTable'];
+		}
+	}
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
@@ -40,7 +49,7 @@ class _dynamicFormFields {
 			'FormID',
 			FORM_INPUT_TYPE_HIDDEN,
 			true,
-			admin::getPathID());
+			$this->formID);
 		$form->setValueType(FORM_VALUE_TYPE_INT);
 					
 		$form->add(
@@ -681,10 +690,10 @@ class _dynamicFormFields {
 	}
 	
 	function displayAdmin() {
-		$owner = sql::fetch(sql::run(
-			" SELECT * FROM `{dynamicforms}`" .
-			" WHERE `ID` = '".admin::getPathID()."'"));
+		if (!$this->formID)
+			$this->formID = admin::getPathID();
 		
+		$owner = dynamicForms::getForm($this->formID);
 		$this->storageSQLTable = $owner['SQLTable'];
 		
 		$this->displayAdminTitle($owner['Title']);
@@ -758,7 +767,7 @@ class _dynamicFormFields {
 		
 		$rows = sql::run(
 			" SELECT * FROM `{dynamicformfields}`" .
-			" WHERE `FormID` = '".admin::getPathID()."'" .
+			" WHERE `FormID` = '".$this->formID."'" .
 			" ORDER BY `OrderID`, `ID`");
 			
 		if (sql::rows($rows))
@@ -1061,7 +1070,7 @@ class _dynamicFormFields {
 				sql::run(
 					" ALTER TABLE `{".$this->storageSQLTable."}`" .
 					" ADD INDEX (`".$values['Name']."`);");
-			elseif ($indexexists)
+			if ($indexexists && !$values['Searchable'])
 				sql::run(
 					" ALTER TABLE `{".$this->storageSQLTable."}`" .
 					" DROP INDEX `".$values['Name']."`;");
@@ -1171,7 +1180,7 @@ class _dynamicFormFields {
 				sql::run(
 					" ALTER TABLE `{".$this->storageSQLTable."}`" .
 					" ADD INDEX (`".$values['Name']."`);");
-			elseif ($indexexists)
+			if ($indexexists && !$values['Searchable'])
 				sql::run(
 					" ALTER TABLE `{".$this->storageSQLTable."}`" .
 					" DROP INDEX `".$values['Name']."`;");

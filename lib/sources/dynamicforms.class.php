@@ -35,8 +35,8 @@ class _dynamicForms extends form {
 	var $textsDomain = 'messages';
 	var $adminPath = 'admin/content/dynamicforms';
 	
-	function __construct($title = null, $id = null, $method = 'post') {
-		parent::__construct($title, $id, $method);
+	function __construct($title = null, $formid = null, $method = 'post') {
+		parent::__construct($title, $formid, $method);
 		$this->formID = $this->id;
 		$this->textsDomain = languages::$selectedTextsDomain;
 		$this->autoResponseFrom = email::genWebmasterEmail();
@@ -1492,9 +1492,17 @@ class _dynamicForms extends form {
 					null) .
 				" ORDER BY `FormID`, `ID`");
 		
+		if (is_numeric($id))
+			return sql::fetch(sql::run(
+				" SELECT * FROM `{dynamicforms}`" .
+				" WHERE `ID` = '".(int)$id."'" .
+				(!$protected?
+					" AND `Protected` = 0":
+					null)));
+		
 		return sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicforms}`" .
-			" WHERE `ID` = '".(int)$id."'" .
+			" WHERE `FormID` = '".sql::escape($id)."'" .
 			(!$protected?
 				" AND `Protected` = 0":
 				null)));

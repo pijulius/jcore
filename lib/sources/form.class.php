@@ -909,9 +909,14 @@ class _form {
 		if (!$values || !is_array($values) || !count($values))
 			return false;
 		
+		$prevvalue = null;
 		foreach($this->elements as $key => $element) {
-			if (!isset($values[$element['Name']]))
+			if (!isset($values[$element['Name']])) {
+				if ($element['Type'] == FORM_INPUT_TYPE_CONFIRM)
+					$this->setValue($element['Name'], $prevvalue);
+				
 				continue;
+			}
 			
 			if ($element['ValueType'] == FORM_VALUE_TYPE_ARRAY && 
 				!is_array($values[$element['Name']]))
@@ -920,6 +925,7 @@ class _form {
 				$value = $values[$element['Name']];
 		
 			$this->setValue($element['Name'], $value);
+			$prevvalue = $value;
 		}
 		
 		return true;
