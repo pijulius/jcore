@@ -991,7 +991,7 @@ class _attachments {
 	}
 	
 	function displayFormated(&$row) {
-		if (!isset($row['_Link']) || $row['_Link'])
+		if (!isset($row['_Link']) || !$row['_Link'])
 			$row['_Link'] = $this->generateLink($row);
 		
 		echo
@@ -1048,7 +1048,7 @@ class _attachments {
 	}
 	
 	function displayOne(&$row) {
-		if (!isset($row['_Link']) || $row['_Link'])
+		if (!isset($row['_Link']) || !$row['_Link'])
 			$row['_Link'] = $this->generateLink($row);
 		
 		echo
