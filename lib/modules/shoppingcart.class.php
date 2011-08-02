@@ -4578,7 +4578,7 @@ class shoppingCart extends modules {
 				return false;
 			}
 			
-			if (JCORE_VERSION >= '0.5' && !shopping::verifyPermission($category)) {
+			if (JCORE_VERSION >= '0.5' && !shopping::checkAccess($category, true)) {
 				tooltip::display(
 					_("The item you wanted to add to your cart can only " .
 						"be accessed by members. Please login first and " .

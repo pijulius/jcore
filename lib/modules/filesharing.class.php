@@ -141,7 +141,7 @@ class fileSharingAttachments extends attachments {
 		}
 		
 		$row = sql::fetch(sql::run(
-			" SELECT * FROM `{" .$this->sqlTable . "}`" .
+			" SELECT `".$this->sqlRow."` FROM `{" .$this->sqlTable . "}`" .
 			" WHERE `ID` = '".(int)$id."'" .
 			" LIMIT 1"));
 		
@@ -152,12 +152,7 @@ class fileSharingAttachments extends attachments {
 			return false;
 		}
 		
-		$folder = sql::fetch(sql::run(
-			" SELECT * FROM `{" .$this->sqlOwnerTable . "}`" .
-			" WHERE `ID` = '".(int)$row[$this->sqlRow]."'" .
-			" LIMIT 1"));
-		
-		if (!$GLOBALS['USER']->loginok && $folder['MembersOnly']) {
+		if (!fileSharing::checkAccess((int)$row[$this->sqlRow], true)) {
 			tooltip::display(
 				_("You need to be logged in to download this file. " .
 					"Please login or register."),
@@ -169,12 +164,19 @@ class fileSharingAttachments extends attachments {
 	}
 	
 	function ajaxRequest() {
-		if (!fileSharing::checkAccess((int)$this->selectedOwnerID)) {
+		if (!$row = fileSharing::checkAccess((int)$this->selectedOwnerID)) {
 			$folder = new fileSharing();
 			$folder->displayLogin();
 			unset($folder);
 			return true;
 		}
+		
+		if (isset($row['MembersOnly']) && $row['MembersOnly'] && !$GLOBALS['USER']->loginok)
+			$attachments->customLink = 
+				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"<div class=\\\"tooltip error\\\"><span>" .
+				htmlspecialchars(_("You need to be logged in to download this file. " .
+					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
 		
 		return parent::ajaxRequest();
 	}
@@ -1758,7 +1760,7 @@ class fileSharing extends modules {
 		return $url;	
 	}
 	
-	static function checkAccess($row) {
+	static function checkAccess($row, $full = false) {
 		if ($GLOBALS['USER']->loginok)
 			return true;
 		
@@ -1771,7 +1773,7 @@ class fileSharing extends modules {
 		if (!$row)
 			return true;
 			
-		if ($row['MembersOnly'] && !$row['ShowToGuests'])
+		if ($row['MembersOnly'] && ($full || !$row['ShowToGuests']))
 			return false;
 		
 		return $row;

@@ -36,13 +36,52 @@ class pollPictures extends pictures {
 		languages::unload('poll');
 	}
 	
+	function download($id, $force = false) {
+		if (!(int)$id) {
+			tooltip::display(
+				_("No picture selected to download!"),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		$row = sql::fetch(sql::run(
+			" SELECT `".$this->sqlRow."` FROM `{" .$this->sqlTable . "}`" .
+			" WHERE `ID` = '".(int)$id."'" .
+			" LIMIT 1"));
+		
+		if (!$row) {
+			tooltip::display(
+				_("The selected picture cannot be found!"),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		if (!poll::checkAccess((int)$row[$this->sqlRow], true)) {
+			tooltip::display(
+				_("You need to be logged in to view this picture. " .
+					"Please login or register."),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		return parent::download($id, $force);
+	}
+	
 	function ajaxRequest() {
-		if (!poll::checkAccess($this->selectedOwnerID)) {
+		if (!$row = poll::checkAccess($this->selectedOwnerID)) {
 			$poll = new poll();
 			$poll->displayLogin();
 			unset($poll);
 			return true;
 		}
+		
+		if (isset($row['MembersOnly']) && $row['MembersOnly'] && 
+			!$GLOBALS['USER']->loginok)
+			$this->customLink = 
+				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"<div class=\\\"tooltip error\\\"><span>" .
+				htmlspecialchars(_("You need to be logged in to view this picture. " .
+					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
 		
 		return parent::ajaxRequest();
 	}
@@ -70,13 +109,51 @@ class pollAttachments extends attachments {
 		languages::unload('poll');
 	}
 	
+	function download($id) {
+		if (!(int)$id) {
+			tooltip::display(
+				_("No file selected to download!"),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		$row = sql::fetch(sql::run(
+			" SELECT `".$this->sqlRow."` FROM `{" .$this->sqlTable . "}`" .
+			" WHERE `ID` = '".(int)$id."'" .
+			" LIMIT 1"));
+		
+		if (!$row) {
+			tooltip::display(
+				_("The selected file cannot be found!"),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		if (!poll::checkAccess((int)$row[$this->sqlRow], true)) {
+			tooltip::display(
+				_("You need to be logged in to download this file. " .
+					"Please login or register."),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		return attachments::download($id);
+	}
+	
 	function ajaxRequest() {
-		if (!poll::checkAccess($this->selectedOwnerID)) {
+		if (!$row = poll::checkAccess($this->selectedOwnerID)) {
 			$poll = new poll();
 			$poll->displayLogin();
 			unset($poll);
 			return true;
 		}
+		
+		if (isset($row['MembersOnly']) && $row['MembersOnly'] && !$GLOBALS['USER']->loginok)
+			$attachments->customLink = 
+				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"<div class=\\\"tooltip error\\\"><span>" .
+				htmlspecialchars(_("You need to be logged in to download this file. " .
+					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
 		
 		return parent::ajaxRequest();
 	}
@@ -710,6 +787,9 @@ class poll extends modules {
 			"	margin-bottom: 5px;\n" .
 			"}\n" .
 			"\n" .
+			".poll-vote-button {\n" .
+			"	margin-bottom: 15px;\n" .
+			"}\n" .
 			".poll-links a {\n" .
 			"	display: inline-block;\n" .
 			"	padding: 5px 0px 5px 20px;\n" .
@@ -1929,7 +2009,7 @@ class poll extends modules {
 		return $url;	
 	}
 	
-	static function checkAccess($row) {
+	static function checkAccess($row, $full = false) {
 		if ($GLOBALS['USER']->loginok)
 			return true;
 		
@@ -1942,7 +2022,7 @@ class poll extends modules {
 		if (!$row)
 			return true;
 			
-		if ($row['MembersOnly'] && !$row['ShowToGuests'])
+		if ($row['MembersOnly'] && ($full || !$row['ShowToGuests']))
 			return false;
 		
 		return $row;
@@ -2209,6 +2289,15 @@ class poll extends modules {
 	
 	function displayPictures(&$row) {
 		$pictures = new pollPictures();
+		
+		if (isset($row['MembersOnly']) && $row['MembersOnly'] && 
+			!$GLOBALS['USER']->loginok)
+			$pictures->customLink = 
+				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"<div class=\\\"tooltip error\\\"><span>" .
+				htmlspecialchars(_("You need to be logged in to view this picture. " .
+					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
+		
 		$pictures->selectedOwnerID = $row['ID'];
 		$pictures->display();
 		unset($pictures);
@@ -2233,6 +2322,14 @@ class poll extends modules {
 	
 	function displayAttachments(&$row) {
 		$attachments = new pollAttachments();
+		
+		if (isset($row['MembersOnly']) && $row['MembersOnly'] && !$GLOBALS['USER']->loginok)
+			$attachments->customLink = 
+				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"<div class=\\\"tooltip error\\\"><span>" .
+				htmlspecialchars(_("You need to be logged in to download this file. " .
+					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
+		
 		$attachments->selectedOwnerID = $row['ID'];
 		$attachments->display();
 		unset($attachments);
@@ -2445,9 +2542,6 @@ class poll extends modules {
 				"</div>";
 		}
 		
-		if ($row['Attachments'])
-			$this->displayAttachments($row);
-		
 		$this->displayAnswers($row);
 		
 		if (!isset($row['VotingsClosed']) || !$row['VotingsClosed']) {
@@ -2459,6 +2553,9 @@ class poll extends modules {
 			echo
 				"</div>";
 		}
+		
+		if ($row['Attachments'])
+			$this->displayAttachments($row);
 		
 		if ($row['EnableComments']) {
 			echo
@@ -2529,9 +2626,6 @@ class poll extends modules {
 				"</div>";
 		}
 		
-		if ($row['Attachments'])
-			$this->displayAttachments($row);
-		
 		$this->displayAnswers($row);
 		
 		if (!isset($row['VotingsClosed']) || !$row['VotingsClosed']) {
@@ -2543,6 +2637,9 @@ class poll extends modules {
 			echo
 				"</div>";
 		}
+		
+		if ($row['Attachments'])
+			$this->displayAttachments($row);
 		
 		echo
 				"<div class='poll-links'>";

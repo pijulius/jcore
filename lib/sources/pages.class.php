@@ -2039,6 +2039,38 @@ class _pages {
 		return true;
 	}
 	
+	function protectSiteFiles() {
+		if (!$this->attachmentsPath)
+			return false;
+		
+		$row = sql::fetch(sql::run(
+			" SELECT COUNT(*) AS `Rows` FROM `{filesharings}` " .
+			" WHERE `MembersOnly` = 1" .
+			" LIMIT 1"));
+			
+		if ($row['Rows']) {
+			if (!files::exists($this->attachmentsPath.'.htaccess') &&
+				!files::create($this->attachmentsPath.'.htaccess',
+					'deny from all'))
+			{
+				tooltip::display(
+					_("Directory couldn't be protected!")." " .
+					sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
+						$this->attachmentsPath),
+					TOOLTIP_ERROR);
+				
+				return false;
+			}
+			
+			return true;
+		}
+		
+		if (files::exists($this->attachmentsPath.'.htaccess'))
+			files::delete($this->attachmentsPath.'.htaccess');
+		
+		return true;
+	}
+	
 	// ************************************************   Client Part
 	static function get($pageid) {
 		if (!(int)$pageid)

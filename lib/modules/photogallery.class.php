@@ -152,7 +152,7 @@ class photoGalleryPictures extends pictures {
 		}
 		
 		$row = sql::fetch(sql::run(
-			" SELECT * FROM `{" .$this->sqlTable . "}`" .
+			" SELECT `".$this->sqlRow."` FROM `{" .$this->sqlTable . "}`" .
 			" WHERE `ID` = '".(int)$id."'" .
 			" LIMIT 1"));
 		
@@ -163,14 +163,10 @@ class photoGalleryPictures extends pictures {
 			return false;
 		}
 		
-		$gallery = sql::fetch(sql::run(
-			" SELECT * FROM `{" .$this->sqlOwnerTable . "}`" .
-			" WHERE `ID` = '".(int)$row[$this->sqlRow]."'" .
-			" LIMIT 1"));
+		if (JCORE_VERSION < '0.5')
+			return parent::download($id, $force);
 		
-		if (!$GLOBALS['USER']->loginok && 
-			isset($gallery['MembersOnly']) && $gallery['MembersOnly']) 
-		{
+		if (!photoGallery::checkAccess((int)$row[$this->sqlRow], true)) {
 			tooltip::display(
 				_("You need to be logged in to view this picture. " .
 					"Please login or register."),
@@ -2595,7 +2591,7 @@ class photoGallery extends modules {
 		return $url;	
 	}
 	
-	static function checkAccess($row) {
+	static function checkAccess($row, $full = false) {
 		if ($GLOBALS['USER']->loginok)
 			return true;
 		
@@ -2608,7 +2604,7 @@ class photoGallery extends modules {
 		if (!$row)
 			return true;
 		
-		if ($row['MembersOnly'] && !$row['ShowToGuests'])
+		if ($row['MembersOnly'] && ($full || !$row['ShowToGuests']))
 			return false;
 		
 		return $row;

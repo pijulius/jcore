@@ -141,7 +141,7 @@ class videoGalleryVideos extends videos {
 		}
 		
 		$row = sql::fetch(sql::run(
-			" SELECT * FROM `{" .$this->sqlTable . "}`" .
+			" SELECT `".$this->sqlRow."` FROM `{" .$this->sqlTable . "}`" .
 			" WHERE `ID` = '".(int)$id."'" .
 			" LIMIT 1"));
 		
@@ -152,12 +152,7 @@ class videoGalleryVideos extends videos {
 			return false;
 		}
 		
-		$folder = sql::fetch(sql::run(
-			" SELECT * FROM `{" .$this->sqlOwnerTable . "}`" .
-			" WHERE `ID` = '".(int)$row[$this->sqlRow]."'" .
-			" LIMIT 1"));
-		
-		if (!$GLOBALS['USER']->loginok && $folder['MembersOnly']) {
+		if (!videoGallery::checkAccess((int)$row[$this->sqlRow], true)) {
 			tooltip::display(
 				_("You need to be logged in to view this video. " .
 					"Please login or register."),
@@ -2493,7 +2488,7 @@ class videoGallery extends modules {
 		if ($row['Rows']) {
 			if (!files::exists($this->videosPath.'.htaccess') &&
 				!files::create($this->videosPath.'.htaccess',
-					'deny from all'))
+					"deny from all\n<FilesMatch \".(jpg|gif|jpeg|png|bmp)$\">\nallow from all\n</FilesMatch>"))
 			{
 				tooltip::display(
 					_("Directory couldn't be protected!")." " .
@@ -2573,7 +2568,7 @@ class videoGallery extends modules {
 		return $url;	
 	}
 	
-	static function checkAccess($row) {
+	static function checkAccess($row, $full = false) {
 		if ($GLOBALS['USER']->loginok)
 			return true;
 		
@@ -2586,7 +2581,7 @@ class videoGallery extends modules {
 		if (!$row)
 			return true;
 		
-		if ($row['MembersOnly'] && !$row['ShowToGuests'])
+		if ($row['MembersOnly'] && ($full || !$row['ShowToGuests']))
 			return false;
 		
 		return $row;

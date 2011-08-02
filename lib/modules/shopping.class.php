@@ -254,13 +254,51 @@ class shoppingItemAttachments extends attachments {
 		languages::unload('shopping');
 	}
 	
+	function download($id) {
+		if (!(int)$id) {
+			tooltip::display(
+				_("No file selected to download!"),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		$row = sql::fetch(sql::run(
+			" SELECT `".$this->sqlRow."` FROM `{" .$this->sqlTable . "}`" .
+			" WHERE `ID` = '".(int)$id."'" .
+			" LIMIT 1"));
+		
+		if (!$row) {
+			tooltip::display(
+				_("The selected file cannot be found!"),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		if (!shoppingItems::checkAccess((int)$row[$this->sqlRow], true)) {
+			tooltip::display(
+				_("You need to be logged in to download this file. " .
+					"Please login or register."),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		return attachments::download($id);
+	}
+	
 	function ajaxRequest() {
-		if (!shoppingItems::checkAccess((int)$this->selectedOwnerID)) {
+		if (!$row = shoppingItems::checkAccess((int)$this->selectedOwnerID)) {
 			$category = new shopping();
 			$category->displayLogin();
 			unset($category);
 			return true;
 		}
+		
+		if (isset($row['MembersOnly']) && $row['MembersOnly'] && !$GLOBALS['USER']->loginok)
+			$attachments->customLink = 
+				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"<div class=\\\"tooltip error\\\"><span>" .
+				htmlspecialchars(_("You need to be logged in to download this file. " .
+					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
 		
 		return parent::ajaxRequest();
 	}
@@ -335,13 +373,52 @@ class shoppingItemPictures extends pictures {
 		languages::unload('shopping');
 	}
 	
+	function download($id, $force = false) {
+		if (!(int)$id) {
+			tooltip::display(
+				_("No picture selected to download!"),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		$row = sql::fetch(sql::run(
+			" SELECT `".$this->sqlRow."` FROM `{" .$this->sqlTable . "}`" .
+			" WHERE `ID` = '".(int)$id."'" .
+			" LIMIT 1"));
+		
+		if (!$row) {
+			tooltip::display(
+				_("The selected picture cannot be found!"),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		if (!shoppingItems::checkAccess((int)$row[$this->sqlRow], true)) {
+			tooltip::display(
+				_("You need to be logged in to view this picture. " .
+					"Please login or register."),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		return parent::download($id, $force);
+	}
+	
 	function ajaxRequest() {
-		if (!shoppingItems::checkAccess((int)$this->selectedOwnerID)) {
+		if (!$row = shoppingItems::checkAccess((int)$this->selectedOwnerID)) {
 			$category = new shopping();
 			$category->displayLogin();
 			unset($category);
 			return true;
 		}
+		
+		if (isset($row['MembersOnly']) && $row['MembersOnly'] && 
+			!$GLOBALS['USER']->loginok)
+			$this->customLink = 
+				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"<div class=\\\"tooltip error\\\"><span>" .
+				htmlspecialchars(_("You need to be logged in to view this picture. " .
+					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
 		
 		return parent::ajaxRequest();
 	}
@@ -3233,7 +3310,7 @@ class shoppingItems {
 		return true;
 	}
 	
-	static function checkAccess($row) {
+	static function checkAccess($row, $full = false) {
 		if ($GLOBALS['USER']->loginok)
 			return true;
 		
@@ -3246,7 +3323,7 @@ class shoppingItems {
 		if (!$row)
 			return true;
 			
-		return shopping::checkAccess($row['ShoppingID']);
+		return shopping::checkAccess($row['ShoppingID'], $full);
 	}
 	
 	function updateKeywordsCloud($newkeywords = null, $oldkeywords = null) {
@@ -3437,6 +3514,14 @@ class shoppingItems {
 		
 		if ($row) {
 			$pictures->selectedOwnerID = $row['ID'];
+			
+			if (!shoppingItems::checkAccess($row, true))
+				$pictures->customLink = 
+					"javascript:jQuery.jCore.tooltip.display(\"" .
+					"<div class=\\\"tooltip error\\\"><span>" .
+					htmlspecialchars(_("You need to be logged in to view this picture. " .
+						"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
+		
 		} else {
 			$pictures->latests = true;
 			$pictures->limit = $this->limit;
@@ -3512,6 +3597,14 @@ class shoppingItems {
 		
 		if ($row) {
 			$attachments->selectedOwnerID = $row['ID'];
+			
+			if (!shoppingItems::checkAccess($row, true))
+				$attachments->customLink = 
+					"javascript:jQuery.jCore.tooltip.display(\"" .
+					"<div class=\\\"tooltip error\\\"><span>" .
+					htmlspecialchars(_("You need to be logged in to download this file. " .
+						"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
+		
 		} else {
 			$attachments->latests = true;
 			$attachments->limit = $this->limit;
@@ -6356,7 +6449,7 @@ class shopping extends modules {
 		return $url;	
 	}
 	
-	static function checkAccess($row) {
+	static function checkAccess($row, $full = false) {
 		if ($GLOBALS['USER']->loginok)
 			return true;
 		
@@ -6369,7 +6462,7 @@ class shopping extends modules {
 		if (!$row)
 			return true;
 			
-		if ($row['MembersOnly'] && !$row['ShowToGuests'])
+		if ($row['MembersOnly'] && ($full || !$row['ShowToGuests']))
 			return false;
 		
 		return $row;
