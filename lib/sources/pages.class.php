@@ -2085,7 +2085,7 @@ class _pages {
 					'pages':
 					'menuitems') .
 				"}`" .
-			" WHERE `ID` = '".$pageid."'"));
+			" WHERE `ID` = '".(int)$pageid."'"));
 	}
 	
 	static function access2Text($typeid) {

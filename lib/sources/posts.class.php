@@ -2346,7 +2346,9 @@ class _posts {
 		$language = $this->selectedLanguage;
 		$page = $this->selectedPage;
 		
-		if (!$page)
+		if (!$row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')])
+			$page = pages::getHome();
+		elseif (!$page)
 			$page = sql::fetch(sql::run(
 				" SELECT `ID`, `Path`, `LanguageID` FROM `{" .
 					(JCORE_VERSION >= '0.8'?
