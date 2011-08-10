@@ -7106,6 +7106,9 @@ class shopping extends modules {
 				" AND `ID` = '".(int)$this->selectedID."'" .
 				" LIMIT 1"));
 				
+			if (!$row)
+				return false;
+			
 			return $this->displaySelected($row);
 		}
 		

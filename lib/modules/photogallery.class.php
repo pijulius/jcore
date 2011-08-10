@@ -3159,7 +3159,10 @@ class photoGallery extends modules {
 				" WHERE `Deactivated` = 0" .
 				" AND `ID` = '".(int)$this->selectedID."'" .
 				" LIMIT 1"));
-				
+			
+			if (!$row)
+				return false;
+			
 			return $this->displaySelected($row);
 		}
 		
