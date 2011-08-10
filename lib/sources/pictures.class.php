@@ -1384,11 +1384,9 @@ class _pictures {
 			return false;
 		}
 		
-		$picpath = $this->rootPath.$this->subFolder.'/';
-		$thumbpath = $this->rootPath.$this->thumbnailsFolder.$this->subFolder.'/';
-		
-		$filename = preg_replace('/.*(\/|\\\)/', '', 
-			$picture['Location']);
+		$picpath = $this->rootPath.'/';
+		$thumbpath = $this->rootPath.$this->thumbnailsFolder.'/';
+		$filename = $picture['Location'];
 		
 		if (JCORE_VERSION >= '0.5')
 			return $this->createThumbnail($picpath.$filename, 
