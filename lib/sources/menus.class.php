@@ -195,16 +195,16 @@ class _menus {
 		$id = null;
 		
 		if (isset($_POST['reordersubmit']))
-			$reorder = $_POST['reordersubmit'];
+			$reorder = (string)$_POST['reordersubmit'];
 		
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -494,10 +494,10 @@ class _menus {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -825,7 +825,7 @@ class _menus {
 							" `ViewableBy` IN (2, 3)":
 							" `ViewableBy` = 2") .
 						(JCORE_VERSION >= '0.9' && $GLOBALS['USER']->data['GroupID']?
-							" OR `ViewableBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
+							" OR `ViewableBy` = '".(int)($GLOBALS['USER']->data['GroupID']+10)."'":
 							null):
 						" `ViewableBy` = 1") .
 				" )" .

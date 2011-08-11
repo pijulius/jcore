@@ -145,16 +145,16 @@ class newsletterLists {
 		$id = null;
 		
 		if (isset($_POST['reordersubmit']))
-			$reorder = $_POST['reordersubmit'];
+			$reorder = (string)$_POST['reordersubmit'];
 		
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -418,10 +418,10 @@ class newsletterLists {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -651,7 +651,7 @@ class newsletterSubscriptions {
 		$listid = null;
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['searchlistid']))
 			$listid = (float)$_GET['searchlistid'];
@@ -740,28 +740,28 @@ class newsletterSubscriptions {
 		$ids = null;
 		
 		if (isset($_POST['deleteallsubmit']))
-			$deleteall = $_POST['deleteallsubmit'];
+			$deleteall = (string)$_POST['deleteallsubmit'];
 		
 		if (isset($_POST['deletesubmit']))
-			$delete = $_POST['deletesubmit'];
+			$delete = (string)$_POST['deletesubmit'];
 		
 		if (isset($_POST['confirmallsubmit']))
-			$confirmall = $_POST['confirmallsubmit'];
+			$confirmall = (string)$_POST['confirmallsubmit'];
 		
 		if (isset($_POST['confirmsubmit']))
-			$confirm = $_POST['confirmsubmit'];
+			$confirm = (string)$_POST['confirmsubmit'];
 		
 		if (isset($_GET['searchlistid']))
 			$listid = (int)$_GET['searchlistid'];
 		
 		if (isset($_GET['search']))
-			$search = $_GET['search'];
+			$search = strip_tags((string)$_GET['search']);
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -837,7 +837,7 @@ class newsletterSubscriptions {
 		if ($ids && count($ids)) {
 			if ($confirm) {
 				foreach($ids as $id)
-					$this->confirm($id);
+					$this->confirm((int)$id);
 				
 				tooltip::display(
 					_("Subscriptions have been successfully confirmed."),
@@ -848,7 +848,7 @@ class newsletterSubscriptions {
 			
 			if ($delete) {
 				foreach($ids as $id)
-					$this->delete($id);
+					$this->delete((int)$id);
 				
 				tooltip::display(
 					_("Subscriptions have been successfully deleted."),
@@ -1116,7 +1116,7 @@ class newsletterSubscriptions {
 		$listid = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['searchlistid']))
 			$listid = (float)$_GET['searchlistid'];
@@ -1226,13 +1226,13 @@ class newsletterSubscriptions {
 		$id = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['searchlistid']))
 			$listid = (float)$_GET['searchlistid'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -1683,7 +1683,7 @@ class newsletterEmails {
 		$newemailid = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -2109,7 +2109,7 @@ class newsletterEmails {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['resend']))
 			$resend = (int)$_GET['resend'];
@@ -2163,7 +2163,7 @@ class newsletterEmails {
 			$selected = sql::fetch(sql::run(
 				" SELECT `ID` FROM `{newsletters}`" .
 				" WHERE `ID` = '".$id."'" .
-				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'"));
+				" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'"));
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			((!$resend && !$delete) || $selected))
@@ -2234,7 +2234,7 @@ class newsletterEmails {
 		$rows = sql::run(
 				" SELECT * FROM `{newsletters}`" .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" WHERE `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					" WHERE `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null) .
 				" ORDER BY `TimeStamp` DESC" .
 				" LIMIT ".$paging->limit);
@@ -2654,10 +2654,10 @@ class newsletter extends modules {
 		$confirmationid = null;
 		
 		if (isset($_GET['subscribe']))
-			$confirmationid = $_GET['subscribe'];
+			$confirmationid = strip_tags((string)$_GET['subscribe']);
 		
 		if (isset($_GET['unsubscribe'])) {
-			$confirmationid = $_GET['unsubscribe'];
+			$confirmationid = strip_tags((string)$_GET['unsubscribe']);
 			$subscribe = false;
 		}
 		

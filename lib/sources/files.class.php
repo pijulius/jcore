@@ -347,7 +347,7 @@ class _files {
 		$fileinfo = @pathinfo($file);
 		$filemtime = @filemtime($file);
 		
-		$filename = (strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false) ?
+		$filename = (strpos((string)$_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false) ?
 			preg_replace('/\./', '%2e', $fileinfo['basename'], substr_count($fileinfo['basename'], '.') - 1) :
 			$fileinfo['basename'];
 		
@@ -357,7 +357,7 @@ class _files {
 			$ctype = files::$mimeTypes[strtolower($fileinfo['extension'])];
 		
 		if($resumable && isset($_SERVER['HTTP_RANGE'])) {
-			list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+			list($size_unit, $range_orig) = explode('=', (string)$_SERVER['HTTP_RANGE'], 2);
 
 			if ($size_unit == 'bytes')
 				list($range, $extra_ranges) = explode(',', $range_orig, 2);
@@ -402,7 +402,7 @@ class _files {
 			header('Content-Disposition: filename="' . $filename . '"');
 		
 		if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && 
-			(strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $filemtime)) 
+			(strtotime((string)$_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $filemtime)) 
 		{
 			header('HTTP/1.0 304 Not Modified');
 			return;

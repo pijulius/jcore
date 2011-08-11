@@ -57,13 +57,13 @@ class _notificationEmails {
 		$ids = null;
 		
 		if (isset($_POST['resetsubmit']))
-			$reset = $_POST['resetsubmit'];
+			$reset = (string)$_POST['resetsubmit'];
 		
 		if (isset($_POST['resetallsubmit']))
-			$resetall = $_POST['resetallsubmit'];
+			$resetall = (string)$_POST['resetallsubmit'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -73,7 +73,7 @@ class _notificationEmails {
 		
 		if ($reset && $ids && count($ids)) {
 			foreach($ids as $id)
-				$this->reset($id);
+				$this->reset((int)$id);
 			
 			tooltip::display(
 				__("Emails have been successfully reset."),
@@ -293,7 +293,7 @@ class _notificationEmails {
 		$id = null;
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];

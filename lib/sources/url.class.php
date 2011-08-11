@@ -10,7 +10,7 @@
  ****************************************************************************/
  
 if (isset($_GET['path']))
-	_url::$pagePath = strip_tags($_GET['path']);
+	_url::$pagePath = strip_tags((string)$_GET['path']);
 
 class _url {
 	static $pageTitle = PAGE_TITLE;
@@ -127,11 +127,11 @@ class _url {
 		if (!isset($_GET[$argument]))
 			return null;
 		
-		return $argument.'='.$_GET[$argument];
+		return $argument.'='.strip_tags((string)$_GET[$argument]);
 	}
 	
 	static function args($notincludeargs = null) {
-		$uri = @parse_url($_SERVER['REQUEST_URI']);
+		$uri = @parse_url(strip_tags((string)$_SERVER['REQUEST_URI']));
 		
 		if (!isset($uri['query']))
 			return null;
@@ -160,7 +160,7 @@ class _url {
 		if (!isset($_GET[$argument]))
 			return null;
 		
-		return $_GET[$argument];
+		return strip_tags((string)$_GET[$argument]);
 	}
 	
 	static function delargs($args = null) {
@@ -174,9 +174,9 @@ class _url {
 		if ($striprequests) 
 			return 
 				preg_replace('/((\?)|&)request=.*/i', '\\1', 
-					$_SERVER['HTTP_REFERER']);
+					strip_tags((string)$_SERVER['HTTP_REFERER']));
 		
-		return $_SERVER['HTTP_REFERER'];
+		return strip_tags((string)$_SERVER['HTTP_REFERER']);
 	}
 	
 	static function setURI($uri) {
@@ -185,12 +185,12 @@ class _url {
 
 	static function uri($notincludeargs = null, $inverse = false) {
 		if (!$notincludeargs)
-			return str_replace('&', '&amp;', $_SERVER['REQUEST_URI']).
-				(strpos($_SERVER['REQUEST_URI'], '?') === false?
+			return str_replace('&', '&amp;', strip_tags((string)$_SERVER['REQUEST_URI'])).
+				(strpos((string)$_SERVER['REQUEST_URI'], '?') === false?
 					'?':
 					null);
 		
-		$uri = @parse_url($_SERVER['REQUEST_URI']);
+		$uri = @parse_url(strip_tags((string)$_SERVER['REQUEST_URI']));
 		
 		if ($notincludeargs == 'ALL')
 			return (isset($uri['path'])?$uri['path']:'');
@@ -223,12 +223,12 @@ class _url {
 		$https = url::https();
 		$url = 'http'.($https?'s':null).'://'.
 			(isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST']?
-				$_SERVER['HTTP_HOST']:
-				$_SERVER['SERVER_NAME']);
+				strip_tags((string)$_SERVER['HTTP_HOST']):
+				strip_tags((string)$_SERVER['SERVER_NAME']));
 		
 		if (($_SERVER['SERVER_PORT'] != 80 && !$https) ||
 			($_SERVER['SERVER_PORT'] != 443 && $https))
-			$url .= ':'.$_SERVER['SERVER_PORT'];
+			$url .= ':'.(int)$_SERVER['SERVER_PORT'];
 		
 		$url .= url::uri($args);
 		return $url;
@@ -400,7 +400,7 @@ class _url {
 	static function displayCSSLinks() {
 		modules::displayCSSLinks();
 		
-		if ($GLOBALS['ADMIN'])
+		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
 			admin::displayCSSLinks();
 	}
 	
@@ -589,7 +589,7 @@ class _url {
 			$parameters = $matches[3];
 			
 		if (isset($_GET['path']))
-			$path = strip_tags($_GET['path']);
+			$path = strip_tags((string)$_GET['path']);
 		
 		ob_start();
 		
@@ -599,11 +599,11 @@ class _url {
 				break;
 				
 			case 'server':
-				echo $_SERVER['SERVER_NAME'];
+				echo strip_tags((string)$_SERVER['SERVER_NAME']);
 				break;
 				
 			case 'host':
-				echo $_SERVER['HTTP_HOST'];
+				echo strip_tags((string)$_SERVER['HTTP_HOST']);
 				break;
 				
 			case 'sessionid':

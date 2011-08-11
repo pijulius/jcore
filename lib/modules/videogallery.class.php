@@ -58,7 +58,7 @@ class videoGalleryVideos extends videos {
 		
 		if (isset($_GET['searchin']) && isset($_GET['search']) && 
 			$_GET['searchin'] == 'modules/videogallery')
-			$this->search = trim(strip_tags($_GET['search']));
+			$this->search = trim(strip_tags((string)$_GET['search']));
 			
 		$this->rootPath = $this->rootPath.'videogallery/';
 		$this->rootURL = $this->rootURL.'videogallery/';
@@ -206,6 +206,17 @@ class videoGalleryVideos extends videos {
 		echo
 			"</div>"; //pictures
 	}
+	
+	function displaySelected(&$row) {
+		if (!videoGallery::checkAccess((int)$this->selectedOwnerID, true)) {
+			$gallery = new videoGallery();
+			$gallery->displayLogin();
+			unset($gallery);
+			return true;
+		}
+		
+		return parent::displaySelected($row);
+	}
 }
 
 class videoGalleryYouTubeVideos extends videoGalleryVideos {
@@ -215,7 +226,7 @@ class videoGalleryYouTubeVideos extends videoGalleryVideos {
 		parent::__construct();
 		
 		if (isset($_GET['videoid']))
-			$this->selectedID = $_GET['videoid'];
+			$this->selectedID = strip_tags((string)$_GET['videoid']);
 	}
 	
 	function __destruct() {
@@ -689,7 +700,7 @@ class videoGalleryComments extends comments {
 			return videoGallery::getURL($comment['VideoGalleryID']).
 				"&videogalleryid=".$comment['VideoGalleryID'];
 		
-		if ($GLOBALS['ADMIN'])
+		if ((bool)$GLOBALS['ADMIN'])
 			return videoGallery::getURL(admin::getPathID()).
 				"&videogalleryid=".admin::getPathID();
 		
@@ -760,7 +771,7 @@ class videoGallery extends modules {
 		
 		if (isset($_GET['searchin']) && isset($_GET['search']) && 
 			$_GET['searchin'] == 'modules/videogallery')
-			$this->search = trim(strip_tags($_GET['search']));
+			$this->search = trim(strip_tags((string)$_GET['search']));
 		
 		$this->videosPath = SITE_PATH.'sitefiles/media/videogallery/';
 	}
@@ -1454,16 +1465,16 @@ class videoGallery extends modules {
 		$id = null;
 		
 		if (isset($_POST['reordersubmit']))
-			$reorder = $_POST['reordersubmit'];
+			$reorder = (string)$_POST['reordersubmit'];
 		
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -1482,7 +1493,7 @@ class videoGallery extends modules {
 						" AND `ID` IN (".$this->userPermissionIDs.")":
 						null) .
 					($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-						" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+						" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 						null));
 			}
 			
@@ -1991,10 +2002,10 @@ class videoGallery extends modules {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -2037,7 +2048,7 @@ class videoGallery extends modules {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
@@ -2062,7 +2073,7 @@ class videoGallery extends modules {
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				null) .
 			($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+				" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 				null) .
 			(!$this->userPermissionIDs && ~$this->userPermissionType & USER_PERMISSION_TYPE_OWN?
 				" AND `SubGalleryOfID` = 0":
@@ -2591,7 +2602,7 @@ class videoGallery extends modules {
 		$users = null;
 		
 		if (isset($_GET['users']))
-			$users = $_GET['users'];
+			$users = (int)$_GET['users'];
 		
 		if ($users) {
 			if (!$GLOBALS['USER']->loginok || 
@@ -2606,7 +2617,7 @@ class videoGallery extends modules {
 			include_once('lib/userpermissions.class.php');
 			
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {

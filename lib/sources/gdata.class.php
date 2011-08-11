@@ -75,7 +75,7 @@ class _GData {
 		$token = null;
 		
 		if (isset($_GET['token']))
-			$token = $_GET['token'];
+			$token = strip_tags((string)$_GET['token']);
 		
 		if (!$token)
 			return false;

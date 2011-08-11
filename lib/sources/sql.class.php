@@ -347,7 +347,7 @@ class _sql {
 						"appreciate your patience during this time. " .
 						"Please wait for a few minutes and <a href='%s'>" .
 						"try again</a>."), 
-						$_SERVER['REQUEST_URI']) .
+						strip_tags((string)$_SERVER['REQUEST_URI'])) .
 				"</p>" .
 			"</div>" .
 			"</body>" .

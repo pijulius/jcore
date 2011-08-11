@@ -57,7 +57,7 @@ class _paging {
 		$this->limit = "0,".$this->defaultLimit;
 		
 		if (isset($_GET[$this->variable])) {
-			$limit = $this->parse(str_replace('-', ',', $_GET[$this->variable]));
+			$limit = $this->parse(str_replace('-', ',', strip_tags((string)$_GET[$this->variable])));
 			$this->limit = $limit['Start'].",".(int)($limit['Limit']-$limit['Start']);
 		}
 		

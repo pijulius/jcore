@@ -71,7 +71,7 @@ class _blocks {
 						" `ViewableBy` IN (2, 3)":
 						" `ViewableBy` = 2") .
 					(JCORE_VERSION >= '0.9' && $GLOBALS['USER']->data['GroupID']?
-						" OR `ViewableBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
+						" OR `ViewableBy` = '".(int)($GLOBALS['USER']->data['GroupID']+10)."'":
 						null):
 					" `ViewableBy` = 1") .
 			" )" .
@@ -388,16 +388,16 @@ class _blocks {
 		$id = null;
 		
 		if (isset($_POST['reordersubmit']))
-			$reorder = $_POST['reordersubmit'];
+			$reorder = (string)$_POST['reordersubmit'];
 		
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -870,10 +870,10 @@ class _blocks {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -1082,11 +1082,11 @@ class _blocks {
 			" `TypeID` = '".
 				(int)$values['TypeID']."'," .
 			" `".(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')."` = '".
-				sql::escape(implode('|', (array)$values[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')]))."'," .
+				sql::escape(strip_tags(implode('|', (array)$values[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')])))."'," .
 			" `".(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')."` = '".
 				(int)$values[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')]."'," .
 			" `LanguageIDs` = '".
-				sql::escape(implode('|', (array)$values['LanguageIDs']))."'," .
+				sql::escape(strip_tags(implode('|', (array)$values['LanguageIDs'])))."'," .
 			" `LanguageExcept` = '".
 				(int)$values['LanguageExcept']."'," .
 			" `ViewableBy` = '".
@@ -1211,11 +1211,11 @@ class _blocks {
 			" `TypeID` = '".
 				(int)$values['TypeID']."'," .
 			" `".(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')."` = '".
-				sql::escape(implode('|', (array)$values[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')]))."'," .
+				sql::escape(strip_tags(implode('|', (array)$values[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')])))."'," .
 			" `".(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')."` = '".
 				(int)$values[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')]."'," .
 			" `LanguageIDs` = '".
-				sql::escape(implode('|', (array)$values['LanguageIDs']))."'," .
+				sql::escape(strip_tags(implode('|', (array)$values['LanguageIDs'])))."'," .
 			" `LanguageExcept` = '".
 				(int)$values['LanguageExcept']."'," .
 			" `ViewableBy` = '".
@@ -1513,7 +1513,7 @@ class _blocks {
 					echo
 						"<p class='spacer'></p>";
 		
-				if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN']) {
+				if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN']) {
 					$admin = new admin();
 					$admin->display();
 					unset($admin);
@@ -1575,7 +1575,7 @@ class _blocks {
 			$mobile = false;
 			
 			if (strpos($block[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')], 'A') !== false) {
-				$admin = isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN'];
+				$admin = isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'];
 				
 				if (($admin && $block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')]) ||
 					(!$admin && !$block[(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept')]))
@@ -1671,7 +1671,7 @@ class _blocks {
 			(JCORE_VERSION >= '0.7'?
 				" AND `TemplateID` = '".
 					(template::$selected && (WEBSITE_TEMPLATE_SETFORADMIN ||
-					 !isset($GLOBALS['ADMIN']) || !$GLOBALS['ADMIN'])?
+					 !isset($GLOBALS['ADMIN']) || !(bool)$GLOBALS['ADMIN'])?
 						(int)template::$selected['ID']:
 						0) .
 					"'":
@@ -1683,7 +1683,7 @@ class _blocks {
 						" `ViewableBy` IN (2, 3)":
 						" `ViewableBy` = 2") .
 					(JCORE_VERSION >= '0.9' && $GLOBALS['USER']->data['GroupID']?
-						" OR `ViewableBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
+						" OR `ViewableBy` = '".(int)($GLOBALS['USER']->data['GroupID']+10)."'":
 						null):
 					" `ViewableBy` = 1") .
 			" )" .
@@ -1736,7 +1736,7 @@ class _blocks {
 						" `ViewableBy` IN (2, 3)":
 						" `ViewableBy` = 2") .
 					(JCORE_VERSION >= '0.9' && $GLOBALS['USER']->data['GroupID']?
-						" OR `ViewableBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
+						" OR `ViewableBy` = '".(int)($GLOBALS['USER']->data['GroupID']+10)."'":
 						null):
 					" `ViewableBy` = 1") .
 			" )" .
@@ -1755,7 +1755,7 @@ class _blocks {
 		
 		// In admin caching is turned off for Main Content
 		if (JCORE_VERSION >= '0.4' && isset($GLOBALS['ADMIN']) && 
-			$GLOBALS['ADMIN']) 
+			(bool)$GLOBALS['ADMIN']) 
 		{
 			$mblock = sql::fetch(sql::run(
 				" SELECT `ID` FROM `{blocks}`" .
@@ -1774,7 +1774,7 @@ class _blocks {
 		$rows = sql::run(
 			$this->SQL());
 		
-		if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN']) {
+		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN']) {
 			$path = 'admin';
 			
 		} else {

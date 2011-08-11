@@ -183,7 +183,7 @@ class pollComments extends comments {
 			return poll::getURL($comment['PollID']).
 				"&pollid=".$comment['PollID'];
 		
-		if ($GLOBALS['ADMIN'])
+		if ((bool)$GLOBALS['ADMIN'])
 			return poll::getURL(admin::getPathID()).
 				"&pollid=".admin::getPathID();
 		
@@ -1091,7 +1091,7 @@ class poll extends modules {
 		$id = null;
 		
 		if (isset($_POST['reordersubmit']))
-			$reorder = $_POST['reordersubmit'];
+			$reorder = (string)$_POST['reordersubmit'];
 		
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
@@ -1100,10 +1100,10 @@ class poll extends modules {
 			$answerorders = (array)$_POST['answerorders'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -1122,7 +1122,7 @@ class poll extends modules {
 						" AND `ID` IN (".$this->userPermissionIDs.")":
 						null) .
 					($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-						" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+						" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 						null));
 				
 				if (isset($answerorders[$oid]) && is_array($answerorders[$oid]))
@@ -1187,7 +1187,7 @@ class poll extends modules {
 			
 		$postarray = $form->getPostArray();
 		$postarray['GuestAnswers'] = (isset($_POST['GuestAnswers'])?
-											$_POST['GuestAnswers']:
+											form::parseArray((array)$_POST['GuestAnswers']):
 											array());
 				
 		if ($edit) {
@@ -1414,7 +1414,7 @@ class poll extends modules {
 		$search = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		echo
 			"<input type='hidden' name='path' value='".admin::path()."' />" .
@@ -1535,13 +1535,13 @@ class poll extends modules {
 		$id = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -1594,7 +1594,7 @@ class poll extends modules {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
@@ -1608,7 +1608,7 @@ class poll extends modules {
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				null) .
 			($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+				" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 				null) .
 			($search?
 				sql::search(
@@ -1672,10 +1672,12 @@ class poll extends modules {
 				}
 				
 			} else {
-				if (isset($_POST['Answers']) && count($_POST['Answers'])) {
+				if (isset($_POST['Answers']) && count((array)$_POST['Answers'])) {
 					$piname = 'Answers';
 					
 					foreach($_POST['Answers'] as $key => $answer) {
+						$key = strip_tags((string)$key);
+						$answer = strip_tags((string)$answer);
 						$iname = 'Answers['.$key.']';
 					
 						$form->insert(
@@ -2048,7 +2050,7 @@ class poll extends modules {
 		$guestanswers = null;
 		
 		if (isset($_POST['pollvote']))
-			$vote = $_POST['pollvote'];
+			$vote = (string)$_POST['pollvote'];
 		
 		if (isset($_POST['pollanswers']))
 			$answers = (array)$_POST['pollanswers'];
@@ -2070,7 +2072,7 @@ class poll extends modules {
 		
 		$poll = sql::fetch(sql::run(
 			" SELECT * FROM `{polls}`" .
-			" WHERE `ID` = '".$pollid."'" .
+			" WHERE `ID` = '".(int)$pollid."'" .
 			" AND `Deactivated` = 0"));
 		
 		if (!$poll) {
@@ -2094,8 +2096,8 @@ class poll extends modules {
 				" AND `TimeStamp` > DATE_SUB(NOW(), INTERVAL ".(int)$poll['VotingInterval']." MINUTE)":
 				null) .
 			($GLOBALS['USER']->loginok?
-				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
-				" AND `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'")));
+				" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
+				" AND `IP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'")));
 			
 		if ($row) {
 			tooltip::display(
@@ -2114,15 +2116,15 @@ class poll extends modules {
 				continue;
 			
 			$guestanswer = null;
-			if (isset($guestanswers[$poll['ID']][$answerid]))
-				$guestanswer = form::parseString($guestanswers[$poll['ID']][$answerid]);
+			if (isset($guestanswers[$poll['ID']][(int)$answerid]))
+				$guestanswer = form::parseString($guestanswers[$poll['ID']][(int)$answerid]);
 			
 			$newid = sql::run(
 				" INSERT INTO `{pollvotes}` SET " .
 				" `PollID` = '".$poll['ID']."'," .
-				" `AnswerID` = '".$answerid."'," .
+				" `AnswerID` = '".(int)$answerid."'," .
 				" `IP` = '".
-					security::ip2long($_SERVER['REMOTE_ADDR'])."'," .
+					security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'," .
 				($GLOBALS['USER']->loginok?
 					" `UserID` = '".
 						(int)$GLOBALS['USER']->data['ID']."',":
@@ -2143,7 +2145,7 @@ class poll extends modules {
 			sql::run(
 				" UPDATE `{pollanswers}` SET" .
 				" `Votes` = `Votes` + 1" .
-				" WHERE `ID` = '".$answerid."'");
+				" WHERE `ID` = '".(int)$answerid."'");
 			
 			$votes++;
 		}
@@ -2198,10 +2200,10 @@ class poll extends modules {
 		$vote = null;
 		
 		if (isset($_GET['users']))
-			$users = $_GET['users'];
+			$users = (int)$_GET['users'];
 		
 		if (isset($_POST['pollvote']))
-			$vote = $_POST['pollvote'];
+			$vote = (string)$_POST['pollvote'];
 		
 		if ($users) {
 			if (!$GLOBALS['USER']->loginok || 
@@ -2216,7 +2218,7 @@ class poll extends modules {
 			include_once('lib/userpermissions.class.php');
 			
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {

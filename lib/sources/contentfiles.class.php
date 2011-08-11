@@ -43,6 +43,13 @@ class _contentFiles extends fileManager {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		$ownertitle = "<a href='?path=".admin::path()."'>sitefiles</a> / ";
+		
+		ob_start();
+		$this->displayPath();
+		$ownertitle .= ob_get_contents();
+		ob_end_clean();
+		
 		admin::displayTitle(
 			__('Content Files'),
 			$ownertitle);
@@ -52,7 +59,7 @@ class _contentFiles extends fileManager {
 	}
 	
 	function displayAdmin() {
-		$this->displayAdminTitle("sitefiles/". $this->selectedPath);
+		$this->displayAdminTitle();
 		$this->displayAdminDescription();
 		
 		echo

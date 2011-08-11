@@ -32,7 +32,7 @@ class _postComments extends comments {
 			return
 				posts::getPostURL($comment['PostID']);
 		
-		if ($GLOBALS['ADMIN'])
+		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
 			return 
 				posts::getPostURL(admin::getPathID());
 		

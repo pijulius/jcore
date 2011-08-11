@@ -299,7 +299,7 @@ class _modules {
 		$install = null;
 		
 		if (isset($_POST['install']))
-			$install = $_POST['install'];
+			$install = (int)$_POST['install'];
 		
 		$this->displayInstallTitle(modules::getTitle(ucfirst(get_class($this))));
 		$this->displayInstallDescription();

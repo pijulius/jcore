@@ -60,7 +60,7 @@ class _admin {
 	static function add($section, $itemid, $item) {
 		preg_match('/(\?|&)path=(.*?)(&|\'|")/i', $item, $matches);
 		
-		$userpermission = userPermissions::check($GLOBALS['USER']->data['ID'], 
+		$userpermission = userPermissions::check((int)$GLOBALS['USER']->data['ID'], 
 			(isset($matches[2])?
 				$matches[2]:
 				null));
@@ -520,7 +520,7 @@ class _admin {
 			return;
 		}
 		
-		$userpermission = userPermissions::check($GLOBALS['USER']->data['ID']);
+		$userpermission = userPermissions::check((int)$GLOBALS['USER']->data['ID']);
 		
 		if (!$userpermission['PermissionType']) {
 			$this->displayHeader();

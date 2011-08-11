@@ -26,9 +26,9 @@ class _postsCalendar extends monthCalendar {
 			$this->uriRequest;
 		
 		if (isset($_GET['searchin']) && isset($_GET['search']) && 
-			$_GET['searchin'] == 'posts' && !isset($_GET['postscalendartime']))
+			(string)$_GET['searchin'] == 'posts' && !isset($_GET['postscalendartime']))
 		{
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 			
 			if (preg_match('/.*?date:([0-9\-]+)/', $search))
 				$this->time = strtotime(preg_replace('/.*?date:([0-9\-]+)/', '\1', 

@@ -172,16 +172,16 @@ class shoppingCartDiscounts {
 		$id = null;
 		
 		if (isset($_POST['setprioritysubmit']))
-			$setpriority = $_POST['setprioritysubmit'];
+			$setpriority = (string)$_POST['setprioritysubmit'];
 		
 		if (isset($_POST['priorities']))
 			$priorities = (array)$_POST['priorities'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -466,10 +466,10 @@ class shoppingCartDiscounts {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -635,7 +635,7 @@ class shoppingCartDiscounts {
 	
 	static function get($amount, $userid = null) {
 		if (!isset($userid) && $GLOBALS['USER']->loginok)
-			$userid = $GLOBALS['USER']->data['ID'];
+			$userid = (int)$GLOBALS['USER']->data['ID'];
 		
 		$row = sql::fetch(sql::run(
 			" SELECT `DiscountPercent` FROM `{shoppingcartdiscounts}`" .
@@ -667,7 +667,7 @@ class shoppingCartDiscounts {
 	
 	static function getNext($amount, $userid = null) {
 		if (!isset($userid) && $GLOBALS['USER']->loginok)
-			$userid = $GLOBALS['USER']->data['ID'];
+			$userid = (int)$GLOBALS['USER']->data['ID'];
 		
 		$row = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingcartdiscounts}`" .
@@ -705,13 +705,13 @@ class shoppingCartDiscounts {
 		$users = null;
 		
 		if (isset($_GET['users']))
-			$users = $_GET['users'];
+			$users = (int)$_GET['users'];
 		
 		if ($users) {
 			include_once('lib/userpermissions.class.php');
 			
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
@@ -932,16 +932,16 @@ class shoppingCartFees {
 		$id = null;
 		
 		if (isset($_POST['setprioritysubmit']))
-			$setpriority = $_POST['setprioritysubmit'];
+			$setpriority = (string)$_POST['setprioritysubmit'];
 		
 		if (isset($_POST['priorities']))
 			$priorities = (array)$_POST['priorities'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -1363,10 +1363,10 @@ class shoppingCartFees {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -1589,7 +1589,7 @@ class shoppingCartFees {
 					$value = null;
 					
 					if (isset($values[$orderformfield['Name']]))
-						$value = $values[$orderformfield['Name']];
+						$value = strip_tags((string)$values[$orderformfield['Name']]);
 					
 					$fieldquery .= 
 						" OR (`FieldID` = '".$orderformfield['ID']."'" .
@@ -1644,13 +1644,13 @@ class shoppingCartFees {
 		$orderformfields = null;
 		
 		if (isset($_GET['orderformfields']))
-			$orderformfields = $_GET['orderformfields'];
+			$orderformfields = (int)$_GET['orderformfields'];
 		
 		if ($orderformfields) {
 			include_once('lib/userpermissions.class.php');
 			
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
@@ -1746,16 +1746,16 @@ class shoppingCartTaxes {
 		$id = null;
 		
 		if (isset($_POST['setprioritysubmit']))
-			$setpriority = $_POST['setprioritysubmit'];
+			$setpriority = (string)$_POST['setprioritysubmit'];
 		
 		if (isset($_POST['priorities']))
 			$priorities = (array)$_POST['priorities'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -2093,10 +2093,10 @@ class shoppingCartTaxes {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -2257,14 +2257,14 @@ class shoppingCartTaxes {
 				$value = null;
 				$valueindex = $orderformfield['Name'];
 				
-				if ((!isset($values[$valueindex]) || !trim($values[$valueindex])) &&
+				if ((!isset($values[$valueindex]) || !trim((string)$values[$valueindex])) &&
 					strpos($valueindex, 'Shipping') !== false)
 				{
 					$valueindex = str_replace('Shipping', '', $valueindex);
 				}
 				
-				if (isset($values[$valueindex]) && trim($values[$valueindex]))
-					$value = trim($values[$valueindex]);
+				if (isset($values[$valueindex]) && trim((string)$values[$valueindex]))
+					$value = trim(strip_tags((string)$values[$valueindex]));
 				
 				if (!$value)
 					continue;
@@ -2307,13 +2307,13 @@ class shoppingCartTaxes {
 		$orderformfields = null;
 		
 		if (isset($_GET['orderformfields']))
-			$orderformfields = $_GET['orderformfields'];
+			$orderformfields = (int)$_GET['orderformfields'];
 		
 		if ($orderformfields) {
 			include_once('lib/userpermissions.class.php');
 			
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
@@ -2465,16 +2465,16 @@ class shoppingCartCoupons {
 		$id = null;
 		
 		if (isset($_POST['setprioritysubmit']))
-			$setpriority = $_POST['setprioritysubmit'];
+			$setpriority = (string)$_POST['setprioritysubmit'];
 		
 		if (isset($_POST['priorities']))
 			$priorities = (array)$_POST['priorities'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -2737,10 +2737,10 @@ class shoppingCartCoupons {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -2916,7 +2916,7 @@ class shoppingCartCoupons {
 	}
 	
 	static function clear() {
-		unset($_SESSION['shoppingcartcoupon']);
+		unset($_SESSION['SHOPPING_CART_COUPON']);
 	}
 	
 	static function get($coupon = null) {
@@ -2965,10 +2965,10 @@ class shoppingCartCoupons {
 	
 	static function getCode() {
 		if (isset($_POST['shoppingcartcoupon']))
-			$_SESSION['shoppingcartcoupon'] = strip_tags($_POST['shoppingcartcoupon']);
+			$_SESSION['SHOPPING_CART_COUPON'] = strip_tags((string)$_POST['shoppingcartcoupon']);
 		
-		if (isset($_SESSION['shoppingcartcoupon']))
-			return strip_tags($_SESSION['shoppingcartcoupon']);
+		if (isset($_SESSION['SHOPPING_CART_COUPON']))
+			return strip_tags((string)$_SESSION['SHOPPING_CART_COUPON']);
 		
 		return '';
 	}
@@ -3017,7 +3017,7 @@ class shoppingCartCheckoutForm extends dynamicForms {
 		$couponvalue = 0;
 		
 		if (isset($_SESSION['HTTP_REFERER']) && $_SESSION['HTTP_REFERER'])
-			$referer = $_SESSION['HTTP_REFERER'];
+			$referer = strip_tags((string)$_SESSION['HTTP_REFERER']);
 		
 		if (JCORE_VERSION >= '0.7')
 			$taxpercentage = shoppingCart::getTax();
@@ -3057,7 +3057,7 @@ class shoppingCartCheckoutForm extends dynamicForms {
 		if (JCORE_VERSION >= '0.9' && $couponcode = shoppingCartCoupons::getCode())
 			$couponvalue = shoppingCartCoupons::getValue($subtotal, $couponcode);
 		
-		$userid = $GLOBALS['USER']->data['ID'];
+		$userid = (int)$GLOBALS['USER']->data['ID'];
 		
 		if (!$GLOBALS['USER']->loginok) {
 			$user = $this->getPostArray();
@@ -3682,7 +3682,7 @@ class shoppingCartCheckoutForm extends dynamicForms {
 				if ($GLOBALS['USER']->loginok && !$this->get('checkoutformsubmitted')) {
 					$lastorder = sql::fetch(sql::run(
 						" SELECT * FROM `{shoppingorders}`" .
-						" WHERE `UserID` = '".$GLOBALS['USER']->data['ID']."'" .
+						" WHERE `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'" .
 						" ORDER BY `ID` DESC" .
 						" LIMIT 1"));
 						
@@ -3851,7 +3851,7 @@ class shoppingCart extends modules {
 			$this->checkout = (bool)$_GET['shoppingcartcheckout'];
 		
 		if (isset($_GET['shoppingcartreferrer']))
-			$this->referrer = $_GET['shoppingcartreferrer'];
+			$this->referrer = strip_tags((string)$_GET['shoppingcartreferrer']);
 	}
 	
 	function __destruct() {
@@ -4455,7 +4455,7 @@ class shoppingCart extends modules {
 		$referrer = null;
 		
 		if (isset($_GET['shoppingcartremove'])) {
-			$remove = $_GET['shoppingcartremove'];
+			$remove = (int)$_GET['shoppingcartremove'];
 			unset($_GET['shoppingcartremove']);
 		}
 		
@@ -4465,7 +4465,7 @@ class shoppingCart extends modules {
 		}
 		
 		if (isset($_POST['shoppingcartaddsubmit'])) {
-			$add = $_POST['shoppingcartaddsubmit'];
+			$add = (string)$_POST['shoppingcartaddsubmit'];
 			unset($_POST['shoppingcartaddsubmit']);
 		}
 		
@@ -4488,7 +4488,7 @@ class shoppingCart extends modules {
 		}
 			
 		if (isset($_GET['shoppingcartreferrer']))
-			$referrer = $_GET['shoppingcartreferrer'];
+			$referrer = strip_tags((string)$_GET['shoppingcartreferrer']);
 		
 		if ($remove) {
 			if (!$cartid) {
@@ -4656,7 +4656,7 @@ class shoppingCart extends modules {
 								$price['Price']);
 						
 						$itemoptions[] = $option['Title'].": " .
-							$priceid;
+							strip_tags((string)$priceid);
 						
 						continue;
 					}

@@ -164,7 +164,7 @@ class _email {
 	}
 	
 	function send($debug = false) {
-		if (isset($GLOBALS['IGNORE_EMAILS']) && $GLOBALS['IGNORE_EMAILS'])
+		if (isset($GLOBALS['IGNORE_EMAILS']) && (bool)$GLOBALS['IGNORE_EMAILS'])
 			return true;
 		
 		$subject = $this->subject;
@@ -299,7 +299,7 @@ class _email {
 
 		$rcv = @fgets($connect, 1024);
 		 
-		@fputs($connect, "HELO ".$_SERVER['SERVER_NAME']."\r\n");
+		@fputs($connect, "HELO ".(string)$_SERVER['SERVER_NAME']."\r\n");
 		$rcv .= @fgets($connect, 1024);
 		
 		if (defined('EMAIL_SMTP_USERNAME') && EMAIL_SMTP_USERNAME) {

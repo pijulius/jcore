@@ -38,7 +38,7 @@ class _templateExporter {
 			'_URI' => SITE_URL,
 			'_Description' => "Default ".PAGE_TITLE." Template",
 			'_Tags' => "default, ".strtolower(preg_replace('/(-|,|;).*/i', '', strip_tags(PAGE_TITLE))),
-			'_Author' => $GLOBALS['USER']->data['UserName'],
+			'_Author' => (string)$GLOBALS['USER']->data['UserName'],
 			'_Version' => "1.0");
 		
 		if (template::$selected)
@@ -205,7 +205,7 @@ class _templateExporter {
 				'URI' => SITE_URL,
 				'Description' => "Default ".PAGE_TITLE." Template",
 				'Tags' => "default, ".strtolower(preg_replace('/(-|,|;).*/i', '', strip_tags(PAGE_TITLE))),
-				'Author' => $GLOBALS['USER']->data['UserName'],
+				'Author' => (string)$GLOBALS['USER']->data['UserName'],
 				'Version' => "1.0");
 		
 		$templatephp = null;
@@ -635,7 +635,7 @@ class templateInstaller extends template {
 		$download = null;
 		
 		if (isset($_GET['download'])) {
-			preg_match('/([^(\/|\\\)]*)$/', $_GET['download'], $matches);
+			preg_match('/([^(\/|\\\)]*)$/', (string)$_GET['download'], $matches);
 			
 			if (isset($matches[1]) && $matches[1] != '.' && $matches[1] != '..')
 				$download = $matches[1];

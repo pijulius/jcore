@@ -80,13 +80,13 @@ class _postsAtGlance extends posts {
 		$ids = null;
 		
 		if (isset($_POST['deletesubmit']))
-			$delete = $_POST['deletesubmit'];
+			$delete = (string)$_POST['deletesubmit'];
 		
 		if (isset($_POST['deactivatesubmit']))
-			$deactivate = $_POST['deactivatesubmit'];
+			$deactivate = (string)$_POST['deactivatesubmit'];
 		
 		if (isset($_POST['activatesubmit']))
-			$activate = $_POST['activatesubmit'];
+			$activate = (string)$_POST['activatesubmit'];
 		
 		if (isset($_POST['ids']))
 			$ids = (array)$_POST['ids'];
@@ -114,10 +114,10 @@ class _postsAtGlance extends posts {
 						!sql::rows(sql::run(
 							" SELECT `ID` FROM `{posts}`" .
 							" WHERE `ID` = '".(int)$id."'" .
-							" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'")))
+							" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'")))
 						continue;
 					
-					$this->deactivate($id);
+					$this->deactivate((int)$id);
 				}
 				
 				tooltip::display(
@@ -137,10 +137,10 @@ class _postsAtGlance extends posts {
 						!sql::rows(sql::run(
 							" SELECT `ID` FROM `{posts}`" .
 							" WHERE `ID` = '".(int)$id."'" .
-							" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'")))
+							" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'")))
 						continue;
 					
-					$this->activate($id);
+					$this->activate((int)$id);
 				}
 				
 				tooltip::display(
@@ -160,10 +160,10 @@ class _postsAtGlance extends posts {
 						!sql::rows(sql::run(
 							" SELECT `ID` FROM `{posts}`" .
 							" WHERE `ID` = '".(int)$id."'" .
-							" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'")))
+							" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'")))
 						continue;
 					
-					$this->delete($id);
+					$this->delete((int)$id);
 				}
 				
 				tooltip::display(
@@ -279,7 +279,7 @@ class _postsAtGlance extends posts {
 		$search = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['searchpageid']))
 			$pageid = (int)$_GET['searchpageid'];
@@ -344,21 +344,21 @@ class _postsAtGlance extends posts {
 		$id = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['searchpageid']))
 			$pageid = (int)$_GET['searchpageid'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
 			
-		if ($edit && isset($_POST['InsertAsNew']) && $_POST['InsertAsNew']) {
+		if ($edit && isset($_POST['InsertAsNew']) && (int)$_POST['InsertAsNew']) {
 			$_GET['limit'] = null;
 			$_GET['edit'] = null;
 			$_GET['id'] = null;
@@ -415,7 +415,7 @@ class _postsAtGlance extends posts {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
@@ -432,7 +432,7 @@ class _postsAtGlance extends posts {
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				null) .
 			($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+				" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 				null) .
 			($pageid?
 				" AND `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '" .

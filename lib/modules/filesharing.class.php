@@ -56,7 +56,7 @@ class fileSharingAttachments extends attachments {
 		
 		if (isset($_GET['searchin']) && isset($_GET['search']) && 
 			$_GET['searchin'] == 'modules/filesharing')
-			$this->search = trim(strip_tags($_GET['search']));
+			$this->search = trim(strip_tags((string)$_GET['search']));
 			
 		if (JCORE_VERSION >= '0.5') {
 			$this->rootPath = $this->rootPath.'filesharing/';
@@ -206,7 +206,7 @@ class fileSharingComments extends comments {
 			return fileSharing::getURL($comment['FileSharingID']).
 				"&filesharingid=".$comment['FileSharingID'];
 		
-		if ($GLOBALS['ADMIN'])
+		if ((bool)$GLOBALS['ADMIN'])
 			return fileSharing::getURL(admin::getPathID()).
 				"&filesharingid=".admin::getPathID();
 		
@@ -275,7 +275,7 @@ class fileSharing extends modules {
 		
 		if (isset($_GET['searchin']) && isset($_GET['search']) && 
 			$_GET['searchin'] == 'modules/filesharing')
-			$this->search = trim(strip_tags($_GET['search']));
+			$this->search = trim(strip_tags((string)$_GET['search']));
 			
 		$this->attachmentsPath = SITE_PATH.'sitefiles/file/filesharing/';
 	}
@@ -798,16 +798,16 @@ class fileSharing extends modules {
 		$id = null;
 		
 		if (isset($_POST['reordersubmit']))
-			$reorder = $_POST['reordersubmit'];
+			$reorder = (string)$_POST['reordersubmit'];
 		
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -826,7 +826,7 @@ class fileSharing extends modules {
 						" AND `ID` IN (".$this->userPermissionIDs.")":
 						null) .
 					($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-						" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+						" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 						null));
 			}
 			
@@ -1259,10 +1259,10 @@ class fileSharing extends modules {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -1305,7 +1305,7 @@ class fileSharing extends modules {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
@@ -1330,7 +1330,7 @@ class fileSharing extends modules {
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				null) .
 			($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+				" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 				null) .
 			(!$this->userPermissionIDs && ~$this->userPermissionType & USER_PERMISSION_TYPE_OWN?
 				" AND `SubFolderOfID` = 0":
@@ -1783,7 +1783,7 @@ class fileSharing extends modules {
 		$users = null;
 		
 		if (isset($_GET['users']))
-			$users = $_GET['users'];
+			$users = (int)$_GET['users'];
 		
 		if ($users) {
 			if (!$GLOBALS['USER']->loginok || 

@@ -152,10 +152,10 @@ class _massEmail {
 		$newemailid = null;
 		
 		if (isset($_POST['continue']))
-			$continue = $_POST['continue'];
+			$continue = (string)$_POST['continue'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -632,7 +632,7 @@ class _massEmail {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['resend']))
 			$resend = (int)$_GET['resend'];
@@ -686,7 +686,7 @@ class _massEmail {
 				" SELECT `ID` FROM `{massemails}`" .
 				" WHERE `ID` = '".$id."'" .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
@@ -757,7 +757,7 @@ class _massEmail {
 		$rows = sql::run(
 				" SELECT * FROM `{massemails}`" .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" WHERE `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					" WHERE `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null) .
 				" ORDER BY `ID` DESC" .
 				" LIMIT ".$paging->limit);
@@ -894,13 +894,13 @@ class _massEmail {
 		$users = null;
 		
 		if (isset($_GET['users']))
-			$users = $_GET['users'];
+			$users = (int)$_GET['users'];
 		
 		if ($users) {
 			include_once('lib/userpermissions.class.php');
 			
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {

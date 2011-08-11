@@ -118,16 +118,16 @@ class _rss {
 		$id = null;
 		
 		if (isset($_POST['reordersubmit']))
-			$reorder = $_POST['reordersubmit'];
+			$reorder = (string)$_POST['reordersubmit'];
 		
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -431,10 +431,10 @@ class _rss {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -802,11 +802,11 @@ class _rss {
 		$feeds = null;
 		
 		if (isset($_GET['feeds']))
-			$feeds = $_GET['feeds'];
+			$feeds = (int)$_GET['feeds'];
 		
 		if ($feeds) {
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {

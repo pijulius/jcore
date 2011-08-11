@@ -328,7 +328,7 @@ class shoppingItemComments extends comments {
 			return shopping::getURL().
 				"&shoppingitemid=".$comment['ShoppingItemID'];
 		
-		if ($GLOBALS['ADMIN'])
+		if ((bool)$GLOBALS['ADMIN'])
 			return shopping::getURL(admin::getPathID(2)).
 				"&shoppingid=".admin::getPathID(2) .
 				"&shoppingitemid=".admin::getPathID();
@@ -463,16 +463,16 @@ class shoppingItems {
 			$this->selectedShoppingID = (int)$_GET['shoppingid'];
 		
 		if (isset($_GET['shoppingitems'])) {
-			$this->active = (strpos($_GET['shoppingitems'], '1') !== false?true:false);
-			$this->popular = (strpos($_GET['shoppingitems'], '2') !== false?true:false);
-			$this->discussed = (strpos($_GET['shoppingitems'], '3') !== false?true:false);
-			$this->similar = (strpos($_GET['shoppingitems'], '4') !== false?true:false);
+			$this->active = (strpos((string)$_GET['shoppingitems'], '1') !== false?true:false);
+			$this->popular = (strpos((string)$_GET['shoppingitems'], '2') !== false?true:false);
+			$this->discussed = (strpos((string)$_GET['shoppingitems'], '3') !== false?true:false);
+			$this->similar = (strpos((string)$_GET['shoppingitems'], '4') !== false?true:false);
 		}
 		
 		if (isset($_GET['searchin']) && isset($_GET['search']) && 
 			($_GET['searchin'] == 'modules/shopping/shoppingitems' ||
 			$_GET['searchin'] == 'modules/shopping'))
-			$this->search = trim(strip_tags($_GET['search']));
+			$this->search = trim(strip_tags((string)$_GET['search']));
 	}
 	
 	function __destruct() {
@@ -598,7 +598,7 @@ class shoppingItems {
 		$edit = null;
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		$form->add(
 			'ShoppingID',
@@ -1701,16 +1701,16 @@ class shoppingItems {
 		$id = null;
 		
 		if (isset($_POST['reordersubmit']))
-			$reorder = $_POST['reordersubmit'];
+			$reorder = (string)$_POST['reordersubmit'];
 		
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -1728,7 +1728,7 @@ class shoppingItems {
 						" AND `ID` IN (".$this->userPermissionIDs.")":
 						null) .
 					($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-						" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+						" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 						null));
 			}
 			
@@ -1836,10 +1836,10 @@ class shoppingItems {
 		$search = null;
 		
 		if (isset($_POST['ajaxsearch']))
-			$search = trim(strip_tags($_POST['ajaxsearch']));
+			$search = trim(strip_tags((string)$_POST['ajaxsearch']));
 		
 		if (isset($_GET['ajaxsearch']))
-			$search = trim(strip_tags($_GET['ajaxsearch']));
+			$search = trim(strip_tags((string)$_GET['ajaxsearch']));
 		
 		if (!isset($search) && !isset($_GET['ajaxlimit']))
 			echo 
@@ -2260,7 +2260,7 @@ class shoppingItems {
 		$search = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		echo 
 			"<input type='hidden' name='path' value='".admin::path()."' />" .
@@ -2388,13 +2388,13 @@ class shoppingItems {
 		$id = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -2462,7 +2462,7 @@ class shoppingItems {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
@@ -2486,7 +2486,7 @@ class shoppingItems {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null) .
 				($search?
 					sql::search(
@@ -2528,7 +2528,7 @@ class shoppingItems {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null) .
 				($search?
 					sql::search(
@@ -3376,13 +3376,13 @@ class shoppingItems {
 		$keywords = null;
 		
 		if (isset($_GET['users']))
-			$users = $_GET['users'];
+			$users = (int)$_GET['users'];
 		
 		if (isset($_GET['shoppingitemoptions']))
 			$options = (int)$_GET['shoppingitemoptions'];
 		
 		if (isset($_GET['keywords']))
-			$keywords = $_GET['keywords'];
+			$keywords = (int)$_GET['keywords'];
 		
 		if ($users) {
 			if (!$GLOBALS['USER']->loginok || 
@@ -3397,7 +3397,7 @@ class shoppingItems {
 			include_once('lib/userpermissions.class.php');
 			
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
@@ -3817,7 +3817,7 @@ class shoppingItems {
 		$form->action = shoppingCart::getURL() .
 			(isset($_GET['shoppingcartreferrer'])?
 				"&amp;shoppingcartreferrer=" .
-					urlencode($_GET['shoppingcartreferrer']):
+					urlencode(strip_tags((string)$_GET['shoppingcartreferrer'])):
 				null);
 		$form->footer = '';
 		
@@ -4594,7 +4594,7 @@ class shopping extends modules {
 		
 		if (isset($_GET['searchin']) && isset($_GET['search']) && 
 			$_GET['searchin'] == 'modules/shopping')
-			$this->search = trim(strip_tags($_GET['search']));
+			$this->search = trim(strip_tags((string)$_GET['search']));
 		
 		$this->attachmentsPath = SITE_PATH.'sitefiles/file/shopping/';
 		$this->digitalGoodsPath = $this->attachmentsPath.'digitalgoods/';
@@ -5446,16 +5446,16 @@ class shopping extends modules {
 		$id = null;
 		
 		if (isset($_POST['reordersubmit']))
-			$reorder = $_POST['reordersubmit'];
+			$reorder = (string)$_POST['reordersubmit'];
 		
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -5474,7 +5474,7 @@ class shopping extends modules {
 						" AND `ID` IN (".$this->userPermissionIDs.")":
 						null) .
 					($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-						" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+						" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 						null));
 			}
 			
@@ -5898,10 +5898,10 @@ class shopping extends modules {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -5941,7 +5941,7 @@ class shopping extends modules {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
@@ -5966,7 +5966,7 @@ class shopping extends modules {
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				null) .
 			($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+				" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 				null) .
 			(!$this->userPermissionIDs && ~$this->userPermissionType & USER_PERMISSION_TYPE_OWN?
 				" AND `SubCategoryOfID` = 0":
@@ -6550,7 +6550,7 @@ class shopping extends modules {
 		$users = null;
 		
 		if (isset($_GET['users']))
-			$users = $_GET['users'];
+			$users = (int)$_GET['users'];
 		
 		if ($users) {
 			if (!$GLOBALS['USER']->loginok || 
@@ -6565,7 +6565,7 @@ class shopping extends modules {
 			include_once('lib/userpermissions.class.php');
 			
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {

@@ -137,7 +137,7 @@ class _BFProtection {
 		
 		$rows = sql::run(
 			" SELECT `IP` FROM `{bfprotectionbans}`" .
-			" WHERE `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'" .
+			" WHERE `IP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'" .
 			" AND `EndTimeStamp` > DATE_ADD(NOW(), INTERVAL ".(int)$this->protectionTimeMinutes." MINUTE)");
 			
 		// If ip is banned for more than protectionTimeMinutes we exit the whole code/site as the 
@@ -146,13 +146,13 @@ class _BFProtection {
 		if (sql::rows($rows))
 			exit();
 		
-		$this->get($_SERVER['REMOTE_ADDR']);
+		$this->get((string)$_SERVER['REMOTE_ADDR']);
 		
 		if ($this->failureAttempts >= $this->maximumFailureAttempts) {
 			if ($this->failureAttempts >= $this->maximumFailureAttemptsBeforeTwoWeeksBan)
-				$this->banIP($_SERVER['REMOTE_ADDR'], 60*24*14); //two weeks ban in minutes
+				$this->banIP((string)$_SERVER['REMOTE_ADDR'], 60*24*14); //two weeks ban in minutes
 			else
-				$this->banIP($_SERVER['REMOTE_ADDR'], $this->protectionTimeMinutes);
+				$this->banIP((string)$_SERVER['REMOTE_ADDR'], $this->protectionTimeMinutes);
 			
 			return true;
 		}

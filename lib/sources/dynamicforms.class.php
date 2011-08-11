@@ -224,10 +224,10 @@ class _dynamicForms extends form {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -665,10 +665,10 @@ class _dynamicForms extends form {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -1332,7 +1332,7 @@ class _dynamicForms extends form {
 							" `ViewableBy` IN (1, 2, 3)":
 							" `ViewableBy` = 2") .
 						(JCORE_VERSION >= '0.9' && $GLOBALS['USER']->data['GroupID']?
-							" OR `ViewableBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
+							" OR `ViewableBy` = '".(int)($GLOBALS['USER']->data['GroupID']+10)."'":
 							null):
 						" `ViewableBy` = 1") .
 				" )":
@@ -1554,11 +1554,11 @@ class _dynamicForms extends form {
 		$localefiles = null;
 		
 		if (isset($_GET['localefiles']))
-			$localefiles = $_GET['localefiles'];
+			$localefiles = (int)$_GET['localefiles'];
 		
 		if ($localefiles) {
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {

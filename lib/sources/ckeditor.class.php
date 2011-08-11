@@ -21,13 +21,13 @@ class _ckEditor {
 		// http://cksource.com/forums/viewtopic.php?f=11&t=15966
 		$buffer = str_replace('resizable=yes', 'resizable=yes,scrollbars=yes', $buffer);
 		
-		if (false !== stripos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip')) {
+		if (false !== stripos((string)$_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip')) {
 			header('Vary: Accept-Encoding');
 			header('Content-Encoding: gzip');
 			return gzencode($buffer);
 		}
 		
-		if (false !== stripos($_SERVER['HTTP_ACCEPT_ENCODING'], 'deflate')) {
+		if (false !== stripos((string)$_SERVER['HTTP_ACCEPT_ENCODING'], 'deflate')) {
 			header('Vary: Accept-Encoding');
 			header('Content-Encoding: deflate');
 			return gzdeflate($buffer);
@@ -120,16 +120,16 @@ class _ckEditor {
 		$ckeditorfuncnum = 1;
 		
 		if (isset($_GET['upload']))
-			$upload = $_GET['upload'];
+			$upload = (int)$_GET['upload'];
 			
 		if (isset($_GET['image']))
-			$image = $_GET['image'];
+			$image = (int)$_GET['image'];
 			
 		if (isset($_GET['flash']))
-			$flash = $_GET['flash'];
+			$flash = (int)$_GET['flash'];
 			
 		if (isset($_FILES['upload']))
-			$file = $_FILES['upload'];
+			$file = (string)$_FILES['upload'];
 			
 		if (isset($_GET['CKEditorFuncNum']))
 			$this->ckFuncNum = (int)$_GET['CKEditorFuncNum'];
@@ -147,12 +147,12 @@ class _ckEditor {
 			include_once('lib/userpermissions.class.php');
 			
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				'admin/content/contentfiles');
 			
 			if (!$permission['PermissionType'])
 				$permission = userPermissions::check(
-					$GLOBALS['USER']->data['ID'],
+					(int)$GLOBALS['USER']->data['ID'],
 					(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
 			
 			echo 
@@ -214,7 +214,7 @@ class _ckEditor {
 		header('Content-Type: application/x-javascript');
 		
 		if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && 
-			(strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $filemtime)) 
+			(strtotime((string)$_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $filemtime)) 
 		{
 			header('HTTP/1.0 304 Not Modified');
 			return true;
@@ -264,7 +264,7 @@ class _ckEditor {
 			echo
 				"<script type='text/javascript'>" .
 				"CKEDITOR.replace('".$inputelement."'" .
-					(isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN']?
+					(isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN']?
 						", {" .
 							"filebrowserWindowWidth : '640'," .
 							"filebrowserBrowseUrl : '".$url."?request=ckeditor/ckeditorfilemanager&ajax=1'," .

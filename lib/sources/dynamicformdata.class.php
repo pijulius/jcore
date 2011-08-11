@@ -69,22 +69,22 @@ class _dynamicFormData {
 		$ids = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_POST['deleteallsubmit']))
-			$deleteall = $_POST['deleteallsubmit'];
+			$deleteall = (string)$_POST['deleteallsubmit'];
 		
 		if (isset($_POST['exportallsubmit']))
-			$exportall = $_POST['exportallsubmit'];
+			$exportall = (string)$_POST['exportallsubmit'];
 		
 		if (isset($_POST['deletesubmit']))
-			$delete = $_POST['deletesubmit'];
+			$delete = (string)$_POST['deletesubmit'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -150,7 +150,7 @@ class _dynamicFormData {
 		
 		if ($ids && count($ids) && $delete) {
 			foreach($ids as $id)
-				$this->delete($id);
+				$this->delete((int)$id);
 			
 			tooltip::display(
 				__("Data has been successfully deleted."),
@@ -478,7 +478,7 @@ class _dynamicFormData {
 		$search = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		echo
 			"<input type='hidden' name='path' value='".admin::path()."' />" .
@@ -596,13 +596,13 @@ class _dynamicFormData {
 		$id = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -974,7 +974,7 @@ class _dynamicFormData {
 		$download = null;
 		
 		if (isset($_GET['download'])) {
-			preg_match('/([^(\/|\\\)]*)$/', $_GET['download'], $matches);
+			preg_match('/([^(\/|\\\)]*)$/', strip_tags((string)$_GET['download']), $matches);
 			
 			if (isset($matches[1]) && $matches[1] != '.' && $matches[1] != '..')
 				$download = $matches[1];
@@ -990,7 +990,7 @@ class _dynamicFormData {
 		}
 		
 		$permission = userPermissions::check(
-			$GLOBALS['USER']->data['ID'],
+			(int)$GLOBALS['USER']->data['ID'],
 			$this->adminPath);
 		
 		if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
@@ -1011,7 +1011,7 @@ class _dynamicFormData {
 		}
 		
 		$permission = userPermissions::check(
-			$GLOBALS['USER']->data['ID'],
+			(int)$GLOBALS['USER']->data['ID'],
 			$this->adminPath);
 		
 		if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {

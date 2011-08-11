@@ -238,7 +238,7 @@ class contact extends modules {
 		$sessionid = null;
 		
 		if (isset($_POST['sessionid']))
-			$sessionid = $_POST['sessionid'];
+			$sessionid = strip_tags((string)$_POST['sessionid']);
 		
 		if ($sessionid)
 			echo

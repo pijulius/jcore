@@ -77,7 +77,7 @@ class _templateCSSEditor extends fileEditor {
 		}
 		
 		$permission = userPermissions::check(
-			$GLOBALS['USER']->data['ID'],
+			(int)$GLOBALS['USER']->data['ID'],
 			$this->adminPath);
 		
 		if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {

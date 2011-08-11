@@ -85,22 +85,22 @@ class _templateManager {
 		$id = null;
 		
 		if (isset($_GET['activate']))
-			$activate = $_GET['activate'];
+			$activate = (int)$_GET['activate'];
 		
 		if (isset($_GET['deactivate']))
-			$deactivate = $_GET['deactivate'];
+			$deactivate = (int)$_GET['deactivate'];
 		
 		if (isset($_GET['setadmin']))
-			$setadmin = $_GET['setadmin'];
+			$setadmin = (int)$_GET['setadmin'];
 		
 		if (isset($_GET['unsetadmin']))
-			$unsetadmin = $_GET['unsetadmin'];
+			$unsetadmin = (int)$_GET['unsetadmin'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['id']))
-			$id = $_GET['id'];
+			$id = strip_tags((string)$_GET['id']);
 		
 		if ($delete) {
 			if (!$this->delete($id))

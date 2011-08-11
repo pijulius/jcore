@@ -22,13 +22,13 @@ class _postsHandling {
 		$topageid = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_POST['copysubmit']))
-			$copy = $_POST['copysubmit'];
+			$copy = (string)$_POST['copysubmit'];
 		
 		if (isset($_POST['movesubmit']))
-			$move = $_POST['movesubmit'];
+			$move = (string)$_POST['movesubmit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -77,7 +77,7 @@ class _postsHandling {
 					'pages':
 					'menuitems') .
 				"}`" .
-			" WHERE `ID` = '".$topageid."'"));
+			" WHERE `ID` = '".(int)$topageid."'"));
 		
 		if (!$topage) {
 			tooltip::display(
@@ -91,7 +91,7 @@ class _postsHandling {
 		
 		if ($move) {
 			foreach($ids as $postid)
-				$this->move($postid, $topage['ID']);
+				$this->move((int)$postid, $topage['ID']);
 					
 			$_POST = array();
 			
@@ -104,7 +104,7 @@ class _postsHandling {
 		}
 		
 		foreach($ids as $postid)
-			$this->copy($postid, $topage['ID']);
+			$this->copy((int)$postid, $topage['ID']);
 		
 		$_POST = array();
 		
@@ -237,7 +237,7 @@ class _postsHandling {
 		$search = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['searchpageid']))
 			$pageid = (int)$_GET['searchpageid'];
@@ -463,7 +463,7 @@ class _postsHandling {
 		$search = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['searchpageid']))
 			$pageid = (int)$_GET['searchpageid'];

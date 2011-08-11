@@ -40,9 +40,9 @@ class memberAccountForm extends dynamicForms {
 		$postarray = $this->getPostArray();
 		
 		if (defined('USERNAME_CHANGES_DISABLED') && USERNAME_CHANGES_DISABLED)
-			$postarray['UserName'] = $GLOBALS['USER']->data['UserName'];
+			$postarray['UserName'] = strip_tags((string)$GLOBALS['USER']->data['UserName']);
 		
-		if (!$GLOBALS['USER']->edit($GLOBALS['USER']->data['ID'], $postarray))
+		if (!$GLOBALS['USER']->edit((int)$GLOBALS['USER']->data['ID'], $postarray))
 			return false;
 			 
 		tooltip::display(

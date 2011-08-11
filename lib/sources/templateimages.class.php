@@ -54,6 +54,13 @@ class _templateImages extends fileManager {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		$ownertitle = "<a href='?path=".admin::path()."'>images</a> / ";
+		
+		ob_start();
+		$this->displayPath();
+		$ownertitle .= ob_get_contents();
+		ob_end_clean();
+		
 		admin::displayTitle(
 			__('Template'),
 			$ownertitle);
@@ -63,7 +70,7 @@ class _templateImages extends fileManager {
 	}
 	
 	function displayAdmin() {
-		$this->displayAdminTitle(__("Images")." ".$this->selectedPath);
+		$this->displayAdminTitle();
 		$this->displayAdminDescription();
 		
 		echo
@@ -91,7 +98,7 @@ class _templateImages extends fileManager {
 		}
 		
 		$permission = userPermissions::check(
-			$GLOBALS['USER']->data['ID'],
+			(int)$GLOBALS['USER']->data['ID'],
 			$this->adminPath);
 		
 		if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {

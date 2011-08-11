@@ -65,10 +65,10 @@ class _posts {
 		
 		if (isset($_GET['searchin']) && isset($_GET['search']) && 
 			$_GET['searchin'] == 'posts')
-			$this->search = trim(strip_tags($_GET['search']));
+			$this->search = trim(strip_tags((string)$_GET['search']));
 			
 		if (isset($_GET['arguments']) && isset($_GET['ajax']))
-			$this->arguments = urldecode($_GET['arguments']);
+			$this->arguments = strip_tags(urldecode((string)$_GET['arguments']));
 	}
 	
 	function SQL() {
@@ -198,7 +198,7 @@ class _posts {
 		if (!isset($_GET['postid']))
 			$_GET['postid'] = 0;
 		
-		if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN'])
+		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
 			return false;
 		
 		$selected = sql::fetch(sql::run(
@@ -251,7 +251,7 @@ class _posts {
 		$edit = null;
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (JCORE_VERSION >= '0.7') {
 			$postsform = new postsForm();
@@ -726,16 +726,16 @@ class _posts {
 		$id = null;
 		
 		if (isset($_POST['reordersubmit']))
-			$reorder = $_POST['reordersubmit'];
+			$reorder = (string)$_POST['reordersubmit'];
 		
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -754,7 +754,7 @@ class _posts {
 						" AND `ID` IN (".$this->userPermissionIDs.")":
 						null) .
 					($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-						" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+						" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 						null));
 			}
 			
@@ -859,10 +859,10 @@ class _posts {
 		$search = null;
 		
 		if (isset($_POST['ajaxsearch']))
-			$search = trim(strip_tags($_POST['ajaxsearch']));
+			$search = trim(strip_tags((string)$_POST['ajaxsearch']));
 		
 		if (isset($_GET['ajaxsearch']))
-			$search = trim(strip_tags($_GET['ajaxsearch']));
+			$search = trim(strip_tags((string)$_GET['ajaxsearch']));
 		
 		if (!isset($search) && !isset($_GET['ajaxlimit']))
 			echo 
@@ -1199,7 +1199,7 @@ class _posts {
 		$search = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		echo 
 			"<input type='hidden' name='path' value='".admin::path()."' />" .
@@ -1305,18 +1305,18 @@ class _posts {
 		$id = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
 			
-		if ($edit && isset($_POST['InsertAsNew']) && $_POST['InsertAsNew']) {
+		if ($edit && isset($_POST['InsertAsNew']) && (int)$_POST['InsertAsNew']) {
 			$_GET['limit'] = null;
 			$_GET['edit'] = null;
 			$_GET['id'] = null;
@@ -1382,7 +1382,7 @@ class _posts {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
@@ -1400,7 +1400,7 @@ class _posts {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null) .
 				($search?
 					sql::search(
@@ -2402,10 +2402,10 @@ class _posts {
 		$keywords = null;
 		
 		if (isset($_GET['users']))
-			$users = $_GET['users'];
+			$users = (int)$_GET['users'];
 		
 		if (isset($_GET['keywords']))
-			$keywords = $_GET['keywords'];
+			$keywords = (int)$_GET['keywords'];
 		
 		if ($users) {
 			if (!$GLOBALS['USER']->loginok || 
@@ -2420,7 +2420,7 @@ class _posts {
 			include_once('lib/userpermissions.class.php');
 			
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
@@ -3629,7 +3629,7 @@ class _posts {
 							" `AccessibleBy` IN (2, 3)":
 							" `AccessibleBy` = 2") .
 						($GLOBALS['USER']->data['GroupID']?
-							" OR `AccessibleBy` = '".($GLOBALS['USER']->data['GroupID']+10)."'":
+							" OR `AccessibleBy` = '".(int)($GLOBALS['USER']->data['GroupID']+10)."'":
 							null):
 						" `AccessibleBy` = 1") .
 				" )":

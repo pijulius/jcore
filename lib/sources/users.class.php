@@ -135,10 +135,10 @@ class _users {
 		$edit = null;
 		
 		if (isset($_GET['searchgroupid']))
-			$groupid = $_GET['searchgroupid'];
+			$groupid = (int)$_GET['searchgroupid'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if ($membersModuleAvailable) {
 			if ($edit) {
@@ -369,19 +369,19 @@ class _users {
 		$ids = null;
 		
 		if (isset($_POST['activatesubmit']))
-			$activate = $_POST['activatesubmit'];
+			$activate = (string)$_POST['activatesubmit'];
 		
 		if (isset($_POST['suspendsubmit']))
-			$suspend = $_POST['suspendsubmit'];
+			$suspend = (string)$_POST['suspendsubmit'];
 		
 		if (isset($_POST['deletesubmit']))
-			$delete = $_POST['deletesubmit'];
+			$delete = (string)$_POST['deletesubmit'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -414,7 +414,7 @@ class _users {
 						(int)$id != $GLOBALS['USER']->data['ID'])
 						continue;
 					
-					$this->activate($id);
+					$this->activate((int)$id);
 				}
 				
 				tooltip::display(
@@ -434,7 +434,7 @@ class _users {
 						(int)$id != $GLOBALS['USER']->data['ID'])
 						continue;
 					
-					$this->suspend($id);
+					$this->suspend((int)$id);
 				}
 				
 				tooltip::display(
@@ -453,7 +453,7 @@ class _users {
 						(int)$id != $GLOBALS['USER']->data['ID'])
 						continue;
 					
-					$this->delete($id);
+					$this->delete((int)$id);
 				}
 				
 				tooltip::display(
@@ -719,7 +719,7 @@ class _users {
 		$groupid = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['searchgroupid']))
 			$groupid = (int)$_GET['searchgroupid'];
@@ -866,16 +866,16 @@ class _users {
 		$id = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['searchgroupid']))
 			$groupid = (int)$_GET['searchgroupid'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -930,7 +930,7 @@ class _users {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" AND `ID` = '".$GLOBALS['USER']->data['ID']."'":
+					" AND `ID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
@@ -947,7 +947,7 @@ class _users {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" AND `ID` = '".$GLOBALS['USER']->data['ID']."'":
+					" AND `ID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null) .
 				(JCORE_VERSION >= '0.8' && $groupid?
 					" AND `GroupID` = '".(int)$groupid."'":
@@ -1305,10 +1305,10 @@ class _users {
 			$rememberme = (int)$_POST['rememberme'];
 			
 		if (isset($_POST['member']))
-			$member = trim($_POST['member']);
+			$member = trim(strip_tags((string)$_POST['member']));
 			
 		if (isset($_POST['password']))
-			$password = $_POST['password'];
+			$password = (string)$_POST['password'];
 		
 		$bfprotection = new BFProtection();
 		$bfprotection->verify();
@@ -1325,7 +1325,7 @@ class _users {
 		// Login a new user
 		if ($member && $password) {
 			if ($bfprotection->failureAttempts >= $bfprotection->maximumFailureAttempts) {
-				$bfprotection->add($member, $_SERVER['REMOTE_ADDR']);
+				$bfprotection->add($member, strip_tags((string)$_SERVER['REMOTE_ADDR']));
 				$this->verifyError = 3;
 				return false;
 			}
@@ -1355,7 +1355,7 @@ class _users {
 			if (!$record || $record['Password'] != 
 				security::text2Hash($password, $record['Password']))
 			{
-				$bfprotection->add($member, $_SERVER['REMOTE_ADDR']);
+				$bfprotection->add($member, strip_tags((string)$_SERVER['REMOTE_ADDR']));
 				
 				$this->loginok = false;
 				$this->verifyError = 2;
@@ -1374,7 +1374,7 @@ class _users {
 				return false;
 			}
 		
-			$bfprotection->clear($_SERVER['REMOTE_ADDR']);
+			$bfprotection->clear(strip_tags((string)$_SERVER['REMOTE_ADDR']));
 			
 			// If user is banned because of to many logins from different ips
 			if ($ptprotection->verify($record['ID'])) {
@@ -1392,7 +1392,7 @@ class _users {
 					$record['ID'].$record['Email'] .
 					$record['TimeStamp'].$record['LastVisitTimeStamp']))."', " .
 				" `UserID` = '".$record['ID']."'," .
-				" `FromIP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'," .
+				" `FromIP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'," .
 				($record['StayLoggedIn']?
 					" `KeepIt` = 1, ":
 					NULL) .
@@ -1415,7 +1415,7 @@ class _users {
 						0) .
 					"'," .
 				" `LastVisitTimeStamp` = NOW()," .
-				" `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'," .
+				" `IP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'," .
 				" `TimeStamp` = `TimeStamp`" .
 				" WHERE `ID` = '".$record['ID']."'");
 				
@@ -1455,7 +1455,7 @@ class _users {
 			$this->data = $this->get($record['UserID']);
 			
 			if ((!isset($this->data['SkipIPCheck']) || !$this->data['SkipIPCheck']) && 
-				$record['FromIP'] != security::ip2long($_SERVER['REMOTE_ADDR'])) 
+				$record['FromIP'] != security::ip2long((string)$_SERVER['REMOTE_ADDR'])) 
 			{
 				$this->reset();
 				return false;
@@ -1582,7 +1582,7 @@ class _users {
 		$requests = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows` FROM `{userrequests}`" .
 			" WHERE `UserID` = '".$values['UserID']."'" .
-			" AND `FromIP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'" .
+			" AND `FromIP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'" .
 			" LIMIT 1"));
 		
 		if ($requests['Rows'] >= BRUTE_FORCE_MAXIMUM_FAILURE_ATTEMPTS) {
@@ -1610,7 +1610,7 @@ class _users {
 					"',":
 				null) .
 			" `RequestID` = '".$newrequestid."'," .
-			" `FromIP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'");
+			" `FromIP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'");
 			
 		if (sql::affected() == -1) {
 			tooltip::display(
@@ -1631,7 +1631,7 @@ class _users {
 		return sql::fetch(sql::run(
 			" SELECT * FROM `{userrequests}` " .
 			" WHERE `RequestID` = BINARY '".sql::escape($requestid)."'" .
-			" AND `FromIP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'" .
+			" AND `FromIP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'" .
 			" LIMIT 1"));
 	}
 	
@@ -1725,7 +1725,7 @@ class _users {
 		$record = sql::fetch(sql::run(
 			" SELECT * FROM `{userlogins}`" .
 			" WHERE `SessionID` = BINARY '".sql::escape($_COOKIE['memberloginid'])."'" .
-			" AND `FromIP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'" .
+			" AND `FromIP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'" .
 			" LIMIT 1"));
 					
 		if (!$record)
@@ -1863,7 +1863,7 @@ class _users {
 		$requestid = null;
 		
 		if (isset($_GET['requestid']))
-			$requestid = $_GET['requestid'];
+			$requestid = strip_tags((string)$_GET['requestid']);
 		
 		if (!$requestid)
 			return false;
@@ -1989,7 +1989,7 @@ class _users {
 		$login = null;
 		
 		if (isset($_GET['quicklogin']))
-			$login = $_GET['quicklogin'];
+			$login = (int)$_GET['quicklogin'];
 		
 		if ($login) {
 			$this->displayQuickLogin();
@@ -2008,7 +2008,7 @@ class _users {
 		if (isset($row['DisplayUserName']) && $row['DisplayUserName'])
 			$username = $row['DisplayUserName'];
 		
-		if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN'])
+		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
 			return
 				"<span class='user-name'>" .
 					sprintf($format,
@@ -2153,10 +2153,10 @@ class _users {
 		$search = null;
 		
 		if (isset($_POST['ajaxsearch']))
-			$search = trim(strip_tags($_POST['ajaxsearch']));
+			$search = trim(strip_tags((string)$_POST['ajaxsearch']));
 		
 		if (isset($_GET['ajaxsearch']))
-			$search = trim(strip_tags($_GET['ajaxsearch']));
+			$search = trim(strip_tags((string)$_GET['ajaxsearch']));
 		
 		if (!isset($search) && !isset($_GET['ajaxlimit']))
 			echo 
@@ -2352,7 +2352,7 @@ class _users {
 		$form->footer = '';
 		$form->action = $referer.
 			(isset($_GET['anchor'])?
-				"#".$_GET['anchor']:
+				"#".strip_tags((string)$_GET['anchor']):
 				null);
 		
 		$this->setupQuickLoginForm($form);
@@ -2465,7 +2465,7 @@ class _users {
 		}
 			
 		$bfprotection = new BFProtection();
-		$bfprotection->get($_SERVER['REMOTE_ADDR']);
+		$bfprotection->get(strip_tags((string)$_SERVER['REMOTE_ADDR']));
 		
 		$ptprotection = new PTProtection();
 		
@@ -2548,7 +2548,7 @@ class _users {
 		$requestpassword = null;
 		
 		if (isset($_GET['requestpassword']))
-			$requestpassword = $_GET['requestpassword'];
+			$requestpassword = (int)$_GET['requestpassword'];
 		
 		if (isset($_GET['login']) || isset($_GET['quicklogin']) || $login)
 			$login = true;

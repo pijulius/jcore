@@ -23,7 +23,7 @@ class _css {
 	// CSS Browser Selector based on Bastian Allgeier's work
 	// http://bastian-allgeier.de/css_browser_selector
 	static function browserSelector($ua = null) {
-		$ua = ($ua?strtolower($ua):strtolower($_SERVER['HTTP_USER_AGENT']));		
+		$ua = ($ua?strtolower($ua):strtolower((string)$_SERVER['HTTP_USER_AGENT']));		
 
 		$g = 'gecko';
 		$w = 'webkit';
@@ -85,7 +85,7 @@ class _css {
 			$admin = null;
 			
 			if (isset($_GET['admin']))
-				$admin = $_GET['admin'];
+				$admin = (int)$_GET['admin'];
 			
 			if (defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE &&
 				(!$admin || WEBSITE_TEMPLATE_SETFORADMIN))
@@ -124,13 +124,13 @@ class _css {
 		if (!css::$compression)
 			return $buffer;
 		
-		if (false !== stripos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip')) {
+		if (false !== stripos((string)$_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip')) {
 			header('Vary: Accept-Encoding');
 			header('Content-Encoding: gzip');
 			return gzencode($buffer);
 		}
 		
-		if (false !== stripos($_SERVER['HTTP_ACCEPT_ENCODING'], 'deflate')) {
+		if (false !== stripos((string)$_SERVER['HTTP_ACCEPT_ENCODING'], 'deflate')) {
 			header('Vary: Accept-Encoding');
 			header('Content-Encoding: deflate');
 			return gzdeflate($buffer);
@@ -162,7 +162,7 @@ class _css {
 		header('Content-Type: text/x-component');
 		
 		if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && 
-			(strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $filemtime)) 
+			(strtotime((string)$_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $filemtime)) 
 		{
 			header('HTTP/1.0 304 Not Modified');
 			return true;
@@ -183,7 +183,7 @@ class _css {
 		$admin = null;
 		
 		if (isset($_GET['admin']))
-			$admin = $_GET['admin'];
+			$admin = (int)$_GET['admin'];
 		
 		$filemtime = @filemtime(SITE_PATH.'template/template.css');
 		
@@ -220,7 +220,7 @@ class _css {
 		header('Content-Type: text/css');
 		
 		if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && 
-			(strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $filemtime)) 
+			(strtotime((string)$_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $filemtime)) 
 		{
 			header('HTTP/1.0 304 Not Modified');
 			return true;
@@ -287,7 +287,7 @@ class _css {
 		$filemtime = @filemtime(SITE_PATH.'template/template.css');
 		
 		if (defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE &&
-			(!isset($GLOBALS['ADMIN']) || !$GLOBALS['ADMIN'] ||
+			(!isset($GLOBALS['ADMIN']) || !(bool)$GLOBALS['ADMIN'] ||
 			WEBSITE_TEMPLATE_SETFORADMIN)) 
 		{
 			$tfilemtime = @filemtime(SITE_PATH.'template/' .
@@ -297,7 +297,7 @@ class _css {
 				$filemtime = $tfilemtime;
 		}
 		
-		if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN']) {
+		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN']) {
 			if (defined('WEBSITE_TEMPLATE') && 
 				WEBSITE_TEMPLATE && WEBSITE_TEMPLATE_SETFORADMIN)
 				$afilemtime = @filemtime(SITE_PATH.'template/' .
@@ -319,12 +319,12 @@ class _css {
 		if (JCORE_VERSION >= '0.6')
 			echo 
 				"<link href='".url::site()."static.php?request=css" .
-					(isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN']?
+					(isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN']?
 						"&amp;admin=1":
 						null) .
 					"&amp;".$filemtime.'-v'.JCORE_VERSION .
 					(defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE &&
-					 (!isset($GLOBALS['ADMIN']) || !$GLOBALS['ADMIN'] ||
+					 (!isset($GLOBALS['ADMIN']) || !(bool)$GLOBALS['ADMIN'] ||
 					  WEBSITE_TEMPLATE_SETFORADMIN)?
 						'-t'.urlencode(WEBSITE_TEMPLATE):
 						null) .
@@ -333,13 +333,13 @@ class _css {
 		else
 			echo 
 				"<link href='".url::site()."index.php?request=css" .
-					(isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN']?
+					(isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN']?
 						"&amp;admin=1":
 						null) .
 					"&amp;ajax=1" .
 					"&amp;".$filemtime.'-v'.JCORE_VERSION .
 					(defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE &&
-					 (!isset($GLOBALS['ADMIN']) || !$GLOBALS['ADMIN'] ||
+					 (!isset($GLOBALS['ADMIN']) || !(bool)$GLOBALS['ADMIN'] ||
 					  WEBSITE_TEMPLATE_SETFORADMIN)?
 						'-t'.urlencode(WEBSITE_TEMPLATE):
 						null) .

@@ -93,7 +93,7 @@ class _comments {
 				include_once('lib/userpermissions.class.php');
 				
 				$userpermission = userPermissions::check(
-					$GLOBALS['USER']->data['ID'], $this->adminPath);
+					(int)$GLOBALS['USER']->data['ID'], $this->adminPath);
 			}
 			
 			$this->userPermissionType = $userpermission['PermissionType'];
@@ -117,13 +117,13 @@ class _comments {
 				  MODERATED_COMMENTS_PENDING_MINUTES?
 					" AND (`TimeStamp` <= DATE_SUB(NOW(), INTERVAL " .
 						(int)MODERATED_COMMENTS_PENDING_MINUTES." MINUTE)" .
-					" OR `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."')":
+					" OR `IP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."')":
 					null) .
 				 (defined('MODERATED_COMMENTS_BY_APPROVAL') && 
 				  MODERATED_COMMENTS_BY_APPROVAL && (!$GLOBALS['USER']->loginok ||
 				  !$GLOBALS['USER']->data['Admin'] || ~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE)?
 					" AND (`Pending` = 0" .
-					" OR `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."')":
+					" OR `IP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."')":
 					null):
 				null) .
 			" ORDER BY " .
@@ -193,31 +193,31 @@ class _comments {
 		$ids = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_POST['declinesubmit']))
-			$decline = $_POST['declinesubmit'];
+			$decline = (string)$_POST['declinesubmit'];
 		
 		if (isset($_POST['approvesubmit']))
-			$approve = $_POST['approvesubmit'];
+			$approve = (string)$_POST['approvesubmit'];
 		
 		if (isset($_POST['deleteallsubmit']))
-			$deleteall = $_POST['deleteallsubmit'];
+			$deleteall = (string)$_POST['deleteallsubmit'];
 		
 		if (isset($_POST['deletesubmit']))
-			$delete = $_POST['deletesubmit'];
+			$delete = (string)$_POST['deletesubmit'];
 		
 		if (isset($_GET['decline']))
-			$decline = $_GET['decline'];
+			$decline = (int)$_GET['decline'];
 		
 		if (isset($_GET['approve']))
-			$approve = $_GET['approve'];
+			$approve = (int)$_GET['approve'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -271,7 +271,7 @@ class _comments {
 		if ($ids && count($ids)) {
 			if ($decline) {
 				foreach($ids as $id)
-					$this->decline($id);
+					$this->decline((int)$id);
 				
 				tooltip::display(
 					__("Comments have been successfully declined and " .
@@ -283,7 +283,7 @@ class _comments {
 			
 			if ($approve) {
 				foreach($ids as $id)
-					$this->approve($id);
+					$this->approve((int)$id);
 				
 				tooltip::display(
 					__("Comments have been successfully approved and " .
@@ -295,7 +295,7 @@ class _comments {
 			
 			if ($delete) {
 				foreach($ids as $id)
-					$this->delete($id);
+					$this->delete((int)$id);
 				
 				tooltip::display(
 					__("Comments have been successfully deleted."),
@@ -526,7 +526,7 @@ class _comments {
 		$search = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		echo
 			"<input type='hidden' name='path' value='".admin::path()."' />" .
@@ -640,13 +640,13 @@ class _comments {
 		$id = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -821,7 +821,7 @@ class _comments {
 			 (!$GLOBALS['USER']->loginok || !$GLOBALS['USER']->data['Admin'])?
 				" `Pending` = 1,":
 				null) .
-			" `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'," .
+			" `IP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'," .
 			" `TimeStamp` = NOW()");
 			
 		if (!$newid) {
@@ -1203,9 +1203,9 @@ class _comments {
 			" SELECT `TimeStamp` FROM `{".$this->sqlTable."ratings}`" .
 			" WHERE `CommentID` = '".$id."'" .
 			($this->guestComments?
-				" AND `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'" .
+				" AND `IP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'" .
 				" AND `TimeStamp` > DATE_SUB(NOW(), INTERVAL 1 DAY)":
-				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'")));
+				" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'")));
 			
 		if ($row) {
 			tooltip::display(
@@ -1218,7 +1218,7 @@ class _comments {
 		sql::run(
 			" INSERT INTO `{".$this->sqlTable."ratings}`" .
 			" SET `CommentID` = '".$id."'," .
-			" `IP` = '".security::ip2long($_SERVER['REMOTE_ADDR'])."'," .
+			" `IP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'," .
 			" `TimeStamp` = NOW()," .
 			($GLOBALS['USER']->loginok?
 				" `UserID` = '".(int)$GLOBALS['USER']->data['ID']."',":
@@ -1276,10 +1276,10 @@ class _comments {
 			$commentid = (int)$_GET[strtolower(get_class($this))];
 			
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 			
 		if (isset($_POST['approve']))
-			$approve = $_POST['approve'];
+			$approve = (int)$_POST['approve'];
 		
 		if ($delete) {
 			if (!$GLOBALS['USER']->loginok ||
@@ -1417,16 +1417,16 @@ class _comments {
 		$edit = null;
 			
 		if (isset($_GET['rateup']))
-			$rateup = $_GET['rateup'];
+			$rateup = (int)$_GET['rateup'];
 	
 		if (isset($_GET['ratedown']))
-			$ratedown = $_GET['ratedown'];
+			$ratedown = (int)$_GET['ratedown'];
 	
 		if (isset($_GET['reply']))
-			$reply = $_GET['reply'];
+			$reply = (int)$_GET['reply'];
 			
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 			
 		if (!$rateup && !$ratedown && !$reply && !$edit)
 			return false;

@@ -49,13 +49,13 @@ class _jQuery {
 		if (!jQuery::$compression)
 			return $buffer;
 		
-		if (false !== stripos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip')) {
+		if (false !== stripos((string)$_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip')) {
 			header('Vary: Accept-Encoding');
 			header('Content-Encoding: gzip');
 			return gzencode($buffer);
 		}
 		
-		if (false !== stripos($_SERVER['HTTP_ACCEPT_ENCODING'], 'deflate')) {
+		if (false !== stripos((string)$_SERVER['HTTP_ACCEPT_ENCODING'], 'deflate')) {
 			header('Vary: Accept-Encoding');
 			header('Content-Encoding: deflate');
 			return gzdeflate($buffer);
@@ -121,10 +121,10 @@ class _jQuery {
 		$request = null;
 		
 		if (isset($_GET['admin']))
-			$admin = $_GET['admin'];
+			$admin = (int)$_GET['admin'];
 		
 		if (isset($_GET['request']))
-			$request = $_GET['request'];
+			$request = (string)$_GET['request'];
 		
 		if ($admin && 
 			(!defined('JQUERY_LOAD_ADMIN_PLUGINS') || 
@@ -152,7 +152,7 @@ class _jQuery {
 		$admin = null;
 		
 		if (isset($_GET['admin']))
-			$admin = $_GET['admin'];
+			$admin = (int)$_GET['admin'];
 		
 		$filemtime = @filemtime(SITE_PATH.'template/template.js');
 		
@@ -170,7 +170,7 @@ class _jQuery {
 		header('Content-Type: application/x-javascript');
 		
 		if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && 
-			(strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $filemtime)) 
+			(strtotime((string)$_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $filemtime)) 
 		{
 			header('HTTP/1.0 304 Not Modified');
 			return true;
@@ -285,13 +285,13 @@ class _jQuery {
 	
 	static function displayPlugins() {
 		if (defined('JQUERY_DISABLED') && JQUERY_DISABLED &&
-			(!isset($GLOBALS['ADMIN']) || !$GLOBALS['ADMIN']))
+			(!isset($GLOBALS['ADMIN']) || !(bool)$GLOBALS['ADMIN']))
 			return;
 		
 		$filemtime = @filemtime(SITE_PATH.'template/template.js');
 		
 		if (defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE &&
-			(!isset($GLOBALS['ADMIN']) || !$GLOBALS['ADMIN'] ||
+			(!isset($GLOBALS['ADMIN']) || !(bool)$GLOBALS['ADMIN'] ||
 			WEBSITE_TEMPLATE_SETFORADMIN)) 
 		{
 			$tfilemtime = @filemtime(SITE_PATH.'template/' .
@@ -303,12 +303,12 @@ class _jQuery {
 		
 		echo 
 			"<script src='".url::site()."static.php?request=js" .
-				(isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN']?
+				(isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN']?
 					"&amp;admin=1":
 					null) .
 				"&amp;".$filemtime.'-v'.JCORE_VERSION .
 				(defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE &&
-				 (!isset($GLOBALS['ADMIN']) || !$GLOBALS['ADMIN'] ||
+				 (!isset($GLOBALS['ADMIN']) || !(bool)$GLOBALS['ADMIN'] ||
 				  WEBSITE_TEMPLATE_SETFORADMIN)?
 					'-t'.urlencode(WEBSITE_TEMPLATE):
 					null) .
@@ -321,7 +321,7 @@ class _jQuery {
 		$admin = null;
 		
 		if (isset($_GET['admin']))
-			$admin = $_GET['admin'];
+			$admin = (int)$_GET['admin'];
 		
 		$filemtime = @filemtime(SITE_PATH.'template/template.js');
 		
@@ -339,7 +339,7 @@ class _jQuery {
 		header('Content-Type: application/x-javascript');
 		
 		if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && 
-			(strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $filemtime)) 
+			(strtotime((string)$_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $filemtime)) 
 		{
 			header('HTTP/1.0 304 Not Modified');
 			return true;
@@ -357,13 +357,13 @@ class _jQuery {
 	
 	static function display() {
 		if (defined('JQUERY_DISABLED') && JQUERY_DISABLED &&
-			(!isset($GLOBALS['ADMIN']) || !$GLOBALS['ADMIN']))
+			(!isset($GLOBALS['ADMIN']) || !(bool)$GLOBALS['ADMIN']))
 			return;
 		
 		$filemtime = @filemtime(SITE_PATH.'template/template.js');
 		
 		if (defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE &&
-			(!isset($GLOBALS['ADMIN']) || !$GLOBALS['ADMIN'] ||
+			(!isset($GLOBALS['ADMIN']) || !(bool)$GLOBALS['ADMIN'] ||
 			WEBSITE_TEMPLATE_SETFORADMIN)) 
 		{
 			$tfilemtime = @filemtime(SITE_PATH.'template/' .
@@ -376,12 +376,12 @@ class _jQuery {
 		if (JCORE_VERSION >= '0.6')
 			echo 
 				"<script src='".url::site()."static.php?request=jquery" .
-					(isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN']?
+					(isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN']?
 						"&amp;admin=1":
 						null) .
 					"&amp;".$filemtime.'-v'.JCORE_VERSION .
 					(defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE &&
-					 (!isset($GLOBALS['ADMIN']) || !$GLOBALS['ADMIN'] ||
+					 (!isset($GLOBALS['ADMIN']) || !(bool)$GLOBALS['ADMIN'] ||
 					  WEBSITE_TEMPLATE_SETFORADMIN)?
 						'-t'.urlencode(WEBSITE_TEMPLATE):
 						null) .

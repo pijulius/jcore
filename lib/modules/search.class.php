@@ -27,16 +27,16 @@ class search extends modules {
 		languages::load('search');
 		
 		if (isset($_GET['search']))
-			$this->search = trim(strip_tags($_GET['search']));
+			$this->search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_POST['search']))
-			$this->search = trim(strip_tags($_POST['search']));
+			$this->search = trim(strip_tags((string)$_POST['search']));
 		
 		if (isset($_GET['searchin']))
-			$this->searchIn = trim(strip_tags($_GET['searchin']));
+			$this->searchIn = trim(strip_tags((string)$_GET['searchin']));
 		
 		if (isset($_POST['searchin']))
-			$this->searchIn = trim(strip_tags($_POST['searchin']));
+			$this->searchIn = trim(strip_tags((string)$_POST['searchin']));
 	}
 	
 	function __destruct() {
@@ -148,7 +148,7 @@ class search extends modules {
 		$modulelimits = null;
 		
 		if (isset($_POST['submit']))
-			$submit = $_POST['submit'];
+			$submit = (string)$_POST['submit'];
 		
 		if (isset($_POST['moduleids']))
 			$moduleids = (array)$_POST['moduleids'];
@@ -165,7 +165,7 @@ class search extends modules {
 					sql::run(
 						" INSERT INTO `{searchmodules}` SET" .
 						" `ModuleID` = '".(int)$moduleid."'," .
-						" `Limit` = '".(int)$modulelimits[$moduleid]."'");
+						" `Limit` = '".(int)$modulelimits[(int)$moduleid]."'");
 			}
 			
 			tooltip::display(

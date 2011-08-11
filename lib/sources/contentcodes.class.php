@@ -15,7 +15,7 @@ define('NOW_YEAR', date('Y'));
 define('NOW_MONTH', date('m'));
 define('NOW_DAY', date('d'));
 define('CURRENT_URL', url::get());
-define('REMOTE_ADDR', $_SERVER['REMOTE_ADDR']);
+define('REMOTE_ADDR', (string)$_SERVER['REMOTE_ADDR']);
 
 include_once('lib/calendar.class.php');
  
@@ -195,10 +195,10 @@ class _contentCodes {
 				break;
 			}
 				
-			$variable = $variable[$exparg];
+			$variable = strip_tags((string)$variable[$exparg]);
 		}
 		
-		return $variable;
+		return (string)$variable;
 	}
 	
 	static function replaceDefinitions(&$content) {

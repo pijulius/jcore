@@ -34,7 +34,7 @@ class _sitemap {
 	
 	function verifyAdmin() {
 		$regenerate = null;
-		if (isset($_GET['regenerate']) && $_GET['regenerate'])
+		if (isset($_GET['regenerate']) && (string)$_GET['regenerate'])
 			$regenerate = true;
 		
 		if ($regenerate) {

@@ -114,13 +114,13 @@ class _form {
 	
 	function submitted() {
 		if (isset($GLOBALS['_'.strtoupper($this->method)][$this->id.'submit']))
-			return $GLOBALS['_'.strtoupper($this->method)][$this->id.'submit'];
+			return (string)$GLOBALS['_'.strtoupper($this->method)][$this->id.'submit'];
 		
 		foreach($this->elements as $element) {
 			if ($element['Type'] == FORM_INPUT_TYPE_SUBMIT && 
 				isset($GLOBALS['_'.strtoupper($this->method)][$element['Name']]))
 			{
-				return $GLOBALS['_'.strtoupper($this->method)][$element['Name']];
+				return (string)$GLOBALS['_'.strtoupper($this->method)][$element['Name']];
 			}
 		}
 		
@@ -248,7 +248,7 @@ class _form {
 			$this->elements[$elementid]['OriginalValue'] = $value;
 			$this->elements[$elementid]['Value'] = 
 				(isset($GLOBALS['_'.strtoupper($this->method)]['scimagecode'])?
-					$GLOBALS['_'.strtoupper($this->method)]['scimagecode']:
+					strip_tags((string)$GLOBALS['_'.strtoupper($this->method)]['scimagecode']):
 					null);
 					
 			if (!isset($this->elements[$elementid]['Attributes']))
@@ -349,29 +349,7 @@ class _form {
 			unset($this->pageBreakElements[$elementid]);
 		}
 		
-		$submittedvalue = null;
-		
-		if (isset($GLOBALS['_'.strtoupper($this->method)][$name]))
-			$submittedvalue = $GLOBALS['_'.strtoupper($this->method)][$name];
-		
-		if (preg_match('/\[(.*)\]/', $name, $matches) &&
-			isset($GLOBALS['_'.strtoupper($this->method)][preg_replace('/\[.*\]/', '', $name)]) && 
-			is_array($GLOBALS['_'.strtoupper($this->method)][preg_replace('/\[.*\]/', '', $name)]))
-		{
-			$submittedvalue = 
-				$GLOBALS['_'.strtoupper($this->method)]
-					[preg_replace('/\[.*\]/', '', $name)];
-			
-			if (isset($matches[1])) {
-				$arraykeys = explode('][', $matches[1]);
-				foreach($arraykeys as $arraykey) {
-					if (isset($submittedvalue[$arraykey]))
-						$submittedvalue = $submittedvalue[$arraykey];
-					else
-						$submittedvalue = null;
-				}
-			}
-		}
+		$submittedvalue = $this->get($elementid);
 		
 		if ($type == FORM_INPUT_TYPE_CHECKBOX || 
 			$type == FORM_INPUT_TYPE_RADIO) 
@@ -1151,7 +1129,7 @@ class _form {
 						($prevelement['Name']?
 							" fc-".url::genPathFromString($prevelement['Name']):
 							null) .
-						(isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN']?
+						(isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN']?
 							" expanded":
 							form::fcState(
 								'fc'.url::genPathFromString($prevelement['Name']),

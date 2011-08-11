@@ -62,17 +62,17 @@ class _ckEditorFileManager extends fileManager {
 		include_once('lib/userpermissions.class.php');
 		
 		$permission = userPermissions::check(
-			$GLOBALS['USER']->data['ID'],
+			(int)$GLOBALS['USER']->data['ID'],
 			'admin/content/contentfiles');
 		
 		if (!$permission['PermissionType'])
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
 		
 		if (!$permission['PermissionType'])
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				'admin/content/postsatglance');
 		
 		if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE)

@@ -300,12 +300,12 @@ class shoppingOrderMethodPayPal extends form {
 			!$_POST['invoice'] || !$_POST['txn_id'])
 			exit("Invalid IPN request!");
 		
-		$grandtotal = $_POST['mc_gross'];
-		$ordernumber = $_POST['invoice'];
-		$ordertransactionid = $_POST['txn_id'];
-		$orderemail = $_POST['payer_email'];
-		$paymentstatus = $_POST['payment_status'];
-		$paymenttype = $_POST['payment_type'];
+		$grandtotal = strip_tags((string)$_POST['mc_gross']);
+		$ordernumber = strip_tags((string)$_POST['invoice']);
+		$ordertransactionid = strip_tags((string)$_POST['txn_id']);
+		$orderemail = strip_tags((string)$_POST['payer_email']);
+		$paymentstatus = strip_tags((string)$_POST['payment_status']);
+		$paymenttype = strip_tags((string)$_POST['payment_type']);
 		
 		$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
 		
@@ -342,12 +342,12 @@ class shoppingOrderMethodPayPal extends form {
 		// These are used for debugging
 		$postgetarguments = "GET arguments:\n";
 		foreach($_GET as $key => $value) {
-			$postgetarguments .= $key."=".$value."\n";
+			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
 		
 		$postgetarguments .= "\nPOST arguments:\n";
 		foreach($_POST as $key => $value) {
-			$postgetarguments .= $key."=".$value."\n";
+			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
    		
 		$email = new email();
@@ -542,12 +542,12 @@ class shoppingOrderMethodCCBill extends form {
 			!$_POST['orderid'] || !$_POST['subscription_id']) 
 			exit("Invalid IPN request!");
 		
-		$grandtotal = $_POST['initialPrice'];
-		$ordernumber = $_POST['orderid'];
-		$ordertransactionid = $_POST['subscription_id'];
-		$orderemail = $_POST['email'];
-		$paymentdeclined = @$_POST['reasonForDeclineCode'];
-		$paymentdeclinedmsg = @$_POST['reasonForDecline'];
+		$grandtotal = strip_tags((string)$_POST['initialPrice']);
+		$ordernumber = strip_tags((string)$_POST['orderid']);
+		$ordertransactionid = strip_tags((string)$_POST['subscription_id']);
+		$orderemail = strip_tags((string)$_POST['email']);
+		$paymentdeclined = strip_tags((string)@$_POST['reasonForDeclineCode']);
+		$paymentdeclinedmsg = strip_tags((string)@$_POST['reasonForDecline']);
 		
 		if ($paymentdeclined)
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_FAILED;
@@ -557,12 +557,12 @@ class shoppingOrderMethodCCBill extends form {
 		// These are used for debugging
 		$postgetarguments = "GET arguments:\n";
 		foreach($_GET as $key => $value) {
-			$postgetarguments .= $key."=".$value."\n";
+			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
     	}
 		
 		$postgetarguments .= "\nPOST arguments:\n";
 		foreach($_POST as $key => $value) {
-			$postgetarguments .= $key."=".$value."\n";
+			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
     	}
     	
 		$email = new email();
@@ -609,7 +609,7 @@ class shoppingOrderMethodCCBill extends form {
 			SHOPPING_CART_ORDER_METHOD_CCBILL_CURRENCY_CODE.
 			SHOPPING_CART_ORDER_METHOD_CCBILL_ENCRYPTION_KEY);
 		
-		if ($diggest != $_POST['responseDigest']) {
+		if ($diggest != strip_tags((string)$_POST['responseDigest'])) {
 			$email->variables['Warning'] .= "FAILED: Not a CCBill request!\n";	
 			$email->send();
 			
@@ -743,12 +743,12 @@ class shoppingOrderMethodAlertPay extends form {
 			!$_POST['ap_securitycode'] || !$_POST['ap_itemcode'])
 			exit("Invalid IPN request!");
 		
-		$securitycode = $_POST['ap_securitycode'];
-		$grandtotal = $_POST['ap_totalamount'];
-		$ordernumber = $_POST['ap_itemcode'];
-		$ordertransactionid = $_POST['ap_referencenumber'];
-		$orderemail = $_POST['ap_custemailaddress'];
-		$paymentstatus = $_POST['ap_status'];
+		$securitycode = strip_tags((string)$_POST['ap_securitycode']);
+		$grandtotal = strip_tags((string)$_POST['ap_totalamount']);
+		$ordernumber = strip_tags((string)$_POST['ap_itemcode']);
+		$ordertransactionid = strip_tags((string)$_POST['ap_referencenumber']);
+		$orderemail = strip_tags((string)$_POST['ap_custemailaddress']);
+		$paymentstatus = strip_tags((string)$_POST['ap_status']);
 		
 		$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
 		
@@ -766,12 +766,12 @@ class shoppingOrderMethodAlertPay extends form {
 		// These are used for debugging
 		$postgetarguments = "GET arguments:\n";
 		foreach($_GET as $key => $value) {
-			$postgetarguments .= $key."=".$value."\n";
+			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
 		
 		$postgetarguments .= "\nPOST arguments:\n";
 		foreach($_POST as $key => $value) {
-			$postgetarguments .= $key."=".$value."\n";
+			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
    		
 		$email = new email();
@@ -965,12 +965,12 @@ class shoppingOrderMethodAuthorizeDotNet extends form {
 			!$_POST['x_invoice_num'] || !$_POST['x_trans_id'])
 			exit("Invalid IPN request!");
 		
-		$grandtotal = $_POST['x_amount'];
-		$ordernumber = $_POST['x_invoice_num'];
-		$ordertransactionid = $_POST['x_trans_id'];
-		$orderemail = $_POST['x_email'];
-		$paymentstatus = $_POST['x_response_code'];
-		$paymentstatusmsg = $_POST['x_response_reason_text'];
+		$grandtotal = strip_tags((string)$_POST['x_amount']);
+		$ordernumber = strip_tags((string)$_POST['x_invoice_num']);
+		$ordertransactionid = strip_tags((string)$_POST['x_trans_id']);
+		$orderemail = strip_tags((string)$_POST['x_email']);
+		$paymentstatus = strip_tags((string)$_POST['x_response_code']);
+		$paymentstatusmsg = strip_tags((string)$_POST['x_response_reason_text']);
 		
 		$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
 		
@@ -984,12 +984,12 @@ class shoppingOrderMethodAuthorizeDotNet extends form {
 		// These are used for debugging
 		$postgetarguments = "GET arguments:\n";
 		foreach($_GET as $key => $value) {
-			$postgetarguments .= $key."=".$value."\n";
+			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
 		
 		$postgetarguments .= "\nPOST arguments:\n";
 		foreach($_POST as $key => $value) {
-			$postgetarguments .= $key."=".$value."\n";
+			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
    		
 		$email = new email();
@@ -1038,7 +1038,7 @@ class shoppingOrderMethodAuthorizeDotNet extends form {
 			SHOPPING_CART_ORDER_METHOD_AUTHORIZEDOTNET_API_LOGIN_ID .
 			$ordertransactionid.$ordertotal));
 		
-		if ($md5 != $_POST['x_MD5_Hash']) {
+		if ($md5 != strip_tags((string)$_POST['x_MD5_Hash'])) {
 			$email->variables['Warning'] .= "FAILED: Not an Authorize.net request!\n";	
 			$email->send();
 			
@@ -1173,14 +1173,14 @@ class shoppingOrderMethod2CheckOut extends form {
 			!$_POST['sale_id'] || !$_POST['vendor_order_id'])
 			exit("Invalid IPN request!");
 		
-		$grandtotal = $_POST['invoice_list_amount'];
-		$ordernumber = $_POST['vendor_order_id'];
-		$ordertransactionid = $_POST['sale_id'];
-		$orderemail = $_POST['customer_email'];
-		$fraudstatus = @$_POST['fraud_status'];
-		$paymentstatus = @$_POST['invoice_status'];
-		$paymentstatustype = $_POST['message_type'];
-		$paymentstatusmsg = $_POST['message_description'];
+		$grandtotal = strip_tags((string)$_POST['invoice_list_amount']);
+		$ordernumber = strip_tags((string)$_POST['vendor_order_id']);
+		$ordertransactionid = strip_tags((string)$_POST['sale_id']);
+		$orderemail = strip_tags((string)$_POST['customer_email']);
+		$fraudstatus = strip_tags((string)@$_POST['fraud_status']);
+		$paymentstatus = strip_tags((string)@$_POST['invoice_status']);
+		$paymentstatustype = strip_tags((string)$_POST['message_type']);
+		$paymentstatusmsg = strip_tags((string)$_POST['message_description']);
 		
 		$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
 		
@@ -1227,12 +1227,12 @@ class shoppingOrderMethod2CheckOut extends form {
 		// These are used for debugging
 		$postgetarguments = "GET arguments:\n";
 		foreach($_GET as $key => $value) {
-			$postgetarguments .= $key."=".$value."\n";
+			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
 		
 		$postgetarguments .= "\nPOST arguments:\n";
 		foreach($_POST as $key => $value) {
-			$postgetarguments .= $key."=".$value."\n";
+			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
    		
 		$email = new email();
@@ -1277,10 +1277,10 @@ class shoppingOrderMethod2CheckOut extends form {
 		
 		$md5 = strtoupper(md5($ordertransactionid .
 			SHOPPING_CART_ORDER_METHOD_2CHECKOUT_VENDOR_ID .
-			$_POST['invoice_id'] .
+			strip_tags((string)$_POST['invoice_id']) .
 			SHOPPING_CART_ORDER_METHOD_2CHECKOUT_SECRET_WORD));
 		
-		if ($md5 != $_POST['md5_hash']) {
+		if ($md5 != strip_tags((string)$_POST['md5_hash'])) {
 			$email->variables['Warning'] .= "FAILED: Not a 2CheckOut request!\n";	
 			$email->send();
 			
@@ -1418,12 +1418,12 @@ class shoppingOrderMethodMoneyBookers extends form {
 			!$_POST['transaction_id'] || !$_POST['mb_transaction_id'])
 			exit("Invalid IPN request!");
 		
-		$grandtotal = $_POST['mb_amount'];
-		$ordernumber = $_POST['transaction_id'];
-		$ordertransactionid = $_POST['mb_transaction_id'];
-		$orderemail = $_POST['pay_from_email'];
-		$paymentstatus = $_POST['status'];
-		$paymenttype = $_POST['payment_type'];
+		$grandtotal = strip_tags((string)$_POST['mb_amount']);
+		$ordernumber = strip_tags((string)$_POST['transaction_id']);
+		$ordertransactionid = strip_tags((string)$_POST['mb_transaction_id']);
+		$orderemail = strip_tags((string)$_POST['pay_from_email']);
+		$paymentstatus = strip_tags((string)$_POST['status']);
+		$paymenttype = strip_tags((string)$_POST['payment_type']);
 		
 		$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
 		
@@ -1437,12 +1437,12 @@ class shoppingOrderMethodMoneyBookers extends form {
 		// These are used for debugging
 		$postgetarguments = "GET arguments:\n";
 		foreach($_GET as $key => $value) {
-			$postgetarguments .= $key."=".$value."\n";
+			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
 		
 		$postgetarguments .= "\nPOST arguments:\n";
 		foreach($_POST as $key => $value) {
-			$postgetarguments .= $key."=".$value."\n";
+			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
    		
 		$email = new email();
@@ -1485,11 +1485,11 @@ class shoppingOrderMethodMoneyBookers extends form {
 				" Order's total (".$ordertotal.")!");
 		}
 		
-		$md5 = md5($_POST['merchant_id'].$order['OrderID'] .
+		$md5 = md5(strip_tags((string)$_POST['merchant_id']).$order['OrderID'] .
 			strtoupper(md5(SHOPPING_CART_ORDER_METHOD_MONEYBOOKERS_SECRET_WORD)) .
-			$ordertotal.$_POST['mb_currency'].$paymentstatus);
+			$ordertotal.strip_tags((string)$_POST['mb_currency']).$paymentstatus);
 		
-		if ($md5 != $_POST['md5sig']) {
+		if ($md5 != strip_tags((string)$_POST['md5sig'])) {
 			$email->variables['Warning'] .= "FAILED: Not a MoneyBookers request!\n";	
 			$email->send();
 			
@@ -1658,30 +1658,30 @@ class shoppingOrderMethodOgone extends form {
 		
 		$arguments = 
 			array(
-				'AAVADDRESS' => (isset($_POST['AAVADDRESS'])?$_POST['AAVADDRESS']:null),
-				'AAVCHECK' => (isset($_POST['AAVCHECK'])?$_POST['AAVCHECK']:null),
-				'AAVZIP' => (isset($_POST['AAVZIP'])?$_POST['AAVZIP']:null),
-				'ACCEPTANCE' => (isset($_POST['ACCEPTANCE'])?$_POST['ACCEPTANCE']:null),
-				'AMOUNT' => (isset($_POST['amount'])?$_POST['amount']:null),
-				'BIN' => (isset($_POST['BIN'])?$_POST['BIN']:null),
-				'BRAND' => (isset($_POST['BRAND'])?$_POST['BRAND']:null),
-				'CARDNO' => (isset($_POST['CARDNO'])?$_POST['CARDNO']:null),
-				'CCCTY'=> (isset($_POST['CCCTY'])?$_POST['CCCTY']:null),
-				'CN' => (isset($_POST['CN'])?$_POST['CN']:null),
-				'COMPLUS' => (isset($_POST['COMPLUS'])?$_POST['COMPLUS']:null),
-				'CURRENCY' => (isset($_POST['currency'])?$_POST['currency']:null),
-				'CVCCHECK' => (isset($_POST['CVCCheck'])?$_POST['CVCCheck']:null),
-				'ECI' => (isset($_POST['ECI'])?$_POST['ECI']:null),
-				'ED' => (isset($_POST['ED'])?$_POST['ED']:null),
-				'IP' => (isset($_POST['IP'])?$_POST['IP']:null),
-				'IPCTY' => (isset($_POST['IPCTY'])?$_POST['IPCTY']:null),
-				'NCERROR' => (isset($_POST['NCERROR'])?$_POST['NCERROR']:null),
-				'ORDERID' => (isset($_POST['orderID'])?$_POST['orderID']:null),
-				'PAYID' => (isset($_POST['PAYID'])?$_POST['PAYID']:null),
-				'PM' => (isset($_POST['PM'])?$_POST['PM']:null),
-				'STATUS' => (isset($_POST['STATUS'])?$_POST['STATUS']:null),
-				'TRXDATE' => (isset($_POST['TRXDATE'])?$_POST['TRXDATE']:null),
-				'VC' => (isset($_POST['VC'])?$_POST['VC']:null));
+				'AAVADDRESS' => (isset($_POST['AAVADDRESS'])?strip_tags((string)$_POST['AAVADDRESS']):null),
+				'AAVCHECK' => (isset($_POST['AAVCHECK'])?strip_tags((string)$_POST['AAVCHECK']):null),
+				'AAVZIP' => (isset($_POST['AAVZIP'])?strip_tags((string)$_POST['AAVZIP']):null),
+				'ACCEPTANCE' => (isset($_POST['ACCEPTANCE'])?strip_tags((string)$_POST['ACCEPTANCE']):null),
+				'AMOUNT' => (isset($_POST['amount'])?strip_tags((string)$_POST['amount']):null),
+				'BIN' => (isset($_POST['BIN'])?strip_tags((string)$_POST['BIN']):null),
+				'BRAND' => (isset($_POST['BRAND'])?strip_tags((string)$_POST['BRAND']):null),
+				'CARDNO' => (isset($_POST['CARDNO'])?strip_tags((string)$_POST['CARDNO']):null),
+				'CCCTY'=> (isset($_POST['CCCTY'])?strip_tags((string)$_POST['CCCTY']):null),
+				'CN' => (isset($_POST['CN'])?strip_tags((string)$_POST['CN']):null),
+				'COMPLUS' => (isset($_POST['COMPLUS'])?strip_tags((string)$_POST['COMPLUS']):null),
+				'CURRENCY' => (isset($_POST['currency'])?strip_tags((string)$_POST['currency']):null),
+				'CVCCHECK' => (isset($_POST['CVCCheck'])?strip_tags((string)$_POST['CVCCheck']):null),
+				'ECI' => (isset($_POST['ECI'])?strip_tags((string)$_POST['ECI']):null),
+				'ED' => (isset($_POST['ED'])?strip_tags((string)$_POST['ED']):null),
+				'IP' => (isset($_POST['IP'])?strip_tags((string)$_POST['IP']):null),
+				'IPCTY' => (isset($_POST['IPCTY'])?strip_tags((string)$_POST['IPCTY']):null),
+				'NCERROR' => (isset($_POST['NCERROR'])?strip_tags((string)$_POST['NCERROR']):null),
+				'ORDERID' => (isset($_POST['orderID'])?strip_tags((string)$_POST['orderID']):null),
+				'PAYID' => (isset($_POST['PAYID'])?strip_tags((string)$_POST['PAYID']):null),
+				'PM' => (isset($_POST['PM'])?strip_tags((string)$_POST['PM']):null),
+				'STATUS' => (isset($_POST['STATUS'])?strip_tags((string)$_POST['STATUS']):null),
+				'TRXDATE' => (isset($_POST['TRXDATE'])?strip_tags((string)$_POST['TRXDATE']):null),
+				'VC' => (isset($_POST['VC'])?strip_tags((string)$_POST['VC']):null));
 		
 		$sha1key = '';
 		foreach ($arguments as $key => $value) {
@@ -1692,13 +1692,13 @@ class shoppingOrderMethodOgone extends form {
 		}
 		
 		$sha1key = sha1($sha1key);
-		$grandtotal = $_POST['amount'];
-		$ordernumber = $_POST['orderID'];
-		$ordertransactionid = $_POST['PAYID'];
-		$paymentmethod = $_POST['PM'];
-		$paymentstatus = $_POST['STATUS'];
+		$grandtotal = strip_tags((string)$_POST['amount']);
+		$ordernumber = strip_tags((string)$_POST['orderID']);
+		$ordertransactionid = strip_tags((string)$_POST['PAYID']);
+		$paymentmethod = strip_tags((string)$_POST['PM']);
+		$paymentstatus = strip_tags((string)$_POST['STATUS']);
 		
-		switch($_POST['STATUS']) {
+		switch(strip_tags((string)$_POST['STATUS'])) {
 			case 0:
 				$paymentstatusmsg = 'Incomplete or invalid';
 				break;
@@ -1820,12 +1820,12 @@ class shoppingOrderMethodOgone extends form {
 		// These are used for debugging
 		$postgetarguments = "GET arguments:\n";
 		foreach($_GET as $key => $value) {
-			$postgetarguments .= $key."=".$value."\n";
+			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
 		
 		$postgetarguments .= "\nPOST arguments:\n";
 		foreach($_POST as $key => $value) {
-			$postgetarguments .= $key."=".$value."\n";
+			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
    		
 		$email = new email();
@@ -1868,7 +1868,7 @@ class shoppingOrderMethodOgone extends form {
 				" Order's total (".$ordertotal.")!");
 		}
 		
-		if(strtoupper($sha1key) != strtoupper($_POST['SHASIGN'])) {
+		if(strtoupper($sha1key) != strtoupper(strip_tags((string)$_POST['SHASIGN']))) {
 			$email->variables['Warning'] .= "FAILED: Not an Ogone request!\n";	
 			$email->send();
 			
@@ -1971,7 +1971,7 @@ class shoppingOrderComments extends comments {
 			return shoppingOrders::getURL().
 				"&shoppingorderid=".$comment['ShoppingOrderID'];
 		
-		if ($GLOBALS['ADMIN'])
+		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
 			return shoppingOrders::getURL().
 				"&shoppingorderid=".admin::getPathID();
 		
@@ -2107,7 +2107,7 @@ class shoppingOrders extends modules {
 		if ($GLOBALS['USER']->data['Admin']) {
 			include_once('lib/userpermissions.class.php');
 			
-			$permission = userPermissions::check($GLOBALS['USER']->data['ID'], 
+			$permission = userPermissions::check((int)$GLOBALS['USER']->data['ID'], 
 				$this->adminPath);
 		}
 		
@@ -2118,11 +2118,11 @@ class shoppingOrders extends modules {
 				" AND `ID` = '".$this->selectedID."'":
 				null) . 
 			(!$GLOBALS['USER']->data['Admin'] || !$permission['PermissionType']?
-				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+				" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 				null) .
 			($permission && $permission['PermissionIDs']?
 				" AND (`ID` IN (".$permission['PermissionIDs'].")" .
-				" OR `UserID` = '".$GLOBALS['USER']->data['ID']."')":
+				" OR `UserID` = '".(int)$GLOBALS['USER']->data['ID']."')":
 				null) .
 			" ORDER BY `ID` DESC";
 	}
@@ -2594,7 +2594,7 @@ class shoppingOrders extends modules {
 		$id = null;
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -2825,16 +2825,16 @@ class shoppingOrders extends modules {
 			$prices = null;
 			
 			if (isset($_POST['ShoppingItemID']))
-				$items = $_POST['ShoppingItemID'];
+				$items = (array)$_POST['ShoppingItemID'];
 			
 			if (isset($_POST['ShoppingItemQuantity']))
-				$quantities = $_POST['ShoppingItemQuantity'];
+				$quantities = (array)$_POST['ShoppingItemQuantity'];
 			
 			if (isset($_POST['ShoppingItemCustomOption']))
-				$customoptions = $_POST['ShoppingItemCustomOption'];
+				$customoptions = (array)$_POST['ShoppingItemCustomOption'];
 			
 			if (isset($_POST['ShoppingItemPrice']))
-				$prices = $_POST['ShoppingItemPrice'];
+				$prices = (array)$_POST['ShoppingItemPrice'];
 		
 			if ($items && is_array($items)) {			
 				foreach($items as $key => $itemid) {
@@ -2847,7 +2847,7 @@ class shoppingOrders extends modules {
 							"<td>" .
 								$item['RefNumber'] .
 								"<input type='hidden' name='ShoppingItemID[]' " .
-									"value='".$itemid."' />" .
+									"value='".(int)$itemid."' />" .
 							"</td>" .
 							"<td class='auto-width'>" .
 								$item['Title']."<br />" .
@@ -2856,23 +2856,23 @@ class shoppingOrders extends modules {
 								"</a><br />" .
 								"<textarea name='ShoppingItemCustomOption[]' " .
 									"style='" .
-									(!$customoptions[$key]?
+									(!$customoptions[(int)$key]?
 										"display: none;":
 										null) .
 									" width: 90%;'>" .
-									$customoptions[$key] .
+									strip_tags((string)$customoptions[(int)$key]) .
 								"</textarea>" .
 							"</td>" .
 							"<td style='text-align: right;'>" . 
 								"<input type='text' name='ShoppingItemQuantity[]' " .
-									"value='".$quantities[$key]."' " .
+									"value='".(int)$quantities[(int)$key]."' " .
 									"style='width: 30px;' />" .
 							"</td>" .
 							"<td style='text-align: right;'>" .
 								"<span class='nowrap'>" .
 								$currencyleft."<input type='text' " .
 									"name='ShoppingItemPrice[]' " .
-									"value='".$prices[$key]."' " .
+									"value='".(float)$prices[(int)$key]."' " .
 									"style='width: 50px;' />" .
 								$currencyright .
 								"</span>" .
@@ -2880,7 +2880,7 @@ class shoppingOrders extends modules {
 							"<td style='text-align: right;'>" .
 								"<span class='shopping-order-new-order-item-total-price nowrap'>" .
 								$currencyleft . 
-								number_format($quantities[$key]*$prices[$key], 2) .
+								number_format((int)$quantities[(int)$key]*(float)$prices[(int)$key], 2) .
 								$currencyright .
 								"</span>" .
 							"</td>" .
@@ -3152,7 +3152,7 @@ class shoppingOrders extends modules {
 		if (isset($values['UserName']) && $values['UserName']) {
 			$user = sql::fetch(sql::run(
 				" SELECT `ID` FROM `{users}` " .
-				" WHERE `UserName` = '".sql::escape($values['UserName'])."'"));
+				" WHERE `UserName` = '".sql::escape((string)$values['UserName'])."'"));
 			
 			if ($user)
 				$userid = $user['ID'];
@@ -3167,27 +3167,27 @@ class shoppingOrders extends modules {
 			$item = sql::fetch(sql::run(
 				" SELECT `Price`, `Weight`, `Taxable`" .
 				" FROM `{shoppingitems}`" .
-				" WHERE `ID` = '".$itemid."'"));
+				" WHERE `ID` = '".(int)$itemid."'"));
 			
 			if (!$item)
 				continue;
 			
-			if (!isset($values['ShoppingItemQuantity'][$key]))
-				$values['ShoppingItemQuantity'][$key] = 1;
+			if (!isset($values['ShoppingItemQuantity'][(int)$key]))
+				$values['ShoppingItemQuantity'][(int)$key] = 1;
 			
-			if (!isset($values['ShoppingItemPrice'][$key]))
-				$values['ShoppingItemPrice'][$key] = $item['Price'];
+			if (!isset($values['ShoppingItemPrice'][(int)$key]))
+				$values['ShoppingItemPrice'][(int)$key] = $item['Price'];
 			
 			if ($taxpercentage > 0 && $item['Taxable'] &&
-				$values['ShoppingItemQuantity'][$key] * $values['ShoppingItemPrice'][$key] > 0)
+				(int)$values['ShoppingItemQuantity'][(int)$key] * (float)$values['ShoppingItemPrice'][(int)$key] > 0)
 			{
-				$totals['Tax'] += round(($values['ShoppingItemQuantity'][$key] *
-					$values['ShoppingItemPrice'][$key])*$taxpercentage/100, 2);
+				$totals['Tax'] += round(((int)$values['ShoppingItemQuantity'][(int)$key] *
+					(float)$values['ShoppingItemPrice'][(int)$key])*$taxpercentage/100, 2);
 			}
 			
-			$totals['Subtotal'] += round($values['ShoppingItemQuantity'][$key] * 
-				$values['ShoppingItemPrice'][$key], 2);
-			$totals['Weight'] += $values['ShoppingItemQuantity'][$key]*$item['Weight'];
+			$totals['Subtotal'] += round((int)$values['ShoppingItemQuantity'][(int)$key] * 
+				(float)$values['ShoppingItemPrice'][(int)$key], 2);
+			$totals['Weight'] += (int)$values['ShoppingItemQuantity'][(int)$key]*$item['Weight'];
 		}
 		
 		$totals['Discount'] = shoppingCart::getDiscount($totals['Subtotal']+$totals['Tax'],
@@ -3208,10 +3208,10 @@ class shoppingOrders extends modules {
 		$id = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -3296,16 +3296,16 @@ class shoppingOrders extends modules {
 		$prices = null;
 		
 		if (isset($_POST['ShoppingItemID']))
-			$items = $_POST['ShoppingItemID'];
+			$items = (array)$_POST['ShoppingItemID'];
 		
 		if (isset($_POST['ShoppingItemQuantity']))
-			$quantities = $_POST['ShoppingItemQuantity'];
+			$quantities = (array)$_POST['ShoppingItemQuantity'];
 		
 		if (isset($_POST['ShoppingItemCustomOption']))
-			$customoptions = $_POST['ShoppingItemCustomOption'];
+			$customoptions = (array)$_POST['ShoppingItemCustomOption'];
 		
 		if (isset($_POST['ShoppingItemPrice']))
-			$prices = $_POST['ShoppingItemPrice'];
+			$prices = (array)$_POST['ShoppingItemPrice'];
 		
 		if (!$items || !is_array($items) || !count($items)) {
 			tooltip::display(
@@ -3331,14 +3331,14 @@ class shoppingOrders extends modules {
 				continue;
 			
 			if (JCORE_VERSION >= '0.7') {
-				$weight += $item['Weight']*$quantities[$key];
+				$weight += $item['Weight']*(int)$quantities[(int)$key];
 				
 				if ($taxpercentage > 0 && $item['Taxable'] &&
-					$quantities[$key]*$prices[$key] > 0)
-					$tax += round(($quantities[$key]*$prices[$key])*$taxpercentage/100, 2);
+					(int)$quantities[(int)$key]*(float)$prices[(int)$key] > 0)
+					$tax += round(((int)$quantities[(int)$key]*(float)$prices[(int)$key])*$taxpercentage/100, 2);
 			}
 			
-			$subtotal += ($prices[$key]*$quantities[$key]);
+			$subtotal += ((float)$prices[(int)$key]*(int)$quantities[(int)$key]);
 		}
 		
 		$ordernumber = shoppingOrders::genOrderID();
@@ -3364,15 +3364,15 @@ class shoppingOrders extends modules {
 		foreach($items as $key => $itemid) {
 			$item = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppingitems}`" .
-				" WHERE `ID` = '".$itemid."'"));
+				" WHERE `ID` = '".(int)$itemid."'"));
 			
 			$itemvalues['ShoppingOrderID'] = $orderid;
-			$itemvalues['ShoppingItemID'] = $itemid;
-			$itemvalues['Price'] = $prices[$key];
-			$itemvalues['Quantity'] = $quantities[$key];
+			$itemvalues['ShoppingItemID'] = (int)$itemid;
+			$itemvalues['Price'] = (float)$prices[(int)$key];
+			$itemvalues['Quantity'] = (int)$quantities[(int)$key];
 			
 			if (JCORE_VERSION >= '0.7')
-				$itemvalues['ShoppingItemOptions'] = $customoptions[$key];
+				$itemvalues['ShoppingItemOptions'] = strip_tags((string)$customoptions[(int)$key]);
 			
 			$newid = $orderitems->add($itemvalues);
 			
@@ -3380,9 +3380,9 @@ class shoppingOrders extends modules {
 				// Update items AvailableQuantity value
 				sql::run(
 					" UPDATE `{shoppingitems}` SET " .
-					" `AvailableQuantity` = `AvailableQuantity` - ".(int)$quantities[$key].", " .
+					" `AvailableQuantity` = `AvailableQuantity` - ".(int)$quantities[(int)$key].", " .
 					" `TimeStamp` = `TimeStamp`" .
-					" WHERE `ID` = '".$itemid."'" .
+					" WHERE `ID` = '".(int)$itemid."'" .
 					" AND `AvailableQuantity` IS NOT NULL" .
 					" AND `AvailableQuantity` > 0");
 			
@@ -3437,10 +3437,10 @@ class shoppingOrders extends modules {
 			$shoppingid = (int)$_GET['ajaxshoppingid'];
 		
 		if (isset($_POST['ajaxsearch']))
-			$search = trim(strip_tags($_POST['ajaxsearch']));
+			$search = trim(strip_tags((string)$_POST['ajaxsearch']));
 		
 		if (isset($_GET['ajaxsearch']))
-			$search = trim(strip_tags($_GET['ajaxsearch']));
+			$search = trim(strip_tags((string)$_GET['ajaxsearch']));
 		
 		if (!isset($search) && !isset($_GET['ajaxlimit']))
 			echo 
@@ -3883,7 +3883,7 @@ class shoppingOrders extends modules {
 		$status = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['status']))
 			$status = (int)$_GET['status'];
@@ -3926,16 +3926,16 @@ class shoppingOrders extends modules {
 		$id = null;
 		
 		if (isset($_GET['search']))
-			$search = trim(strip_tags($_GET['search']));
+			$search = trim(strip_tags((string)$_GET['search']));
 		
 		if (isset($_GET['status']))
 			$status = (int)$_GET['status'];
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
@@ -3992,7 +3992,7 @@ class shoppingOrders extends modules {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-					" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
@@ -4015,7 +4015,7 @@ class shoppingOrders extends modules {
 				" AND `ID` IN (".$this->userPermissionIDs.")":
 				null) .
 			($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
-				" AND `UserID` = '".$GLOBALS['USER']->data['ID']."'":
+				" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 				null) .
 			($status?
 				" AND `OrderStatus` = '".(int)$status."'":
@@ -4071,13 +4071,13 @@ class shoppingOrders extends modules {
 				$prices = null;
 				
 				if (isset($_POST['ShoppingItemID']))
-					$items = $_POST['ShoppingItemID'];
+					$items = (array)$_POST['ShoppingItemID'];
 				
 				if (isset($_POST['ShoppingItemQuantity']))
-					$quantities = $_POST['ShoppingItemQuantity'];
+					$quantities = (array)$_POST['ShoppingItemQuantity'];
 				
 				if (isset($_POST['ShoppingItemPrice']))
-					$prices = $_POST['ShoppingItemPrice'];
+					$prices = (array)$_POST['ShoppingItemPrice'];
 			
 				if ($items && is_array($items)) {			
 					foreach($items as $key => $itemid) {
@@ -4087,7 +4087,7 @@ class shoppingOrders extends modules {
 						
 						echo
 							"jQuery.jCore.modules.shoppingOrders.admin.newOrder.cart.add(".
-								$itemid.", " .
+								(int)$itemid.", " .
 								"'".htmlspecialchars($item['RefNumber'], ENT_QUOTES)."', " .
 								"'<a href=\"".$this->shoppingURL .
 									"&amp;shoppingid=".$item['ShoppingID'].
@@ -4095,8 +4095,8 @@ class shoppingOrders extends modules {
 									"target=\"_blank\" class=\"bold\">" .
 									htmlspecialchars($item['Title'], ENT_QUOTES) .
 								"</a>', " .
-								$quantities[$key].", " .
-								$prices[$key].");";
+								(int)$quantities[(int)$key].", " .
+								(float)$prices[(int)$key].");";
 					}
 				}
 				
@@ -4206,10 +4206,10 @@ class shoppingOrders extends modules {
 		$enddate = date("Y-m-d");
 		
 		if (isset($_GET['startdate']))
-			$startdate = $_GET['startdate'];
+			$startdate = strip_tags((string)$_GET['startdate']);
 		
 		if (isset($_GET['enddate']))
-			$enddate = $_GET['enddate'];
+			$enddate = strip_tags((string)$_GET['enddate']);
 		
 		$sales = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`, " .
@@ -4278,10 +4278,10 @@ class shoppingOrders extends modules {
 		$enddate = null;
 		
 		if (isset($_GET['startdate']))
-			$startdate = $_GET['startdate'];
+			$startdate = strip_tags((string)$_GET['startdate']);
 		
 		if (isset($_GET['enddate']))
-			$enddate = $_GET['enddate'];
+			$enddate = strip_tags((string)$_GET['enddate']);
 		
 		$paging = new paging(10,
 			"&amp;request=admin/modules/shoppingorders" .
@@ -4495,10 +4495,10 @@ class shoppingOrders extends modules {
 		$enddate = null;
 		
 		if (isset($_GET['startdate']))
-			$startdate = $_GET['startdate'];
+			$startdate = strip_tags((string)$_GET['startdate']);
 		
 		if (isset($_GET['enddate']))
-			$enddate = $_GET['enddate'];
+			$enddate = strip_tags((string)$_GET['enddate']);
 		
 		$paging = new paging(10,
 			"&amp;request=admin/modules/shoppingorders" .
@@ -4650,10 +4650,10 @@ class shoppingOrders extends modules {
 		$enddate = null;
 		
 		if (isset($_GET['startdate']))
-			$startdate = $_GET['startdate'];
+			$startdate = strip_tags((string)$_GET['startdate']);
 		
 		if (isset($_GET['enddate']))
-			$enddate = $_GET['enddate'];
+			$enddate = strip_tags((string)$_GET['enddate']);
 		
 		$paging = new paging(10,
 			"&amp;request=admin/modules/shoppingorders" .
@@ -5270,7 +5270,7 @@ class shoppingOrders extends modules {
 		if ($GLOBALS['USER']->data['Admin']) {
 			include_once('lib/userpermissions.class.php');
 			
-			$permission = userPermissions::check($GLOBALS['USER']->data['ID'], 
+			$permission = userPermissions::check((int)$GLOBALS['USER']->data['ID'], 
 				$this->adminPath);
 		}
 		
@@ -5293,31 +5293,31 @@ class shoppingOrders extends modules {
 		$viewedproducts = null;
 		
 		if (isset($_GET['users']))
-			$users = $_GET['users'];
+			$users = (int)$_GET['users'];
 		
 		if (isset($_GET['shoppingitems']))
-			$items = $_GET['shoppingitems'];
+			$items = (int)$_GET['shoppingitems'];
 		
 		if (isset($_GET['discount']))
-			$discount = $_GET['discount'];
+			$discount = (int)$_GET['discount'];
 		
 		if (isset($_GET['fee']))
-			$fee = $_GET['fee'];
+			$fee = (int)$_GET['fee'];
 		
 		if (isset($_GET['subtotal']))
-			$subtotal = $_GET['subtotal'];
+			$subtotal = (int)$_GET['subtotal'];
 		
 		if (isset($_GET['totals']))
-			$totals = $_GET['totals'];
+			$totals = (int)$_GET['totals'];
 		
 		if (isset($_GET['orders']))
-			$orders = $_GET['orders'];
+			$orders = (int)$_GET['orders'];
 		
 		if (isset($_GET['orderedproducts']))
-			$orderedproducts = $_GET['orderedproducts'];
+			$orderedproducts = (int)$_GET['orderedproducts'];
 		
 		if (isset($_GET['viewedproducts']))
-			$viewedproducts = $_GET['viewedproducts'];
+			$viewedproducts = (int)$_GET['viewedproducts'];
 		
 		if ($users || $items || $orders || $orderedproducts || $viewedproducts) {
 			if (!$GLOBALS['USER']->loginok || 
@@ -5332,7 +5332,7 @@ class shoppingOrders extends modules {
 			include_once('lib/userpermissions.class.php');
 			
 			$permission = userPermissions::check(
-				$GLOBALS['USER']->data['ID'],
+				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 			
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
@@ -5979,7 +5979,7 @@ class shoppingOrders extends modules {
 		while($row = sql::fetch($rows)) {
 			$row['_Link'] = $this->shoppingOrdersURL .
 				(isset($_GET['shoppingorderslimit'])?
-					"&amp;shoppingorderslimit=".$_GET['shoppingorderslimit']:
+					"&amp;shoppingorderslimit=".strip_tags((string)$_GET['shoppingorderslimit']):
 					null) . 
 				"&amp;shoppingorderid=".$row['ID'];
 			

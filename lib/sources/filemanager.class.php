@@ -24,14 +24,14 @@ class _fileManager {
 	
 	function __construct() {
 		if (isset($_GET['file'])) {
-			preg_match('/([^(\/|\\\)]*)$/', $_GET['file'], $matches);
+			preg_match('/([^(\/|\\\)]*)$/', strip_tags((string)$_GET['file']), $matches);
 			
 			if (isset($matches[1]) && $matches[1] != '.' && $matches[1] != '..')
 				$this->selectedFile = $matches[1];
 		}
 		
 		if (isset($_GET['dir']) && $_GET['dir'])
-			$this->selectedPath = rtrim(str_replace('..', '', $_GET['dir']), '/').'/';
+			$this->selectedPath = rtrim(str_replace('..', '', strip_tags((string)$_GET['dir'])), '/\\').'/';
 		
 		$this->uriRequest = strtolower(get_class($this));
 	}
@@ -62,10 +62,10 @@ class _fileManager {
 		$edit = null;
 		
 		if (isset($_GET['delete']))
-			$delete = $_GET['delete'];
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if ($delete) {
 			if (!$this->selectedFile)
@@ -104,8 +104,21 @@ class _fileManager {
 			if (!$this->selectedFile)
 				return false;
 			
+			$move = false;
+			$path = null;
+			$renameto = $form->get('FileName');
+			$absolute = (preg_match('/^(\/|\\\)/', $renameto)?true:false);
+			
+			if (preg_match('/(\/|\\\)/', $renameto)) {
+				$move = true;
+		 		$path = trim(preg_replace('/\.\.?(\/|\\\)/', '', 
+		 			preg_replace('/((.*(\/|\\\))|^).*$/', '\2', $renameto)), '/\\');
+			}
+	 		
+			$filename = preg_replace('/.*(\/|\\\)/', '', $renameto);
+			
 			if (!$this->edit($this->rootPath.$this->selectedPath.$this->selectedFile, 
-				$this->rootPath.$this->selectedPath.$form->get('FileName')))
+				$this->rootPath.(!$absolute?$this->selectedPath:null).($path?$path.'/':null).$filename))
 			{
 				tooltip::display(
 					__("File / Folder couldn't be renamed.")." " .
@@ -119,6 +132,14 @@ class _fileManager {
 			tooltip::display(
 				__("File / Folder has been successfully renamed."),
 				TOOLTIP_SUCCESS);
+			
+			$form->setValue('FileName', $filename);
+			
+			if ($move) {
+				$this->selectedPath = (!$absolute?$this->selectedPath:null).($path?$path.'/':null);
+				$form->action = url::uri('dir').'&amp;dir='.trim($this->selectedPath, '/\\');
+				url::setURI($form->action);
+			}
 			
 			return true;
 		}
@@ -166,6 +187,14 @@ class _fileManager {
 	}
 	
 	function edit($from, $to) {
+		if (!preg_match("/".files::$allowedFileTypes[FILE_TYPE_UPLOAD]."/i", $to)) {
+			tooltip::display(
+				sprintf(__("Unsupported file format! Supported formats are: %s."),
+					str_replace('|', ', ', files::$allowedFileTypes[FILE_TYPE_UPLOAD])),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
 		return files::rename($from, $to);		
 	}
 	
@@ -227,7 +256,7 @@ class _fileManager {
 		$edit = null;
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		if ($edit) {
 			$form->add(
@@ -274,9 +303,40 @@ class _fileManager {
 		$form->display();
 	}
 	
+	function displayPath($displaypath = null) {
+		if (!$displaypath)
+			$displaypath = $this->selectedPath;
+			
+		if (!$displaypath)
+			return;
+		
+		$path = null;
+		$exppaths = explode('/', $displaypath);
+		
+		$i = 0;
+		foreach($exppaths as $key => $exppath) {
+			if (!$exppath)
+				continue;
+			
+			if ($path) 
+				$path .= '/';
+				
+			$path .= $exppath;
+			
+			if ($i > 0)
+				echo " / ";
+			
+			echo
+				"<a class='url-path' href='". url::uri('dir, file, edit, delete, limit') .
+					"&amp;dir=".$path."'>".$exppath."</a>";
+			
+			$i++;
+		}
+	}
+	
 	function displayHeader() {
 		echo
-			"<th colspan='2'><span class='nowrap'>".
+			"<th colspan='2'><span class='nowrap'>/".
 				$this->selectedPath."</span></th>" .
 			"<th style='text-align: right;'><span class='nowrap'>".
 				__("Size")."</span></th>";
@@ -509,7 +569,7 @@ class _fileManager {
 		$edit = null;
 		
 		if (isset($_GET['edit']))
-			$edit = $_GET['edit'];
+			$edit = (int)$_GET['edit'];
 		
 		$this->rootPath = rtrim($this->rootPath, '/').'/';
 		

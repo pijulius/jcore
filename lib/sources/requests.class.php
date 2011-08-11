@@ -61,10 +61,10 @@ class _requests {
 	
 	function display() {
 		if (isset($GLOBALS['_'.strtoupper($this->method)][$this->variable]))
-			requests::$path = $GLOBALS['_'.strtoupper($this->method)][$this->variable];
+			requests::$path = strip_tags((string)$GLOBALS['_'.strtoupper($this->method)][$this->variable]);
 		
 		if (isset($GLOBALS['_'.strtoupper($this->method)]['ajax']))
-			requests::$ajax = $GLOBALS['_'.strtoupper($this->method)]['ajax'];
+			requests::$ajax = (bool)$GLOBALS['_'.strtoupper($this->method)]['ajax'];
 		
 		if (!requests::$path)
 			return;
@@ -126,7 +126,7 @@ class _requests {
 				
 				include_once('lib/admin.class.php');
 				
-				$userpermission = userPermissions::check($GLOBALS['USER']->data['ID'], requests::$path);
+				$userpermission = userPermissions::check((int)$GLOBALS['USER']->data['ID'], requests::$path);
 				if (!$userpermission['PermissionType'])
 					break;
 				

@@ -606,10 +606,10 @@ class _security {
 		$newsession = null;
 		
 		if (isset($_GET['scimage']))
-			$scimage = $_GET['scimage'];
+			$scimage = (int)$_GET['scimage'];
 		
 		if (isset($_GET['regeneratesessionid']))
-			$newsession = $_GET['regeneratesessionid'];
+			$newsession = (int)$_GET['regeneratesessionid'];
 		
 		if ($scimage) {
 			$this->genImageCode();
@@ -905,7 +905,7 @@ class _security {
 	
 	static function isBot($useragent = null) {
 		if (!$useragent)
-			$useragent = $_SERVER['HTTP_USER_AGENT'];
+			$useragent = (string)$_SERVER['HTTP_USER_AGENT'];
 		
 		if (!is_array(security::$bots))
 			return false;

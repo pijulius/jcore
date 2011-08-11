@@ -35,7 +35,7 @@ if (!defined('MOBILE_BROWSER')) {
 		'hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|' .
 		'opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|' .
 		'symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|' .
-		'xda|xiino/i', $_SERVER['HTTP_USER_AGENT']) || 
+		'xda|xiino/i', (string)$_SERVER['HTTP_USER_AGENT']) || 
 		preg_match('/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|' .
 		'ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|' .
 		'ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|' .
@@ -63,7 +63,7 @@ if (!defined('MOBILE_BROWSER')) {
 		'v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|' .
 		'53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|' .
 		'wmlb|wonu|x700|xda(\-|2|g)|yas\-|your|zeto|zte\-/i',
-		substr($_SERVER['HTTP_USER_AGENT'],0,4)))
+		substr((string)$_SERVER['HTTP_USER_AGENT'],0,4)))
 	{
 		define('MOBILE_BROWSER', true);
 	} else {
@@ -72,35 +72,35 @@ if (!defined('MOBILE_BROWSER')) {
 }
 
 if (!defined('IE_BROWSER')) {
-	if(preg_match('/msie\s(\d+)/i', $_SERVER['HTTP_USER_AGENT'], $array))
+	if(preg_match('/msie\s(\d+)/i', (string)$_SERVER['HTTP_USER_AGENT'], $array))
 		define('IE_BROWSER', $array[1]);
 	else
 		define('IE_BROWSER', false);
 }
 
 if (!defined('FF_BROWSER')) {
-	if(preg_match('/firefox\/(\d+)/i', $_SERVER['HTTP_USER_AGENT'], $array))
+	if(preg_match('/firefox\/(\d+)/i', (string)$_SERVER['HTTP_USER_AGENT'], $array))
 		define('FF_BROWSER', $array[1]);
 	else
 		define('FF_BROWSER', false);
 }
 
 if (!defined('O_BROWSER')) {
-	if(preg_match('/opera(\s|\/)(\d+)/i', $_SERVER['HTTP_USER_AGENT'], $array))
+	if(preg_match('/opera(\s|\/)(\d+)/i', (string)$_SERVER['HTTP_USER_AGENT'], $array))
 		define('O_BROWSER', $array[2]);
 	else
 		define('O_BROWSER', false);
 }
 
 if (!defined('CH_BROWSER')) {
-	if(preg_match('/chrome\/(\d+)/i', $_SERVER['HTTP_USER_AGENT'], $array))
+	if(preg_match('/chrome\/(\d+)/i', (string)$_SERVER['HTTP_USER_AGENT'], $array))
 		define('CH_BROWSER', $array[1]);
 	else
 		define('CH_BROWSER', false);
 }
 
 if (!defined('SF_BROWSER')) {
-	if(preg_match('/safari\/(\d+)/i', $_SERVER['HTTP_USER_AGENT'], $array))
+	if(preg_match('/safari\/(\d+)/i', (string)$_SERVER['HTTP_USER_AGENT'], $array))
 		define('SF_BROWSER', $array[1]);
 	else
 		define('SF_BROWSER', false);
@@ -126,13 +126,28 @@ class _settings {
 		$settings = null;
 		
 		if (isset($_POST['submit']))
-			$update = $_POST['submit'];
+			$update = (string)$_POST['submit'];
 			
 		if (isset($_POST['settings']))
 			$settings = (array)$_POST['settings'];
 		
 		if ($update) {
 			foreach($settings as $sid => $svalue) {
+				$sid = strip_tags((string)$sid);
+				$typeid = $this->getType($sid);
+				
+				if ($typeid == SETTINGS_TYPE_HIDDEN)
+					continue;
+				
+				if ($typeid == SETTINGS_TYPE_TEXTAREA)
+					$svalue = $svalue;
+				elseif ($typeid == SETTINGS_TYPE_CHECKBOX)
+					$svalue = (bool)$svalue;
+				elseif ($typeid == SETTINGS_TYPE_NUMBER)
+					$svalue = (int)$svalue;
+				else
+					$svalue = form::parseString($svalue);
+				
 				if (($sid == 'jQuery_Load_Plugins' && 
 					 $svalue != JQUERY_LOAD_PLUGINS) || 
 					($sid == 'jQuery_Load_Admin_Plugins' && 
@@ -417,6 +432,18 @@ class _settings {
 		return $row['Value'];
 	}
 	
+	function getType($id) {
+		$row = sql::fetch(sql::run(
+			" SELECT `TypeID` " .
+			" FROM `{".$this->sqlTable."}`" .
+			" WHERE `ID` = '".sql::escape($id)."'"));
+		
+		if (!$row)
+			return null;
+		
+		return $row['TypeID'];
+	}
+	
 	static function iniGet($var, $parse = false) {
 		if (!$var)
 			return null;
@@ -464,7 +491,7 @@ class _settings {
 	}
 	
 	static function displayMaintenanceNotification() {
-		if (isset($GLOBALS['ADMIN']) && $GLOBALS['ADMIN'])
+		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
 			return false;
 		
 		if (((defined('MAINTENANCE_SUSPEND_WEBSITE') && MAINTENANCE_SUSPEND_WEBSITE) ||

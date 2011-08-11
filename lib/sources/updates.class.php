@@ -22,7 +22,7 @@ class _updates {
 		$this->rootPath = SITE_PATH.'sitefiles/var/updates/';
 		
 		if (isset($_GET['update']))
-			$this->selectedUpdate = strip_tags($_GET['update']);
+			$this->selectedUpdate = strip_tags((string)$_GET['update']);
 	}
 	
 	function install(&$update) {
@@ -337,9 +337,9 @@ class _updates {
 		if (isset($_POST['ftphost']) && $_POST['ftphost'] && 
 			isset($_POST['ftpuser']) && $_POST['ftpuser'])
 		{
-			$ftphost = strip_tags($_POST['ftphost']);
-			$ftpuser = strip_tags($_POST['ftpuser']);
-			$ftppass = isset($_POST['ftppass'])?strip_tags($_POST['ftppass']):null;
+			$ftphost = strip_tags((string)$_POST['ftphost']);
+			$ftpuser = strip_tags((string)$_POST['ftpuser']);
+			$ftppass = isset($_POST['ftppass'])?strip_tags((string)$_POST['ftppass']):null;
 			$ftpport = isset($_POST['ftpport'])?(int)$_POST['ftpport']:21;
 			$ftpssl = isset($_POST['ftpssl'])?(bool)$_POST['ftpssl']:false;
 			
@@ -1285,7 +1285,7 @@ class _updates {
 		$counter = null;
 		
 		if (isset($_GET['counter']))
-			$counter = $_GET['counter'];
+			$counter = (int)$_GET['counter'];
 		
 		if ($counter) {
 			if (!$GLOBALS['USER']->loginok || 
