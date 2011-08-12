@@ -801,6 +801,10 @@ class poll extends modules {
 			"	background-image: url(\"http://icons.jcore.net/16/doc_page_previous.png\");\n" .
 			"}\n" .
 			"\n" .
+			".poll-links .more-details {\n" .
+			"	background-image: url(\"http://icons.jcore.net/16/doc_text_image.png\");\n" .
+			"}\n" .
+			"\n" .
 			".poll-links .comments {\n" .
 			"	background-image: url(\"http://icons.jcore.net/16/comment.png\");\n" .
 			"}\n" .
@@ -1834,6 +1838,8 @@ class poll extends modules {
 		
 		unset($answers);
 		
+		$this->protectFiles();
+		
 		return $newid;
 	}
 	
@@ -1948,6 +1954,8 @@ class poll extends modules {
 		
 		unset($answers);
 		
+		$this->protectFiles();
+		
 		return true;
 	}
 	
@@ -1996,6 +2004,80 @@ class poll extends modules {
 		unset($attachments);
 		unset($pictures);
 		unset($comments);
+		
+		$this->protectFiles();
+		
+		return true;
+	}
+	
+	function protectFiles() {
+		$attachments = new pollAttachments();
+		$attachmentspath = $attachments->rootPath;
+		unset($attachments);
+		
+		$pictures = new pollPictures();
+		$picturespath = $pictures->rootPath;
+		unset($pictures);
+		
+		if (!$attachmentspath && !$picturespath)
+			return false;
+		
+		$row = sql::fetch(sql::run(
+			" SELECT COUNT(*) AS `Rows` FROM `{polls}` " .
+			" WHERE `MembersOnly` = 1" .
+			" LIMIT 1"));
+			
+		if ($row['Rows']) {
+			if (!files::exists($attachmentspath.'.htaccess') &&
+				!files::create($attachmentspath.'.htaccess',
+					'deny from all'))
+			{
+				tooltip::display(
+					_("Directory couldn't be protected!")." " .
+					sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
+						$attachmentspath),
+					TOOLTIP_ERROR);
+				
+				return false;
+			}
+			
+			if (!files::exists($picturespath.'.htaccess') &&
+				!files::create($picturespath.'.htaccess',
+					'deny from all'))
+			{
+				tooltip::display(
+					_("Directory couldn't be protected!")." " .
+					sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
+						$picturespath),
+					TOOLTIP_ERROR);
+				
+				return false;
+			}
+			
+			if (!files::exists($picturespath.'thumbnail/.htaccess') &&
+				!files::create($picturespath.'thumbnail/.htaccess',
+					'allow from all'))
+			{
+				tooltip::display(
+					_("Directory couldn't be protected!")." " .
+					sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
+						$picturespath.'thumbnail/'),
+					TOOLTIP_ERROR);
+				
+				return false;
+			}
+			
+			return true;
+		}
+		
+		if (files::exists($attachmentspath.'.htaccess'))
+			files::delete($attachmentspath.'.htaccess');
+		
+		if (files::exists($picturespath.'.htaccess'))
+			files::delete($picturespath.'.htaccess');
+		
+		if (files::exists($picturespath.'thumbnail/.htaccess'))
+			files::delete($picturespath.'thumbnail/.htaccess');
 		
 		return true;
 	}
@@ -2094,7 +2176,7 @@ class poll extends modules {
 		if (!$GLOBALS['USER']->loginok && $poll['MembersOnly']) {
 			tooltip::display(
 				_("Only registered users can vote."),
-				TOOLTIP_NOTIFICATION);
+				TOOLTIP_ERROR);
 			return false;
 		}
 			
@@ -2301,8 +2383,7 @@ class poll extends modules {
 	function displayPictures(&$row) {
 		$pictures = new pollPictures();
 		
-		if (isset($row['MembersOnly']) && $row['MembersOnly'] && 
-			!$GLOBALS['USER']->loginok)
+		if ($row['MembersOnly'] && !$GLOBALS['USER']->loginok)
 			$pictures->customLink = 
 				"javascript:jQuery.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
@@ -2319,6 +2400,7 @@ class poll extends modules {
 		$pictures->selectedOwnerID = $row['ID'];
 		$pictures->limit = 1;
 		$pictures->showPaging = false;
+		$pictures->customLink = $row['_Link'];
 		$pictures->display();
 		unset($pictures);
 	}
@@ -2372,6 +2454,14 @@ class poll extends modules {
 				"</a>";
 		
 		} else {
+			if ($row['Description'] || $row['Attachments'] || $row['Pictures'])
+				echo
+					"<a href='".$row['_Link']."' class='more-details comment'>" .
+						"<span>".
+						_("More Details") .
+						"</span> " .
+					"</a>";
+			
 			if ($row['EnableComments'])
 				echo
 					"<a href='".$row['_Link']."#comments' class='comments comment'>" .
@@ -2542,19 +2632,6 @@ class poll extends modules {
 		echo
 				"</div>";
 				
-		if ($row['Pictures'])
-			$this->displayLatestPicture($row);
-		
-		if ($row['Description']) {
-			echo
-				"<div class='poll-description'>";
-			
-			$this->displayDescription($row);
-			
-			echo
-				"</div>";
-		}
-		
 		$this->displayAnswers($row);
 		
 		if (!isset($row['VotingsClosed']) || !$row['VotingsClosed']) {
@@ -2567,10 +2644,9 @@ class poll extends modules {
 				"</div>";
 		}
 		
-		if ($row['Attachments'])
-			$this->displayAttachments($row);
-		
-		if ($row['EnableComments']) {
+		if ($row['EnableComments'] || $row['Description'] || 
+			$row['Attachments'] || $row['Pictures'])
+		{
 			echo
 				"<div class='poll-links'>";
 		
