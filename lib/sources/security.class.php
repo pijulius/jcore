@@ -9,10 +9,15 @@
  *  For licensing, see LICENSE or http://jcore.net/license
  ****************************************************************************/
  
-define('SECURITY_SALT_LENGTH', 7);
-
 if (!defined('MINIMUM_PASSWORD_LENGTH'))
 	define('MINIMUM_PASSWORD_LENGTH', 5);
+
+if (!defined('SECURITY_ITERATION_COUNT'))
+	define('SECURITY_ITERATION_COUNT', 7);
+
+// Only used in fallback mode (sha1 passwords)
+if (!defined('SECURITY_SALT_LENGTH'))
+	define('SECURITY_SALT_LENGTH', 7);
 
 class _security {
 	static $fonts = array(
@@ -904,20 +909,91 @@ class _security {
 		return false;
 	}
 	
-	static function salt($length = SECURITY_SALT_LENGTH) {
-		return substr(md5(uniqid(rand(), true)), 0, $length);
-	}
-	
-	static function text2Hash($text, $salt = null) {
-    	if ($salt === null) {
-			$salt = security::salt();
-		} elseif (strlen($salt) > SECURITY_SALT_LENGTH) {
-			$salt = substr($salt, 0, SECURITY_SALT_LENGTH);
-		} elseif (strlen($salt) < SECURITY_SALT_LENGTH) {
-			$salt = $salt.security::salt(SECURITY_SALT_LENGTH - strlen($salt));
+	static function genHash($text, $salt = null) {
+		if (CRYPT_BLOWFISH == 1) {
+			$bfsalt = $salt;
+			
+	    	if ($bfsalt === null)
+				$bfsalt = security::salt(22);
+			elseif (strlen($bfsalt) > 22)
+				$bfsalt = substr($bfsalt, 0, 22);
+			elseif (strlen($bfsalt) < 22)
+				$bfsalt = $bfsalt.security::salt(22 - strlen($bfsalt));
+			
+			$iteration = SECURITY_ITERATION_COUNT;
+			if ($iteration < 4 || $iteration > 31)
+				$iteration = 7;
+			
+			$hash = crypt($text, '$2a$' .
+				($iteration<10?'0':null).$iteration.'$' .
+				substr($bfsalt, 0, 22));
+			
+			if ($hash)
+				return $hash;
+			
 		}
 		
-    	return $salt.sha1($salt.$text);
+		if (CRYPT_MD5 == 1) {
+			$md5salt = $salt;
+			
+	    	if ($md5salt === null)
+				$md5salt = security::salt(9);
+			elseif (strlen($md5salt) > 9)
+				$md5salt = substr($md5salt, 0, 9);
+			elseif (strlen($md5salt) < 9)
+				$md5salt = $md5salt.security::salt(9 - strlen($md5salt));
+			
+			$hash = crypt($text, '$1$'.substr($md5salt, 0, 9));
+			
+			if ($hash)
+				return $hash;
+		}
+		
+    	if ($salt === null)
+			$salt = security::salt(SECURITY_SALT_LENGTH);
+		elseif (strlen($salt) > SECURITY_SALT_LENGTH)
+			$salt = substr($salt, 0, SECURITY_SALT_LENGTH);
+		elseif (strlen($salt) < SECURITY_SALT_LENGTH)
+			$salt = $salt.security::salt(SECURITY_SALT_LENGTH - strlen($salt));
+		
+    	return 
+    		$salt.sha1($salt.$text);
+	}
+	
+	static function checkHash($text, $hash) {
+		if (strpos($hash, '$') === 0)
+			return crypt($text, $hash) == $hash;
+		
+		$salt = substr($hash, 0, SECURITY_SALT_LENGTH);
+		return $salt.sha1($salt.$text) == $hash;
+	}
+	
+	static function salt($length = SECURITY_SALT_LENGTH) {
+		$salt = '';
+		
+		if (@is_readable('/dev/urandom') && ($fp = @fopen('/dev/urandom', 'rb'))) {
+			$salt = md5(fread($fp, $length));
+			fclose($fp);
+		}
+		
+		if (strlen($salt) < $length)
+			for ($i = 0; $i < $length; $i += 16)
+				$salt .= md5(uniqid(rand(), true).microtime().$i);
+		
+		return substr($salt, 0, $length);
+	}
+	
+	// Kept only for compatibility reasons, you should use genHash and checkHash
+	static function text2Hash($text, $salt = null) {
+    	if ($salt === null)
+			$salt = security::salt(SECURITY_SALT_LENGTH);
+		elseif (strlen($salt) > SECURITY_SALT_LENGTH)
+			$salt = substr($salt, 0, SECURITY_SALT_LENGTH);
+		elseif (strlen($salt) < SECURITY_SALT_LENGTH)
+			$salt = $salt.security::salt(SECURITY_SALT_LENGTH - strlen($salt));
+		
+    	return 
+    		$salt.sha1($salt.$text);
 	}
 	
 	static function isBot($useragent = null) {

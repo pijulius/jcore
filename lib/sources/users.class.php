@@ -1059,7 +1059,7 @@ class _users {
 			(JCORE_VERSION < '0.6' || 
 			 ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin']) ||
 			 (defined('INSTANT_USER_REGISTRATION') && INSTANT_USER_REGISTRATION)?
-				" `Password` = '".sql::escape(security::text2Hash($password))."',":
+				" `Password` = '".sql::escape(security::genHash($password))."',":
 				null) .
 			" `Email` = '".sql::escape($values['Email'])."',";
 		
@@ -1099,7 +1099,7 @@ class _users {
 			$requestid = $this->addRequest(array(
 				'UserID' => $newid,
 				'RequestTypeID' => REQUEST_TYPE_NEW_ACCOUNT,
-				'Data' => security::text2Hash($password)));
+				'Data' => security::genHash($password)));
 			
 			if (!$requestid)
 				return $requestid;
@@ -1173,7 +1173,7 @@ class _users {
 				sql::escape($values['UserName'])."'," .
 			($values['Password']?
 				" `Password` = '".
-					sql::escape(security::text2Hash($values['Password']))."',":
+					sql::escape(security::genHash($values['Password']))."',":
 				null) .
 			" `Email` = '".
 				sql::escape($values['Email'])."',";
@@ -1352,9 +1352,7 @@ class _users {
 				return false;
 			}
 			
-			if (!$record || $record['Password'] != 
-				security::text2Hash($password, $record['Password']))
-			{
+			if (!$record || !security::checkHash($password, $record['Password'])) {
 				$bfprotection->add($member, strip_tags((string)$_SERVER['REMOTE_ADDR']));
 				
 				$this->loginok = false;
@@ -1668,7 +1666,7 @@ class _users {
 			
 		} else {
 			$newpassword = security::genPassword($user['Email']);
-			$password = security::text2Hash($newpassword);
+			$password = security::genHash($newpassword);
 		}
 		
 		sql::run(
@@ -1802,7 +1800,7 @@ class _users {
 				$newid = $this->addRequest(array(
 					'UserID' => $user['ID'],
 					'RequestTypeID' => REQUEST_TYPE_NEW_PASSWORD,
-					'Data' => security::text2Hash($newpassword)));
+					'Data' => security::genHash($newpassword)));
 				
 			} else {
 				$newid = $this->addRequest(array(
@@ -1943,7 +1941,7 @@ class _users {
 				
 				sql::run(
 					" UPDATE `{users}` SET" .
-					" `Password` = '".sql::escape(security::text2Hash($password))."'," .
+					" `Password` = '".sql::escape(security::genHash($password))."'," .
 					" `TimeStamp` = `TimeStamp`" .
 					" WHERE `ID` = '".$user['ID']."'");
 				
