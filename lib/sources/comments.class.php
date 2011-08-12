@@ -414,6 +414,7 @@ class _comments {
 		echo
 			"<td>" .
 				"<span class='nowrap'>" .
+				"<label>" .
 				"<input type='checkbox' name='ids[]' " .
 					"value='".$row['ID']."' " .
 					($ids && in_array($row['ID'], $ids)?
@@ -430,6 +431,7 @@ class _comments {
 					"</span>":
 					null) .
 				"</span>" .
+				"</label>" .
 			"</td>" .
 			"<td align='center'>" .
 				"<div class='admin-content-preview'>";
