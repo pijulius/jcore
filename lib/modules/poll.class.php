@@ -787,7 +787,7 @@ class poll extends modules {
 			"	margin-bottom: 5px;\n" .
 			"}\n" .
 			"\n" .
-			".poll-vote-button {\n" .
+			".poll.selected .poll-vote-button {\n" .
 			"	margin-bottom: 15px;\n" .
 			"}\n" .
 			".poll-links a {\n" .
@@ -2567,13 +2567,15 @@ class poll extends modules {
 					}
 					break;
 				
-				case 'comments':
-					if ($row['EnableComments']) {
+				case 'links':
+					if ($row['EnableComments'] || $row['Description'] || 
+						$row['Attachments'] || $row['Pictures'])
+					{
 						echo
 							"<div class='poll-links'>";
-						
+					
 						$this->displayFunctions($row);
-						
+							
 						echo
 							"<div class='clear-both'></div>" .
 							"</div>";
@@ -2597,6 +2599,9 @@ class poll extends modules {
 		echo
 			"</form>" .
 			"</div>";
+		
+		if ($this->selectedID == $row['ID'] && $row['EnableComments'])
+			$this->displayComments($row);
 	}
 	
 	function displayOne(&$row) {
