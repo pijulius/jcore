@@ -887,6 +887,23 @@ class _security {
 			security::randomChars();		
 	}
 	
+	static function genToken($lifetime = 10800) {
+		$i = ceil(time() / $lifetime);
+		$u = implode((array)$GLOBALS['USER']->data);
+
+		return sha1(session_id().$i.$u);
+	}
+	
+	static function checkToken($token, $lifetime = 10800) {
+		$i = ceil(time() / $lifetime);
+		$u = implode((array)$GLOBALS['USER']->data);
+
+		if (sha1(session_id().$i.$u) == $token)
+			return true;
+		
+		return false;
+	}
+	
 	static function salt($length = SECURITY_SALT_LENGTH) {
 		return substr(md5(uniqid(rand(), true)), 0, $length);
 	}

@@ -2068,6 +2068,15 @@ class poll extends modules {
 			return false;
 		}
 		
+		if (!isset($_POST['_FormSecurityToken']) || 
+			!security::checkToken((string)$_POST['_FormSecurityToken'], 86400)) 
+		{
+			tooltip::display(
+				_("Poll cannot be found or it has been deactivated!"),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
 		$pollid = (int)key($answers);
 		
 		$poll = sql::fetch(sql::run(
@@ -2398,7 +2407,8 @@ class poll extends modules {
 					null) .
 				"'>" .
 			"<form action='".url::uri("request") .
-				"&amp;request=modules/poll' class='ajax-form' method='post'>";
+				"&amp;request=modules/poll' class='ajax-form' method='post'>" .
+				"<input type='hidden' name='_FormSecurityToken' value='".security::genToken(86400)."' />";
 		
 		$parts = preg_split('/%([a-z0-9-_]+?)%/', $this->format, null, PREG_SPLIT_DELIM_CAPTURE);
 		
@@ -2515,7 +2525,8 @@ class poll extends modules {
 					null) .
 				"'>" .
 			"<form action='".url::uri("request") .
-				"&amp;request=modules/poll' class='ajax-form' method='post'>";
+				"&amp;request=modules/poll' class='ajax-form' method='post'>" .
+				"<input type='hidden' name='_FormSecurityToken' value='".security::genToken(86400)."' />";
 		
 		echo
 				"<h2 class='poll-title'>";
@@ -2597,7 +2608,8 @@ class poll extends modules {
 					null) .
 				"'>" .
 			"<form action='".url::uri("request") .
-				"&amp;request=modules/poll' class='ajax-form' method='post'>";
+				"&amp;request=modules/poll' class='ajax-form' method='post'>" .
+				"<input type='hidden' name='_FormSecurityToken' value='".security::genToken(86400)."' />";
 		
 		echo
 				"<h2 class='poll-title'>";

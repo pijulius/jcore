@@ -979,6 +979,20 @@ class _form {
 		return false;
 	}
 	
+	function verifyToken() {
+		if (!isset($GLOBALS['_'.strtoupper($this->method)]['_FormSecurityToken']) ||
+			!security::checkToken((string)$GLOBALS['_'.strtoupper($this->method)]['_FormSecurityToken'])) 
+		{
+			tooltip::display(
+				__("Please review / correct the marked fields in the form below " .
+					"and try again."),
+				TOOLTIP_ERROR);
+			return false;
+		}
+		
+		return true;
+	}
+	
 	function verify() {
 		if (!$this->submitted())
 			return false;
@@ -1098,6 +1112,9 @@ class _form {
 			tooltip::display($error, TOOLTIP_ERROR);
 			return false;
 		}
+		
+		if (!$this->verifyToken())
+			return false;
 		
 		return true;
 	}
@@ -1971,6 +1988,11 @@ class _form {
 				"</div>";
 	}
 	
+	function displayToken() {
+		echo
+			"<input type='hidden' name='_FormSecurityToken' value='".security::genToken()."' />";
+	}
+	
 	function displayTitle() {
 		echo $this->title;
 		
@@ -1985,6 +2007,7 @@ class _form {
 				"<form action='".$this->action."' method='".$this->method."' " .
 					"enctype='multipart/form-data' ".$this->attributes.">";
 		
+		$this->displayToken();
 		$this->displayElements($this->elements);
 		
 		if ($this->displayFormElement)		
