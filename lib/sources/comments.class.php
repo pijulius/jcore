@@ -984,16 +984,6 @@ class _comments {
 		if (!$id)
 			return false;
 		
-		if (defined('MODERATED_COMMENTS') && MODERATED_COMMENTS &&
-			defined('MODERATED_COMMENTS_BY_APPROVAL') && 
-			MODERATED_COMMENTS_BY_APPROVAL)
-		{
-			sql::run(
-				" DELETE FROM `{".$this->sqlTable."}`" .
-				" WHERE `Pending` = 1" .
-				" AND `TimeStamp` < DATE_SUB(NOW(), INTERVAL 1 MONTH)");
-		}
-		
 		foreach($this->getSubComments($id) as $subcomment)
 			sql::run(
 				" DELETE FROM `{".$this->sqlTable."}` " .
