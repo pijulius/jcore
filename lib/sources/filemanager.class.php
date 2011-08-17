@@ -187,7 +187,7 @@ class _fileManager {
 	}
 	
 	function edit($from, $to) {
-		if (!preg_match("/".files::$allowedFileTypes[FILE_TYPE_UPLOAD]."/i", $to)) {
+		if (!@is_dir($from) && !preg_match("/".files::$allowedFileTypes[FILE_TYPE_UPLOAD]."/i", $to)) {
 			tooltip::display(
 				sprintf(__("Unsupported file format! Supported formats are: %s."),
 					str_replace('|', ', ', files::$allowedFileTypes[FILE_TYPE_UPLOAD])),
