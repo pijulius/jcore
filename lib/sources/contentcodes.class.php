@@ -220,6 +220,9 @@ class _contentCodes {
 		if ($constant == 'JCORE_URL')
 			return url::jCore();
 		
+		if ($constant == 'SECURITY_TOKEN')
+			return security::genToken();
+		
 		if (!defined($constant))
 			return null;
 		
