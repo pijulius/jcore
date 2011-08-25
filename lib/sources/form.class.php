@@ -948,6 +948,14 @@ class _form {
 		}
 		
 		$this->elements[$elementid][$key] = $elementname;
+		
+		if ($key == 'ValueType') {
+			$submittedvalue = $this->get($elementid);
+			
+			if (isset($submittedvalue))
+				$this->elements[$elementid]['Value'] = $submittedvalue;
+		}
+		
 		return true;
 	}
 	
