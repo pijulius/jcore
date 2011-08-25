@@ -3734,12 +3734,13 @@ class _posts {
 		
 		$rows = sql::run(
 			$this->SQL() .
-			($this->ignorePaging || $this->latests?
-				($this->limit?
-					" LIMIT ".$this->limit:
-					null):
-				" LIMIT ".$paging->limit) .
-			null);
+			(!$this->selectedID?
+				($this->ignorePaging || $this->latests?
+					($this->limit?
+						" LIMIT ".$this->limit:
+						null):
+					" LIMIT ".$paging->limit):
+				null));
 		
 		if (!$this->latests)
 			$paging->setTotalItems(sql::count());
