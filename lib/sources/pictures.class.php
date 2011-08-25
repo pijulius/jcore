@@ -1713,6 +1713,13 @@ class _pictures {
 	}
 	
 	function displayPicture(&$row) {
+		if (!isset($row['_ThumbnailLocation']) || !$row['_ThumbnailLocation'])
+			$row['_ThumbnailLocation'] = $this->rootURL.
+				(JCORE_VERSION >= '0.5' && $row['Thumbnail']?
+					$this->thumbnailsFolder:
+					null) .
+				$row['Location'];
+		
 		echo
 			"<img src='".
 				(strpos($row['Location'], '://') !== false?
@@ -1823,13 +1830,6 @@ class _pictures {
 		
 		if (!isset($row['_Link']) || !$row['_Link'])
 			$row['_Link'] = $this->generateLink($row);
-		
-		if (!isset($row['_ThumbnailLocation']) || !$row['_ThumbnailLocation'])
-			$row['_ThumbnailLocation'] = $this->rootURL.
-				(JCORE_VERSION >= '0.5' && $row['Thumbnail']?
-					$this->thumbnailsFolder:
-					null) .
-				$row['Location'];
 		
 		echo
 			"<div " .
