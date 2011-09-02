@@ -2119,8 +2119,14 @@ class _users {
 		if (!$size)
 			$size = 64;
 		
-		if (!$default && defined('DEFAULT_AVATAR_URL') && DEFAULT_AVATAR_URL)
+		if (!$default && defined('DEFAULT_AVATAR_URL') && DEFAULT_AVATAR_URL) {
 			$default = DEFAULT_AVATAR_URL;
+			
+			if (strpos($default, '/') === 0)
+				$default = url::site().$default;
+			elseif (strpos($default, 'http://') !== 0 && strpos($default, 'https://') !== 0)
+				$default = TEMPLATE_URL.$default;
+		}
 		
 		if (!$default)
 			$default = 'mm';
