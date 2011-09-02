@@ -71,6 +71,8 @@ class _comments {
 	var $format = null;
 	var $limit = 0;
 	var $latests = false;
+	var $showPaging = true;
+	var $ajaxPaging = false;
 	var $ajaxRequest = null;
 	var $adminPath = null;
 	var $userPermissionType = 0;
@@ -1400,9 +1402,6 @@ class _comments {
 		if (isset($_GET[strtolower(get_class($this))]))
 			$commentid = (int)$_GET[strtolower(get_class($this))];
 		
-		if (!$commentid)
-			return false;
-			
 		$rateup = null;
 		$ratedown = null;
 		$reply = null;
@@ -1420,52 +1419,71 @@ class _comments {
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
 			
-		if (!$rateup && !$ratedown && !$reply && !$edit)
-			return false;
+		if ($rateup || $ratedown || $reply || $edit) {
+			if ($this->sqlOwnerTable && !$this->guestComments) {
+				if (sql::rows(sql::run(
+					" SHOW COLUMNS FROM `{" .$this->sqlOwnerTable . "}`" .
+					" LIKE 'EnableGuestComments'")))
+				{
+					$selectedowner = sql::fetch(sql::run(
+						" SELECT `EnableGuestComments` FROM `{" .$this->sqlOwnerTable . "}`" .
+						" WHERE `ID` = '".$this->selectedOwnerID."'"));
+					
+					if ($selectedowner['EnableGuestComments'])
+						$this->guestComments = true;
+				}
+			}
+			
+			if ($rateup) {
+				$this->rate($commentid, 1);
+				return true;
+			}
 		
-		if ($this->sqlOwnerTable && !$this->guestComments) {
-			if (sql::rows(sql::run(
-				" SHOW COLUMNS FROM `{" .$this->sqlOwnerTable . "}`" .
-				" LIKE 'EnableGuestComments'")))
-			{
-				$selectedowner = sql::fetch(sql::run(
-					" SELECT `EnableGuestComments` FROM `{" .$this->sqlOwnerTable . "}`" .
-					" WHERE `ID` = '".$this->selectedOwnerID."'"));
+			if ($ratedown) {
+				$this->rate($commentid, -1);
+				return true;
+			}
+		
+			if ($reply) {
+				$this->displayReplyForm($commentid);
+				return true;
+			}
 				
-				if ($selectedowner['EnableGuestComments'])
-					$this->guestComments = true;
+			if ($edit) {
+				$this->displayEditForm($commentid);
+				return true;
 			}
 		}
 		
-		if ($rateup) {
-			$this->rate($commentid, 1);
-			return true;
-		}
-	
-		if ($ratedown) {
-			$this->rate($commentid, -1);
-			return true;
-		}
-	
-		if ($reply) {
-			$this->displayReplyForm($commentid);
-			return true;
-		}
-			
-		if ($edit) {
-			$this->displayEditForm($commentid);
-			return true;
-		}
-			
-		return false;
+		$this->ajaxPaging = true;
+		$this->display();
+		return true;
 	}
 	
-	function countItems() {
+	function countItems($toplevels = false) {
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{" . $this->sqlTable . "}`" .
+			" WHERE 1" .
 			($this->sqlRow && !$this->latests?
-				" WHERE `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
+				" AND `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
+				null) .
+			($toplevels?
+				" AND `SubCommentOfID` = 0" .
+				(defined('MODERATED_COMMENTS') && MODERATED_COMMENTS?
+					 (defined('MODERATED_COMMENTS_PENDING_MINUTES') && 
+					  MODERATED_COMMENTS_PENDING_MINUTES?
+						" AND (`TimeStamp` <= DATE_SUB(NOW(), INTERVAL " .
+							(int)MODERATED_COMMENTS_PENDING_MINUTES." MINUTE)" .
+						" OR `IP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."')":
+						null) .
+					 (defined('MODERATED_COMMENTS_BY_APPROVAL') && 
+					  MODERATED_COMMENTS_BY_APPROVAL && (!$GLOBALS['USER']->loginok ||
+					  !$GLOBALS['USER']->data['Admin'] || ~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE)?
+						" AND (`Pending` = 0" .
+						" OR `IP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."')":
+						null):
+					null):
 				null) .
 			" LIMIT 1"));
 		return (int)$row['Rows'];
@@ -2076,8 +2094,9 @@ class _comments {
 			isset($_GET['edit']) && $_GET['edit'])
 			$edit = (int)$_GET['postcomments'];
 		
-		echo 
-			"<div class='comments'>";
+		if (!$this->ajaxRequest)
+			echo 
+				"<div class='comments'>";
 		
 		if (!$this->latests) {
 			echo
@@ -2171,13 +2190,27 @@ class _comments {
 			
 			if ($edit && ($verifyok || !$form->submitted()))
 				$form->setValues($comment);
+			
+			$paging = new paging($this->limit);
+			
+			if ($this->ajaxPaging) {
+				$paging->ajax = true;
+				$paging->otherArgs = "&amp;request=".$this->uriRequest .
+					($this->sqlRow?
+						"&amp;".strtolower($this->sqlRow)."=".$this->selectedOwnerID:
+						null);
+			}
+			
+			$paging->track(strtolower(get_class($this)).'limit');
 		}
 		
 		$rows = sql::run(
 			$this->SQL() .
-			($this->limit?
-				" LIMIT ".$this->limit:
-				null));
+			($this->latests?
+				($this->limit?
+					" LIMIT ".$this->limit:
+					null):
+				" LIMIT ".$paging->limit));
 		
 		if (!$this->latests) {
 			echo 
@@ -2185,6 +2218,8 @@ class _comments {
 			$this->displayTitle();
 			echo
 				"</h3>";
+			
+			$paging->setTotalItems($this->countItems(true));
 		}
 		
 		if (!sql::rows($rows)) {
@@ -2207,6 +2242,9 @@ class _comments {
 				"</div>";
 		}
 		
+		if ($this->showPaging && !$this->latests)
+			$paging->display();
+		
 		if (!$this->latests) {
 			if ($this->guestComments || $GLOBALS['USER']->loginok) {
 				echo
@@ -2223,7 +2261,10 @@ class _comments {
 			unset($form);
 		}
 		
-		echo "</div>";
+		if (!$this->ajaxRequest)
+			echo "</div>";
+		
+		return $paging->items;
 	}
 }
 
