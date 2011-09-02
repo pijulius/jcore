@@ -9,6 +9,11 @@
  *  For licensing, see LICENSE or http://jcore.net/license
  ****************************************************************************/
  
+if (defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE)
+	define('TEMPLATE_URL', url::site().'template/'.WEBSITE_TEMPLATE.'/');
+else
+	define('TEMPLATE_URL', url::site().'template/');
+
 class _template {
 	static $selected = null;
 	
