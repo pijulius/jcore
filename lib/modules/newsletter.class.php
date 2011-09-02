@@ -2361,6 +2361,7 @@ class newsletterEmails {
 }
 
 class newsletter extends modules {
+	var $newsletterURL = '';
 	var $adminPath = 'admin/modules/newsletter';
 	var $selectedID = 0;
 	
@@ -2921,11 +2922,14 @@ class newsletter extends modules {
 		$form->setValueType(FORM_VALUE_TYPE_ARRAY);
 	}
 	
-	function displaySubscriptionForm() {
+	function displaySubscriptionForm($verify = true) {
 		$selectedlist = null;
 		
 		if ($this->selectedID)
 			$selectedlist = newsletterLists::get($this->selectedID, false);
+		
+		if (!$this->newsletterURL)
+			$this->newsletterURL = newsletter::getURL($this->selectedID);
 		
 		$form = new form(
 			($selectedlist?
@@ -2935,6 +2939,7 @@ class newsletter extends modules {
 			'newslettersubscribe');
 		
 		$form->footer = '';
+		$form->action = $this->newsletterURL;
 		$this->setupSubscriptionForm($form);
 		
 		$form->add(
@@ -2947,7 +2952,9 @@ class newsletter extends modules {
 			'Unsubscribe',
 			FORM_INPUT_TYPE_SUBMIT);
 		
-		$this->verifySubscription($form);
+		if ($verify)
+			$this->verifySubscription($form);
+		
 		$form->display();
 		unset($form);
 	}
@@ -2956,12 +2963,24 @@ class newsletter extends modules {
 		if (!$this->arguments)
 			return false;
 		
+		$formonly = false;
+		
+		if (preg_match('/(^|\/)form($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)form($|\/)/', '\2', $this->arguments);
+			$formonly = true;
+		}
+		
 		$list = sql::fetch(sql::run(
 			" SELECT `ID` FROM `{newsletterlists}`" .
 			" WHERE `Path` LIKE '".sql::escape($this->arguments)."'"));
 		
 		if ($list)
 			$this->selectedID = $list['ID'];
+		
+		if ($formonly) {
+			$this->displaySubscriptionForm(false);
+			return true;
+		}
 		
 		return false;
 	}
@@ -2970,6 +2989,9 @@ class newsletter extends modules {
 		if ($this->displayArguments())
 			return;
 		
+		if (!$this->newsletterURL)
+			$this->newsletterURL = newsletter::getURL();
+			
 		$this->displaySubscriptionForm();
 	}
 }
