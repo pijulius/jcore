@@ -209,7 +209,7 @@ class _pages {
 					'LayoutID',
 					FORM_INPUT_TYPE_SELECT);
 				$form->setValueType(FORM_VALUE_TYPE_INT);
-				$form->addValue('', __('Default'));
+				$form->addValue('0', __('Default'));
 				
 				while($layout = sql::fetch($layouts))
 					$form->addValue($layout['ID'], $layout['Title']);
