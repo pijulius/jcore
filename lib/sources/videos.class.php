@@ -1183,66 +1183,67 @@ class _videos {
 	}
 	
 	function displayVideoPlayer(&$row) {
+		$html5video = 
+			"<video controls='controls' " .
+				"width='".$this->videoWidth."' height='".$this->videoHeight."'>" .
+				"<source src='".
+					(strpos($row['Location'], '://') !== false?
+						$row['Location']:
+						$this->rootURL.$row['Location']) .
+					"' />" .
+			"</video>";
+		
 		$parameters = array(
-			'FlashVars' => 'url=' .
+			'FlashVars' => 'source=' .
 				urlencode(
 					(strpos($row['Location'], '://') !== false?
 						$row['Location']:
 						$this->rootURL.$row['Location'])) .
-				'&autoplay=1');
+				'&autostart=true&controltype=1&streamtype=http');
 		
 		$row['Location'] = url::jCore() .
 				'lib/flash/player.swf';
 		
-		$this->displayFlashVideo($row, $parameters);
+		$this->displayFlashVideo($row, $parameters, $html5video);
+		
+		echo
+			"<script>" .
+				"if (!jQuery.jCore.flashAvailable()) " .
+					"jQuery('.video".$row['ID']." video').trigger('play');" .
+			"</script>";
 	}
 	
-	function displayFlashVideo(&$row, $parameters = array()) {
-		echo
-			"<object width='".$this->videoWidth."' height='".$this->videoHeight."'>" .
-				"<param name='movie' " .
-					"value='".$row['Location']."'>" .
-				"</param>" .
-				"<param name='allowFullScreen' value='true'></param>" .
-				"<param name='allowscriptaccess' value='always'></param>";
+	function displayFlashVideo(&$row, $parameters = array(), $fallbackcontent = null) {
+		$params = null;
 		
 		foreach($parameters as $key => $value)
-			echo 
-				"<param name='".$key."' value='".$value."'></param>";
+			$params .= "<param name='".$key."' value='".$value."'></param>";
 		
 		echo
-				"<embed src='".$row['Location']."' " .
-					"type='application/x-shockwave-flash' " .
-					"allowscriptaccess='always' " .
-					"allowfullscreen='true' ";
-		
-		foreach($parameters as $key => $value)
-			echo 
-				$key."='".$value."' ";
-		
-		echo
+			"<object classid='clsid:d27cdb6e-ae6d-11cf-96b8-444553540000' " .
+				"width='".$this->videoWidth."' height='".$this->videoHeight."'>" .
+				"<param name='movie' value='".$row['Location']."' />" .
+				"<param name='seamlesstabbing' value='1' />" .
+				"<param name='allowfullscreen' value='true' />" .
+				"<param name='allowscriptaccess' value='always' />" .
+				"<param name='bgcolor' value='#000000' />" .
+				"<param name='wmode' value='opaque' />" .
+				$params .
+				"<!--[if !IE]>-->" .
+				"<object type='application/x-shockwave-flash' data='".$row['Location']."' " .
 					"width='".$this->videoWidth."' height='".$this->videoHeight."'>" .
-				"</embed>" .
+				"<param name='movie' value='".$row['Location']."' />" .
+				"<param name='allowfullscreen' value='true' />" .
+				"<param name='allowscriptaccess' value='always' />" .
+				"<param name='bgcolor' value='#000000' />" .
+				"<param name='wmode' value='opaque' />" .
+				$params .
+				"<!--<![endif]-->" .
+				$fallbackcontent .
+				"<!--[if !IE]>-->" .
+				"</object>" .
+				"<!--<![endif]-->" .
 			"</object>";
-	}
-	
-	function displayHTML5Video(&$row) {
-		echo
-			"<video " .
-				"width='".$this->videoWidth."' " .
-				"height='".$this->videoHeight."' " .
-				"controls='true' " .
-				"autoplay='true'>" .
-				"<source src='" .
-				(strpos($row['Location'], '://') !== false?
-					$row['Location']:
-					$this->rootURL.$row['Location']) .
-				"' />";
-		
-		$this->displayVideoPlayer($row);
-		
-		echo
-			"</video>";
 	}
 	
 	function displayIframeVideo(&$row) {
@@ -1285,11 +1286,6 @@ class _videos {
 			"&request=".$this->uriRequest .
 			"&get=".$row['ID']."&ajax=1";
 		
-		if (preg_match('/\.(mp4|mov|webm|ogv)$/i', $file)) {
-			$this->displayHTML5Video($row);
-			return true;
-		}
-		
 		$this->displayVideoPlayer($row);
 		return true;
 	}
@@ -1317,11 +1313,6 @@ class _videos {
 		
 		if (preg_match('/\.swf$/i', $row['Location'])) {
 			$this->displayFlashVideo($row);
-			return true;
-		}
-		
-		if (preg_match('/\.(mp4|mov|webm|ogv)$/i', $row['Location'])) {
-			$this->displayHTML5Video($row);
 			return true;
 		}
 		
@@ -1399,7 +1390,8 @@ class _videos {
 					" selected":
 					null) .
 				" video".$row['ID'] .
-				"'>";
+				"' style='width: ".$this->videoWidth."px;" .
+				" height:".$this->videoHeight."px'>";
 		
 		$this->displayVideo($row);
 		
