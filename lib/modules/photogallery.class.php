@@ -986,7 +986,7 @@ class photoGallery extends modules {
 			"}\n" .
 			"\n" .
 			".as-modules-photogallery a {\n" .
-			"	background-image: url(\"http://icons.jcore.net/48/folder-photos.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/emblem-photos.png\");\n" .
 			"}\n";
 		
 		return

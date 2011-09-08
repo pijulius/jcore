@@ -213,7 +213,7 @@ class members extends modules {
 	function installFiles() {
 		$css = 
 			".as-modules-members a {\n" .
-			"	background-image: url(\"http://icons.jcore.net/48/user_auth.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/member-forms.png\");\n" .
 			"}\n";
 		
 		return

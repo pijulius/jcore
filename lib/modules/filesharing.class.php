@@ -542,7 +542,7 @@ class fileSharing extends modules {
 			"}\n" .
 			"\n" .
 			".as-modules-filesharing a {\n" .
-			"	background-image: url(\"http://icons.jcore.net/48/folder-files.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/document-open.png\");\n" .
 			"}\n";
 		
 		return 

@@ -816,7 +816,7 @@ class poll extends modules {
 			"}\n" .
 			"\n" .
 			".as-modules-poll a {\n" .
-			"	background-image: url(\"http://icons.jcore.net/48/eq.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/poll.png\");\n" .
 			"}\n";
 		
 		return

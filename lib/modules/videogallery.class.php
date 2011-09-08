@@ -1046,7 +1046,7 @@ class videoGallery extends modules {
 			"}\n" .
 			"\n" .
 			".as-modules-videogallery a {\n" .
-			"	background-image: url(\"http://icons.jcore.net/48/folder-videos.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/emblem-videos.png\");\n" .
 			"}\n";
 		
 		return

@@ -2504,6 +2504,10 @@ class shoppingOrders extends modules {
 			"}\n" .
 			"\n" .
 			".as-modules-shoppingorders a {\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/emblem-money.png\");\n" .
+			"}\n" .
+			"\n" .
+			".as-shopping-processed-orders a {\n" .
 			"	background-image: url(\"http://icons.jcore.net/48/shopping-orders.png\");\n" .
 			"}\n" .
 			"\n" .

@@ -5168,7 +5168,7 @@ class shopping extends modules {
 			"}\n" .
 			"\n" .
 			".as-modules-shopping a {\n" .
-			"	background-image: url(\"http://icons.jcore.net/48/folder-shopping-categories.png\");\n" .
+			"	background-image: url(\"http://icons.jcore.net/48/shopping-items.png\");\n" .
 			"}\n";
 		
 		return
