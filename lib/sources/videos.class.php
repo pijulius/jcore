@@ -1208,7 +1208,7 @@ class _videos {
 		
 		echo
 			"<script>" .
-				"if (!jQuery.jCore.flashAvailable()) " .
+				"if (!jQuery.jCore.hasFlash()) " .
 					"jQuery('.video".$row['ID']." video').trigger('play');" .
 			"</script>";
 	}
@@ -1219,30 +1219,24 @@ class _videos {
 		foreach($parameters as $key => $value)
 			$params .= "<param name='".$key."' value='".$value."'></param>";
 		
-		echo
-			"<object classid='clsid:d27cdb6e-ae6d-11cf-96b8-444553540000' " .
-				"width='".$this->videoWidth."' height='".$this->videoHeight."'>" .
-				"<param name='movie' value='".$row['Location']."' />" .
-				"<param name='seamlesstabbing' value='1' />" .
-				"<param name='allowfullscreen' value='true' />" .
-				"<param name='allowscriptaccess' value='always' />" .
-				"<param name='bgcolor' value='#000000' />" .
-				"<param name='wmode' value='opaque' />" .
-				$params .
-				"<!--[if !IE]>-->" .
+		if (IE_BROWSER)
+			echo
+				"<object classid='clsid:d27cdb6e-ae6d-11cf-96b8-444553540000' " .
+					"width='".$this->videoWidth."' height='".$this->videoHeight."'>";
+		else
+			echo
 				"<object type='application/x-shockwave-flash' data='".$row['Location']."' " .
-					"width='".$this->videoWidth."' height='".$this->videoHeight."'>" .
+					"width='".$this->videoWidth."' height='".$this->videoHeight."'>";
+		
+		echo
 				"<param name='movie' value='".$row['Location']."' />" .
+				"<param name='seamlesstabbing' value='false' />" .
 				"<param name='allowfullscreen' value='true' />" .
 				"<param name='allowscriptaccess' value='always' />" .
 				"<param name='bgcolor' value='#000000' />" .
 				"<param name='wmode' value='opaque' />" .
 				$params .
-				"<!--<![endif]-->" .
 				$fallbackcontent .
-				"<!--[if !IE]>-->" .
-				"</object>" .
-				"<!--<![endif]-->" .
 			"</object>";
 	}
 	
