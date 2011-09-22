@@ -1026,17 +1026,30 @@ class _security {
 			if (strpos($ip, '.') !== false)
 				return ip2long(substr($ip, strrpos($ip, ':')+1));
 			
-			$ip_n = inet_pton($ip);
-			$ipv6long = null;
-			$bits = 15;
-			
-			while ($bits >= 0) {
-				$bin = sprintf("%08b",(ord($ip_n[$bits])));
-				$ipv6long = $bin.$ipv6long;
-				$bits--;
+			if (function_exists('gmp_strval')) {
+				$ip_n = inet_pton($ip);
+				$ipv6long = null;
+				$bits = 15;
+				
+				while ($bits >= 0) {
+					$bin = sprintf("%08b",(ord($ip_n[$bits])));
+					$ipv6long = $bin.$ipv6long;
+					$bits--;
+				}
+				
+				return gmp_strval(gmp_init($ipv6long,2),10);
 			}
 			
-			return gmp_strval(gmp_init($ipv6long,2),10);
+			if (substr_count($ip, '::'))
+				$ip = str_replace('::', str_repeat(':0000', 8 - substr_count($ip, ':')) . ':', $ip) ;
+			
+			$ip = explode(':', $ip) ;
+			
+			$r_ip = '' ;
+			foreach ($ip as $v)
+    			$r_ip .= str_pad(base_convert($v, 16, 2), 16, 0, STR_PAD_LEFT) ;
+    		
+			return base_convert($r_ip, 2, 10);
 		}
 		
 		return ip2long($ip);
