@@ -98,6 +98,10 @@ class _requests {
 				$classname = "users";
 				break;
 	
+			case 'pages':
+				$classname = "pages";
+				break;
+			
 			case 'ckeditor':
 			case 'posts':
 				$classname = preg_replace('/[^a-zA-Z0-9\_\-]/', '', 

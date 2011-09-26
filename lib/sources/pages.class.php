@@ -2416,8 +2416,10 @@ class _pages {
 		$modules->sqlOwnerTable = (JCORE_VERSION >= '0.8'?'pages':'menuitems');
 		$modules->selectedOwner = 'Page';
 		$modules->selectedOwnerID = $pageid;
-		$modules->display();
+		$display = $modules->display();
 		unset($modules);
+		
+		return $display;
 	}
 	
 	static function displayForms($pageid) {

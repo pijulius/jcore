@@ -662,14 +662,15 @@ class _modules {
 	
 	function display() {
 		if (!$this->sqlTable)
-			return;
+			return false;
 		
 		$rows = sql::run(
 			$this->SQL());
 		
 		if (!sql::rows($rows))
-			return;
+			return false;
 		
+		$display = false;
 		$owner = sql::fetch(sql::run(
 			" SELECT * FROM `{".$this->sqlOwnerTable. "}`" .
 			" WHERE `ID` = '".$this->selectedOwnerID."'"));
@@ -691,10 +692,14 @@ class _modules {
 					}
 				}
 				
-				$$modulename->display();
+				if ($$modulename->display())
+					$display = true;
+				
 				unset($$modulename);
 			}
 		}
+		
+		return $display;
 	}
 }
 
