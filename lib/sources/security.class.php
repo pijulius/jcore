@@ -19,6 +19,9 @@ if (!defined('SECURITY_ITERATION_COUNT'))
 if (!defined('SECURITY_SALT_LENGTH'))
 	define('SECURITY_SALT_LENGTH', 7);
 
+if (defined('USE_RECAPTCHA') && USE_RECAPTCHA)
+	include_once('lib/recaptcha/recaptchalib.php');
+
 class _security {
 	static $fonts = array(
 		'arial.ttf',
@@ -578,34 +581,6 @@ class _security {
 		return true;
 	}
 	
-	static function strRand($length, $numbers = true) {
-		$str = "";
-		
-		while(strlen($str)<$length) {
-			if ($numbers)
-				$random=rand(48,122);
-			else
-				$random=rand(97,122);
-			
-			if(($random>47 && $random<58) || ($random>96 && $random<123)) {
-				$str.=chr($random);
-			}
-		}
-		return $str;
-	}
-
-	static function verifyImageCode($scimagecode) {
-		global $_COOKIE;
-		
-		if ($scimagecode && $_COOKIE['scimagestr'] && 
-			$_COOKIE['scimagestr'] == md5(SITE_PATH.WEBMASTER_EMAIL.SQL_USER.$scimagecode)) 
-		{
-			return true;
-		}
-		
-		return false;
-	}
-	
 	function ajaxRequest() {
 		$scimage = null;
 		$newsession = null;
@@ -666,7 +641,48 @@ class _security {
 		return $html;
 	}
 	
+	static function strRand($length, $numbers = true) {
+		$str = "";
+		
+		while(strlen($str)<$length) {
+			if ($numbers)
+				$random=rand(48,122);
+			else
+				$random=rand(97,122);
+			
+			if(($random>47 && $random<58) || ($random>96 && $random<123)) {
+				$str.=chr($random);
+			}
+		}
+		return $str;
+	}
+
+	static function verifyImageCode($scimagecode = null) {
+		if (defined('USE_RECAPTCHA') && USE_RECAPTCHA) {
+			$resp = recaptcha_check_answer(
+				RECAPTCHA_PRIVATE_KEY,
+				$_SERVER["REMOTE_ADDR"],
+				@$_POST["recaptcha_challenge_field"],
+				@$_POST["recaptcha_response_field"]);
+			
+			return $resp->is_valid;
+		}
+		
+		global $_COOKIE;
+		
+		if ($scimagecode && $_COOKIE['scimagestr'] && 
+			$_COOKIE['scimagestr'] == md5(SITE_PATH.WEBMASTER_EMAIL.SQL_USER.$scimagecode)) 
+		{
+			return true;
+		}
+		
+		return false;
+	}
+	
 	static function genImageCode() {
+		if (defined('USE_RECAPTCHA') && USE_RECAPTCHA)
+			return recaptcha_get_html(RECAPTCHA_PUBLIC_KEY);
+		
 		$fontsize = 30;
 		$codelength = 7;
 		$textangle = rand(-3, 3);

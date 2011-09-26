@@ -233,16 +233,70 @@ class _form {
 			if ($GLOBALS['USER']->loginok && !$this->preview)
 				return false;
 			
-			$this->elements[$elementid]['Title'] = 
-				"<b>".$title."</b>";
-					
-			$this->elements[$elementid]['AdditionalTitle'] =
-				"<div class='comment'>" .
-					__("Enter the code shown in the image") .
-				"<p>&nbsp;</p></div>";
+			if (defined('USE_RECAPTCHA') && USE_RECAPTCHA) {
+				$this->elements[$elementid]['EntryID'] = "recaptcha_response_field";				
+				$this->elements[$elementid]['Name'] = "recaptcha_response_field";
 				
-			$this->elements[$elementid]['EntryID'] = "scimagecode";				
-			$this->elements[$elementid]['Name'] = "scimagecode";
+				$this->elements[$elementid]['Title'] =
+					"<script type='text/javascript'>" .
+					((defined('RECAPTCHA_THEME') && RECAPTCHA_THEME) ||
+					 (defined('RECAPTCHA_LANG') && RECAPTCHA_LANG)?
+						"var RecaptchaOptions = {" .
+							(defined('RECAPTCHA_THEME') && RECAPTCHA_THEME?
+								"theme : '".RECAPTCHA_THEME."'":
+								null) .
+							(defined('RECAPTCHA_LANG') && RECAPTCHA_LANG?
+								"lang : '".RECAPTCHA_LANG."'":
+								null) .
+						"};":
+						null) . 
+					"if (jQuery('#recaptcha_widget_div').length > 0) {" .
+						"jQuery('#".$this->id."form .form-entry-recaptcha_response_field')." .
+							"html(jQuery('#recaptcha_widget_div:first').parent().html());" .
+						"jQuery('#recaptcha_reload_btn').live('click', function() {" .
+							"var rbut = jQuery(this);" .
+							"jQuery('#recaptcha_response_field:first').focus(function() {" .
+								"jQuery('#".$this->id."form #recaptcha_image')." .
+									"html(jQuery('#recaptcha_image:first').html());" .
+								"jQuery(this).unbind('focus');" .
+								"rbut.parent().parent().find('#recaptcha_response_field').val('').focus();" .
+								"jQuery('html,body').scrollTop(rbut.closest('form').offset().top-10);" .
+							"});" .
+						"});" .
+					"}" .
+					"</script>" .
+					recaptcha_get_html(RECAPTCHA_PUBLIC_KEY, null, url::https());
+				
+			} else {
+				$this->elements[$elementid]['EntryID'] = "scimagecode";				
+				$this->elements[$elementid]['Name'] = "scimagecode";
+				
+				$this->elements[$elementid]['Title'] = 
+					"<b>".$title."</b>";
+						
+				$this->elements[$elementid]['AdditionalTitle'] =
+					"<div class='comment'>" .
+						__("Enter the code shown in the image") .
+					"<p>&nbsp;</p></div>";
+				
+				$this->elements[$elementid]['AdditionalPreText'] = 
+					"<div class='security-image ".$this->id."-scimage'>" .
+						"<img src='".url::uri().
+							"&amp;request=security&amp;scimage=1&amp;ajax=1' " .
+							(JCORE_VERSION < '0.6'?
+								"border='2' ":
+								null) .
+							"alt='".htmlspecialchars(__("Security Image"), ENT_QUOTES)."' />" .
+						"<a class='reload-link' href='javascript://' " .
+							"onclick=\"jQuery('.".$this->id."-scimage img').attr('src', '".
+								url::uri().
+								"&amp;request=security&amp;scimage=1&amp;ajax=1'+Math.random())" .
+								".parent().parent().find('input').val('').focus();\">".
+							__("Reload").
+						"</a>" .
+					"</div>";
+			}
+			
 			$this->elements[$elementid]['Type'] = $type;
 			$this->elements[$elementid]['Required'] = true;
 			$this->elements[$elementid]['OriginalValue'] = $value;
@@ -257,21 +311,7 @@ class _form {
 			if (!isset($this->elements[$elementid]['ValueType']))
 				$this->elements[$elementid]['ValueType'] = FORM_VALUE_TYPE_TEXT;
 			
-			$this->elements[$elementid]['AdditionalPreText'] = 
-				"<div class='security-image ".$this->id."-scimage'>" .
-					"<img src='".url::uri().
-						"&amp;request=security&amp;scimage=1&amp;ajax=1' " .
-						(JCORE_VERSION < '0.6'?
-							"border='2' ":
-							null) .
-						"alt='".htmlspecialchars(__("Security Image"), ENT_QUOTES)."' />" .
-					"<a class='reload-link' href='javascript://' " .
-						"onclick=\"jQuery('.".$this->id."-scimage img').attr('src', '".
-							url::uri().
-							"&amp;request=security&amp;scimage=1&amp;ajax=1'+Math.random());\">".
-						__("Reload").
-					"</a>" .
-				"</div>";
+			$this->elements[$elementid]['Attributes'] .= " autocomplete='off' autocapitalize='off' autocorrect='off'";
 			
 			return $elementid;
 		}
@@ -1265,6 +1305,7 @@ class _form {
 				$requiredelements++;
 			
 			if ($element['Type'] == FORM_INPUT_TYPE_VERIFICATION_CODE && 
+				(!defined('USE_RECAPTCHA') || !USE_RECAPTCHA) &&
 				isset($element['VerifyResult']) && !$element['VerifyResult']) 
 			{
 				echo 
@@ -1273,7 +1314,7 @@ class _form {
 				
 				continue;
 			}
-			 
+			
 			if ($element['Type'] == FORM_PAGE_BREAK) {
 				if ($this->ignorePageBreaks) {
 					echo
@@ -1499,7 +1540,6 @@ class _form {
 				FORM_INPUT_TYPE_MULTISELECT,
 				FORM_INPUT_TYPE_RECIPIENT_SELECT,
 				FORM_INPUT_TYPE_TEXTAREA,
-				FORM_INPUT_TYPE_VERIFICATION_CODE,
 				FORM_INPUT_TYPE_FILE,
 				FORM_INPUT_TYPE_TIMESTAMP,
 				FORM_INPUT_TYPE_DATE,
@@ -1511,7 +1551,9 @@ class _form {
 				FORM_INPUT_TYPE_TEL,
 				FORM_INPUT_TYPE_URL,
 				FORM_INPUT_TYPE_RANGE,
-				FORM_INPUT_TYPE_NUMBER)))
+				FORM_INPUT_TYPE_NUMBER)) ||
+				($element['Type'] == FORM_INPUT_TYPE_VERIFICATION_CODE &&
+				(!defined('USE_RECAPTCHA') || !USE_RECAPTCHA))) 
 			{
 				echo
 						"<" .
@@ -1623,7 +1665,9 @@ class _form {
 									" color-input":
 									null).
 								"' " .
-							"value='".htmlspecialchars($element['Value'], ENT_QUOTES)."' " .
+							($element['Type'] != FORM_INPUT_TYPE_VERIFICATION_CODE?
+								"value='".htmlspecialchars($element['Value'], ENT_QUOTES)."' ":
+								null) .
 							(isset($element['AutoFocus']) &&
 							 $element['AutoFocus']?
 							 	"autofocus='autofocus' ":
@@ -1974,7 +2018,10 @@ class _form {
 						"</textarea>";
 			}
 			
-			if ($element['Type'] == FORM_STATIC_TEXT) {
+			if ($element['Type'] == FORM_STATIC_TEXT ||
+				(defined('USE_RECAPTCHA') && USE_RECAPTCHA && 
+				 $element['Type'] == FORM_INPUT_TYPE_VERIFICATION_CODE)) 
+			{
 				echo $element['Title'];
 			}
 						
