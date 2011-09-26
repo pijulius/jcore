@@ -794,6 +794,9 @@ class _templateManager {
 			return false;
 		}
 		
+		if ($exists['Name'] != WEBSITE_TEMPLATE)
+			return true;
+		
 		$settings = new settings();
 		$settings->set('Website_Template', '');
 		$settings->set('Website_Template_SetForAdmin', '0');
