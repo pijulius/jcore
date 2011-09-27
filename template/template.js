@@ -1,3 +1,3 @@
-jQuery(document).ready(function() {
-	jQuery(this).jCore();
+$(document).ready(function() {
+	$(this).jCore();
 });

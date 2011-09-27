@@ -136,7 +136,7 @@ class _dynamicFormData {
 					__("Download") .
 				"</a>" .
 				"<script type='text/javascript'>" .
-					"jQuery(document).ready(function() {" .
+					"$(document).ready(function() {" .
 						"window.location='".url::uri('id, edit, delete, request, download') .
 							"&request=".url::path() .
 							"&download=".$file .

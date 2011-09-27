@@ -71,12 +71,12 @@ class _massEmail {
 		$tolinks = 
 			"<a href='javascript://' " .
 				"class='mass-email-active-users' " .
-				"onclick=\"jQuery('#newemailform #entryTo').val('<ACTIVE-USERS>');\">" .
+				"onclick=\"$('#newemailform #entryTo').val('<ACTIVE-USERS>');\">" .
 				__("Active Users") .
 			"</a>" .
 			"<a href='javascript://' " .
 				"class='mass-email-all-users' " .
-				"onclick=\"jQuery('#newemailform #entryTo').val('<ALL-USERS>');\">" .
+				"onclick=\"$('#newemailform #entryTo').val('<ALL-USERS>');\">" .
 				__("All Users") .
 			"</a>" .
 			"<a href='".url::uri('request, users') .

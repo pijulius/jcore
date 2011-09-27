@@ -1698,7 +1698,7 @@ class _comments {
 		else			
 			echo
 				"<a class='comment-reply comment' " .
-					"href='javascript:jQuery.jCore.tooltip.display(\"" .
+					"href='javascript:$.jCore.tooltip.display(\"" .
 						"<div class=\\\"tooltip error\\\"><span>" .
 						htmlspecialchars(__("Only registered users can comment."), ENT_QUOTES) .
 						"</span></div>\", true)' " .

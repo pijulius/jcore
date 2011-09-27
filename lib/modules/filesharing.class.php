@@ -173,7 +173,7 @@ class fileSharingAttachments extends attachments {
 		
 		if (isset($row['MembersOnly']) && $row['MembersOnly'] && !$GLOBALS['USER']->loginok)
 			$attachments->customLink = 
-				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
 				htmlspecialchars(_("You need to be logged in to download this file. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
@@ -1937,7 +1937,7 @@ class fileSharing extends modules {
 	
 		if (isset($row['MembersOnly']) && $row['MembersOnly'] && !$GLOBALS['USER']->loginok)
 			$attachments->customLink = 
-				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
 				htmlspecialchars(_("You need to be logged in to download this file. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";

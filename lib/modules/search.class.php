@@ -248,7 +248,7 @@ class search extends modules {
 						"disabled='disabled' ":
 						null) .
 					"style='width: 30px;' onchange=\"if(parseInt(this.value) > 0) " .
-						"jQuery(this).closest('tr').find('input:first').attr('checked', true);\"/>" .
+						"$(this).closest('tr').find('input:first').attr('checked', true);\"/>" .
 			"</td>";
 	}
 	

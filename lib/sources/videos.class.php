@@ -119,7 +119,7 @@ class _videos {
 				"<div class='form-entry-title'></div>" .
 				"<div class='form-entry-content'>" .
 					"<a href='javascript://' class='add-link' " .
-						"onclick=\"jQuery.jCore.form.appendEntryTo(" .
+						"onclick=\"$.jCore.form.appendEntryTo(" .
 							"'.form-entry-upload-multi-video-urls-container', " .
 							"'', " .
 							"'Locations[]', " .
@@ -1208,8 +1208,8 @@ class _videos {
 		
 		echo
 			"<script>" .
-				"if (!jQuery.jCore.hasFlash()) " .
-					"jQuery('.video".$row['ID']." video').trigger('play');" .
+				"if (!$.jCore.hasFlash()) " .
+					"$('.video".$row['ID']." video').trigger('play');" .
 			"</script>";
 	}
 	

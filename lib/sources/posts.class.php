@@ -932,11 +932,11 @@ class _posts {
 					"<td align='center'>" .
 						"<a href='javascript://' " .
 							"onclick=\"" .
-								"jQuery('".$targetfield."').val(" .
-									"jQuery('".$targetfield."').val()+" .
-									"(jQuery('".$targetfield."').val()?', ':'')+" .
+								"$('".$targetfield."').val(" .
+									"$('".$targetfield."').val()+" .
+									"($('".$targetfield."').val()?', ':'')+" .
 									"'".htmlspecialchars($row['Keyword'], ENT_QUOTES)."');" .
-									"jQuery(this).closest('.posts-add-keywords-list').find('input[type=search]').first().focus();" .
+									"$(this).closest('.posts-add-keywords-list').find('input[type=search]').first().focus();" .
 								"\" class='add-link'>" .
 							(JCORE_VERSION < '0.6'?
 								"&nbsp;+&nbsp;":

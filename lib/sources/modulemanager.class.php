@@ -52,7 +52,7 @@ class _moduleManager {
 			"<div class='form-entry-title'></div>" .
 			"<div class='form-entry-content'>" .
 				"<a href='javascript://' class='add-link' " .
-					"onclick=\"jQuery.jCore.form.appendEntryTo(" .
+					"onclick=\"$.jCore.form.appendEntryTo(" .
 						"'.form-entry-upload-multi-modules-container', " .
 						"'', " .
 						"'Files[]', " .
@@ -113,7 +113,7 @@ class _moduleManager {
 			
 			echo
 				"<script type='text/javascript'>" .
-				"jQuery('link[rel=\"stylesheet\"]').each(function () {" .
+				"$('link[rel=\"stylesheet\"]').each(function () {" .
 					"this.href = this.href+'&reload';});" .
 				"</script>";
 				

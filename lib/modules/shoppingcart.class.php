@@ -1082,11 +1082,11 @@ class shoppingCartFees {
 					($i%2?" class='pair'":NULL).">" .
 					"<td align='center'>" .
 						"<a href='javascript://' " .
-							"onclick='jQuery(\"#neweditfeeform #entryFieldName\")" .
+							"onclick='$(\"#neweditfeeform #entryFieldName\")" .
 								".val(\"".$row['Name']."\");" .
 								(JCORE_VERSION >= '0.7'?
-									"jQuery(this).closest(\".tipsy\").hide();":
-									"jQuery(this).closest(\".qtip\").qtip(\"hide\");") .
+									"$(this).closest(\".tipsy\").hide();":
+									"$(this).closest(\".qtip\").qtip(\"hide\");") .
 								"' " .
 							"class='shopping-cart-fees-select-order-form-field'>" .
 						"</a>" .
@@ -1896,11 +1896,11 @@ class shoppingCartTaxes {
 					($i%2?" class='pair'":NULL).">" .
 					"<td align='center'>" .
 						"<a href='javascript://' " .
-							"onclick='jQuery(\"#newedittaxform #entryFieldName\")" .
+							"onclick='$(\"#newedittaxform #entryFieldName\")" .
 								".val(\"".$row['Name']."\");" .
 								(JCORE_VERSION >= '0.7'?
-									"jQuery(this).closest(\".tipsy\").hide();":
-									"jQuery(this).closest(\".qtip\").qtip(\"hide\");") .
+									"$(this).closest(\".tipsy\").hide();":
+									"$(this).closest(\".qtip\").qtip(\"hide\");") .
 								"' " .
 							"class='shopping-cart-taxes-select-order-form-field'>" .
 						"</a>" .
@@ -3824,8 +3824,8 @@ class shoppingCartCheckoutForm extends dynamicForms {
 		
 		echo
 			"<script type='text/javascript'>" .
-			"jQuery('#checkoutform form').submit(function () {" .
-				"jQuery('#checkoutform #buttoncheckoutsubmit').click(function() {" .
+			"$('#checkoutform form').submit(function () {" .
+				"$('#checkoutform #buttoncheckoutsubmit').click(function() {" .
 					"alert('".htmlspecialchars(_("Form is being processed. Please wait."), ENT_QUOTES)."');" .
 					"return false;" .
 				"});" .

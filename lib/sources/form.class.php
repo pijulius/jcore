@@ -250,17 +250,17 @@ class _form {
 								null) .
 						"};":
 						null) . 
-					"if (jQuery('#recaptcha_widget_div').length > 0) {" .
-						"jQuery('#".$this->id."form .form-entry-recaptcha_response_field')." .
-							"html(jQuery('#recaptcha_widget_div:first').parent().html());" .
-						"jQuery('#recaptcha_reload_btn').live('click', function() {" .
-							"var rbut = jQuery(this);" .
-							"jQuery('#recaptcha_response_field:first').focus(function() {" .
-								"jQuery('#".$this->id."form #recaptcha_image')." .
-									"html(jQuery('#recaptcha_image:first').html());" .
-								"jQuery(this).unbind('focus');" .
+					"if ($('#recaptcha_widget_div').length > 0) {" .
+						"$('#".$this->id."form .form-entry-recaptcha_response_field')." .
+							"html($('#recaptcha_widget_div:first').parent().html());" .
+						"$('#recaptcha_reload_btn').live('click', function() {" .
+							"var rbut = $(this);" .
+							"$('#recaptcha_response_field:first').focus(function() {" .
+								"$('#".$this->id."form #recaptcha_image')." .
+									"html($('#recaptcha_image:first').html());" .
+								"$(this).unbind('focus');" .
 								"rbut.parent().parent().find('#recaptcha_response_field').val('').focus();" .
-								"jQuery('html,body').scrollTop(rbut.closest('form').offset().top-10);" .
+								"$('html,body').scrollTop(rbut.closest('form').offset().top-10);" .
 							"});" .
 						"});" .
 					"}" .
@@ -288,7 +288,7 @@ class _form {
 								null) .
 							"alt='".htmlspecialchars(__("Security Image"), ENT_QUOTES)."' />" .
 						"<a class='reload-link' href='javascript://' " .
-							"onclick=\"jQuery('.".$this->id."-scimage img').attr('src', '".
+							"onclick=\"$('.".$this->id."-scimage img').attr('src', '".
 								url::uri().
 								"&amp;request=security&amp;scimage=1&amp;ajax=1'+Math.random())" .
 								".parent().parent().find('input').val('').focus();\">".

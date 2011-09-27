@@ -2256,18 +2256,18 @@ class _users {
 							"<a href='javascript://' " .
 								($multiple?
 									"onclick=\"" .
-										"jQuery('".$target."').val(" .
-											"jQuery('".$target."').val()+" .
-											"(jQuery('".$target."').val()?'" .
+										"$('".$target."').val(" .
+											"$('".$target."').val()+" .
+											"($('".$target."').val()?'" .
 												htmlspecialchars($separator, ENT_QUOTES)." ':'')+" .
 											"'".$formatedvalue."');" .
-											"jQuery(this).closest('.select-users-list').find('input[type=search]').first().focus();" .
+											"$(this).closest('.select-users-list').find('input[type=search]').first().focus();" .
 										"\" class='add-link'>":
-									"onclick='jQuery(\"".$target."\")" .
+									"onclick='$(\"".$target."\")" .
 										".val(\"".$formatedvalue."\");" .
 										(JCORE_VERSION >= '0.7'?
-											"jQuery(this).closest(\".tipsy\").hide();":
-											"jQuery(this).closest(\".qtip\").qtip(\"hide\");") .
+											"$(this).closest(\".tipsy\").hide();":
+											"$(this).closest(\".qtip\").qtip(\"hide\");") .
 										"' class='select-link'>") .
 								($multiple && JCORE_VERSION < '0.6'?
 									"&nbsp;+&nbsp;":

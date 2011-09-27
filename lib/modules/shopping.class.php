@@ -295,7 +295,7 @@ class shoppingItemAttachments extends attachments {
 		
 		if (isset($row['MembersOnly']) && $row['MembersOnly'] && !$GLOBALS['USER']->loginok)
 			$attachments->customLink = 
-				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
 				htmlspecialchars(_("You need to be logged in to download this file. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
@@ -415,7 +415,7 @@ class shoppingItemPictures extends pictures {
 		if (isset($row['MembersOnly']) && $row['MembersOnly'] && 
 			!$GLOBALS['USER']->loginok)
 			$this->customLink = 
-				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
 				htmlspecialchars(_("You need to be logged in to view this picture. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
@@ -1418,23 +1418,23 @@ class shoppingItems {
 					_("Add new option") .
 				"</a>" .
 				"<script type='text/javascript'>" .
-				"jQuery(document).ready(function() {" .
-					"jQuery.jCore.modules.shopping = {" .
+				"$(document).ready(function() {" .
+					"$.jCore.modules.shopping = {" .
 						"admin: {" .
 							"itemWatchOptionType: function(typeselect) {" .
 								"if (typeselect.value == 18) {" .
-									"jQuery(typeselect).parent().parent().parent().find('.shopping-item-option-multi-prices').hide();" .
-									"jQuery(typeselect).parent().parent().parent().find('.shopping-item-option-prices').hide();" .
+									"$(typeselect).parent().parent().parent().find('.shopping-item-option-multi-prices').hide();" .
+									"$(typeselect).parent().parent().parent().find('.shopping-item-option-prices').hide();" .
 								"} else if (typeselect.value == 3 || typeselect.value == 4 || typeselect.value == 5 || typeselect.value == 15) {" .
-									"jQuery(typeselect).parent().parent().parent().find('.shopping-item-option-multi-prices').show();" .
-									"jQuery(typeselect).parent().parent().parent().find('.shopping-item-option-prices').hide();" .
+									"$(typeselect).parent().parent().parent().find('.shopping-item-option-multi-prices').show();" .
+									"$(typeselect).parent().parent().parent().find('.shopping-item-option-prices').hide();" .
 								"} else {" .
-									"jQuery(typeselect).parent().parent().parent().find('.shopping-item-option-multi-prices').hide();" .
-									"jQuery(typeselect).parent().parent().parent().find('.shopping-item-option-prices').show();" .
+									"$(typeselect).parent().parent().parent().find('.shopping-item-option-multi-prices').hide();" .
+									"$(typeselect).parent().parent().parent().find('.shopping-item-option-prices').show();" .
 								"}" .
 							"}," .
 							"itemAddOptionPrice: function(clickedlink) {" .
-								"jlink = jQuery(clickedlink);" .
+								"jlink = $(clickedlink);" .
 								"optionIndex = jlink.parent().parent().parent().parent().parent().attr('id').replace(/[^0-9]*/, '');" .
 								"shoppingItemOptionPricesIndex[optionIndex]++;" .
 								"priceIndex = shoppingItemOptionPricesIndex[optionIndex];" .
@@ -1480,34 +1480,34 @@ class shoppingItems {
 									"</tr>" .
 								"')." .
 								"find('.shopping-item-remove-option-price').click(function() {" .
-									"jQuery.jCore.modules.shopping.admin.itemRemoveOptionPrice(this);" .
+									"$.jCore.modules.shopping.admin.itemRemoveOptionPrice(this);" .
 								"});" .
 							"}," .
 							"itemRemoveOptionPrice: function(clickedlink) {" .
-								"jQuery(clickedlink).parent().parent().remove();" .
+								"$(clickedlink).parent().parent().remove();" .
 							"}," .
 							"itemRemoveOption: function(clickedlink) {" .
-								"jQuery(clickedlink).parent().parent().parent().parent().remove();" .
+								"$(clickedlink).parent().parent().parent().parent().remove();" .
 							"}" .
 						"}" .
 					"};" .
 					"" .
-					"jQuery('.shopping-item-option-type').change(function() {" .
-						"jQuery.jCore.modules.shopping.admin.itemWatchOptionType(this);" .
+					"$('.shopping-item-option-type').change(function() {" .
+						"$.jCore.modules.shopping.admin.itemWatchOptionType(this);" .
 					"});" .
-					"jQuery('.shopping-item-remove-option-price').click(function() {" .
-						"jQuery.jCore.modules.shopping.admin.itemRemoveOptionPrice(this);" .
+					"$('.shopping-item-remove-option-price').click(function() {" .
+						"$.jCore.modules.shopping.admin.itemRemoveOptionPrice(this);" .
 					"});" .
-					"jQuery('.shopping-item-add-option-price').click(function() {" .
-						"jQuery.jCore.modules.shopping.admin.itemAddOptionPrice(this);" .
+					"$('.shopping-item-add-option-price').click(function() {" .
+						"$.jCore.modules.shopping.admin.itemAddOptionPrice(this);" .
 					"});" .
-					"jQuery('.shopping-item-remove-option').click(function() {" .
-						"jQuery.jCore.modules.shopping.admin.itemRemoveOption(this);" .
+					"$('.shopping-item-remove-option').click(function() {" .
+						"$.jCore.modules.shopping.admin.itemRemoveOption(this);" .
 					"});" .
-					"jQuery('.shopping-item-add-option').click(function() {" .
+					"$('.shopping-item-add-option').click(function() {" .
 						"shoppingItemOptionsIndex++;" .
 						"shoppingItemOptionPricesIndex[shoppingItemOptionsIndex]=0;" .
-						"joption = jQuery('" .
+						"joption = $('" .
 							"<table cellpadding=\'0\' cellspacing=\'0\' class=\'list\' id=\'shoppingitemoption'+shoppingItemOptionsIndex+'\'>" .
 							"<thead>" .
 							"<tr>" .
@@ -1677,15 +1677,15 @@ class shoppingItems {
 							"</tbody>" .
 							"</table>');" .
 							"joption.find('.shopping-item-remove-option').click(function() {" .
-								"jQuery.jCore.modules.shopping.admin.itemRemoveOption(this);" .
+								"$.jCore.modules.shopping.admin.itemRemoveOption(this);" .
 							"});" .
 							"joption.find('.shopping-item-option-type').change(function() {" .
-								"jQuery.jCore.modules.shopping.admin.itemWatchOptionType(this);" .
+								"$.jCore.modules.shopping.admin.itemWatchOptionType(this);" .
 							"});" .
 							"joption.find('.shopping-item-add-option-price').click(function() {" .
-								"jQuery.jCore.modules.shopping.admin.itemAddOptionPrice(this);" .
+								"$.jCore.modules.shopping.admin.itemAddOptionPrice(this);" .
 							"});" .
-							"jQuery(this).parent().find('.shopping-item-options-container').append(joption);" .
+							"$(this).parent().find('.shopping-item-options-container').append(joption);" .
 						"});" .
 				"});" .
 				"</script>",
@@ -1909,11 +1909,11 @@ class shoppingItems {
 					"<td align='center'>" .
 						"<a href='javascript://' " .
 							"onclick=\"" .
-								"jQuery('#newedititemform #entryKeywords').val(" .
-									"jQuery('#newedititemform #entryKeywords').val()+" .
-									"(jQuery('#newedititemform #entryKeywords').val()?', ':'')+" .
+								"$('#newedititemform #entryKeywords').val(" .
+									"$('#newedititemform #entryKeywords').val()+" .
+									"($('#newedititemform #entryKeywords').val()?', ':'')+" .
 									"'".htmlspecialchars($row['Keyword'], ENT_QUOTES)."');" .
-									"jQuery(this).closest('.shopping-item-add-keywords-list').find('input[type=search]').first().focus();" .
+									"$(this).closest('.shopping-item-add-keywords-list').find('input[type=search]').first().focus();" .
 								"\" class='add-link'>" .
 							(JCORE_VERSION < '0.6'?
 								"&nbsp;+&nbsp;":
@@ -3517,7 +3517,7 @@ class shoppingItems {
 			
 			if (!shoppingItems::checkAccess($row, true))
 				$pictures->customLink = 
-					"javascript:jQuery.jCore.tooltip.display(\"" .
+					"javascript:$.jCore.tooltip.display(\"" .
 					"<div class=\\\"tooltip error\\\"><span>" .
 					htmlspecialchars(_("You need to be logged in to view this picture. " .
 						"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
@@ -3600,7 +3600,7 @@ class shoppingItems {
 			
 			if (!shoppingItems::checkAccess($row, true))
 				$attachments->customLink = 
-					"javascript:jQuery.jCore.tooltip.display(\"" .
+					"javascript:$.jCore.tooltip.display(\"" .
 					"<div class=\\\"tooltip error\\\"><span>" .
 					htmlspecialchars(_("You need to be logged in to download this file. " .
 						"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
@@ -3941,7 +3941,7 @@ class shoppingItems {
 		echo
 			"<div class='shopping-item-add-to-cart-button button'>" .
 				"<a href='javascript://' " .
-					"onclick=\"jQuery(this).parents('form').submit();\">" .
+					"onclick=\"$(this).parents('form').submit();\">" .
 					"<span>"._("Add to My Cart")."</span>" .
 				"</a>" .
 			"</div>";

@@ -3003,31 +3003,31 @@ class shoppingOrders extends modules {
 			"</div>" .
 			(JCORE_VERSION >= '0.7'?
 			"<script type='text/javascript'>" .
-			"jQuery(document).ready(function() {" .
-				"jQuery.jCore.modules.shoppingOrders = {" .
+			"$(document).ready(function() {" .
+				"$.jCore.modules.shoppingOrders = {" .
 					"admin: {" .
 						"newOrder: {" .
 							"cart: {" .
 								"add: function(itemid, refnumber, title, quantity, price) {" .
-									"cart = jQuery('#neworderform .shopping-order-cart tbody');" .
+									"cart = $('#neworderform .shopping-order-cart tbody');" .
 									
 									"if (!refnumber || !title || !quantity || !price) {" .
-										"itemtds = jQuery('#shoppingorderneworderitemlistrow'+itemid+' td');" .
+										"itemtds = $('#shoppingorderneworderitemlistrow'+itemid+' td');" .
 										"if (!refnumber)" .
-											"refnumber = jQuery(itemtds.get(0)).html();" .
+											"refnumber = $(itemtds.get(0)).html();" .
 										"if (!title)" .
-											"title = jQuery(itemtds.get(1)).html();" .
+											"title = $(itemtds.get(1)).html();" .
 										"if (!price)" .
-											"price = jQuery(itemtds.get(3)).find('input').val();" .
+											"price = $(itemtds.get(3)).find('input').val();" .
 										"if (!quantity) {" .
-											"if (jQuery(itemtds.get(2)).find('select').val())" .
-												"quantity = jQuery(itemtds.get(2)).find('select').val();" .
+											"if ($(itemtds.get(2)).find('select').val())" .
+												"quantity = $(itemtds.get(2)).find('select').val();" .
 											"else" .
-												"quantity = jQuery(itemtds.get(2)).find('input').val();" .
+												"quantity = $(itemtds.get(2)).find('input').val();" .
 										"}" .
 									"}" .
 									
-									"newitem = jQuery(" .
+									"newitem = $(" .
 										"\"<tr>" .
 											"<td>" .
 												"\"+refnumber + \"" .
@@ -3060,7 +3060,7 @@ class shoppingOrders extends modules {
 											"<td style='text-align: right;'>" .
 												"<span class='shopping-order-new-order-item-total-price nowrap'>" .
 												$currencyleft."\" + " .
-													"jQuery.numberFormat(" .
+													"$.numberFormat(" .
 														"(quantity*price), 2)" .
 												" +\"".$currencyright .
 												"</span>" .
@@ -3072,63 +3072,63 @@ class shoppingOrders extends modules {
 										"</tr>\");" .
 									
 									"newitem.find('.shopping-order-new-order-remove-item').click(function() {" .
-										"jQuery(this).parent().parent().remove();" .
+										"$(this).parent().parent().remove();" .
 									"});" .
 									
 									"newitem.find('.shopping-order-new-order-custom-option').click(function() {" .
-										"jQuery(this).next().next().toggle();" .
+										"$(this).next().next().toggle();" .
 									"});" .
 									
 									"newitem.find('.shopping-order-new-order-remove-item, .shopping-order-new-order-custom-option').click(function() {" .
-										"jQuery.jCore.modules.shoppingOrders.admin.newOrder.cart.refresh();" .
+										"$.jCore.modules.shoppingOrders.admin.newOrder.cart.refresh();" .
 									"});" .
 									
 									"cart.append(newitem);" .
-									"jQuery.jCore.modules.shoppingOrders.admin.newOrder.cart.refresh();" .
+									"$.jCore.modules.shoppingOrders.admin.newOrder.cart.refresh();" .
 									
 									"return false;" .
 								"}," .
 								"refresh: function() {" .
-									"cart = jQuery('#neworderform .shopping-order-cart tbody');" .
+									"cart = $('#neworderform .shopping-order-cart tbody');" .
 									"cart.find('tr').each(function () {" .
-										"jthis = jQuery(this);" .
+										"jthis = $(this);" .
 										"jthis.find('.shopping-order-new-order-item-total-price').html(" .
 											"'".$currencyleft."' + " .
-											"jQuery.numberFormat(jthis.find('input[name^=ShoppingItemQuantity]').val()*" .
+											"$.numberFormat(jthis.find('input[name^=ShoppingItemQuantity]').val()*" .
 											"jthis.find('input[name^=ShoppingItemPrice]').val(), 2) + '".$currencyright."');" .
 									"});" .
-									"jQuery.post('".url::uri('ALL')."?request=modules/shoppingorders&admin=1&totals=1&ajax=1', jQuery('#neworderform form').serialize(), function(data) {" .
-										"jQuery('#neworderform .shopping-order-cart-totals .shopping-order-cart-subtotal span.bold')." .
-											"html('".$currencyleft."' + jQuery.numberFormat(data.Subtotal, 2) + '".$currencyright."');" .
-										"jQuery('#neworderform .shopping-order-cart-totals .shopping-order-cart-tax span.bold')." .
-											"html('".$currencyleft."' + jQuery.numberFormat(data.Tax, 2) + '".$currencyright."');" .
-										"jQuery('#neworderform .shopping-order-cart-totals .shopping-order-cart-discount span.bold')." .
-											"html('".$currencyleft."' + jQuery.numberFormat(data.Discount, 2) + '".$currencyright."');" .
-										"jQuery('#neworderform .shopping-order-cart-totals .shopping-order-cart-fee span.bold')." .
-											"html('".$currencyleft."' + jQuery.numberFormat(data.Fee, 2) + '".$currencyright."');" .
-										"jQuery('#neworderform .shopping-order-cart-totals .shopping-order-cart-grand-total span.bold')." .
-											"html('".$currencyleft."' + jQuery.numberFormat(data.GrandTotal, 2) + '".$currencyright."');" .
+									"$.post('".url::uri('ALL')."?request=modules/shoppingorders&admin=1&totals=1&ajax=1', $('#neworderform form').serialize(), function(data) {" .
+										"$('#neworderform .shopping-order-cart-totals .shopping-order-cart-subtotal span.bold')." .
+											"html('".$currencyleft."' + $.numberFormat(data.Subtotal, 2) + '".$currencyright."');" .
+										"$('#neworderform .shopping-order-cart-totals .shopping-order-cart-tax span.bold')." .
+											"html('".$currencyleft."' + $.numberFormat(data.Tax, 2) + '".$currencyright."');" .
+										"$('#neworderform .shopping-order-cart-totals .shopping-order-cart-discount span.bold')." .
+											"html('".$currencyleft."' + $.numberFormat(data.Discount, 2) + '".$currencyright."');" .
+										"$('#neworderform .shopping-order-cart-totals .shopping-order-cart-fee span.bold')." .
+											"html('".$currencyleft."' + $.numberFormat(data.Fee, 2) + '".$currencyright."');" .
+										"$('#neworderform .shopping-order-cart-totals .shopping-order-cart-grand-total span.bold')." .
+											"html('".$currencyleft."' + $.numberFormat(data.GrandTotal, 2) + '".$currencyright."');" .
 									"}, 'json');" .
 									(JCORE_VERSION >= '0.7'?
-										"if (jQuery('.shopping-orders-cart-add-item').data('tipsy'))" .
-											"jQuery('.shopping-orders-cart-add-item').tipsy('update');":
-										"if (jQuery('.shopping-orders-cart-add-item').data('qtip'))" .
-											"jQuery('.shopping-orders-cart-add-item').qtip('api').updatePosition();") .
+										"if ($('.shopping-orders-cart-add-item').data('tipsy'))" .
+											"$('.shopping-orders-cart-add-item').tipsy('update');":
+										"if ($('.shopping-orders-cart-add-item').data('qtip'))" .
+											"$('.shopping-orders-cart-add-item').qtip('api').updatePosition();") .
 								"}" .
 							"}" .
 						"}" .
 					"}" .
 				"};" .
-				"jQuery('.shopping-order-new-order-remove-item').click(function() {" .
-					"jQuery(this).parent().parent().remove();" .
+				"$('.shopping-order-new-order-remove-item').click(function() {" .
+					"$(this).parent().parent().remove();" .
 				"});" .
-				"jQuery('.shopping-order-new-order-custom-option').click(function() {" .
-					"jQuery(this).next().next().toggle();" .
+				"$('.shopping-order-new-order-custom-option').click(function() {" .
+					"$(this).next().next().toggle();" .
 				"});" .
-				"jQuery('.shopping-orders-cart-refresh, .shopping-order-new-order-remove-item, .shopping-order-new-order-custom-option').click(function() {" .
-					"jQuery.jCore.modules.shoppingOrders.admin.newOrder.cart.refresh();" .
+				"$('.shopping-orders-cart-refresh, .shopping-order-new-order-remove-item, .shopping-order-new-order-custom-option').click(function() {" .
+					"$.jCore.modules.shoppingOrders.admin.newOrder.cart.refresh();" .
 				"});" .
-				"jQuery.jCore.modules.shoppingOrders.admin.newOrder.cart.refresh();" .
+				"$.jCore.modules.shoppingOrders.admin.newOrder.cart.refresh();" .
 			"});" .
 			"</script>":
 			null),
@@ -3458,7 +3458,7 @@ class shoppingOrders extends modules {
 						"target='.shopping-order-new-order-items'>" .
 					__("Search").": " .
 					"<select name='ajaxshoppingid' " .
-						"onchange=\"jQuery('.shopping-order-new-order-items form').ajaxSubmit();\">" .
+						"onchange=\"$('.shopping-order-new-order-items form').ajaxSubmit();\">" .
 					"<option value=''></option>";
 					
 		foreach(shopping::getTree() as $row)
@@ -3588,17 +3588,17 @@ class shoppingOrders extends modules {
 					($i%2?" class='pair'":NULL).">" .
 					"<td align='center'>" .
 						"<a href='javascript://' " .
-							"onclick=\"jQuery.jCore.modules.shoppingOrders.admin.newOrder.cart.add(" .
+							"onclick=\"$.jCore.modules.shoppingOrders.admin.newOrder.cart.add(" .
 								$row['ID']."," .
 								"'".$row['RefNumber']."'," .
 								"'".htmlspecialchars($row['Title'], ENT_QUOTES)."'," .
-								"jQuery('#newordershoppingitemquantity".$row['ID']."').val()," .
+								"$('#newordershoppingitemquantity".$row['ID']."').val()," .
 								"'".
 									(isset($specialprice)?
 										$specialprice:
 										$price) .
 									"');" .
-									"jQuery(this).closest('.shopping-order-new-order-items').find('input[type=search]').first().focus();" .
+									"$(this).closest('.shopping-order-new-order-items').find('input[type=search]').first().focus();" .
 								"\" class='shopping-order-new-order-add-item'>" .
 						"</a>" .
 					"</td>" .
@@ -4068,7 +4068,7 @@ class shoppingOrders extends modules {
 				echo
 					"<script type='text/javascript'>" .
 						"window.onload = function() {" .
-						"jQuery.jCore.modules.shoppingOrders.admin.newOrder.cart.currency = '".SHOPPING_CART_CURRENCY."';";
+						"$.jCore.modules.shoppingOrders.admin.newOrder.cart.currency = '".SHOPPING_CART_CURRENCY."';";
 						
 				$items = null;
 				$quantities = null;
@@ -4090,7 +4090,7 @@ class shoppingOrders extends modules {
 							" WHERE `ID` = '".(int)$itemid."'"));
 						
 						echo
-							"jQuery.jCore.modules.shoppingOrders.admin.newOrder.cart.add(".
+							"$.jCore.modules.shoppingOrders.admin.newOrder.cart.add(".
 								(int)$itemid.", " .
 								"'".htmlspecialchars($item['RefNumber'], ENT_QUOTES)."', " .
 								"'<a href=\"".$this->shoppingURL .

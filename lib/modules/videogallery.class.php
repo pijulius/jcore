@@ -174,7 +174,7 @@ class videoGalleryVideos extends videos {
 		if (isset($row['MembersOnly']) && $row['MembersOnly'] && 
 			!$GLOBALS['USER']->loginok)
 			$this->customLink = 
-				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
 				htmlspecialchars(_("You need to be logged in to view this video. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
@@ -2776,7 +2776,7 @@ class videoGallery extends modules {
 		if (isset($row['MembersOnly']) && $row['MembersOnly'] && 
 			!$GLOBALS['USER']->loginok)
 			$videos->customLink = 
-				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
 				htmlspecialchars(_("You need to be logged in to view this video. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";

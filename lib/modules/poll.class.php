@@ -78,7 +78,7 @@ class pollPictures extends pictures {
 		if (isset($row['MembersOnly']) && $row['MembersOnly'] && 
 			!$GLOBALS['USER']->loginok)
 			$this->customLink = 
-				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
 				htmlspecialchars(_("You need to be logged in to view this picture. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
@@ -150,7 +150,7 @@ class pollAttachments extends attachments {
 		
 		if (isset($row['MembersOnly']) && $row['MembersOnly'] && !$GLOBALS['USER']->loginok)
 			$attachments->customLink = 
-				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
 				htmlspecialchars(_("You need to be logged in to download this file. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
@@ -911,7 +911,7 @@ class poll extends modules {
 			"<div class='form-entry-title'></div>" .
 			"<div class='form-entry-content'>" .
 				"<a href='javascript://' class='add-link' " .
-					"onclick=\"jQuery.jCore.form.appendEntryTo(" .
+					"onclick=\"$.jCore.form.appendEntryTo(" .
 						"'.form-entry-additional-answers-container', " .
 						"'', " .
 						"'Answers[]', " .
@@ -1668,7 +1668,7 @@ class poll extends modules {
 								null) .
 							" />" .
 						"<a href='javascript://' class='remove-link' " .
-							"onclick=\"jQuery.jCore.form.removeEntry(this);\">" .
+							"onclick=\"$.jCore.form.removeEntry(this);\">" .
 							__("Remove") .
 						"</a>");
 		
@@ -1702,7 +1702,7 @@ class poll extends modules {
 								 	null) .
 								" />" .
 							"<a href='javascript://' class='remove-link' " .
-								"onclick=\"jQuery.jCore.form.removeEntry(this);\">" .
+								"onclick=\"$.jCore.form.removeEntry(this);\">" .
 								__("Remove") .
 							"</a>");
 						
@@ -1725,7 +1725,7 @@ class poll extends modules {
 							$iname,
 							"<input type='checkbox' name='GuestAnswers[".$i."]' value='1' />" .
 							"<a href='javascript://' class='remove-link' " .
-								"onclick=\"jQuery.jCore.form.removeEntry(this);\">" .
+								"onclick=\"$.jCore.form.removeEntry(this);\">" .
 								__("Remove") .
 							"</a>");
 					}
@@ -2268,8 +2268,8 @@ class poll extends modules {
 					$percentage = round($answer['Votes']*100/$poll['Votes']);
 				
 				echo
-					"jQuery('.poll-answer".$answer['ID']."').each(function() {" .
-						"var jthis = jQuery(this);" .
+					"$('.poll-answer".$answer['ID']."').each(function() {" .
+						"var jthis = $(this);" .
 						"jthis.find('.poll-answer-progressbar, .poll-answer-title .comment').show();" .
 						"jthis.find('.poll-answer-progressbar-value').animate({'width': '" .
 							$percentage."%'}, 'slow').find('span').text('" .
@@ -2385,7 +2385,7 @@ class poll extends modules {
 		
 		if ($row['MembersOnly'] && !$GLOBALS['USER']->loginok)
 			$pictures->customLink = 
-				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
 				htmlspecialchars(_("You need to be logged in to view this picture. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
@@ -2418,7 +2418,7 @@ class poll extends modules {
 		
 		if (isset($row['MembersOnly']) && $row['MembersOnly'] && !$GLOBALS['USER']->loginok)
 			$attachments->customLink = 
-				"javascript:jQuery.jCore.tooltip.display(\"" .
+				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
 				htmlspecialchars(_("You need to be logged in to download this file. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";

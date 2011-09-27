@@ -85,7 +85,7 @@ class _updates {
 		
 		echo
 			"<script type='text/javascript'>" .
-				"jQuery('#jcoreupdateprocess').append('" .
+				"$('#jcoreupdateprocess').append('" .
 						__("Running update")." ... " .
 						"<span class=\"update-running-process\" style=\"font-weight: bold;\">" .
 						"</span> " .
@@ -132,13 +132,13 @@ class _updates {
 		if ($successfiles && $successsql)
 			echo
 				"<script type='text/javascript'>" .
-					"jQuery('#jcoreupdateprocess .update-running-process').html('" .
+					"$('#jcoreupdateprocess .update-running-process').html('" .
 							strtoupper(__("Ok"))."');" .
 				"</script>";
 		else
 			echo
 				"<script type='text/javascript'>" .
-					"jQuery('#jcoreupdateprocess .update-running-process').html('<b class=\"red\">" .
+					"$('#jcoreupdateprocess .update-running-process').html('<b class=\"red\">" .
 							strtoupper(__("Error")) .
 						"</b>');" .
 				"</script>";
@@ -775,10 +775,10 @@ class _updates {
 		{
 			echo 
 				"<script type='text/javascript'>" .
-				"jQuery(document).ready(function() {" .
-					"jQuery.get('".url::uri('ALL') .
+				"$(document).ready(function() {" .
+					"$.get('".url::uri('ALL') .
 						"?request=admin/site/updates&counter=1&ajax=1', function(data){" .
-						"jQuery('.admin-section-item.as-site-updates').prepend(data);" .
+						"$('.admin-section-item.as-site-updates').prepend(data);" .
 					"});" .
 				"});" .
 				"</script>";
@@ -1045,7 +1045,7 @@ class _updates {
 		if ($status["timed_out"]) {
 			echo
 				"<script type='text/javascript'>" .
-					"jQuery('#jcoreupdateprocess').append('<b class=\"red\">" .
+					"$('#jcoreupdateprocess').append('<b class=\"red\">" .
 							strtoupper(__("Error")) .
 						"</b> (".__("connection timed out").")<br />');" .
 				"</script>";
@@ -1067,7 +1067,7 @@ class _updates {
 		
 		echo
 			"<script type='text/javascript'>" .
-				"jQuery('#jcoreupdateprocess').append('" .
+				"$('#jcoreupdateprocess').append('" .
 						sprintf(__("Downloading %s"), $title)." ... " .
 						"<span class=\"".$downloadstatusclass."\" style=\"font-weight: bold;\">" .
 							__("connecting") .
@@ -1084,7 +1084,7 @@ class _updates {
 		if (!$fp) {
 			echo
 				"<script type='text/javascript'>" .
-					"jQuery('#jcoreupdateprocess').append('<b class=\"red\">" .
+					"$('#jcoreupdateprocess').append('<b class=\"red\">" .
 							strtoupper(__("Error")) .
 						"</b> (".$errno.": ".$errstr.")<br />');" .
 				"</script>";
@@ -1096,7 +1096,7 @@ class _updates {
 		
 		echo
 			"<script type='text/javascript'>" .
-				"jQuery('#jcoreupdateprocess .".$downloadstatusclass."').html('" .
+				"$('#jcoreupdateprocess .".$downloadstatusclass."').html('" .
 						__("sending request")."');" .
 			"</script>";
 		
@@ -1152,12 +1152,12 @@ class _updates {
 		{
 			echo
 				"<script type='text/javascript'>" .
-					"jQuery('#jcoreupdateprocess .".$downloadstatusclass."').html('');" .
+					"$('#jcoreupdateprocess .".$downloadstatusclass."').html('');" .
 				"</script>";
 			
 			echo
 				"<script type='text/javascript'>" .
-					"jQuery('#jcoreupdateprocess').append('<b>" .
+					"$('#jcoreupdateprocess').append('<b>" .
 							strtoupper(__("Ok")) .
 						"</b> (".files::humanSize(@filesize($this->rootPath.$filename))." " .
 						__("cached").")<br />');" .
@@ -1179,7 +1179,7 @@ class _updates {
 			if (!$fl) {
 				echo
 					"<script type='text/javascript'>" .
-						"jQuery('#jcoreupdateprocess').append('<b class=\"red\">" .
+						"$('#jcoreupdateprocess').append('<b class=\"red\">" .
 								strtoupper(__("Error")) .
 							"</b><br />');" .
 					"</script>";
@@ -1213,7 +1213,7 @@ class _updates {
 			if (!$time || time() - $time > 1) {
 				echo
 					"<script type='text/javascript'>" .
-						"jQuery('#jcoreupdateprocess .".$downloadstatusclass."').html('" .
+						"$('#jcoreupdateprocess .".$downloadstatusclass."').html('" .
 								$percentage."%');" .
 					"</script>";
 				
@@ -1227,7 +1227,7 @@ class _updates {
     		if (strlen($data) == 0) {
 				echo
 					"<script type='text/javascript'>" .
-						"jQuery('#jcoreupdateprocess .".$downloadstatusclass."').html('" .
+						"$('#jcoreupdateprocess .".$downloadstatusclass."').html('" .
 								$percentage."%');" .
 					"</script>";
 				
@@ -1249,7 +1249,7 @@ class _updates {
 		if ($savefile && !$filename) {
 			echo
 				"<script type='text/javascript'>" .
-					"jQuery('#jcoreupdateprocess').append('<b class=\"red\">" .
+					"$('#jcoreupdateprocess').append('<b class=\"red\">" .
 							strtoupper(__("Error")) .
 						"</b><br />');" .
 				"</script>";
@@ -1268,7 +1268,7 @@ class _updates {
 		
 		echo
 			"<script type='text/javascript'>" .
-				"jQuery('#jcoreupdateprocess').append('<b>" .
+				"$('#jcoreupdateprocess').append('<b>" .
 						strtoupper(__("Ok")) .
 					"</b> (".files::humanSize($downloadsize).")<br />');" .
 			"</script>";

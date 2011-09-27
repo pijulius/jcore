@@ -66,7 +66,7 @@ class _userPermissions {
 						__("Select path") .
 					"</a> &nbsp; " .
 					"<a href='javascript://' class='add-link' " .
-						"onclick=\"jQuery.jCore.form.appendEntryTo(" .
+						"onclick=\"$.jCore.form.appendEntryTo(" .
 							"'.form-entry-user-multi-permission-paths-container', " .
 							"'', " .
 							"'Paths[]', " .
@@ -294,11 +294,11 @@ class _userPermissions {
 						"<td align='center'>" .
 							"<a href='javascript://' " .
 								"onclick=\"" .
-									"jQuery('#neweditpermissionform .text-entry[name^=Path]:last').val('" .
+									"$('#neweditpermissionform .text-entry[name^=Path]:last').val('" .
 										htmlspecialchars($matches[1], ENT_QUOTES)."');" .
 									(JCORE_VERSION >= '0.7'?
-										"jQuery(this).closest('.tipsy').hide();":
-										"jQuery(this).closest('.qtip').qtip('hide');") .
+										"$(this).closest('.tipsy').hide();":
+										"$(this).closest('.qtip').qtip('hide');") .
 									"\" " .
 								"class='user-permissions-select-path select-link'>" .
 							"</a>" .

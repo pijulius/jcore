@@ -388,11 +388,11 @@ class _languages {
 					"<td align='center'>" .
 						"<a href='javascript://' " .
 							"onclick=\"" .
-								"jQuery('#neweditlanguageform #entryLocale').val('" .
+								"$('#neweditlanguageform #entryLocale').val('" .
 									htmlspecialchars($language['Location'], ENT_QUOTES)."');" .
 								(JCORE_VERSION >= '0.7'?
-									"jQuery(this).closest('.tipsy').hide();":
-									"jQuery(this).closest('.qtip').qtip('hide');") .
+									"$(this).closest('.tipsy').hide();":
+									"$(this).closest('.qtip').qtip('hide');") .
 								"\" " .
 							"class='languages-select-locale select-link'>" .
 						"</a>" .

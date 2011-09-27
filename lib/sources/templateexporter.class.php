@@ -126,7 +126,7 @@ class _templateExporter {
 				__("Download") .
 			"</a>" .
 			"<script type='text/javascript'>" .
-				"jQuery(document).ready(function() {" .
+				"$(document).ready(function() {" .
 					"window.location='".url::uri('request, download') .
 						"&request=".url::path() .
 						"&download=".$file .

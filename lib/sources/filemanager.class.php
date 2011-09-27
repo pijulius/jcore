@@ -280,7 +280,7 @@ class _fileManager {
 				"<div class='form-entry-title'></div>" .
 				"<div class='form-entry-content'>" .
 					"<a href='javascript://' class='add-link' " .
-						"onclick=\"jQuery.jCore.form.appendEntryTo(" .
+						"onclick=\"$.jCore.form.appendEntryTo(" .
 							"'.form-entry-upload-multi-pictures-container', " .
 							"'', " .
 							"'Files[]', " .
