@@ -2,7 +2,7 @@
 
 /***************************************************************************
  * 
- *  Name: Members Module
+ *  Name: Member Forms Module
  *  URI: http://jcore.net
  *  Description: Allows members to register/update their accounts. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
@@ -262,11 +262,15 @@ class members extends modules {
 	function displayAdminListHeader() {
 		echo
 			"<th><span class='nowrap'>".
-				__("Title / Form ID")."</span></th>";
+				__("Title / Form ID")."</span></th>" .
+			"<th><span class='nowrap'>".
+				__("Email")."</span></th>";
 	}
 	
 	function displayAdminListHeaderOptions() {
 		echo
+			"<th><span class='nowrap'>".
+				__("Data")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Fields")."</span></th>";
 	}
@@ -274,16 +278,30 @@ class members extends modules {
 	function displayAdminListItem(&$row) {
 		echo
 			"<td class='auto-width'>" .
-				"<div class='bold'>" .
+				"<a class='bold' href='".url::uri('ALL') .
+					"?path=admin/content/dynamicforms&amp;id=".$row['ID']."'>" .
 					_($row['Title']) .
-				"</div>" .
+				"</a>" .
 				"<div class='comment' style='padding-left: 10px;'>" .
 					$row['FormID'] .
 				"</div>" .
+			"</td>" .
+			"<td style='text-align: right;'>" .
+				($row['SendNotificationEmail']?
+					__('Yes'):
+					'') .
 			"</td>";
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		$dbitems = null;
+		
+		if ($row['SQLTable'])
+			$dbitems = sql::fetch(sql::run(
+				" SELECT COUNT(*) AS `Rows`" .
+				" FROM `{".$row['SQLTable']."}`" .
+				" LIMIT 1"));
+		
 		$fields = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{dynamicformfields}`" .
@@ -291,6 +309,24 @@ class members extends modules {
 			" LIMIT 1"));
 		
 		echo
+			"<td align='center'>";
+		
+		if ($row['SQLTable'] && JCORE_VERSION >= '0.7') {
+			echo
+				"<a class='admin-link db' " .
+					"title='".htmlspecialchars(__("Browse Data"), ENT_QUOTES) .
+					" (".$dbitems['Rows'].")' " .
+					"href='".url::uri('ALL') .
+					"?path=admin/content/dynamicforms/".$row['ID']."/dynamicformdata'>";
+		if (ADMIN_ITEMS_COUNTER_ENABLED && $dbitems['Rows'])
+			counter::display($dbitems['Rows']);
+		
+			echo
+				"</a>";
+		}
+		
+		echo
+			"</td>" .
 			"<td align='center'>" .
 				"<a class='admin-link fields' " .
 					"title='".htmlspecialchars(__("Fields"), ENT_QUOTES) .
@@ -505,7 +541,7 @@ class members extends modules {
  
 modules::register(
 	'members',
-	_('Site Members'), 
+	_('Member Forms'), 
 	_('Forms for My Account, Register and Login pages'));
 
 ?>
