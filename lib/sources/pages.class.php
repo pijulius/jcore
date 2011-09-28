@@ -351,7 +351,7 @@ class _pages {
 		
 		if (JCORE_VERSION >= '0.8') {
 			$form->add(
-				__('Post Keywords'),
+				__('Post Tags'),
 				'PostKeywords',
 				FORM_INPUT_TYPE_TEXT);
 			$form->setStyle('width: 250px;');
@@ -362,11 +362,11 @@ class _pages {
 					"&amp;request=".url::path() .
 					"&amp;keywords=1' " .
 					"class='posts-add-keyword add-link ajax-content-link' " .
-					"title='".htmlspecialchars(__("Add Keyword"), ENT_QUOTES)."'>" .
-					__("Add Keyword") .
+					"title='".htmlspecialchars(__("Add Tag"), ENT_QUOTES)."'>" .
+					__("Add Tag") .
 				"</a>" .
 				" <span class='comment'>" .
-				__("(automatically show posts with these keywords)") .
+				__("(automatically show posts with these tags)") .
 				"</span>");
 		}
 		
@@ -445,7 +445,7 @@ class _pages {
 				'; height: 100px;');
 			
 			$form->add(
-				__('Keywords'),
+				__('Tags'),
 				'SEOKeywords',
 				FORM_INPUT_TYPE_TEXT);
 			$form->setStyle('width: 350px;');
@@ -733,7 +733,7 @@ class _pages {
 		
 		if (JCORE_VERSION >= '0.8' && $row['PostKeywords'])
 			$tooltiptxt .= 
-				"<b>".__("Post Keywords")."</b>" .
+				"<b>".__("Post Tags")."</b>" .
 				"<ul>" .
 					"<li>".$row['PostKeywords']."</li>" .
 				"</ul>";

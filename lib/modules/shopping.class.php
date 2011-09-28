@@ -537,7 +537,7 @@ class shoppingItems {
 					($this->similar?'OR':'AND'),
 					array(
 						'date' => 'TimeStamp',
-						'key' => 'Keywords')) .
+						'tag' => 'Keywords')) .
 				($categories?
 					" OR (`ShoppingID` IN (".implode(',', $categories)."))":
 					null) .
@@ -698,8 +698,8 @@ class shoppingItems {
 					"&amp;request=".url::path() .
 					"&amp;keywords=1' " .
 					"class='shopping-item-add-keyword add-link ajax-content-link' " .
-					"title='".htmlspecialchars(__("Add Keyword"), ENT_QUOTES)."'>" .
-					__("Add Keyword") .
+					"title='".htmlspecialchars(__("Add Tag"), ENT_QUOTES)."'>" .
+					__("Add Tag") .
 				"</a>");
 			
 			unset($itemsform);
@@ -824,7 +824,7 @@ class shoppingItems {
 		$form->setStyle('width: 300px;');
 		
 		$form->add(
-			__('Keywords'),
+			__('Tags'),
 			'Keywords',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 250px;');
@@ -838,8 +838,8 @@ class shoppingItems {
 					"&amp;request=".url::path() .
 					"&amp;keywords=1' " .
 					"class='shopping-item-add-keyword add-link ajax-content-link' " .
-					"title='".htmlspecialchars(__("Add Keyword"), ENT_QUOTES)."'>" .
-					__("Add Keyword") .
+					"title='".htmlspecialchars(__("Add Tag"), ENT_QUOTES)."'>" .
+					__("Add Tag") .
 				"</a>");
 			
 		} else {
@@ -1871,7 +1871,7 @@ class shoppingItems {
 						"</th>" .
 						"<th>" .
 							"<span class='nowrap'>".
-							__("Keyword").
+							__("Tag").
 							"</span>" .
 						"</th>" .
 						"<th style='text-align: right;'>" .
@@ -2208,7 +2208,7 @@ class shoppingItems {
 		
 		if ($row['Keywords'])
 			admin::displayItemData(
-				__("Keywords"), 
+				__("Tags"), 
 				$row['Keywords']);
 		 
 		if ($row['EnableRating'])
@@ -3620,7 +3620,7 @@ class shoppingItems {
 	
 	function displayKeywordsCloudLink(&$row) {
 		echo  
-			"<a href='".$this->shoppingURL."&amp;search=key:".
+			"<a href='".$this->shoppingURL."&amp;search=tag:".
 				urlencode('"'.trim($row['Keyword']).'"') .
 				"&amp;searchin=modules/shopping/shoppingitems' " .
 				"style='font-size: ".$row['_FontPercent']."%;'>" .
@@ -3674,7 +3674,7 @@ class shoppingItems {
 					(strpos($row['_CategoryLink'], '?') === false?
 						'?':
 						'&amp;') .
-					"search=key:".urlencode('"'.trim($word).'"') .
+					"search=tag:".urlencode('"'.trim($word).'"') .
 					"&amp;searchin=modules/shopping/shoppingitems" .
 					"'>" .
 					ucfirst(trim($word)) .
@@ -3684,7 +3684,7 @@ class shoppingItems {
 	
 	function displayKeywords(&$row) {
 		echo
-			__("Keywords").": ";
+			__("Tags").": ";
 		
 		$this->displayKeywordLinks($row);
 	}
@@ -4217,6 +4217,7 @@ class shoppingItems {
 					break;
 				
 				case 'keywords':
+				case 'tags':
 					if (trim($row['Keywords'])) {
 						echo
 							"<div class='keywords'>";
@@ -6962,8 +6963,8 @@ class shopping extends modules {
 			$this->selectedID = null;
 		}
 		
-		if (preg_match('/(^|\/)keywords($|\/)/', $this->arguments)) {
-			$this->arguments = preg_replace('/(^|\/)keywords($|\/)/', '\2', $this->arguments);
+		if (preg_match('/(^|\/)(keywords|tags)($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)(keywords|tags)($|\/)/', '\3', $this->arguments);
 			
 			$items = new shoppingItems();
 			$items->shoppingURL = shopping::getURL();

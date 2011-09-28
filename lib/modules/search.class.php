@@ -634,8 +634,8 @@ class search extends modules {
 			$this->limit = (int)$matches[2];
 		}
 		
-		if (preg_match('/(^|\/)keywords($|\/)/', $this->arguments)) {
-			$this->arguments = preg_replace('/(^|\/)keywords($|\/)/', '\2', $this->arguments);
+		if (preg_match('/(^|\/)(keywords|tags)($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)(keywords|tags)($|\/)/', '\3', $this->arguments);
 			
 			if (isset($matches[2]))
 				$this->keywordsLimit = (int)$matches[2];

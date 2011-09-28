@@ -162,7 +162,7 @@ class _posts {
 						'AND'), 
 					array(
 						'date' => 'TimeStamp',
-						'key' => 'Keywords')):
+						'tag' => 'Keywords')):
 				null) .
 			($this->active?
 				" AND `Views` > 0":
@@ -396,8 +396,8 @@ class _posts {
 					"&amp;request=".url::path() .
 					"&amp;keywords=1' " .
 					"class='posts-add-keyword add-link ajax-content-link' " .
-					"title='".htmlspecialchars(__("Add Keyword"), ENT_QUOTES)."'>" .
-					__("Add Keyword") .
+					"title='".htmlspecialchars(__("Add Tag"), ENT_QUOTES)."'>" .
+					__("Add Tag") .
 				"</a>");
 			
 			unset($postsform);
@@ -447,7 +447,7 @@ class _posts {
 		}
 		
 		$form->add(
-			__('Keywords'),
+			__('Tags'),
 			'Keywords',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 250px;');
@@ -461,8 +461,8 @@ class _posts {
 					"&amp;request=".url::path() .
 					"&amp;keywords=1' " .
 					"class='posts-add-keyword add-link ajax-content-link' " .
-					"title='".htmlspecialchars(__("Add Keyword"), ENT_QUOTES)."'>" .
-					__("Add Keyword") .
+					"title='".htmlspecialchars(__("Add Tag"), ENT_QUOTES)."'>" .
+					__("Add Tag") .
 				"</a>");
 			
 		} else {
@@ -889,12 +889,12 @@ class _posts {
 					"<tr>" .
 						"<th>" .
 							"<span class='nowrap'>".
-								__("Add") .
+							__("Add") .
 							"</span>" .
 						"</th>" .
 						"<th>" .
 							"<span class='nowrap'>".
-							__("Keyword").
+							__("Tag").
 							"</span>" .
 						"</th>" .
 						"<th style='text-align: right;'>" .
@@ -977,7 +977,7 @@ class _posts {
 		
 		if ($row['Keywords'])
 			admin::displayItemData(
-				__("Keywords"),
+				__("Tags"),
 				$row['Keywords']);
 		
 		if (JCORE_VERSION >= '0.6' && $row['URL'])
@@ -2658,7 +2658,7 @@ class _posts {
 				(strpos($row['_SearchURL'], '?') === false?
 					'?':
 					'&amp;') .
-				"search=key:".urlencode('"'.trim($row['Keyword']).'"') .
+				"search=tag:".urlencode('"'.trim($row['Keyword']).'"') .
 				"&amp;searchin=posts' " .
 				"style='font-size: ".$row['_FontPercent']."%;'>" .
 				ucfirst(trim($row['Keyword'])) .
@@ -2789,7 +2789,7 @@ class _posts {
 					(strpos($row['_PageLink'], '?') === false?
 						'?':
 						'&amp;') .
-					"search=key:".urlencode('"'.trim($word).'"') .
+					"search=tag:".urlencode('"'.trim($word).'"') .
 					"&amp;searchin=posts" .
 					"' class='keyword'>" .
 					ucfirst(trim($word)) .
@@ -2800,7 +2800,7 @@ class _posts {
 	function displayKeywords(&$row) {
 		echo
 			"<span class='keywords-title'>" .
-				__("Keywords").": " .
+				__("Tags").": " .
 			"</span> ";
 		
 		$this->displayKeywordLinks($row);
@@ -3146,6 +3146,7 @@ class _posts {
 					break;
 				
 				case 'keywords':
+				case 'tags':
 					if (trim($row['Keywords'])) {
 						echo
 							"<div class='keywords post-keywords'>";
@@ -3552,9 +3553,9 @@ class _posts {
 			$this->format = trim($matches[2]);
 		}
 		
-		if (preg_match('/(^|\/)keyword\/(.*?)($|\/)/', $this->arguments, $matches)) {
-			$this->arguments = preg_replace('/(^|\/)keyword\/.*?($|\/)/', '\2', $this->arguments);
-			$this->searchKeywords = trim($matches[2]);
+		if (preg_match('/(^|\/)(keyword|tag)\/(.*?)($|\/)/', $this->arguments, $matches)) {
+			$this->arguments = preg_replace('/(^|\/)(keyword|tag)\/.*?($|\/)/', '\3', $this->arguments);
+			$this->searchKeywords = trim($matches[3]);
 		}
 		
 		if (preg_match('/(^|\/)search\/(.*?)($|\/)/', $this->arguments, $matches)) {
@@ -3562,8 +3563,8 @@ class _posts {
 			$this->search = trim($matches[2]);
 		}
 		
-		if (preg_match('/(^|\/)keywords($|\/)/', $this->arguments)) {
-			$this->arguments = preg_replace('/(^|\/)keywords($|\/)/', '\2', $this->arguments);
+		if (preg_match('/(^|\/)(keywords|tags)($|\/)/', $this->arguments)) {
+			$this->arguments = preg_replace('/(^|\/)(keywords|tags)($|\/)/', '\3', $this->arguments);
 			
 			if ($this->limit)
 				$this->keywordsCloudLimit = $this->limit;
