@@ -133,8 +133,12 @@ class _paging {
 			"</a>";
 	}
 	
-	function displayTitle() {
-		echo __("Pages").":";
+	function displayTitle($selectedpage = 0, $totalpages = 0) {
+		if (JCORE_VERSION >= '1.0')
+			echo 
+				sprintf(__("Page %s of %s"), $selectedpage, $totalpages).":";
+		else
+			echo __("Pages").":";
 	}
 	
 	function display() {
@@ -183,7 +187,7 @@ class _paging {
 				"<div class='paging'>" .
 					"<div class='paging-text'>";
 		
-		$this->displayTitle();
+		$this->displayTitle($currentpagenum, $totalpagenum);
 		
 		echo
 					"</div>";
