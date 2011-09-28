@@ -5767,7 +5767,7 @@ class shoppingOrders extends modules {
 			
 			echo
 				"<li>\"" .
-					sprintf(_("%s, started on <i>%s</i>, finished on %s, from %s"),
+					sprintf(_("%s, started on <i>%s</i>, finished on <i>%s</i>, from %s"),
 						$downloaddigitalgood['Title'],
 						calendar::datetime($download['StartTimeStamp']),
 						($download['FinishTimeStamp']?
