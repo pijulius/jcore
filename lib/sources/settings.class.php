@@ -279,7 +279,8 @@ class _settings {
 				echo
 					"<tr>" .
 						"<td style='width: 1px; text-align: right; vertical-align: middle; padding: 0px 10px 5px 0px;'>" .
-						"<label for='settings".$setting['ID']."' style='white-space: nowrap;'>";
+						"<label for='settings".$setting['ID']."' style='white-space: nowrap;' " .
+							"title='".__(str_replace('_',' ', $setting['ID']))."'>";
 				
 				$this->displayAdminItemTitle($setting['ID'], $row['ID']);
 				

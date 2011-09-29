@@ -8,6 +8,12 @@
  *  me@pijulius.com
  *  For licensing, see LICENSE or http://jcore.net/license
  ****************************************************************************/
+
+if (!defined('PAGINATED_COMMENTS'))
+	define('PAGINATED_COMMENTS', false);
+
+if (!defined('COMMENTS_PER_PAGE'))
+	define('COMMENTS_PER_PAGE', 0);
  
 include_once('lib/security.class.php');
 include_once('lib/email.class.php');
@@ -86,6 +92,11 @@ class _comments {
 		
 		if (JCORE_VERSION >= '0.6')
 			$this->defaultRating = 7;
+		
+		if (PAGINATED_COMMENTS) {
+			$this->limit = COMMENTS_PER_PAGE;
+			$this->ajaxPaging = (COMMENTS_PER_PAGE?true:false);
+		}
 		
 		if ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin']) {
 			if (!$this->adminPath) {
