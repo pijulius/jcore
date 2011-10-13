@@ -114,6 +114,10 @@ class _sql {
 	}
 	
 	static function run($query, $debug = false) {
+		if (!trim($query))
+			return false;
+		
+		$optimization = false;
 		if (DEBUG &&
 			preg_match('/^ *?SELECT.*?WHERE/i', $query) && !preg_match('/`\{TMP[a-zA-Z0-9]+\}`/', $query) &&
 			$explains = @mysql_query('EXPLAIN '.sql::prefixTable($query), sql::$link))
@@ -123,15 +127,12 @@ class _sql {
 				!in_array($explain['Extra'], array(
 					'Impossible WHERE noticed after reading const tables',
 					'Select tables optimized away')))
-				$debug = true;
+				$optimization = true;
 		}
-		
-		if (!trim($query))
-			return false;
 		
 		sql::$lastQuery = $query;
 		
-		if ($debug || sql::$debug)
+		if ($optimization || $debug || sql::$debug)
 			$time_start = microtime(true);
 	
 		if (!sql::$link) 
@@ -140,9 +141,20 @@ class _sql {
 		$query = sql::prefixTable($query);
 	    $result = @mysql_query($query, sql::$link);
 	    
-		if ($debug || sql::$debug) {
+		if ($optimization || $debug || sql::$debug) {
 			sql::$lastQueryTime = sql::mtimetosec(microtime(true), $time_start);
+			
+			if ($optimization) 
+				ob_start();
+			
 			sql::display();
+			
+			if ($optimization) {
+				$sqlexplain = ob_get_contents();
+				ob_end_clean();
+				
+				debug::log('SQL Optimization', $sqlexplain);
+			}
 			
 		} elseif (!$result && !sql::$quiet) {
 	    	if (mysql_errno(sql::$link) == 1146 && !headers_sent())

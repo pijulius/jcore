@@ -17,6 +17,7 @@ define('D_ALL', 9);
 
 class _debug {
 	static $data = null;
+	static $customData = null;
 	static $runtime = 0;
 	
 	static function start() {
@@ -107,6 +108,13 @@ class _debug {
 		return false;
 	}
 	
+	static function log($type, $data) {
+		if (!isset(debug::$customData[$type]))
+			debug::$customData[$type] = '';
+		 
+		debug::$customData[$type] .= $data;
+	}
+	
 	static function display() {
 		echo 
 			"<div class='fc'>" .
@@ -117,6 +125,16 @@ class _debug {
 					"DEBUG Info" .
 				"</a>" .
 				"<div class='fc-content'>";
+		
+		if (debug::$customData && is_array(debug::$customData)) {
+			foreach(debug::$customData as $title => $data)
+				echo
+					"<h2>".$title."</h2>" .
+					$data;
+			
+			echo
+				"<p>&nbsp;</p>";
+		}
 		
 		if (!debug::$data || !isset(debug::$data[0]) || !debug::$data[0]) {
 			if (!debug::xdebug())
@@ -179,6 +197,9 @@ class _debug {
 			
 		} else {
 			echo
+				(debug::$customData?
+					"<h2>Code Profiling</h2>":
+					null) .
 				"<p>" .
 					"Below you will find the top 300 functions ordered by run time (descending). " .
 					"For a more detailed output please see " .
