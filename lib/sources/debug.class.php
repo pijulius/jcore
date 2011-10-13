@@ -117,14 +117,14 @@ class _debug {
 	
 	static function display() {
 		echo 
-			"<div class='fc'>" .
+			"<div class='fc' tabindex='0' style='margin: 20px;'>" .
 				"<a class='fc-title'>" .
 					"<span class='align-right'>" .
 						"PHP Run Time: ~".debug::$runtime .
 					"</span>" .
 					"DEBUG Info" .
 				"</a>" .
-				"<div class='fc-content'>";
+				"<div class='fc-content' style='padding: 1px 20px;'>";
 		
 		if (debug::$customData && is_array(debug::$customData)) {
 			foreach(debug::$customData as $title => $data)
