@@ -757,6 +757,15 @@ class _form {
 		
 		return trim($content);
 	}
+	
+	static function text2HTML($data) {
+		return 
+			preg_replace(
+				'/(.*?<\/p>)/i', '<p>\1', 
+				str_replace("\n", '<br />',
+					str_replace("\n\n", '</p>',
+						str_replace("\r", '', $data))));
+	}
 
 	static function type2Text($type) {
 		if (!$type)

@@ -50,7 +50,9 @@ class _notificationEmails {
 		$form->add(
 			__('Body'),
 			'Body',
-			FORM_INPUT_TYPE_TEXTAREA);
+			(defined('HTML_EMAILS') && HTML_EMAILS?
+				FORM_INPUT_TYPE_EDITOR:
+				FORM_INPUT_TYPE_TEXTAREA));
 		$form->setStyle('width: ' .
 			(JCORE_VERSION >= '0.7'?
 				'90%':
@@ -255,8 +257,17 @@ class _notificationEmails {
 		
 		admin::displayItemData(
 			"<hr />");
-		admin::displayItemData(
-			nl2br(htmlspecialchars($row['Body'])));
+		
+		if (defined('HTML_EMAILS') && HTML_EMAILS) {
+			if (!preg_match('/<[a-zA-Z]>/', $row['Body']))
+				$row['Body'] = form::text2HTML($row['Body']);
+			
+			admin::displayItemData($row['Body']);
+			
+		} else {
+			admin::displayItemData(
+				nl2br(url::parseLinks(htmlspecialchars($row['Body']))));
+		}
 		
 		api::callHooks(API_HOOK_AFTER,
 			'notificationEmails::displayAdminListItemSelected', $this, $row);
@@ -457,6 +468,10 @@ class _notificationEmails {
 				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{notificationemails}`" .
 					" WHERE `ID` = '".$id."'"));
+				
+				if (defined('HTML_EMAILS') && HTML_EMAILS &&
+					!preg_match('/<[a-zA-Z]>/', $selected['Body']))
+					$selected['Body'] = form::text2HTML($selected['Body']);
 				
 				$form->setValues($selected);
 			}

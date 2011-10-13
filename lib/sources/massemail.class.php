@@ -126,13 +126,16 @@ class _massEmail {
 		$form->add(
 			__('Message'),
 			'Message',
-			FORM_INPUT_TYPE_TEXTAREA,
+			(defined('HTML_EMAILS') && HTML_EMAILS?
+				FORM_INPUT_TYPE_EDITOR:
+				FORM_INPUT_TYPE_TEXTAREA),
 			true);
 		$form->setStyle('width: ' .
 			(JCORE_VERSION >= '0.7'?
 				'90%':
 				'350px') .
 			'; height: 200px;');
+		$form->setValueType(FORM_VALUE_TYPE_HTML);
 		
 		$form->add(
 			__('Partial sending (split your emails into chunks)'),
@@ -554,8 +557,17 @@ class _massEmail {
 		
 		admin::displayItemData(
 			"<hr />");
-		admin::displayItemData(
-			nl2br(url::parseLinks($row['Message'])));
+
+		if (defined('HTML_EMAILS') && HTML_EMAILS) {
+			if (!preg_match('/<[a-zA-Z]>/', $row['Message']))
+				$row['Message'] = form::text2HTML($row['Message']);
+			
+			admin::displayItemData($row['Message']);
+			
+		} else {
+			admin::displayItemData(
+				nl2br(url::parseLinks(htmlspecialchars($row['Message']))));
+		}
 		
 		api::callHooks(API_HOOK_AFTER,
 			'massEmail::displayAdminListItemSelected', $this, $row);
@@ -697,11 +709,22 @@ class _massEmail {
 				"</div>";
 		}
 		
+		$message = $form->get('Message');
+		
+		if (defined('HTML_EMAILS') && HTML_EMAILS) {
+			if (!preg_match('/<[a-zA-Z]>/', $message))
+				$message = form::text2HTML($message);
+			
+		} else {
+			$message = nl2br(url::parseLinks(htmlspecialchars($message)));
+		}
+		
 		echo
 				"<div class='form-entry form-entry-Message preview'>" .
 					"<div class='admin-content-preview'>" .
-						nl2br(url::parseLinks($form->get('Message'))) .
+						$message .
 					"</div>" .
+					"<div class='clear-both'></div>" .
 				"</div>" .
 			"</div>";
 		
@@ -906,6 +929,10 @@ class _massEmail {
 				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{massemails}`" .
 					" WHERE `ID` = '".$id."'"));
+				
+				if (defined('HTML_EMAILS') && HTML_EMAILS &&
+					!preg_match('/<[a-zA-Z]>/', $selected['Message']))
+					$selected['Message'] = form::text2HTML($selected['Message']);
 				
 				$form->setValues($selected);
 			}

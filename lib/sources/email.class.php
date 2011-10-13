@@ -42,6 +42,9 @@ class _email {
 		
 		$this->from = email::genWebmasterEmail();
 		
+		if (defined('HTML_EMAILS') && HTML_EMAILS)
+			$this->html = true;
+		
 		api::callHooks(API_HOOK_AFTER,
 			'email::email', $this);
 	}
@@ -283,6 +286,9 @@ class _email {
 		
 		contentCodes::replaceDefinitions($subject);
 		contentCodes::replaceDefinitions($message);
+		
+		if ($this->html && !preg_match('/<[a-zA-Z]>/', $message))
+			$message = form::text2HTML($message);
 		
 		if ($debug) {
 			tooltip::display(
