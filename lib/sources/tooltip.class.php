@@ -23,29 +23,42 @@ class _tooltip {
 	}
 	
 	static function construct($message, $type = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'tooltip::construct', $_ENV, $message, $type);
+		
 		if (defined($type))
 			$type = constant($type);
 		
-		return 
+		$result = 
 			"<div class='tooltip ".$type." rounded-corners'>" .
 				"<span>" .
 				$message .
 				"</span>" .
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'tooltip::construct', $_ENV, $message, $type, $result);
+		
+		return $result;
 	}
 	
 	static function display($message = null, $type = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'tooltip::display', $_ENV, $message, $type);
+		
 		if (!$message) {
 			echo tooltip::$cache;
 			tooltip::$cache = '';
 			
-			return;
+		} else {
+			if (tooltip::$caching)
+				tooltip::$cache .= tooltip::construct($message, $type);
+			else 
+				echo tooltip::construct($message, $type);
 		}
 		
-		if (tooltip::$caching)
-			tooltip::$cache .= tooltip::construct($message, $type);
-		else 
-			echo tooltip::construct($message, $type);
+		api::callHooks(API_HOOK_AFTER,
+			'tooltip::display', $_ENV, $message, $type);
 	}
 }
 

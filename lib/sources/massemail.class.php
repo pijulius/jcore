@@ -17,14 +17,24 @@ class _massEmail {
 	
 	// ************************************************   Admin Part
 	static function countAdminItems() {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::countAdminItems', $_ENV);
+		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{massemails}`" .
 			" LIMIT 1"));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::countAdminItems', $_ENV, $row['Rows']);
+		
 		return $row['Rows'];
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Email'), 
@@ -33,9 +43,15 @@ class _massEmail {
 		favoriteLinks::add(
 			__('Users'), 
 			'?path=admin/members/users');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::setupAdminForm', $this, $form);
+		
 		$form->add(
 			__('Preview'),
 			'Preview',
@@ -143,9 +159,15 @@ class _massEmail {
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::verifyAdmin', $this, $form);
+		
 		$continue = null;
 		$delete = null;
 		$id = null;
@@ -161,23 +183,33 @@ class _massEmail {
 			$id = (int)$_GET['id'];
 		
 		if ($delete) {
-			if (!$this->delete($id))
-				return false;
+			$result = $this->delete($id);
 			
-			tooltip::display(
-				__("Email has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Email has been successfully deleted."),
+					TOOLTIP_SUCCESS);
 			
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if (!email::verify($form->get('From'), true)) {
 			tooltip::display(
 				__("From email address is not a valid email address!"),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::verifyAdmin', $this, $form);
 			
 			return false;
 		}
@@ -221,17 +253,28 @@ class _massEmail {
 						', ', $invalidtoemails))),
 				TOOLTIP_ERROR);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::verifyAdmin', $this, $form);
+			
 			return false;
 		}
 		
-		if (!$form->get('SendSubmit'))
+		if (!$form->get('SendSubmit')) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if (JCORE_VERSION >= '0.2') {
 			$newemailid = $this->add($form->getPostArray());
 		
-			if (!$newemailid)
+			if (!$newemailid) {
+				api::callHooks(API_HOOK_AFTER,
+					'massEmail::verifyAdmin', $this, $form);
+				
 				return false;
+			}
 		}
 		
 		if (count($toemails) == count($customtoemails))
@@ -360,6 +403,9 @@ class _massEmail {
 					"No more emails left to be sent."),
 				TOOLTIP_SUCCESS);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::verifyAdmin', $this, $form);
+			
 			return true;
 		}
 		
@@ -374,6 +420,9 @@ class _massEmail {
 						"messages above and try again.")),
 				TOOLTIP_ERROR);
 	
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::verifyAdmin', $this, $form);
+			
 			return false;
 		}
 		
@@ -386,29 +435,51 @@ class _massEmail {
 				$emailssentout),
 			TOOLTIP_SUCCESS);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::verifyAdmin', $this, $form, $emailssentout);
+		
 		return true;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Subject / Sent out")."</span></th>" .
 			"<th style='text-align: right;'><span class='nowrap'>".
 				__("Emails Sent")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::displayAdminListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Resend")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::displayAdminListItem', $this, $row);
+		
 		echo
 			"<td class='auto-width'>" .
 				"<a href='".url::uri('id, resend, delete') .
@@ -423,12 +494,22 @@ class _massEmail {
 			"<td style='text-align: right;'>" .
 				$row['EmailsSentOut'] .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::displayAdminListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link email-new' " .
@@ -444,9 +525,15 @@ class _massEmail {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListItemSelected(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::displayAdminListItemSelected', $this, $row);
+		
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
 		admin::displayItemData(
@@ -469,9 +556,15 @@ class _massEmail {
 			"<hr />");
 		admin::displayItemData(
 			nl2br(url::parseLinks($row['Message'])));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::displayAdminListItemSelected', $this, $row);
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::displayAdminList', $this, $rows);
+		
 		$id = null;
 		
 		if (isset($_GET['id']))
@@ -527,9 +620,15 @@ class _massEmail {
 				"</tbody>" .
 			"</table>" .
 			"<br />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminPreview(&$form, &$emailssent) {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::displayAdminPreview', $this, $form, $emailssent);
+		
 		if (JCORE_VERSION >= '0.6')
 			echo
 				"<div class='form rounded-corners'>";
@@ -611,22 +710,44 @@ class _massEmail {
 				"</div>";
 		
 		echo "<br />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::displayAdminPreview', $this, $form, $emailssent);
 	}
 
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Mass Email Administration'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::displayAdmin', $this);
+		
 		$delete = null;
 		$resend = null;
 		$id = null;
@@ -737,6 +858,10 @@ class _massEmail {
 			
 				echo 
 					"</div>";	//admin-content
+				
+				api::callHooks(API_HOOK_AFTER,
+					'massEmail::displayAdmin', $this);
+				
 				return;
 			}
 		}
@@ -747,6 +872,9 @@ class _massEmail {
 				
 			echo 
 				"</div>";	//admin-content
+			
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::displayAdmin', $this);
 			
 			return;
 		}
@@ -792,11 +920,17 @@ class _massEmail {
 			
 		echo 
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::displayAdmin', $this);
 	}
 	
 	function add($values) {
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::add', $this, $values);
 		
 		$exists = sql::fetch(sql::run(
 			" SELECT `ID` FROM `{massemails}`" .
@@ -819,6 +953,9 @@ class _massEmail {
 				" `TimeStamp` = NOW()" .
 				" WHERE `ID` = '".$exists['ID']."'");
 			
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::add', $this, $values, $exists['ID']);
+			
 			return $exists['ID'];
 		}
 			
@@ -836,13 +973,14 @@ class _massEmail {
 				sql::escape($values['Message'])."'," .
 			" `TimeStamp` = NOW()");
 				
-		if (!$newid) {
+		if (!$newid)
 			tooltip::display(
 				sprintf(__("Mass Email couldn't be created! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::add', $this, $values, $newid);
 		
 		return $newid;
 	}
@@ -850,6 +988,9 @@ class _massEmail {
 	function incEmailsSentOut($id) {
 		if (!$id)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::incEmailsSentOut', $this, $id);
 		
 		sql::run(
 			" UPDATE `{massemails}` SET" .
@@ -863,12 +1004,19 @@ class _massEmail {
 			"</script>";
 		
 		url::flushDisplay();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::incEmailsSentOut', $this, $id);
+		
 		return true;
 	}
 	
 	function delete($id, $ifnoemailssent = false) {
 		if (!$id)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::delete', $this, $id, $ifnoemailssent);
 		
 		sql::run(
 			" DELETE FROM `{massemails}`" .
@@ -877,17 +1025,27 @@ class _massEmail {
 				" AND `EmailsSentOut` = 0":
 				null));
 		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::delete', $this, $id, $ifnoemailssent);
+		
 		return true;
 	}
 	
 	// ************************************************   Client Part
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'massEmail::ajaxRequest', $this);
+		
 		if (!$GLOBALS['USER']->loginok || 
 			!$GLOBALS['USER']->data['Admin']) 
 		{
 			tooltip::display(
 				__("Request can only be accessed by administrators!"),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::ajaxRequest', $this);
+			
 			return true;
 		}
 		
@@ -907,13 +1065,24 @@ class _massEmail {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'massEmail::ajaxRequest', $this);
+				
 				return true;
 			}
 			
 			$GLOBALS['USER']->displayQuickList(
 				'#newemailform #entryTo', true, '%UserName% <%Email%>');
+			
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::ajaxRequest', $this, $users);
+			
 			return true;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'massEmail::ajaxRequest', $this);
 		
 		return false;
 	}

@@ -25,8 +25,11 @@ class _menuItems {
 		'admin/site/menus/menuitems');
 	
 	function SQL() {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::SQL', $this);
+		
 		if (JCORE_VERSION >= '0.9')
-			return 
+			$sql =
 				" SELECT * FROM `{menuitems}`" .
 				" WHERE `Deactivated` = 0" .
 				" AND `MenuID` = '".(int)$this->selectedMenuID."'" .
@@ -47,34 +50,42 @@ class _menuItems {
 						" `ViewableBy` = 1") .
 				" )" .
 				" ORDER BY `OrderID`, `ID`";
+		else
+			$sql = 
+				" SELECT * FROM `{" .
+					(JCORE_VERSION >= '0.8'?
+						'pages':
+						'menuitems') .
+					"}`" .
+				" WHERE `Deactivated` = 0" .
+				" AND `Hidden` = 0" .
+				" AND `MenuID` = '".(int)$this->selectedMenuID."'" .
+				" AND `LanguageID` = '".
+					(languages::$selected?
+						(int)languages::$selected['ID']:
+						0) .
+					"'" .
+				" AND `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = 0" .
+				" AND (`ViewableBy` = 0 OR " .
+					($GLOBALS['USER']->loginok?
+						($GLOBALS['USER']->data['Admin']?
+							" `ViewableBy` IN (2, 3)":
+							" `ViewableBy` = 2"):
+						" `ViewableBy` = 1") .
+				" )" .
+				" ORDER BY `OrderID`, `ID`";
 		
-		return
-			" SELECT * FROM `{" .
-				(JCORE_VERSION >= '0.8'?
-					'pages':
-					'menuitems') .
-				"}`" .
-			" WHERE `Deactivated` = 0" .
-			" AND `Hidden` = 0" .
-			" AND `MenuID` = '".(int)$this->selectedMenuID."'" .
-			" AND `LanguageID` = '".
-				(languages::$selected?
-					(int)languages::$selected['ID']:
-					0) .
-				"'" .
-			" AND `".(JCORE_VERSION >= '0.8'?'SubPageOfID':'SubMenuOfID')."` = 0" .
-			" AND (`ViewableBy` = 0 OR " .
-				($GLOBALS['USER']->loginok?
-					($GLOBALS['USER']->data['Admin']?
-						" `ViewableBy` IN (2, 3)":
-						" `ViewableBy` = 2"):
-					" `ViewableBy` = 1") .
-			" )" .
-			" ORDER BY `OrderID`, `ID`";
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::SQL', $this, $sql);
+		
+		return $sql;
 	}
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::countAdminItems', $this);
+		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{" .
@@ -83,16 +94,26 @@ class _menuItems {
 					'menuitems') .
 				"}`" .
 			" LIMIT 1"));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::countAdminItems', $this, $row['Rows']);
+		
 		return $row['Rows'];
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::setupAdmin', $this);
+		
 		if (JCORE_VERSION < '0.9') {
 			$pages = new pages();
 			$pages->userPermissionType = $this->userPermissionType;
 			$pages->userPermissionIDs = $this->userPermissionIDs;
 			$pages->setupAdmin();
 			unset($pages);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'menuItems::setupAdmin', $this);
 			
 			return;
 		}
@@ -105,9 +126,15 @@ class _menuItems {
 		favoriteLinks::add(
 			__('Pages / Posts'), 
 			'?path=admin/content/pages');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::setupAdminForm', $this, $form);
+		
 		$edit = null;
 		
 		if (isset($_GET['edit']))
@@ -257,9 +284,15 @@ class _menuItems {
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::verifyAdmin', $this, $form);
+		
 		$reorder = null;
 		$orders = null;
 		$delete = null;
@@ -282,10 +315,7 @@ class _menuItems {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
-			if (!$orders)
-				return false;
-			
-			foreach($orders as $oid => $ovalue) {
+			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{menuitems}` " .
 					" SET `OrderID` = '".(int)$ovalue."'" .
@@ -296,27 +326,41 @@ class _menuItems {
 				__("Menu items have been successfully re-ordered."),
 				TOOLTIP_SUCCESS);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'menuItems::verifyAdmin', $this, $form, $reorder);
+			
 			return true;
 		}
 		
 		if ($delete) {
-			if (!$this->delete($id))
-				return false;
+			$result = $this->delete($id);
 			
-			tooltip::display(
-				__("Menu item and all its subitems have been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Menu item and all its subitems have been successfully deleted."),
+					TOOLTIP_SUCCESS);
 			
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'menuItems::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'menuItems::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if (!$edit && !$form->get('Title') && !count($form->get('PageIDs'))) {
 			tooltip::display(
 				__("No page selected to be added or no custom menu item title defined!"),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'menuItems::verifyAdmin', $this, $form);
+			
 			return false;
 		}
 		
@@ -345,15 +389,20 @@ class _menuItems {
 				$newids[$page['ID']] = $this->add($page);
 			}
 			
-			if (!count($newids))
-				return false;
+			$result = count($newids);
 			
-			tooltip::display(
-				__("Pages have been successfully added.")." ",
-				TOOLTIP_SUCCESS);
+			if ($result) {
+				tooltip::display(
+					__("Pages have been successfully added.")." ",
+					TOOLTIP_SUCCESS);
+				
+				$form->reset();
+			}
 			
-			$form->reset();
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'menuItems::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
 		if (!$form->get('Path')) {
@@ -379,41 +428,55 @@ class _menuItems {
 						__("Menu item cannot be subitem of itself!"),
 						TOOLTIP_ERROR);
 					
+					api::callHooks(API_HOOK_AFTER,
+						'menuItems::verifyAdmin', $this, $form);
+					
 					return false;
 				}
 			}
 		}
 			
 		if ($edit) {
-			if (!$this->edit($id, $form->getPostArray()))
-				return false;
+			$result = $this->edit($id, $form->getPostArray());
 			
-			tooltip::display(
-				__("Menu item has been successfully updated.")." " .
-				"<a href='#adminform'>" .
-					__("Edit") .
-				"</a>",
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Menu item has been successfully updated.")." " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
 			
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'menuItems::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$newid = $this->add($form->getPostArray()))
-			return false;
-			
-		tooltip::display(
-			__("Menu item has been successfully created.")." " .
-				"<a href='".url::uri('id, edit, delete') .
-					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-					__("Edit") .
-				"</a>",
-			TOOLTIP_SUCCESS);
+		$newid = $this->add($form->getPostArray());
 		
-		$form->reset();
-		return true;
+		if ($newid) {
+			tooltip::display(
+				__("Menu item has been successfully created.")." " .
+					"<a href='".url::uri('id, edit, delete') .
+						"&amp;id=".$newid."&amp;edit=1#adminform'>" .
+						__("Edit") .
+					"</a>",
+				TOOLTIP_SUCCESS);
+			
+			$form->reset();
+		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::verifyAdmin', $this, $form, $newid);
+		
+		return $newid;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Order")."</span></th>" .
@@ -421,20 +484,36 @@ class _menuItems {
 				__("Title / Path / Link")."</span></th>" .
 			"<th style='text-align: right;'><span class='nowrap'>".
 				__("Viewable by")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayAdminListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayAdminListItem', $this, $row);
+		
 		echo 
 			"<td>" .
 				"<input type='text' name='orders[".$row['ID']."]' " .
@@ -469,12 +548,22 @@ class _menuItems {
 					null) .
 				"</span>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayAdminListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -490,14 +579,23 @@ class _menuItems {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayAdminListFunctions', $this);
+		
 		echo
 			"<input type='submit' name='reordersubmit' value='".
 				htmlspecialchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminListLanguages($language) {
@@ -508,6 +606,9 @@ class _menuItems {
 		
 		if (!$items)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayAdminListLanguages', $this, $language);
 		
 		echo 
 		"<div tabindex='0' class='fc" . 
@@ -523,6 +624,9 @@ class _menuItems {
 				$items .
 			"</div>" .
 		"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayAdminListLanguages', $this, $language);
 		
 		return true;
 	}
@@ -541,6 +645,10 @@ class _menuItems {
 		
 		if (!sql::rows($rows))
 			return false;
+		
+		if (!$menuid)
+			api::callHooks(API_HOOK_BEFORE,
+				'menuItems::displayAdminListItems', $this, $menuid, $rowpair, $language);
 		
 		if ($menuid) {
 			echo 
@@ -598,10 +706,17 @@ class _menuItems {
 				"</table>";
 		}
 		
+		if (!$menuid)
+			api::callHooks(API_HOOK_AFTER,
+				'menuItems::displayAdminListItems', $this, $menuid, $rowpair, $language);
+		
 		return true;
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayAdminList', $this, $rows);
+		
 		echo
 			"<form action='".url::uri('edit, delete')."' method='post'>";
 		
@@ -638,33 +753,60 @@ class _menuItems {
 				
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Menu Items'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription($includesnewpages = false) {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayAdminDescription', $this, $includesnewpages);
+		
 		if ($includesnewpages)
 			echo 
 				"<p>" .
 					__("New pages will be automatically added to this menu.") .
 				"</p>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayAdminDescription', $this, $includesnewpages);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayAdmin', $this);
+		
 		if (JCORE_VERSION < '0.9') {
 			$pages = new pages();
 			$pages->userPermissionType = $this->userPermissionType;
 			$pages->userPermissionIDs = $this->userPermissionIDs;
 			$pages->displayAdmin();
 			unset($pages);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'menuItems::displayAdmin', $this);
 			
 			return;
 		}
@@ -769,11 +911,17 @@ class _menuItems {
 		
 		echo 
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayAdmin', $this);
 	}
 	
 	function add($values) {
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::add', $this, $values);
 		
 		if (!isset($values['LanguageID']))
 			$values['LanguageID'] = null;
@@ -844,13 +992,14 @@ class _menuItems {
 			" `OrderID` = '".
 				(int)$values['OrderID']."'");
 		
-		if (!$newid) {
+		if (!$newid)
 			tooltip::display(
 				sprintf(__("Menu item couldn't be created! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::add', $this, $values, $newid);
 		
 		return $newid;
 	}
@@ -862,6 +1011,9 @@ class _menuItems {
 		if (!is_array($values))
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::edit', $this, $id, $values);
+		
 		if (!isset($values['LanguageID']))
 			$values['LanguageID'] = null;
 			
@@ -916,11 +1068,17 @@ class _menuItems {
 				(int)$values['OrderID']."'" .
 			" WHERE `ID` = '".(int)$id."'");
 		
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result) {
 			tooltip::display(
 				sprintf(__("Menu item couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'menuItems::edit', $this, $id, $values);
+			
 			return false;
 		}
 		
@@ -974,12 +1132,18 @@ class _menuItems {
 					" WHERE `ID` = '".$row['ID']."'");
 		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::edit', $this, $id, $values, $result);
+		
+		return $result;
 	}
 	
 	function delete($id) {
 		if (!$id)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::delete', $this, $id);
 		
 		$itemids = array($id);
 		
@@ -998,6 +1162,9 @@ class _menuItems {
 			sql::run(
 				" DELETE FROM `{menuitems}` " .
 				" WHERE `ID` = '".$itemid."'");
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::delete', $this, $id);
 		
 		return true;
 	}
@@ -1228,7 +1395,15 @@ class _menuItems {
 			'&amp;pageid='.$row[(JCORE_VERSION >= '0.9'?'PageID':'ID')];
 	}
 	
+	// For compatibility reasons only, DON'T USE IT!
+	static function displayModules($menuid) {
+		pages::displayModules($menuid);
+	}
+	
 	function displayTitle(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayTitle', $this, $row);
+		
 		echo 
 			"<a href='".$row['_Link']."'" .
 				($row['Link'] && strpos($row['Link'], '://') !== false && 
@@ -1240,6 +1415,9 @@ class _menuItems {
 				$row['Title'] .
 				"</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayTitle', $this, $row);
 	}
 	
 	function displaySubmenus(&$row, $container = true) {
@@ -1300,6 +1478,9 @@ class _menuItems {
 		if (!$items)
 			return;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displaySubmenus', $this, $row, $container);
+		
 		if ($container)
 			echo 
 			"<" .
@@ -1332,9 +1513,15 @@ class _menuItems {
 				'ul':
 				'div') .
 			">"; //submenu
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displaySubmenus', $this, $row, $container);
 	}
 	
 	function displayOne(&$row = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::displayOne', $this, $row);
+		
 		if ($row['Link'])
 			$row['_Link'] = url::generateLink($row['Link']);
 		else
@@ -1368,6 +1555,9 @@ class _menuItems {
 				'li':
 				'div') .
 			">";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::displayOne', $this, $row);
 	}
 	
 	function display() {
@@ -1378,6 +1568,12 @@ class _menuItems {
 		
 		$i = 1;
 		$items = sql::rows($rows);
+		
+		if (!$items)
+			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'menuItems::display', $this);
 		
 		while ($row = sql::fetch($rows)) {
 			$row['_CSSClass'] = null;
@@ -1391,6 +1587,9 @@ class _menuItems {
 			
 			$i++;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'menuItems::display', $this);
 	}
 }
 

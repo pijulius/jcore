@@ -6335,59 +6335,16 @@ class shopping extends modules {
 			return false;
 		}
 		
-		if ($row['Rows']) {
-			if (!files::exists($this->attachmentsPath.'.htaccess') &&
-				!files::create($this->attachmentsPath.'.htaccess',
-					'deny from all'))
-			{
-				tooltip::display(
-					_("Directory couldn't be protected!")." " .
-					sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
-						$this->attachmentsPath),
-					TOOLTIP_ERROR);
-				
-				return false;
-			}
-			
-			if (!files::exists($this->picturesPath.'.htaccess') &&
-				!files::create($this->picturesPath.'.htaccess',
-					'deny from all'))
-			{
-				tooltip::display(
-					_("Directory couldn't be protected!")." " .
-					sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
-						$this->picturesPath),
-					TOOLTIP_ERROR);
-				
-				return false;
-			}
-			
-			if (!files::exists($this->thumbnailsPath.'.htaccess') &&
-				!files::create($this->thumbnailsPath.'.htaccess',
-					'allow from all'))
-			{
-				tooltip::display(
-					_("Directory couldn't be protected!")." " .
-					sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
-						$this->thumbnailsPath),
-					TOOLTIP_ERROR);
-				
-				return false;
-			}
-			
-			return true;
-		}
+		if ($row['Rows'])
+			return 
+				(dirs::protect($this->attachmentsPath) &&
+				 dirs::protect($this->picturesPath) &&
+				 dirs::protect($this->thumbnailsPath, 'allow from all'));
 		
-		if (files::exists($this->attachmentsPath.'.htaccess'))
-			files::delete($this->attachmentsPath.'.htaccess');
-		
-		if (files::exists($this->picturesPath.'.htaccess'))
-			files::delete($this->picturesPath.'.htaccess');
-		
-		if (files::exists($this->thumbnailsPath.'.htaccess'))
-			files::delete($this->thumbnailsPath.'.htaccess');
-			
-		return true;
+		return 
+			(dirs::unprotect($this->attachmentsPath) &&
+			 dirs::unprotect($this->picturesPath) &&
+			 dirs::unprotect($this->thumbnailsPath));
 	}
 	
 	static function getTree($categoryid = 0, $firstcall = true,

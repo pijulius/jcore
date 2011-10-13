@@ -54,9 +54,15 @@ class _requests {
 	}
 	
 	static function displayResult() {
+		api::callHooks(API_HOOK_BEFORE,
+			'requests::displayResult', $_ENV);
+		
 		echo requests::$result;
 		url::flushDisplay();
 		requests::$result = null;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'requests::displayResult', $_ENV);
 	}
 	
 	function display() {
@@ -170,6 +176,9 @@ class _requests {
 			return;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'requests::display', $this);
+		
 		$class = new $classname;
 		
 		$class->uriRequest = requests::$path;
@@ -194,16 +203,24 @@ class _requests {
 		if (requests::$ajax && $requestsuccess) {
 			requests::displayResult();
 			sql::logout();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'requests::display', $this);
+			
 			exit();
 		}
 		
 		$this->clear();
 		
-		if ($requestsuccess)
-			return;
+		if (!$requestsuccess) {
+			unset($GLOBALS['_'.strtoupper($this->method)][$this->variable]);
+			url::setURI(url::uri($this->variable));
+		}
 		
-		unset($GLOBALS['_'.strtoupper($this->method)][$this->variable]);
-		url::setURI(url::uri($this->variable));
+		api::callHooks(API_HOOK_AFTER,
+			'requests::display', $this);
+		
+		return;
 	}
 }
 

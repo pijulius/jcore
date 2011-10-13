@@ -17,10 +17,19 @@ class _templateExporter {
 	var $adminPath = 'admin/site/template/templateexporter';
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateExporter::templateExporter', $this);
+		
 		$this->rootPath = SITE_PATH.'template/';
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateExporter::templateExporter', $this);
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateExporter::setupAdmin', $this);
+		
 		favoriteLinks::add(
 			__('Upload Template'), 
 			'?path=admin/site/template#adminform');
@@ -30,9 +39,15 @@ class _templateExporter {
 		favoriteLinks::add(
 			__('Layout Blocks'), 
 			'?path=admin/site/blocks');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateExporter::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateExporter::setupAdminForm', $this, $form);
+		
 		$row = array(
 			'_Name' => preg_replace('/(-|,|;).*/i', '', strip_tags(PAGE_TITLE)),
 			'_URI' => SITE_URL,
@@ -103,53 +118,83 @@ class _templateExporter {
 			false,
 			$row['_Version']);
 		$form->setStyle('width: 30px;');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateExporter::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateExporter::verifyAdmin', $this, $form);
+		
 		$template = null;
 		
 		if (template::$selected)
 			$template = template::$selected['Name'];
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateExporter::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
-		if (!$file = $this->createTar($template, $form->getPostArray()))
-			return false;
+		$file = $this->createTar($template, $form->getPostArray());
 		
-		tooltip::display(
-			__("Template has been successfully created.")." " .
-			"<a href='".url::uri('request, download') .
-				"&amp;request=".url::path() .
-				"&amp;download=".$file .
-				"&amp;ajax=1'>" .
-				__("Download") .
-			"</a>" .
-			"<script type='text/javascript'>" .
-				"$(document).ready(function() {" .
-					"window.location='".url::uri('request, download') .
-						"&request=".url::path() .
-						"&download=".$file .
-						"&ajax=1';" .
-				"});" .
-			"</script>",
-			TOOLTIP_SUCCESS);
+		if ($file) {
+			tooltip::display(
+				__("Template has been successfully created.")." " .
+				"<a href='".url::uri('request, download') .
+					"&amp;request=".url::path() .
+					"&amp;download=".$file .
+					"&amp;ajax=1'>" .
+					__("Download") .
+				"</a>" .
+				"<script type='text/javascript'>" .
+					"$(document).ready(function() {" .
+						"window.location='".url::uri('request, download') .
+							"&request=".url::path() .
+							"&download=".$file .
+							"&ajax=1';" .
+					"});" .
+				"</script>",
+				TOOLTIP_SUCCESS);
+			
+			$form->reset();
+		}
 		
-		$form->reset();
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'templateExporter::verifyAdmin', $this, $form, $file);
+		
+		return $file;
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateExporter::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateExporter::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateExporter::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Export Template'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateExporter::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateExporter::displayAdminDescription', $this);
+		
 		$template = __("Default");
 		
 		if (template::$selected)
@@ -163,9 +208,15 @@ class _templateExporter {
 					"layout blocks, images, css, js, fonts and all the custom directories " .
 					"found."), $template) .
 			"</p>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateExporter::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateExporter::displayAdmin', $this);
+		
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
 		
@@ -194,6 +245,9 @@ class _templateExporter {
 		
 		echo
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateExporter::displayAdmin', $this);
 	}
 	
 	function createTar($template, $details = null, $gzip = true) {
@@ -413,7 +467,7 @@ class templateInstaller extends template {
 		if (!$code)
 			return false;
 		
-		$code = 
+		return
 			'$layout'.$layout['ID'].' = sql::run(
 			" INSERT INTO `{layouts}` SET" .' .
 			$code.'
@@ -423,8 +477,6 @@ class templateInstaller extends template {
 			return false;
 		
 		';
-		
-		return $code;
 	}
 	
 	function generateBlockCode($block) {
@@ -625,13 +677,22 @@ class templateInstaller extends template {
 			return false;
 		}
 
+		api::callHooks(API_HOOK_BEFORE,
+			'templateExporter::download', $this, $filename);
+		
 		session_write_close();
-		files::display($file, true);
+		$result = files::display($file, true);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateExporter::download', $this, $filename, $result);
 		
 		return true;
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateExporter::ajaxRequest', $this);
+		
 		$download = null;
 		
 		if (isset($_GET['download'])) {
@@ -641,10 +702,14 @@ class templateInstaller extends template {
 				$download = $matches[1];
 		}
 		
+		$result = true;
 		if ($download)
-			return $this->download($download);
+			$result = $this->download($download);
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'templateExporter::ajaxRequest', $this, $result);
+		
+		return $result;
 	}
 }
 

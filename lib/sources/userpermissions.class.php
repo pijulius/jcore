@@ -23,6 +23,9 @@ class _userPermissions {
 	
 	// ************************************************   Admin Part
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::setupAdminForm', $this, $form);
+		
 		$edit = null;
 		
 		if (isset($_GET['edit']))
@@ -118,9 +121,15 @@ class _userPermissions {
 			USER_PERMISSION_TYPE_WRITE | USER_PERMISSION_TYPE_OWN, $this->type2Text(USER_PERMISSION_TYPE_WRITE | USER_PERMISSION_TYPE_OWN));
 		$form->addValue(
 			USER_PERMISSION_TYPE_READ | USER_PERMISSION_TYPE_OWN, $this->type2Text(USER_PERMISSION_TYPE_READ | USER_PERMISSION_TYPE_OWN));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::setupAdminForm', $this, $form);
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Permission'), 
@@ -129,9 +138,15 @@ class _userPermissions {
 		favoriteLinks::add(
 			__('Users'), 
 			'?path=admin/members/users');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::setupAdmin', $this);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::verifyAdmin', $this, $form);
+		
 		$delete = null;
 		$edit = null;
 		$id = null;
@@ -146,24 +161,34 @@ class _userPermissions {
 			$id = (int)$_GET['id'];
 		
 		if ($delete) {
-			if (!$this->delete($id))
-				return false;
-				
-			tooltip::display(
-				__("Permission has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			$result = $this->delete($id);
 			
-			return true;
+			if ($result)
+				tooltip::display(
+					__("Permission has been successfully deleted."),
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if (!$edit && !count($form->get('Paths'))) {
 			tooltip::display(
 				__("No paths have been defined! " .
 					"Please define at least one path to set permission to."),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::verifyAdmin', $this, $form);
 			
 			return false;
 		}
@@ -172,17 +197,20 @@ class _userPermissions {
 			$form->set('Path', 
 				str_replace(' ', '', trim($form->get('Path'), ' /')));
 			
-			if (!$this->edit($id, $form->getPostArray()))
-				return false;
-				
-			tooltip::display(
-				__("Permission has been successfully updated.")." " .
-				"<a href='#adminform'>" .
-					__("Edit") .
-				"</a>",
-				TOOLTIP_SUCCESS);
+			$result = $this->edit($id, $form->getPostArray());
 			
-			return true;
+			if ($result)
+				tooltip::display(
+					__("Permission has been successfully updated.")." " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
 		$paths = $form->get('Paths');
@@ -207,8 +235,12 @@ class _userPermissions {
 					implode(', ', $failedpaths)),
 				TOOLTIP_ERROR);
 			
-			if (!$failedpaths || !count($successpaths))
+			if (!$failedpaths || !count($successpaths)) {
+				api::callHooks(API_HOOK_AFTER,
+					'userPermissions::verifyAdmin', $this, $form);
+				
 				return false;
+			}
 		}
 		
 		tooltip::display(
@@ -218,10 +250,17 @@ class _userPermissions {
 			TOOLTIP_SUCCESS);
 		
 		$form->reset();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::verifyAdmin', $this, $form, $successpaths);
+		
 		return true;
 	}
 	
 	function displayAdminSections() {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::displayAdminSections', $this);
+		
 		echo
 			"<div class='user-permissions-admin-sections'>" .
 				"<div class='form-title'>".__('Available Sections')."</div>" .
@@ -328,28 +367,50 @@ class _userPermissions {
 		
 		echo
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::displayAdminSections', $this);
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Section / Path")."</span></th>" .
 			"<th style='text-align: right;'><span class='nowrap'>".
 				__("Permission")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::displayAdminListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::displayAdminListItem', $this, $row);
+		
 		$pathtitle = null;
 		
 		foreach(admin::$sections as $sectionid => $section) {
@@ -398,12 +459,22 @@ class _userPermissions {
 				$this->type2Text($row['PermissionTypeID']) .
 				"</span>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::displayAdminListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -419,9 +490,15 @@ class _userPermissions {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::displayAdminList', $this, $rows);
+		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>";
@@ -458,34 +535,60 @@ class _userPermissions {
 				"</tbody>" .
 			"</table>" .
 			"<br />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('User Permissions'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::displayAdminDescription', $this);
+		
 		echo "<p>".
 			__("User will have full access to all paths (if marked as Admin) " .
 				"unless you define some paths below.") .
 			"</p>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
 		if ($this->sqlTable == 'userpermissions' && 
 			$GLOBALS['USER']->data['ID'] == admin::getPathID()) 
 		{
+			echo "<br />";
+			
 			tooltip::display(
 				__("You are not allowed to modify your own permissions!"),
 				TOOLTIP_NOTIFICATION);
 			return;
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::displayAdmin', $this);
 		
 		$delete = null;
 		$edit = null;
@@ -567,6 +670,9 @@ class _userPermissions {
 		
 		echo
 			"</div>"; //admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::displayAdmin', $this);
 	}
 	
 	function add($values) {
@@ -589,6 +695,9 @@ class _userPermissions {
 			return false;
 		}
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::add', $this, $values);
+		
 		$newid = sql::run(
 			" INSERT INTO `{".$this->sqlTable."}` SET " .
 			" `".$this->sqlRow."` = " .
@@ -598,13 +707,14 @@ class _userPermissions {
 			" `PermissionTypeID` = '".
 				(int)$values['PermissionTypeID']."'");
 			
-		if (!$newid) {
+		if (!$newid)
 			tooltip::display(
 				sprintf(__("Permission couldn't be set! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::add', $this, $values, $newid);
 		
 		return $newid;
 	}
@@ -633,6 +743,9 @@ class _userPermissions {
 			return false;
 		}
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::edit', $this, $id, $values);
+		
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}` SET ".
 			" `Path` = '".
@@ -641,24 +754,33 @@ class _userPermissions {
 				(int)$values['PermissionTypeID']."'" .
 			" WHERE `ID` = '".(int)$id."'");
 			
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result)
 			tooltip::display(
 				sprintf(__("Permission couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::edit', $this, $id, $values, $result);
+		
+		return $result;
 	}
 	
 	function delete($id) {
 		if (!$id)
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::delete', $this, $id);
+		
 		sql::run(
 			" DELETE FROM `{".$this->sqlTable."}` " .
 			" WHERE `ID` = '".$id."'");
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::delete', $this, $id);
 		
 		return true;
 	}
@@ -794,12 +916,19 @@ class _userPermissions {
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'userPermissions::ajaxRequest', $this);
+		
 		if (!$GLOBALS['USER']->loginok || 
 			!$GLOBALS['USER']->data['Admin']) 
 		{
 			tooltip::display(
 				__("Request can only be accessed by administrators!"),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::ajaxRequest', $this);
+			
 			return true;
 		}
 		
@@ -817,12 +946,23 @@ class _userPermissions {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'userPermissions::ajaxRequest', $this);
+				
 				return true;
 			}
 			
 			$this->displayAdminSections();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::ajaxRequest', $this, $sections);
+			
 			return true;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userPermissions::ajaxRequest', $this);
 		
 		return false;
 	}

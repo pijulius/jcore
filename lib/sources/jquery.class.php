@@ -33,7 +33,13 @@ class _jQuery {
 		'ui.datepicker', 'tipsy');
 		
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'jQuery::jQuery', $this);
+		
 		$this->path = url::jCore();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'jQuery::jQuery', $this);
 	}
 	
 	static function update() {
@@ -108,15 +114,31 @@ class _jQuery {
 		return true;
 	}
 	
-	static function getPlugins() {
-		$plugins = sql::fetch(sql::run(
-			" SELECT `Value` FROM `{settings}`" .
-			" WHERE `ID` = 'jQuery_Load_Plugins'"));
+	static function getPlugins($array = true) {
+		if (defined('JQUERY_LOAD_PLUGINS')) {
+			$plugins = ($array?
+				explode(',', str_replace(' ', '', JQUERY_LOAD_PLUGINS)):
+				JQUERY_LOAD_PLUGINS);
+			
+		} elseif (isset($this) && isset($this->plugins)) {
+			$plugins = (array)$this->plugins;
 		
-		return explode(',', str_replace(' ', '', $plugins['Value']));
+		} else {
+			$jquery = new jQuery();
+			$plugins = $jquery->plugins;
+			unset($jquery);
+		}
+		
+		if ($array || !is_array($plugins))
+			return $plugins;
+		
+		return implode(',', $plugins);
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'jQuery::ajaxRequest', $this);
+		
 		$admin = null;
 		$request = null;
 		
@@ -129,7 +151,12 @@ class _jQuery {
 		if ($admin && 
 			(!defined('JQUERY_LOAD_ADMIN_PLUGINS') || 
 			 !JQUERY_LOAD_ADMIN_PLUGINS))
-			 return true;
+		{
+			api::callHooks(API_HOOK_AFTER,
+				'jQuery::ajaxRequest', $this);
+			
+			return true;
+		}
 		
 		session_write_close();
 		$cachetime = 60*60*24*365;
@@ -140,10 +167,17 @@ class _jQuery {
 		
 		if ($request == 'jquery') {
 			jQuery::displayJS();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'jQuery::ajaxRequest', $this);
+			
 			return true;
 		}
 		
 		jQuery::displayPluginsJS();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'jQuery::ajaxRequest', $this);
 		
 		return true;
 	}
@@ -176,22 +210,13 @@ class _jQuery {
 			return true;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'jQuery::displayPluginsJS', $_ENV);
+		
 		ob_start(array('jQuery', 'compress'));
 		
-		$plugins = null;
+		$plugins = jQuery::getPlugins(false);
 		$jsfiles = array();
-		
-		if (defined('JQUERY_LOAD_PLUGINS')) {
-			$plugins = JQUERY_LOAD_PLUGINS;
-			
-		} elseif (isset($this) && isset($this->plugins)) {
-			$plugins = implode(',', (array)$this->plugins);
-		
-		} else {
-			$jquery = new jQuery();
-			$plugins = implode(',', $jquery->plugins);
-			unset($jquery);
-		}
 		
 		if ($admin && defined('JQUERY_LOAD_ADMIN_PLUGINS') &&
 			JQUERY_LOAD_ADMIN_PLUGINS) 
@@ -280,6 +305,10 @@ class _jQuery {
 			echo @file_get_contents($jsfile)."\n";
 		
 		ob_end_flush();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'jQuery::displayPluginsJS', $_ENV);
+		
 		return true;
 	}
 	
@@ -287,6 +316,9 @@ class _jQuery {
 		if (defined('JQUERY_DISABLED') && JQUERY_DISABLED &&
 			(!isset($GLOBALS['ADMIN']) || !(bool)$GLOBALS['ADMIN']))
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'jQuery::displayPlugins', $_ENV);
 		
 		$filemtime = @filemtime(SITE_PATH.'template/template.js');
 		
@@ -315,6 +347,9 @@ class _jQuery {
 				"' " .
 				"type='text/javascript'>" .
 			"</script>\n";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'jQuery::displayPlugins', $_ENV);
 	}
 	
 	static function displayJS() {
@@ -345,6 +380,9 @@ class _jQuery {
 			return true;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'jQuery::displayJS', $_ENV);
+		
 		ob_start(array('jQuery', 'compress'));
 		
 		echo 
@@ -352,6 +390,10 @@ class _jQuery {
 				FILE_USE_INCLUDE_PATH)."\n";
 		
 		ob_end_flush();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'jQuery::displayJS', $_ENV);
+		
 		return true;
 	}
 	
@@ -359,6 +401,9 @@ class _jQuery {
 		if (defined('JQUERY_DISABLED') && JQUERY_DISABLED &&
 			(!isset($GLOBALS['ADMIN']) || !(bool)$GLOBALS['ADMIN']))
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'jQuery::display', $_ENV);
 		
 		$filemtime = @filemtime(SITE_PATH.'template/template.js');
 		
@@ -395,6 +440,9 @@ class _jQuery {
 					"&amp;".$filemtime.'-v'.JCORE_VERSION."' " .
 					"type='text/javascript'>" .
 				"</script>\n";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'jQuery::display', $_ENV);
 	}
 }
 

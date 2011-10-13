@@ -21,21 +21,36 @@ class _postPictures extends pictures {
 		'admin/content/postsatglance/postpictures');
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postPictures::postPictures', $this);
+		
 		parent::__construct();
 		
 		$this->selectedOwner = __('Post');
 		$this->uriRequest = "posts/".$this->uriRequest;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postPictures::postPictures', $this);
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postPictures::ajaxRequest', $this);
+		
 		if (!posts::checkAccess($this->selectedOwnerID)) {
 			$page = new pages();
 			$page->displayLogin();
 			unset($page);
-			return true;
+			$result = true;
+			
+		} else {
+			$result = parent::ajaxRequest();
 		}
 		
-		return parent::ajaxRequest();
+		api::callHooks(API_HOOK_AFTER,
+			'postPictures::ajaxRequest', $this, $result);
+		
+		return $result;
 	}
 }
 

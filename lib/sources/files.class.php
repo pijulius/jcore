@@ -222,6 +222,9 @@ class _files {
 	}
 	
  	static function upload($file, $to, $filetype = FILE_TYPE_UPLOAD) {
+		api::callHooks(API_HOOK_BEFORE,
+			'files::upload', $_ENV, $file, $to, $filetype);
+		
 		$topath = preg_replace('/(.*(\/|\\\)).*/', '\1', $to);
 		$tofilename = preg_replace('/.*(\/|\\\)/', '', $to);
 		
@@ -274,6 +277,9 @@ class _files {
 							files::humanSize(files::getUploadMaxFilesize())), 
 					TOOLTIP_ERROR);
 				
+				api::callHooks(API_HOOK_AFTER,
+					'files::upload', $_ENV, $file, $to, $filetype);
+				
  				return false;
  			}
  			
@@ -299,6 +305,9 @@ class _files {
 					"would like to upload."), $tofilename),
 				TOOLTIP_ERROR);
 				
+			api::callHooks(API_HOOK_AFTER,
+				'files::upload', $_ENV, $file, $to, $filetype);
+			
 			return false;
 		}
 		
@@ -308,6 +317,9 @@ class _files {
 					str_replace('|', ', ', files::$allowedFileTypes[$filetype])),
 				TOOLTIP_ERROR);
 				
+			api::callHooks(API_HOOK_AFTER,
+				'files::upload', $_ENV, $file, $to, $filetype);
+			
 			return false;
 		}
 		
@@ -318,6 +330,9 @@ class _files {
 					$topath),
 				TOOLTIP_ERROR);
 				
+			api::callHooks(API_HOOK_AFTER,
+				'files::upload', $_ENV, $file, $to, $filetype);
+			
 			return false;
 		}
 		
@@ -327,7 +342,7 @@ class _files {
 			$uploaded = @move_uploaded_file($file, $topath.$tofilename);
  		}
 		
-		if (!$uploaded) {
+		if (!$uploaded)
 			tooltip::display(
 				sprintf(__("File couldn't be saved! This usually means that your " .
 					"file is larger than the allowed upload limit (%s) or something " .
@@ -335,17 +350,23 @@ class _files {
 					"try again or contact webmaster."),
 						files::humanSize(files::getUploadMaxFilesize())), 
 				TOOLTIP_ERROR);
-				
-			return false;
-		}
-
-		return $tofilename;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'files::upload', $_ENV, $file, $to, $filetype, $uploaded, $tofilename);
+		
+		if ($uploaded)
+			return $tofilename;
+		
+		return $uploaded;
  	}
  	
  	static function display($file, $forcedownload = false, $resumable = true) {
  		if (!@is_file($file))
- 			return;
+ 			return false;
  		
+		api::callHooks(API_HOOK_BEFORE,
+			'files::display', $_ENV, $file, $forcedownload, $resumable);
+		
 		$size = @filesize($file);
 		$fileinfo = @pathinfo($file);
 		$filemtime = @filemtime($file);
@@ -408,7 +429,11 @@ class _files {
 			(strtotime((string)$_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $filemtime)) 
 		{
 			header('HTTP/1.0 304 Not Modified');
-			return;
+			
+			api::callHooks(API_HOOK_AFTER,
+				'files::display', $_ENV, $file, $forcedownload, $resumable);
+			
+			return false;
 		}
 		
 		$fp = fopen($file, 'rb');
@@ -424,6 +449,11 @@ class _files {
 		}
 		
 		fclose($fp);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'files::display', $_ENV, $file, $forcedownload, $resumable);
+		
+		return true;
  	}
  	
  	static function humanSize($size) {
@@ -438,53 +468,64 @@ class _files {
  	
  	static function mimeType($file) {
         $type = @exec("file -bi ".escapeshellarg($file));
-        if($type)
-        	return $type;
         
-        $type = files::$mimeTypes[preg_replace('/.*\./', '', $file)];
- 		if ($type)
-        	return $type;
+        if(!$type)
+	        $type = files::$mimeTypes[preg_replace('/.*\./', '', $file)];
         
-        return __("unknown/file");
+        if (!$type)
+        	$type = __("unknown/file");
+        
+		return $type;
  	}
  	
  	static function humanMimeType($file) {
  		$type = @exec("file -b ".escapeshellarg($file));
- 		if ($type)
-        	return $type;
+ 		
+ 		if (!$type)
+	        $type = files::$mimeTypes[preg_replace('/.*\./', '', $file)];
         
-        $type = files::$mimeTypes[preg_replace('/.*\./', '', $file)];
- 		if ($type)
-        	return $type;
+        if (!$type)
+        	$type = __("Unknown File Type");
         
-        return __("Unknown File Type");
+        return $type;
  	}
  	
  	static function ext2MimeClass($file) {
+		api::callHooks(API_HOOK_BEFORE,
+			'files::ext2MimeClass', $_ENV, $file);
+		
 		if (preg_match('/\.(7z|rar|gz|gzip|tar|tgz|zip)$/i', $file))
-			return "mime-type-package";
+			$result = "mime-type-package";
 		
-		if (preg_match('/\.(gif|bmp|jpeg|jpg|png|tif|tiff)$/i', $file))
-			return "mime-type-photo";
+		else if (preg_match('/\.(gif|bmp|jpeg|jpg|png|tif|tiff)$/i', $file))
+			$result = "mime-type-photo";
 		
-		if (preg_match('/\.(asf|avi|mov|fla|flv|mid|mp3|mp4|mpc|mpeg|mpg|rm|qt|ram|swf|wav|wma|wmv)$/i', $file))
-			return "mime-type-multimedia";
+		else if (preg_match('/\.(asf|avi|mov|fla|flv|mid|mp3|mp4|mpc|mpeg|mpg|rm|qt|ram|swf|wav|wma|wmv)$/i', $file))
+			$result = "mime-type-multimedia";
 		
-		if (preg_match('/\.(csv|doc|pdf|ppt|rtf|xls)$/i', $file))
-			return "mime-type-office";
+		else if (preg_match('/\.(csv|doc|pdf|ppt|rtf|xls)$/i', $file))
+			$result = "mime-type-office";
 		
-		if (preg_match('/\.(txt|xml)$/i', $file))
-			return "mime-type-text";
+		else if (preg_match('/\.(txt|xml)$/i', $file))
+			$result = "mime-type-text";
 		
-		if (preg_match('/\.(patch)$/i', $file))
-			return "mime-type-patch";
+		else if (preg_match('/\.(patch)$/i', $file))
+			$result = "mime-type-patch";
 		
-		if (preg_match('/\.(sql)$/i', $file))
-			return "mime-type-db";
+		else if (preg_match('/\.(sql)$/i', $file))
+			$result = "mime-type-db";
+		
+		else
+			$result = "mime-type-unknown";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'files::ext2MimeClass', $_ENV, $file, $result);
+		
+		return $result;
  	}
  	
  	static function exists($file) {
- 		return file_exists($file);
+ 		return @file_exists($file);
  	}
  	
  	static function isWritable($file) {
@@ -526,12 +567,10 @@ class _files {
  					strtoupper(__("Error")) .
 					"</b>" .
 					" (".__("not writable").")<br />";
- 			
- 			return false;
+ 		} else {
+	 		if ($debug || files::$debug)
+				echo "<b>".strtoupper(__("Ok"))."</b><br />";
  		}
- 		
- 		if ($debug || files::$debug)
-			echo "<b>".strtoupper(__("Ok"))."</b><br />";
 		
 		return $result;
  	}
@@ -601,6 +640,7 @@ class _files {
 		   			$data .= @fread($fp, 8192);
 				
 				fclose($fp);
+				
 				return $data;
 			}
 		}
@@ -614,10 +654,7 @@ class _files {
 		if ($dir && !is_dir($dir) && !@mkdir($dir, 0777, true))
 			return false;
  		
- 		if (@file_put_contents($file, $data) === false)
- 			return false;
- 		
- 		return true;
+ 		return (@file_put_contents($file, $data) !== false);
  	}
  	
  	static function save($file, $data = null, $debug = false) {
@@ -626,21 +663,19 @@ class _files {
  		
  		$result = @files::create($file, $data);
  		
- 		if (!$result) {
- 			if ($debug || files::$debug)
+ 		if ($debug || files::$debug) {
+	 		if (!$result)
  				echo "<b class='red'>" .
  					strtoupper(__("Error")) .
 					"</b>" .
 					" (".__("not writable").")<br />";
- 			
- 			return false;
+			
+ 			else
+				echo "<b>" .
+					strtoupper(__("Ok")). 
+					"</b>" .
+					" (".files::humanSize(strlen($data)).")<br />";
  		}
- 		
- 		if ($debug || files::$debug)
-			echo "<b>" .
-				strtoupper(__("Ok")). 
-				"</b>" .
-				" (".files::humanSize(strlen($data)).")<br />";
 		
  		return $result;
  	}

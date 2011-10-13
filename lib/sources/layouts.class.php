@@ -14,14 +14,24 @@ class _layouts {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::countAdminItems', $this);
+		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{layouts}`" .
 			" LIMIT 1"));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::countAdminItems', $this, $row['Rows']);
+		
 		return $row['Rows'];
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Layout'), 
@@ -34,9 +44,15 @@ class _layouts {
 			__('Pages / Posts'), 
 			'?path=' .
 			(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::setupAdminForm', $this, $form);
+		
 		$form->add(
 			__('Title'),
 			'Title',
@@ -73,9 +89,15 @@ class _layouts {
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::verifyAdmin', $this, $form);
+		
 		$reorder = null;
 		$orders = null;
 		$delete = null;
@@ -98,7 +120,7 @@ class _layouts {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
-			foreach($orders as $oid => $ovalue) {
+			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{layouts}` " .
 					" SET `OrderID` = '".(int)$ovalue."'" .
@@ -109,75 +131,114 @@ class _layouts {
 				__("Layouts have been successfully re-ordered."),
 				TOOLTIP_SUCCESS);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'layouts::verifyAdmin', $this, $form, $reorder);
+			
 			return true;
 		}
 		
 		if ($delete && $id) {
-			if (!$this->delete($id))
-				return false;
-				
-			tooltip::display(
-				__("Layout has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			$result = $this->delete($id);
 			
-			return true;
+			if ($result)
+				tooltip::display(
+					__("Layout has been successfully deleted."),
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'layouts::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'layouts::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if ($edit) {
-			if (!$this->edit($id, $form->getPostArray()))
-				return false;
-				
+			$result = $this->edit($id, $form->getPostArray());
+			
+			if ($result)
+				tooltip::display(
+					__("Layout has been successfully updated.")." " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'layouts::verifyAdmin', $this, $form, $result);
+			
+			return $result;
+		}
+		
+		$newid = $this->add($form->getPostArray());
+		
+		if ($newid) {
 			tooltip::display(
-				__("Layout has been successfully updated.")." " .
-				"<a href='#adminform'>" .
+				__("Layout has been successfully created.")." " .
+				"<a href='".url::uri('id, edit, delete') .
+					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
-			
-			return true;
+				
+			$form->reset();
 		}
 		
-		if (!$newid = $this->add($form->getPostArray()))
-			return false;
-				
-		tooltip::display(
-			__("Layout has been successfully created.")." " .
-			"<a href='".url::uri('id, edit, delete') .
-				"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-				__("Edit") .
-			"</a>",
-			TOOLTIP_SUCCESS);
-			
-		$form->reset();
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::verifyAdmin', $this, $form, $newid);
+		
+		return $newid;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Order")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Title")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::displayAdminListHeaderOptions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Blocks")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::displayAdminListItem', $this, $row);
+		
 		echo
 			"<td>" .
 				"<input type='text' name='orders[".$row['ID']."]' " .
@@ -193,9 +254,15 @@ class _layouts {
 					$row['Title'] .
 				"</div>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::displayAdminListItemOptions', $this, $row);
+		
 		$blocks = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{blocks}`" .
@@ -214,9 +281,15 @@ class _layouts {
 		echo
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -232,17 +305,29 @@ class _layouts {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::displayAdminListFunctions', $this);
+		
 		echo 
 			"<input type='submit' name='reordersubmit' value='".
 				htmlspecialchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::displayAdminList', $this, $rows);
+		
 		echo
 			"<form action='".url::uri('edit, delete')."' method='post'>";
 		
@@ -293,22 +378,44 @@ class _layouts {
 				
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Layouts Administration'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::displayAdmin', $this);
+		
 		$delete = null;
 		$edit = null;
 		$id = null;
@@ -388,11 +495,17 @@ class _layouts {
 		
 		echo 
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::displayAdmin', $this);
 	}
 	
 	function add($values) {
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::add', $this, $values);
 		
 		if ($values['OrderID'] == '') {
 			$row = sql::fetch(sql::run(
@@ -424,13 +537,14 @@ class _layouts {
 			" `OrderID` = '".
 				(int)$values['OrderID']."'");
 		
-		if (!$newid) {
+		if (!$newid)
 			tooltip::display(
 				sprintf(__("Layout couldn't be created! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::add', $this, $values, $newid);
 		
 		return $newid;
 	}
@@ -441,6 +555,9 @@ class _layouts {
 		
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::edit', $this, $id, $values);
 		
 		sql::run(
 			" UPDATE `{layouts}` SET ".
@@ -455,20 +572,26 @@ class _layouts {
 				(int)$values['OrderID']."'" .
 			" WHERE `ID` = '".(int)$id."'");
 		
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result)
 			tooltip::display(
 				sprintf(__("Layout couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::edit', $this, $id, $values, $result);
+		
+		return $result;
 	}
 	
 	function delete($id) {
 		if (!$id)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'layouts::delete', $this, $id);
 		
 		sql::run(
 			" DELETE FROM `{layouts}` " .
@@ -477,6 +600,9 @@ class _layouts {
 		sql::run(
 			" DELETE FROM `{blocks}` " .
 			" WHERE `LayoutID` = '".(int)$id."'");
+		
+		api::callHooks(API_HOOK_AFTER,
+			'layouts::delete', $this, $id);
 		
 		return true;
 	}

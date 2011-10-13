@@ -57,6 +57,9 @@ class _security {
 	var $adminPath = 'admin/site/security';
 	
 	function countAdminItems() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::countAdminItems', $this);
+		
 		$bfrow = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{bfprotectionbans}`" .
@@ -67,19 +70,33 @@ class _security {
 			" FROM `{ptprotectionbans}`" .
 			" LIMIT 1"));
 		
-		return $bfrow['Rows']+$ptrow['Rows'];
+		$result = $bfrow['Rows']+$ptrow['Rows'];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::countAdminItems', $this, $result);
+		
+		return $result;
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::setupAdmin', $this);
+		
 		favoriteLinks::add(
 			__('More Settings'), 
 			'?path=admin/site/settings');
 		favoriteLinks::add(
 			__('Users'), 
 			'?path=admin/members/users');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::setupAdmin', $this);
 	}
 	
 	function verifyAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::verifyAdmin', $this);
+		
 		$bfon = null;
 		$pton = null;
 		$ip = null;
@@ -99,64 +116,82 @@ class _security {
 			
 		if (isset($bfon)) {
 			if ($bfon) {
-				$this->switchBF(true);
+				$result = $this->switchBF(true);
 				tooltip::display(
 					__("Brute Force Protection has been turned ON."),
 					TOOLTIP_SUCCESS);
 				
 			} else {
-				$this->switchBF(false);
+				$result = $this->switchBF(false);
 				tooltip::display(
 					__("Brute Force Protection has been turned OFF."),
 					TOOLTIP_SUCCESS);
 			}
+			
+			api::callHooks(API_HOOK_AFTER,
+				'security::verifyAdmin', $this, $bfon, $result);
 			
 			return true;
 		}
 		
 		if (isset($pton)) {
 			if ($pton) {
-				$this->switchPT(true);
+				$result = $this->switchPT(true);
 				tooltip::display(
 					__("Password Trading Protection has been turned ON."),
 					TOOLTIP_SUCCESS);
 				
 			} else {
-				$this->switchPT(false);
+				$result = $this->switchPT(false);
 				tooltip::display(
 					__("Password Trading Protection has been turned OFF."),
 					TOOLTIP_SUCCESS);
 			}
 			
+			api::callHooks(API_HOOK_AFTER,
+				'security::verifyAdmin', $this, $pton, $result);
+			
 			return true;
 		}
 		
 		if ($delete && isset($ip)) {
-			$this->deleteBFBan($ip);
+			$result = $this->deleteBFBan($ip);
 			
-			tooltip::display(
-				sprintf(__("IP \"%s\" has been successfully removed from the list."),
-					security::long2ip($ip)),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					sprintf(__("IP \"%s\" has been successfully removed from the list."),
+						security::long2ip($ip)),
+					TOOLTIP_SUCCESS);
 			
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'security::verifyAdmin', $this, $ip, $result);
+			
+			return $result;
 		}
 		
 		if ($delete && $userid) {
-			$this->deletePTBan($userid);
+			$result = $this->deletePTBan($userid);
+			
+			if ($result) {
+				$user = $GLOBALS['USER']->get($userid);
 				
-			$user = $GLOBALS['USER']->get($userid);
+				tooltip::display(
+					sprintf(__("User \"%s\" has been successfully removed from the list."),
+						$user['UserName']),
+					TOOLTIP_SUCCESS);
+			}
 			
-			tooltip::display(
-				sprintf(__("User \"%s\" has been successfully removed from the list."),
-					$user['UserName']),
-				TOOLTIP_SUCCESS);
+			api::callHooks(API_HOOK_AFTER,
+				'security::verifyAdmin', $this, $userid, $result);
 			
-			return true;
+			return $result;
 		}
 	}
 	
 	function displayAdminBFListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminBFListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("IP")."</span></th>" .
@@ -164,18 +199,34 @@ class _security {
 				__("Usernames used")."</span></th>" .
 			"<th style='text-align: right;'><span class='nowrap'>".
 				__("Expires on")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminBFListHeader', $this);
 	}
 	
 	function displayAdminBFListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminBFListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminBFListHeaderOptions', $this);
 	}
 	
 	function displayAdminBFListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminBFListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminBFListHeaderFunctions', $this);
 	}
 	
 	function displayAdminBFListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminBFListItem', $this, $row);
+		
 		echo
 			"<td>" .
 				"<span class='nowrap bold'>" .
@@ -190,12 +241,22 @@ class _security {
 				calendar::datetime($row['EndTimeStamp']) .
 				"</span>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminBFListItem', $this, $row);
 	}
 	
 	function displayAdminBFListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminBFListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminBFListItemOptions', $this, $row);
 	}
 	
 	function displayAdminBFListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminBFListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
@@ -204,9 +265,15 @@ class _security {
 					"&amp;ip=".$row['IP']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminBFListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminBFListFooter() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminBFListFooter', $this);
+		
 		echo 
 			"<p class='comment'>" .
 				__("For additional brute force protection settings please see") .
@@ -215,9 +282,15 @@ class _security {
 					__("Global Settings") .
 				"</a>." .
 			"</p>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminBFListFooter', $this);
 	}
 	
 	function displayAdminBFList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminBFList', $this, $rows);
+		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>";
@@ -255,9 +328,15 @@ class _security {
 			"</table>";
 		
 		$this->displayAdminBFListFooter();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminBFList', $this, $rows);
 	}
 	
 	function displayAdminBFFunctions($bfenabled = true) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminBFFunctions', $this, $bfenabled);
+		
 		echo
 			"<div class='button'>" .
 				"<a title='".htmlspecialchars(__("Turn Protection On/Off"), ENT_QUOTES)."' " .
@@ -272,9 +351,15 @@ class _security {
 						__("Turn ON")) .
 				"</a>" .
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminBFFunctions', $this, $bfenabled);
 	}
 	
 	function displayAdminBFTitle($bfenabled = true) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminBFTitle', $this, $bfenabled);
+		
 		echo
 			"<b>" .
 			__("Brute Force Protection") .
@@ -284,9 +369,15 @@ class _security {
 					"<span class='red'>".__("OFF")."</span>") .
 				")" .
 			"</b>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminBFTitle', $this, $bfenabled);
 	}
 	
 	function displayAdminBFDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminBFDescription', $this);
+		
 		echo
 			"<p class='comment'>" .
 			__("The logged IP adresses in the list below have been banned " .
@@ -294,9 +385,15 @@ class _security {
 				"and won't be able to login until expiration date / time. " .
 				"To unban an IP just delete it from the list.") .
 			"</p>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminBFDescription', $this);
 	}
 	
 	function displayAdminPTListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminPTListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("User")."</span></th>" .
@@ -304,18 +401,34 @@ class _security {
 				__("IPs used")."</span></th>" .
 			"<th style='text-align: right;'><span class='nowrap'>".
 				__("Expires on")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminPTListHeader', $this);
 	}
 	
 	function displayAdminPTListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminPTListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminPTListHeaderOptions', $this);
 	}
 	
 	function displayAdminPTListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminPTListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminPTListHeaderFunctions', $this);
 	}
 	
 	function displayAdminPTListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminPTListItem', $this, $row);
+		
 		$user = $GLOBALS['USER']->get($row['UserID']);
 			
 		echo
@@ -335,12 +448,22 @@ class _security {
 				calendar::datetime($row['EndTimeStamp']) .
 				"</span>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminPTListItem', $this, $row);
 	}
 	
 	function displayAdminPTListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminPTListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminPTListItemOptions', $this, $row);
 	}
 	
 	function displayAdminPTListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminPTListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
@@ -349,9 +472,15 @@ class _security {
 					"&amp;userid=".$row['UserID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminPTListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminPTListFooter() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminPTListFooter', $this);
+		
 		echo 
 			"<p class='comment'>" .
 				__("For additional password trading protection settings please see") .
@@ -360,9 +489,15 @@ class _security {
 					__("Global Settings") .
 				"</a>." .
 			"</p>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminPTListFooter', $this);
 	}
 	
 	function displayAdminPTList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminPTList', $this, $rows);
+		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>";
@@ -400,9 +535,15 @@ class _security {
 			"</table>";
 		
 		$this->displayAdminPTListFooter();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminPTList', $this, $rows);
 	}
 	
 	function displayAdminPTFunctions($ptenabled = true) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminPTFunctions', $this, $ptenabled);
+		
 		echo
 			"<div class='button'>" .
 				"<a title='".htmlspecialchars(__("Turn Protection On/Off"), ENT_QUOTES)."' " .
@@ -417,9 +558,15 @@ class _security {
 						__("Turn ON")) .
 				"</a>" .
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminPTFunctions', $this, $ptenabled);
 	}
 	
 	function displayAdminPTTitle($ptenabled = true) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminPTTitle', $this, $ptenabled);
+		
 		echo
 			"<b>" .
 			__("Password Trading Protection") .
@@ -429,9 +576,15 @@ class _security {
 					"<span class='red'>".__("OFF")."</span>") .
 				")" .
 			"</b>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminPTTitle', $this, $ptenabled);
 	}
 	
 	function displayAdminPTDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminPTDescription', $this);
+		
 		echo
 			"<p class='comment'>" .
 			__("The logged Users in the list below have been suspended " .
@@ -439,26 +592,41 @@ class _security {
 				"and won't be able to login until expiration date / time. " .
 				"To unsuspend a user just delete it from the list.") .
 			"</p>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminPTDescription', $this);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__("Security Alerts Administration"),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::displayAdmin', $this);
+		
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
 		
 		$this->verifyAdmin();
-		$settings = new settings();
 		
-		$bfenabled = $settings->get('Brute_Force_Protection_Enabled');
-		$ptenabled = $settings->get('Password_Trading_Protection_Enabled');
+		$bfenabled = settings::get('Brute_Force_Protection_Enabled');
+		$ptenabled = settings::get('Password_Trading_Protection_Enabled');
 		
 		if (!isset($bfenabled))
 			$bfenabled = BRUTE_FORCE_PROTECTION_ENABLED;
@@ -528,36 +696,30 @@ class _security {
 		echo
 			"</div>"; //admin-content
 		
-		unset($settings);
+		api::callHooks(API_HOOK_AFTER,
+			'security::displayAdmin', $this);
 	}
 	
 	function switchBF($on) {
-		$settings = new settings();
-			
 		if ($on)
-			$set = $settings->edit('Brute_Force_Protection_Enabled', 1);
-		else
-			$set = $settings->edit('Brute_Force_Protection_Enabled', 0);
+			return settings::set('Brute_Force_Protection_Enabled', 1);
 		
-		unset($settings);
-		return $set;
+		return settings::set('Brute_Force_Protection_Enabled', 0);
 	}
 	
 	function switchPT($on) {
-		$settings = new settings();
-		
 		if ($on)
-			$set = $settings->edit('Password_Trading_Protection_Enabled', 1);
-		else
-			$set = $settings->edit('Password_Trading_Protection_Enabled', 0);
+			return settings::set('Password_Trading_Protection_Enabled', 1);
 		
-		unset($settings);
-		return $set;
+		return settings::set('Password_Trading_Protection_Enabled', 0);
 	}
 	
 	function deleteBFBan($ip) {
 		if (!isset($ip))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'security::deleteBFBan', $this, $ip);
 		
 		sql::run(
 			" DELETE FROM `{bfprotectionbans}`" .
@@ -567,6 +729,9 @@ class _security {
 			" DELETE FROM `{bfprotection}`" .
 			" WHERE `IP` = '".$ip."'");
 		
+		api::callHooks(API_HOOK_AFTER,
+			'security::deleteBFBan', $this, $ip);
+		
 		return true;
 	}
 	
@@ -574,14 +739,23 @@ class _security {
 		if (!$userid)
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'security::deletePTBan', $this, $userid);
+		
 		sql::run(
 			" DELETE FROM `{ptprotectionbans}`" .
 			" WHERE `UserID` = '".$userid."'");
+		
+		api::callHooks(API_HOOK_AFTER,
+			'security::deletePTBan', $this, $userid);
 		
 		return true;
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::ajaxRequest', $this);
+		
 		$scimage = null;
 		$newsession = null;
 		
@@ -591,18 +765,23 @@ class _security {
 		if (isset($_GET['regeneratesessionid']))
 			$newsession = (int)$_GET['regeneratesessionid'];
 		
+		$result = false;
+		
 		if ($scimage) {
 			$this->genImageCode();
-			return true;
+			$result = true;
 		}
 		
 		if ($newsession) {
 			session_start();
   			session_regenerate_id();
-  			return true;
+  			$result = true;
 		}
 		
-		return false;
+		api::callHooks(API_HOOK_AFTER,
+			'security::ajaxRequest', $this, $result);
+		
+		return $result;
 	}
 	
 	static function closeTags($html) {
@@ -654,6 +833,7 @@ class _security {
 				$str.=chr($random);
 			}
 		}
+		
 		return $str;
 	}
 
@@ -666,15 +846,14 @@ class _security {
 				@$_POST["recaptcha_response_field"]);
 			
 			return $resp->is_valid;
+			
 		}
 		
 		global $_COOKIE;
 		
 		if ($scimagecode && $_COOKIE['scimagestr'] && 
 			$_COOKIE['scimagestr'] == md5(SITE_PATH.WEBMASTER_EMAIL.SQL_USER.$scimagecode)) 
-		{
 			return true;
-		}
 		
 		return false;
 	}
@@ -855,6 +1034,9 @@ class _security {
 		if (fseek($fp, $length*$line) == -1)
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'security::randomWord', $_ENV, $extended);
+		
 		$word = trim(fgets($fp));
 		fclose($fp);
 		
@@ -871,10 +1053,16 @@ class _security {
 			$word = implode('', $word);
 		}
 
+		api::callHooks(API_HOOK_AFTER,
+			'security::randomWord', $_ENV, $extended, $word);
+		
 		return $word;
 	}
 	 
 	static function randomChars($length = 5, $numbers = true) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::randomChars', $_ENV, $length, $numbers);
+		
 		$chars = null;
 		
 		for ($i = 0; $i < $length; $i++) {
@@ -892,20 +1080,31 @@ class _security {
 				$chars .= rand(0, 9);
 		}
 			
+		api::callHooks(API_HOOK_AFTER,
+			'security::randomChars', $_ENV, $length, $numbers);
+		
 		return $chars;		
 	}
 	
 	static function genPassword($salt = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'security::genPassword', $_ENV, $salt);
+		
     	if ($salt === null) {
 			$salt = security::salt();
 		} else {
 			$salt = substr($salt, 0, SECURITY_SALT_LENGTH);
 		}
 		
-		return
+		$result =
 			'P' .
 			substr(md5($salt.time()), 0, 5) .
-			security::randomChars();		
+			security::randomChars();
+				
+		api::callHooks(API_HOOK_AFTER,
+			'security::genPassword', $_ENV, $salt, $result);
+		
+		return $result;
 	}
 	
 	static function genToken($lifetime = 10800) {
@@ -946,7 +1145,6 @@ class _security {
 			
 			if ($hash)
 				return $hash;
-			
 		}
 		
 		if (CRYPT_MD5 == 1) {
@@ -972,16 +1170,18 @@ class _security {
 		elseif (strlen($salt) < SECURITY_SALT_LENGTH)
 			$salt = $salt.security::salt(SECURITY_SALT_LENGTH - strlen($salt));
 		
-    	return 
+    	$hash =
     		$salt.sha1($salt.$text);
+    	
+    	return $hash;
 	}
 	
 	static function checkHash($text, $hash) {
 		if (strpos($hash, '$') === 0)
-			return crypt($text, $hash) == $hash;
-		
+			return (crypt($text, $hash) == $hash);
+			
 		$salt = substr($hash, 0, SECURITY_SALT_LENGTH);
-		return $salt.sha1($salt.$text) == $hash;
+		return ($salt.sha1($salt.$text) == $hash);
 	}
 	
 	static function salt($length = SECURITY_SALT_LENGTH) {
@@ -1066,6 +1266,7 @@ class _security {
     			$r_ip .= str_pad(base_convert($v, 16, 2), 16, 0, STR_PAD_LEFT) ;
     		
 			return base_convert($r_ip, 2, 10);
+			
 		}
 		
 		return ip2long($ip);
@@ -1094,6 +1295,7 @@ class _security {
 			}
 			
 			return inet_ntop(inet_pton(substr($ipv6,0,-1)));
+			
 		}
 		
 		return long2ip($long);
@@ -1107,10 +1309,10 @@ class _security {
 		if (!$availablememory)
 			return false;
 			
-		if ($memoryneeded+memory_get_usage() < $availablememory)
-			return false;
+		if ($memoryneeded+memory_get_usage() > $availablememory)
+			return true;
 			
-		return true;
+		return false;
 	}
 }
 

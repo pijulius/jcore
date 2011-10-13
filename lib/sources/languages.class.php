@@ -38,22 +38,39 @@ class _languages {
 	static $selectedLocale = '';
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::languages', $this);
+		
 		if (isset($_GET['languageid']))
 			$this->selectedID = (int)$_GET['languageid'];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::languages', $this);
 	}
 	
 	function SQL() {
-		return
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::SQL', $this);
+		
+		$sql =
 			" SELECT * FROM `{languages}` " .
 			" WHERE `Deactivated` = 0" .
 			" ORDER BY" .
 			(JCORE_VERSION >= '0.7'?
 				" `OrderID`,":
 				null) .
-			" `ID`";		
+			" `ID`";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::languages', $this, $sql);
+		
+		return $sql;		
 	}
 	
 	static function populate() {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::populate', $_ENV);
+		
 		if (!isset($_GET['languageid']))
 			$_GET['languageid'] = 0;
 		
@@ -61,6 +78,10 @@ class _languages {
 			//We always set the default for admin so you can have it in different 
 			//language independent of the default language set for the website
 			languages::setDefault();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'languages::populate', $_ENV);
+			
 			return false;
 		}
 		
@@ -87,24 +108,37 @@ class _languages {
 			languages::$selected = $selected;
 			$_GET['languageid'] = $selected['ID'];
 			languages::set($selected['Locale']);
-			return;
+			
+		} else {
+			//We set a default language so you can translate a site without languages too
+			languages::setDefault();
+			$_GET['languageid'] = 0;
 		}
 		
-		//We set a default language so you can translate a site without languages too
-		languages::setDefault();
-		$_GET['languageid'] = 0;
+		api::callHooks(API_HOOK_AFTER,
+			'languages::populate', $_ENV);
 	}
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::countAdminItems', $this);
+		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{languages}`" .
 			" LIMIT 1"));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::countAdminItems', $this, $row['Rows']);
+		
 		return $row['Rows'];
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Language'), 
@@ -117,9 +151,15 @@ class _languages {
 		favoriteLinks::add(
 			__('Blocks'), 
 			'?path=admin/site/blocks');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::setupAdminForm', $this, $form);
+		
 		$form->add(
 			__('Title'),
 			'Title',
@@ -198,9 +238,15 @@ class _languages {
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::verifyAdmin', $this, $form);
+		
 		$reorder = null;
 		$orders = null;
 		$delete = null;
@@ -223,10 +269,7 @@ class _languages {
 			$id = (int)$_GET['id'];
 		
 		if (JCORE_VERSION >= '0.7' && $reorder) {
-			if (!$orders)
-				return false;
-			
-			foreach($orders as $oid => $ovalue) {
+			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{languages}` " .
 					" SET `OrderID` = '".(int)$ovalue."'" .
@@ -237,64 +280,85 @@ class _languages {
 				__("Languages have been successfully re-ordered."),
 				TOOLTIP_SUCCESS);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'languages::verifyAdmin', $this, $form, $reorder);
+			
 			return true;
 		}
 		
 		if ($delete) {
-			if (!$this->delete($id))
-				return false;
+			$result = $this->delete($id);
 			
-			tooltip::display(
-				__("Language has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Language has been successfully deleted."),
+					TOOLTIP_SUCCESS);
 			
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'languages::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'languages::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 			
 		if (!$form->get('Path'))
 			$form->set('Path', url::genPathFromString($form->get('Title')));
 		
 		if ($edit) {
-			if (!$this->edit($id, $form->getPostArray()))
-				return false;
-				
+			$result = $this->edit($id, $form->getPostArray());
+			
+			if ($result)
+				tooltip::display(
+					__("Language has been successfully updated.")." " .
+					"<a href='?path=".(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems')."'>" .
+						__("View Pages") .
+					"</a>" .
+					" - " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'languages::verifyAdmin', $this, $form, $result);
+			
+			return $result;
+		}
+		
+		$newid = $this->add($form->getPostArray());
+		
+		if ($newid) {
 			tooltip::display(
-				__("Language has been successfully updated.")." " .
+				__("Language has been successfully created.")." " .
 				"<a href='?path=".(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems')."'>" .
 					__("View Pages") .
 				"</a>" .
 				" - " .
-				"<a href='#adminform'>" .
+				"<a href='".url::uri('id, edit, delete') .
+					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
 			
-			return true;
+			$form->reset();
 		}
 		
-		if (!$newid = $this->add($form->getPostArray()))
-			return false;
+		api::callHooks(API_HOOK_AFTER,
+			'languages::verifyAdmin', $this, $form, $result);
 		
-		tooltip::display(
-			__("Language has been successfully created.")." " .
-			"<a href='?path=".(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems')."'>" .
-				__("View Pages") .
-			"</a>" .
-			" - " .
-			"<a href='".url::uri('id, edit, delete') .
-				"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-				__("Edit") .
-			"</a>",
-			TOOLTIP_SUCCESS);
-		
-		$form->reset();
-		return true;
+		return $newid;
 	}
 	
 	function displayAdminAvailableLocales() {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayAdminAvailableLocales', $this);
+		
 		if (!isset($_GET['ajaxlimit']))
 			echo
 				"<div class='languages-available-locales'>";
@@ -417,9 +481,15 @@ class _languages {
 		if (!isset($_GET['ajaxlimit']))
 			echo
 				"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayAdminAvailableLocales', $this);
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayAdminListHeader', $this);
+		
 		if (JCORE_VERSION >= '0.7')
 			echo
 				"<th><span class='nowrap'>".
@@ -432,20 +502,36 @@ class _languages {
 				__("Default")."</span></th>" .
 			"<th style='text-align: right;'><span class='nowrap'>".
 				__("Locale")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayAdminListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayAdminListItem', $this, $row);
+		
 		if (JCORE_VERSION >= '0.7')
 			echo
 				"<td>" .
@@ -475,12 +561,22 @@ class _languages {
 				$row['Locale'] .
 				"</span>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayAdminListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -496,17 +592,29 @@ class _languages {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayAdminListFunctions', $this);
+		
 		echo
 			"<input type='submit' name='reordersubmit' value='".
 				htmlspecialchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayAdminList', $this, $rows);
+		
 		if (JCORE_VERSION >= '0.7') {
 			echo
 				"<form action='".url::uri('edit, delete')."' method='post'>";
@@ -561,22 +669,44 @@ class _languages {
 			echo
 				"</form>";
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Languages Administration'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayAdmin', $this);
+		
 		$delete = null;
 		$edit = null;
 		$id = null;
@@ -657,11 +787,17 @@ class _languages {
 		
 		echo 
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayAdmin', $this);
 	}
 	
 	function add($values) {
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::add', $this, $values);
 		
 		if (JCORE_VERSION >= '0.7') {
 			if ($values['OrderID'] == '') {
@@ -709,13 +845,14 @@ class _languages {
 					'0').
 				"'");
 			
-		if (!$newid) {
+		if (!$newid)
 			tooltip::display(
 				sprintf(__("Language couldn't be created! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::add', $this, $values, $newid);
 		
 		return $newid;
 	}
@@ -726,6 +863,9 @@ class _languages {
 		
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::edit', $this, $id, $values);
 		
 		if ($values['Default']) {
 			sql::run(
@@ -756,21 +896,27 @@ class _languages {
 					'0').
 				"'" .
 			" WHERE `ID` = '".(int)$id."'");
-			
-		if (sql::affected() == -1) {
+		
+		$result = (sql::affected() != -1);
+		
+		if (!$result)	
 			tooltip::display(
 				sprintf(__("Language couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'languages::edit', $this, $id, $values, $result);
+		
+		return $result;
 	}
 	
 	function delete($id) {
 		if (!$id)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::delete', $this, $id);
 		
 		sql::run(
 			" DELETE FROM `{languages}` " .
@@ -790,6 +936,9 @@ class _languages {
 			" SET `LanguageID` = 0" .
 			" WHERE `LanguageID` = '".$id."'");
 			
+		api::callHooks(API_HOOK_AFTER,
+			'languages::delete', $this, $id);
+		
 		return true;
 	}
 	
@@ -937,18 +1086,16 @@ class _languages {
 			" `ID`"));
 		
 		if ($languageids)
-			$languageids = explode('|', $languageids['IDs']);
+			return explode('|', $languageids['IDs']);
 		
-		return $languageids;
+		return null;
 	}
 	
 	static function getDefault() {
-		$row = sql::fetch(sql::run(
+		return sql::fetch(sql::run(
 			" SELECT * FROM `{languages}`" .
 			" WHERE `Default` = 1" .
 			" LIMIT 1"));
-		
-		return $row;
 	}
 	
 	static function getSelected() {
@@ -956,19 +1103,26 @@ class _languages {
 	}
 	
 	static function getSelectedID () {
-		if (!languages::$selected)
-			return 0;
+		if (languages::$selected)
+			return languages::$selected['ID'];
 		
-		return languages::$selected['ID'];
+		return 0;
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::ajaxRequest', $this);
+		
 		if (!$GLOBALS['USER']->loginok || 
 			!$GLOBALS['USER']->data['Admin']) 
 		{
 			tooltip::display(
 				__("Request can only be accessed by administrators!"),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'languages::ajaxRequest', $this);
+			
 			return true;
 		}
 		
@@ -986,26 +1140,47 @@ class _languages {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'languages::ajaxRequest', $this);
+				
 				return true;
 			}
 			
+			$result = true;
 			$this->displayAdminAvailableLocales();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'languages::ajaxRequest', $this, $result);
+			
 			return true;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::ajaxRequest', $this);
 		
 		return false;
 	}
 	
 	function displayTitle(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayTitle', $this, $row);
+		
 		echo 
 			"<a href='".$row['_Link']."'>" .
 				"<span>" .
 				$row['Title'] .
 				"</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayTitle', $this, $row);
 	} 
 	
 	function displayOne(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayOne', $this, $row);
+		
 		$translatedpage = null;
 		
 		if (pages::$selected)
@@ -1048,11 +1223,17 @@ class _languages {
 		
 		echo
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayOne', $this, $row);
 	}
 	
 	function displayArguments() {
 		if (!$this->arguments)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::displayArguments', $this);
 		
 		if (preg_match('/(^|\/)selected($|\/)/', $this->arguments)) {
 			if (languages::$selected) {
@@ -1062,6 +1243,9 @@ class _languages {
 					echo languages::$selected['ID'];
 			}
 			
+			api::callHooks(API_HOOK_AFTER,
+				'languages::displayArguments', $this, languages::$selected);
+			
 			return true;
 		}
 		
@@ -1070,8 +1254,12 @@ class _languages {
 			" WHERE `Path` LIKE '".sql::escape($this->arguments)."'" .
 			" LIMIT 1"));
 			
-		if (!$row)
+		if (!$row) {
+			api::callHooks(API_HOOK_AFTER,
+				'languages::displayArguments', $this);
+			
 			return true;
+		}
 		
 		echo
 			"<div class='languages'>" .
@@ -1087,6 +1275,9 @@ class _languages {
 				"</div>" .
 			"</div>";
 		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::displayArguments', $this, $row);
+		
 		return true;
 	}
 	
@@ -1100,6 +1291,9 @@ class _languages {
 		if (sql::rows($rows) < 2)
 			return;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'languages::display', $this);
+		
 		echo
 			"<div class='languages'>";
 		
@@ -1108,6 +1302,9 @@ class _languages {
 		
 		echo
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'languages::display', $this);
 	}
 }
 

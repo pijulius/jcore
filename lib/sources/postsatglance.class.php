@@ -12,14 +12,24 @@
 class _postsAtGlance extends posts {
 	// ************************************************   Admin Part
 	function countAdminItems() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsAtGlance::postsAtGlance', $this);
+		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{posts}`" .
 			" LIMIT 1"));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsAtGlance::postsAtGlance', $this, $row['Rows']);
+		
 		return $row['Rows'];
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsAtGlance::setupAdminForm', $this, $form);
+		
 		$pageid = null;
 		
 		if (isset($_GET['searchpageid']))
@@ -71,9 +81,15 @@ class _postsAtGlance extends posts {
 					$language['ID'], 
 					$language['Title']);
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsAtGlance::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsAtGlance::verifyAdmin', $this, $form);
+		
 		$delete = null;
 		$deactivate = null;
 		$activate = null;
@@ -96,6 +112,9 @@ class _postsAtGlance extends posts {
 				__("No posts selected! Please select at " .
 					"least one post."),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'postsAtGlance::verifyAdmin', $this, $form);
 			
 			return false;
 		}
@@ -125,6 +144,9 @@ class _postsAtGlance extends posts {
 						"are now NOT visible to the public."),
 					TOOLTIP_SUCCESS);
 					
+				api::callHooks(API_HOOK_AFTER,
+					'postsAtGlance::verifyAdmin', $this, $form, $deactivate);
+				
 				return true;
 			}
 			
@@ -148,6 +170,9 @@ class _postsAtGlance extends posts {
 						"are now visible to the public."),
 					TOOLTIP_SUCCESS);
 					
+				api::callHooks(API_HOOK_AFTER,
+					'postsAtGlance::verifyAdmin', $this, $form, $activate);
+				
 				return true;
 			}
 			
@@ -170,14 +195,25 @@ class _postsAtGlance extends posts {
 					__("Posts have been successfully deleted."),
 					TOOLTIP_SUCCESS);
 					
+				api::callHooks(API_HOOK_AFTER,
+					'postsAtGlance::verifyAdmin', $this, $form, $delete);
+				
 				return true;
 			}
 		}
 		
-		return parent::verifyAdmin($form);
+		$result = parent::verifyAdmin($form);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsAtGlance::verifyAdmin', $this, $form, $result);
+		
+		return $result;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsAtGlance::displayAdminListHeader', $this);
+		
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' alt='.list' " .
@@ -188,9 +224,15 @@ class _postsAtGlance extends posts {
 			"</th>" .
 			"<th><span class='nowrap'>".
 				__("Title / Created on")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsAtGlance::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListItemSelected(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsAtGlance::displayAdminListItemSelected', $this, $row);
+		
 		if ($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]) {
 			$pageroute = null;
 			
@@ -223,9 +265,15 @@ class _postsAtGlance extends posts {
 		}
 		
 		parent::displayAdminListItemSelected($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsAtGlance::displayAdminListItemSelected', $this, $row);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsAtGlance::displayAdminListItem', $this, $row);
+		
 		$ids = null;
 		
 		if (isset($_POST['ids']))
@@ -261,9 +309,15 @@ class _postsAtGlance extends posts {
 					", ".sprintf(__("%s views"), $row['Views']) .
 				"</div>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsAtGlance::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsAtGlance::displayAdminListFunctions', $this);
+		
 		echo
 			"<input type='submit' name='deletesubmit' value='" .
 				htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
@@ -272,9 +326,15 @@ class _postsAtGlance extends posts {
 				htmlspecialchars(__("Deactivate"), ENT_QUOTES)."' class='button' />" .
 			"<input type='submit' name='activatesubmit' value='" .
 				htmlspecialchars(__("Activate"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsAtGlance::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminListSearch() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsAtGlance::displayAdminListSearch', $this);
+		
 		$pageid = null;
 		$search = null;
 		
@@ -328,15 +388,27 @@ class _postsAtGlance extends posts {
 			"</select> " .
 			"<input type='submit' value='" .
 				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsAtGlance::displayAdminListSearch', $this);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsAtGlance::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Posts at Glance'), 
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsAtGlance::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsAtGlance::displayAdmin', $this);
+		
 		$pageid = null;
 		$search = null;
 		$delete = null;
@@ -491,6 +563,9 @@ class _postsAtGlance extends posts {
 		
 		echo 
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsAtGlance::displayAdmin', $this);
 	}
 }
 

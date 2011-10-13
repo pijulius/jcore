@@ -66,6 +66,8 @@ if (get_magic_quotes_gpc()) {
 header('Content-Type: text/html; charset='.PAGE_CHARSET);
 session_start();
 
+include_once('lib/api.class.php');
+
 if (((defined('MAINTENANCE_SUSPEND_WEBSITE') && MAINTENANCE_SUSPEND_WEBSITE) ||
 	(defined('MAINTENANCE_WEBSITE_SUSPENDED') && MAINTENANCE_WEBSITE_SUSPENDED)) &&
 	!preg_match('/admin\//', $_SERVER['PHP_SELF']) && 
@@ -103,6 +105,10 @@ include_once('lib/template.class.php');
 // Globally check user and have him available in all classes we have
 $GLOBALS['USER'] = new users();
 $GLOBALS['USER']->check();
+
+// Starting from 1.0 we load all installed modules because
+// these modules are now able to interact with the code using the API
+modules::loadModules();
 
 // We populate the followings so the page title and keywords
 // and so on can be added to the html tags/titles

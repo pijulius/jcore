@@ -18,10 +18,16 @@ class _noteAttachments extends attachments {
 	var $adminPath = 'admin/site/notes/noteattachments';
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'noteAttachments::noteAttachments', $this);
+		
 		parent::__construct();
 		
 		$this->selectedOwner = __('Note');
 		$this->uriRequest = "notes&amp;attachments=1";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'noteAttachments::noteAttachments', $this);
 	}
 }
 

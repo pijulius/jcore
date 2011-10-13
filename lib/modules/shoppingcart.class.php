@@ -26,11 +26,8 @@ class shoppingCartSettings extends settings {
 	}
 }
 
-if (modules::installed('shoppingCart')) {
-	$shoppingcartsettings = new shoppingCartSettings();
-	$shoppingcartsettings->defineSettings();
-	unset($shoppingcartsettings);
-}
+if (modules::installed('shoppingCart'))
+	settings::defineSettings('shoppingcartsettings');
 
 include_once('lib/modules/shopping.class.php');
 include_once('lib/modules/shoppingorders.class.php');

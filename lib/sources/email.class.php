@@ -37,7 +37,13 @@ class _email {
 	var $html = false;
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'email::email', $this);
+		
 		$this->from = email::genWebmasterEmail();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'email::email', $this);
 	}
 	
 	static function add($id, $subject, $body, $save = true) {
@@ -48,9 +54,15 @@ class _email {
 			exit($id." email template couldn't be added as it's " .
 				"id is already used by another template!");
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'email::add', $_ENV, $id, $subject, $body, $save);
+		
 		_email::$templates[$id]['Subject'] = $subject;
 		_email::$templates[$id]['Body'] = $body;
 		_email::$templates[$id]['Save'] = $save;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'email::add', $_ENV, $id, $subject, $body, $save);
 		
 		return true;
 	}
@@ -59,8 +71,14 @@ class _email {
 		if (!$id)
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'email::edit', $_ENV, $id, $subject, $body);
+		
 		email::$templates[$id]['Subject'] = $subject;
 		email::$templates[$id]['Body'] = $body;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'email::edit', $_ENV, $id, $subject, $body);
 		
 		return true;
 	}
@@ -69,17 +87,36 @@ class _email {
 		if (!$id)
 			return false;
 		
-		return email::$templates[$id];
+		api::callHooks(API_HOOK_BEFORE,
+			'email::get', $_ENV, $id);
+		
+		$result = email::$templates[$id];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'email::get', $_ENV, $id, $result);
+		
+		return $result;
 	}
 	
 	static function genWebmasterEmail() {
-		return preg_replace('/(-|,|;).*/i', '', strip_tags(PAGE_TITLE)).
+		api::callHooks(API_HOOK_BEFORE,
+			'email::genWebmasterEmail', $_ENV);
+		
+		$result = preg_replace('/(-|,|;).*/i', '', strip_tags(PAGE_TITLE)).
 			" <".WEBMASTER_EMAIL.">";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'email::genWebmasterEmail', $_ENV, $result);
+		
+		return $result;
 	}
 	
 	function load($id) {
 		if (!$id)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'email::load', $this, $id);
 		
 		$email = null;
 		
@@ -89,28 +126,42 @@ class _email {
 		if (!$email)
 			$email = email::get($id);
 		
-		if (!$email)
-			return false;
+		if ($email) {
+			$this->subject = $email['Subject'];
+			$this->message = $email['Body'];
+		}
 		
-		$this->subject = $email['Subject'];
-		$this->message = $email['Body'];
+		api::callHooks(API_HOOK_AFTER,
+			'email::load', $this, $id, $email);
 		
-		return true;
+		return $email;
 	}
 	
 	function getToUser() {
 		if (!$this->toUserID && !$this->toUser)
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'email::getToUser', $this);
+		
 		if ($this->toUser) {
-			if (!$this->toUser['Email'])
+			if (!$this->toUser['Email']) {
+				api::callHooks(API_HOOK_AFTER,
+					'email::getToUser', $this);
+				
 				return false;
+			}
 			
 			$this->to = $this->toUser['UserName'].
 				" <".$this->toUser['Email'].">";
 				
 			$this->toUserID = $this->toUser['ID'];
-			return $this->toUser['ID'];
+			$result = $this->toUser['ID'];
+			
+			api::callHooks(API_HOOK_AFTER,
+				'email::getToUser', $this, $result);
+			
+			return $result;
 		}
 		
 		$user = sql::fetch(sql::run(
@@ -121,26 +172,38 @@ class _email {
 			" `Email`" .
 			" FROM `{users}`" .
 			" WHERE `ID` = '".(int)$this->toUserID."'"));
-	
-		if (!$user)
-			return false;
 		
-		$this->to = $user['UserName'] .
-			" <".$user['Email'].">";
-			
-		$this->toUserID = $user['ID'];
-		$this->toUser = $user;
+		$result = null;
 		
-		return $user['ID'];
+		if ($user) {
+			$this->to = $user['UserName'] .
+				" <".$user['Email'].">";
+				
+			$this->toUserID = $user['ID'];
+			$this->toUser = $user;
+			$result = $user['ID'];
+		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'email::getToUser', $this, $result);
+		
+		return $result;
 	}
 	
 	static function verify($email, $withname = false) {
+		api::callHooks(API_HOOK_BEFORE,
+			'email::verify', $_ENV, $email, $withname);
+		
 		if ($withname && strpos($email, '<') !== false) {
 			preg_match('/(.*)<(.*)>/', $email, $matches);
 			
 			if (isset($matches[2])) {
-				if (preg_match('/(,|;)/', $matches[1]))
+				if (preg_match('/(,|;)/', $matches[1])) {
+					api::callHooks(API_HOOK_AFTER,
+						'email::verify', $_ENV, $email, $withname);
+					
 					return false;
+				}
 				
 				$email = $matches[2];
 			}
@@ -151,21 +214,35 @@ class _email {
 		$ipv4 = '[0-9]{1,3}(\.[0-9]{1,3}){3}';
 		$ipv6 = '[0-9a-fA-F]{1,4}(\:[0-9a-fA-F]{1,4}){7}';
 
-		return preg_match("/^$user@($domain|(\[($ipv4|$ipv6)\]))$/", $email);
+		$result = preg_match("/^$user@($domain|(\[($ipv4|$ipv6)\]))$/", $email);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'email::verify', $_ENV, $email, $withname, $result);
+		
+		return $result;
 	}
 	
 	function reset() {
+		api::callHooks(API_HOOK_BEFORE,
+			'email::reset', $this);
+		
 		$this->from = email::genWebmasterEmail();
 		$this->to = null;
 		$this->cc = null;
 		$this->bcc = null;
 		$this->toUser = array();
 		$this->toUserID = null;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'email::reset', $this);
 	}
 	
 	function send($debug = false) {
 		if (isset($GLOBALS['IGNORE_EMAILS']) && (bool)$GLOBALS['IGNORE_EMAILS'])
 			return true;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'email::send', $this, $debug);
 		
 		$subject = $this->subject;
 		$message = $this->message;
@@ -189,7 +266,12 @@ class _email {
 		
 		if (isset($this->toUser['DisableNotificationEmails']) && 
 			$this->toUser['DisableNotificationEmails'] && !$this->force)
+		{
+			api::callHooks(API_HOOK_AFTER,
+				'email::send', $this, $debug);
+			
 			return false;
+		}
 		
 		foreach($this->toUser as $key => $value) {
 			$subject = str_replace(
@@ -212,6 +294,9 @@ class _email {
 				"</textarea>",
 				TOOLTIP_NOTIFICATION);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'email::send', $this, $debug);
+			
 			return false;
 		}
 		
@@ -231,11 +316,17 @@ class _email {
 					htmlspecialchars($this->to, ENT_QUOTES)),
 				TOOLTIP_ERROR);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'email::send', $this, $debug, $sent);
+		
 		return $sent;
 	}
 	
 	function phpMail($subject, $message) {
-		return
+		api::callHooks(API_HOOK_BEFORE,
+			'email::phpMail', $this, $subject, $message);
+		
+		$result =
 			@mail(
 				$this->to, 
 				$subject, 
@@ -252,9 +343,17 @@ class _email {
 					"Content-Type: text/html;":
 					"Content-Type: text/plain;") .
 				" charset=".PAGE_CHARSET."\r\n");
+		
+		api::callHooks(API_HOOK_AFTER,
+			'email::phpMail', $this, $subject, $message, $result);
+		
+		return $result;
 	}
 	
 	function smtpMail($subject, $message) {
+		api::callHooks(API_HOOK_BEFORE,
+			'email::smtpMail', $this, $subject, $message);
+		
 		if (!defined('EMAIL_SMTP_HOST') || !defined('EMAIL_SMTP_PORT') ||
 			!EMAIL_SMTP_HOST || !EMAIL_SMTP_PORT) 
 		{
@@ -264,6 +363,9 @@ class _email {
 						"are not defined! Please go to your administration panel and " .
 						"in the Global Settings define both required values."),
 					TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'email::smtpMail', $this, $subject, $message);
 			
 			return false;
 		}
@@ -293,6 +395,9 @@ class _email {
 					sprintf(__("SMTP connection couldn't be established. %s"), 
 						"#".$errno." - ".htmlspecialchars($errstr, ENT_QUOTES)),
 					TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'email::smtpMail', $this, $subject, $message);
 			
 			return false;
 		} 
@@ -368,13 +473,21 @@ class _email {
 					TOOLTIP_ERROR);
 			}
 			
-			return false;
+			$result = false;
+		} else {
+			$result = true;
 		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'email::smtpMail', $this, $subject, $message, $result);
+		
+		return $result;
 	}
 	
 	function pgpMail($subject, $message) {
+		api::callHooks(API_HOOK_BEFORE,
+			'email::pgpMail', $this, $subject, $message);
+		
 		if (!defined('EMAIL_PGP_PUBLIC_KEYS_DIRECTORY') || !defined('EMAIL_PGP_BINARY') ||
 			!EMAIL_PGP_PUBLIC_KEYS_DIRECTORY || !EMAIL_PGP_BINARY) 
 		{
@@ -384,6 +497,9 @@ class _email {
 						"file are not defined! Please go to your administration panel and " .
 						"in the Global Settings define both required values."),
 					TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'email::pgpMail', $this, $subject, $message);
 			
 			return false;
 		}
@@ -407,13 +523,21 @@ class _email {
 						"#".$errorcode." - ".htmlspecialchars($message, ENT_QUOTES)),
 					TOOLTIP_ERROR);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'email::pgpMail', $this, $subject, $message);
+			
 			return false;
 		}
 		
 		if (defined('EMAIL_USE_SMTP') && EMAIL_USE_SMTP)
-			return $this->smtpMail($subject, $message);
+			$result = $this->smtpMail($subject, $message);
+		else
+			$result = $this->phpMail($subject, $message);
 		
-		return $this->phpMail($subject, $message);
+		api::callHooks(API_HOOK_AFTER,
+			'email::pgpMail', $this, $subject, $message, $result);
+		
+		return $result;
 	}
 }
 

@@ -12,7 +12,6 @@
 include_once('lib/paging.class.php');
 include_once('lib/calendar.class.php');
 include_once('lib/rss.class.php');
-include_once('lib/ixr.class.php');
 include_once('lib/contentcodes.class.php');
 include_once('lib/postattachments.class.php');
 include_once('lib/postcomments.class.php');
@@ -54,6 +53,9 @@ class _posts {
 	static $selected = null;
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::posts', $this);
+		
 		if (isset($_GET['postid']))
 			$this->selectedID = (int)$_GET['postid'];
 		
@@ -69,9 +71,15 @@ class _posts {
 			
 		if (isset($_GET['arguments']) && isset($_GET['ajax']))
 			$this->arguments = strip_tags(urldecode((string)$_GET['arguments']));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::posts', $this);
 	}
 	
 	function SQL() {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::SQL', $this);
+		
 		$homepage = pages::getHome($this->selectedLanguageID);
 		$page = pages::get($this->selectedPageID);
 		
@@ -93,7 +101,7 @@ class _posts {
 				$searchignorepageids = $pageids['PageIDs'];
 		}
 		
-		return
+		$sql =
 			" SELECT * " .
 			" FROM `{posts}`" .
 			" WHERE 1" .
@@ -192,6 +200,11 @@ class _posts {
 					" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = 0,":
 					" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` = '".$page['ID']."',") .
 				" `OnMainPage` DESC, `OrderID`, `StartDate`, `ID` DESC");
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::SQL', $this, $sql);
+		
+		return $sql;
 	}
 	
 	static function populate() {
@@ -200,6 +213,9 @@ class _posts {
 		
 		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::populate', $_ENV);
 		
 		$selected = sql::fetch(sql::run(
 			" SELECT `ID`, `Title`, `Path`, `Keywords`" .
@@ -226,14 +242,24 @@ class _posts {
 			url::addPageKeywords($selected['Keywords']);
 				
 			$_GET['postid'] = $selected['ID'];
+			
+			api::callHooks(API_HOOK_AFTER,
+				'posts::populate', $_ENV, $selected['ID']);
+			
 			return;
 		}
 		
 		$_GET['postid'] = 0;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::populate', $_ENV);
 	}
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Post'), 
@@ -245,9 +271,15 @@ class _posts {
 		favoriteLinks::add(
 			__('View Website'), 
 			SITE_URL);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::setupAdmin', $this, $form);
+		
 		$edit = null;
 		
 		if (isset($_GET['edit']))
@@ -401,6 +433,10 @@ class _posts {
 				"</a>");
 			
 			unset($postsform);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'posts::setupAdmin', $this, $form);
+			
 			return;
 		}
 		
@@ -716,9 +752,15 @@ class _posts {
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::setupAdmin', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::verifyAdmin', $this, $form);
+		
 		$reorder = null;
 		$orders = null;
 		$delete = null;
@@ -741,10 +783,7 @@ class _posts {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
-			if (!$orders)
-				return false;
-			
-			foreach($orders as $oid => $ovalue) {
+			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{posts}` " .
 					" SET `OrderID` = '".(int)$ovalue."'," .
@@ -762,22 +801,32 @@ class _posts {
 				__("Posts have been successfully re-ordered."),
 				TOOLTIP_SUCCESS);
 			
-			return true;
-		}
-		
-		if ($delete) {
-			if (!$this->delete($id))
-				return false;
-				
-			tooltip::display(
-				__("Post has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			api::callHooks(API_HOOK_AFTER,
+				'posts::verifyAdmin', $this, $form, $reorder);
 			
 			return true;
 		}
 		
-		if (!$form->verify())
+		if ($delete) {
+			$result = $this->delete($id);
+			
+			if ($result)
+				tooltip::display(
+					__("Post has been successfully deleted."),
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'posts::verifyAdmin', $this, $form, $result);
+			
+			return $result;
+		}
+		
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'posts::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if ($form->get('Owner')) {
 			$user = sql::fetch(sql::run(
@@ -794,6 +843,10 @@ class _posts {
 					TOOLTIP_ERROR);
 				
 				$form->setError('Owner', FORM_ERROR_REQUIRED);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'posts::verifyAdmin', $this, $form);
+				
 				return false;
 			}
 			
@@ -808,54 +861,70 @@ class _posts {
 			$form->set('Path', url::genPathFromString($form->get('Title')));
 			
 		if ($edit) {
-			if (!$this->edit($id, $form->getPostArray()))
-				return false;
+			$result = $this->edit($id, $form->getPostArray());
 			
-			$post = sql::fetch(sql::run(
-				" SELECT * FROM `{posts}`" .
-				" WHERE `ID` = '".(int)$id."'"));
+			if ($result) {
+				$post = sql::fetch(sql::run(
+					" SELECT * FROM `{posts}`" .
+					" WHERE `ID` = '".(int)$id."'"));
+				
+				tooltip::display(
+					__("Post has been successfully updated.")." ".
+					"<a href='".$this->generateLink($post)."' target='_blank'>" .
+						__("View Post") .
+					"</a>" .
+					" - " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			}
 			
-			tooltip::display(
-				__("Post has been successfully updated.")." ".
-				"<a href='".$this->generateLink($post)."' target='_blank'>" .
-					__("View Post") .
-				"</a>" .
-				" - " .
-				"<a href='#adminform'>" .
-					__("Edit") .
-				"</a>",
-				TOOLTIP_SUCCESS);
+			api::callHooks(API_HOOK_AFTER,
+				'posts::verifyAdmin', $this, $form, $result);
 			
-			return true;
+			return $result;
 		}
 		
-		if ($this->userPermissionIDs)
-			return false;
-		
-		if (!$newid = $this->add($form->getPostArray()))
-			return false;
+		if ($this->userPermissionIDs) {
+			api::callHooks(API_HOOK_AFTER,
+				'posts::verifyAdmin', $this, $form);
 			
-		$post = sql::fetch(sql::run(
-			" SELECT * FROM `{posts}`" .
-			" WHERE `ID` = '".(int)$newid."'"));
+			return false;
+		}
 		
-		tooltip::display(
-			__("Post has been successfully created.")." " .
-				"<a href='".$this->generateLink($post)."' target='_blank'>" .
-					__("View Post") .
-				"</a>" .
-				" - " .
-				"<a href='".url::uri('id, edit, delete') .
-					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-					__("Edit") .
-				"</a>",
-			TOOLTIP_SUCCESS);
+		$newid = $this->add($form->getPostArray());
 		
-		$form->reset();
-		return true;
+		if ($newid) {
+			$post = sql::fetch(sql::run(
+				" SELECT * FROM `{posts}`" .
+				" WHERE `ID` = '".(int)$newid."'"));
+			
+			tooltip::display(
+				__("Post has been successfully created.")." " .
+					"<a href='".$this->generateLink($post)."' target='_blank'>" .
+						__("View Post") .
+					"</a>" .
+					" - " .
+					"<a href='".url::uri('id, edit, delete') .
+						"&amp;id=".$newid."&amp;edit=1#adminform'>" .
+						__("Edit") .
+					"</a>",
+				TOOLTIP_SUCCESS);
+			
+			$form->reset();
+		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::verifyAdmin', $this, $form, $result);
+		
+		return $result;
 	}
 	
 	function displayAdminAvailableKeywords($targetfield = '#neweditpostform #entryKeywords') {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdminAvailableKeywords', $this, $targetfield);
+		
 		$search = null;
 		
 		if (isset($_POST['ajaxsearch']))
@@ -966,9 +1035,15 @@ class _posts {
 		if (!isset($search) && !isset($_GET['ajaxlimit']))
 			echo
 				"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdminAvailableKeywords', $this, $targetfield);
 	}
 	
 	function displayAdminListItemSelected(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdminListItemSelected', $this, $row);
+		
 		$blockroute = null;
 		
 		admin::displayItemData(
@@ -1071,17 +1146,29 @@ class _posts {
 		
 		if (JCORE_VERSION >= '0.7')
 			$this->displayCustomFields($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdminListItemSelected', $this, $row);
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Order")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Title / Created on")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdminListHeaderOptions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Comments")."</span></th>" .
@@ -1089,17 +1176,29 @@ class _posts {
 				__("Attachments")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Pictures")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdminListItem', $this, $row);
+		
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
 		echo
@@ -1124,9 +1223,15 @@ class _posts {
 					", ".sprintf(__("%s views"), $row['Views']) .
 				"</div>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdminListItemOptions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link comments' " .
@@ -1167,9 +1272,15 @@ class _posts {
 		echo
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -1185,17 +1296,29 @@ class _posts {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdminListFunctions', $this);
+		
 		echo
 			"<input type='submit' name='reordersubmit' value='" .
 				htmlspecialchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminListSearch() {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdminListSearch', $this);
+		
 		$search = null;
 		
 		if (isset($_GET['search']))
@@ -1208,9 +1331,15 @@ class _posts {
 				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
 			"<input type='submit' value='" .
 				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdminListSearch', $this);
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdminList', $this, $rows);
+		
 		$id = null;
 		
 		if (isset($_GET['id']))
@@ -1283,22 +1412,44 @@ class _posts {
 		
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdminList', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdminList', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Posts'), 
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAdmin', $this);
+		
 		$search = null;
 		$delete = null;
 		$edit = null;
@@ -1450,11 +1601,17 @@ class _posts {
 		
 		echo 
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAdmin', $this);
 	}
 	
 	function add($values) {
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::add', $this, $values);
 		
 		if ($values['OrderID'] == '') {
 			if (JCORE_VERSION < '0.9')
@@ -1574,6 +1731,10 @@ class _posts {
 				sprintf(__("Post couldn't be created! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'posts::add', $this, $values);
+			
 			return false;
 		}
 		
@@ -1634,6 +1795,9 @@ class _posts {
 					"servers separated by commas in Global Settings."),
 				TOOLTIP_NOTIFICATION);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::add', $this, $values, $newid);
+		
 		return $newid;
 	}
 	
@@ -1643,6 +1807,9 @@ class _posts {
 		
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::edit', $this, $id, $values);
 		
 		$post = sql::fetch(sql::run(
 			" SELECT * FROM `{posts}`" .
@@ -1735,11 +1902,17 @@ class _posts {
 				" WHERE `ID` = '".(int)$id."'");
 		}
 			
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result) {
 			tooltip::display(
 				sprintf(__("Post couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'posts::edit', $this, $id, $values, $result);
+			
 			return false;
 		}
 		
@@ -1815,6 +1988,9 @@ class _posts {
 					"rss/"),
 				TOOLTIP_NOTIFICATION);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::edit', $this, $id, $values, $result);
+		
 		return true;
 	}
 	
@@ -1822,6 +1998,9 @@ class _posts {
 		if (!$id)
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::delete', $this, $id);
+		
 		$post = sql::fetch(sql::run(
 			" SELECT * FROM `{posts}`" .
 			" WHERE `ID` = '".(int)$id."'"));
@@ -1907,6 +2086,9 @@ class _posts {
 					"rss/"),
 				TOOLTIP_NOTIFICATION);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::delete', $this, $id);
+		
 		return true;
 	}
 	
@@ -1924,8 +2106,16 @@ class _posts {
 		if (!$post['Deactivated'])
 			return true;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::activate', $this, $id);
+		
 		$post['Deactivated'] = false;
-		return $this->edit($id, $post);
+		$result = $this->edit($id, $post);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::activate', $this, $id, $result);
+		
+		return $result;
 	}
 	
 	function deactivate($id) {
@@ -1942,8 +2132,16 @@ class _posts {
 		if ($post['Deactivated'])
 			return true;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::deactivate', $this, $id);
+		
 		$post['Deactivated'] = true;
-		return $this->edit($id, $post);
+		$result = $this->edit($id, $post);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::deactivate', $this, $id, $result);
+		
+		return $result;
 	}
 	
 	static function updateRSS($pageid = null) {
@@ -1974,8 +2172,10 @@ class _posts {
 					"}` " .
 				" WHERE `ID` = '".(int)$pageid."'"));
 			
-			if (!$page['Path'])
+			if (!$page['Path']) {
+				unset($rss);
 				return false;
+			}
 			
 			$rss->channel['Title'] = $page['Title']." - ".
 				$rss->channel['Title'];
@@ -1983,6 +2183,9 @@ class _posts {
 			$rss->file = SITE_PATH.'rss/posts-'.preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '',
 					str_replace('/', '-', $page['Path'])).'.xml';
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::updateRSS', $_ENV, $pageid, $rss);
 		
 		$rows = sql::run(
 			" SELECT * FROM `{posts}`" .
@@ -2034,18 +2237,21 @@ class _posts {
 						null)));
 		}
 		
+		$result = false;
+		
 		if (!count($rss->items)) {
 			files::delete($rss->file);
-			unset($rss);
-			return true;
+			$result = true;
 			
-		} elseif (!$rss->save()) {
-			unset($rss);
-			return false;
+		} elseif ($rss->save()) {
+			$result = true;
 		}
 		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::updateRSS', $_ENV, $pageid, $rss, $result);
+		
 		unset($rss);
-		return true;
+		return $result;
 	}
 	
 	static function updateKeywordsCloud($newkeywords = null, $oldkeywords = null, 
@@ -2173,6 +2379,11 @@ class _posts {
 					str_replace('/', '-', $page['Path'])).'.xml';
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::blogPing', $_ENV, $pageid);
+		
+		include_once('lib/ixr.class.php');
+		
 		$servers = explode(",", BLOG_PING_SERVERS);
 		foreach ($servers as $server) {
 			if (!trim($server))
@@ -2197,6 +2408,9 @@ class _posts {
 			unset($client);
 		}
 		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::blogPing', $_ENV, $pageid);
+		
 		return true;
 	}
 	
@@ -2215,6 +2429,9 @@ class _posts {
 	}
 	
 	static function generateTeaser($description) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::generateTeaser', $_ENV, $description);
+		
 		if (stripos($description, '<div style="page-break-after: always') !== false)
 			preg_match('/(.*?)(<div style="page-break-after: always)/is', $description, $matches);
 		elseif (stripos($description, '<hr') !== false)
@@ -2232,6 +2449,9 @@ class _posts {
 			$teaser = $description;
 		}
 		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::generateTeaser', $_ENV, $description, $teaser);
+		
 		return $teaser;
 	}
 	
@@ -2240,10 +2460,10 @@ class _posts {
 	}
 	
 	static function getSelectedID () {
-		if (!posts::$selected)
-			return 0;
+		if (posts::$selected)
+			return posts::$selected['ID'];
 		
-		return posts::$selected['ID'];
+		return 0;
 	}
 	
 	static function getPostURL($post = null) {
@@ -2276,14 +2496,14 @@ class _posts {
 				" WHERE `ID` = '".$page['LanguageID']."'"));
 		
 		if (SEO_FRIENDLY_LINKS)
-			return 
+			return
 				url::site() .
 				($language?
 					$language['Path'].'/':
 					null) .
 				$page['Path'].'/' .
 				$post['Path'];
-			
+		
 		return 
 			url::site().'index.php?' .
 			($language?
@@ -2296,10 +2516,10 @@ class _posts {
 	function generateLink(&$row) {
 		if (isset($row['_PageLink']) && $row['_PageLink']) {
 			if (SEO_FRIENDLY_LINKS)
-				return 
+				return
 					$row['_PageLink'].'/' .
 					$row['Path'];
-				
+			
 			return
 				$row['_PageLink'] . 
 				'&amp;postid='.$row['ID'];
@@ -2325,14 +2545,14 @@ class _posts {
 				" WHERE `ID` = '".$page['LanguageID']."'"));
 		
 		if (SEO_FRIENDLY_LINKS)
-			return 
+			return
 				url::site() .
 				($language?
 					$language['Path'].'/':
 					null) .
 				$page['Path'].'/' .
 				$row['Path'];
-			
+		
 		return 
 			url::site().'index.php?' .
 			($language?
@@ -2363,7 +2583,7 @@ class _posts {
 				" WHERE `ID` = '".$page['LanguageID']."'"));
 		
 		if (SEO_FRIENDLY_LINKS)
-			return 
+			return
 				url::site() .
 				($language?
 					$language['Path'].'/':
@@ -2398,6 +2618,9 @@ class _posts {
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::ajaxRequest', $this);
+		
 		$users = null;
 		$keywords = null;
 		
@@ -2414,6 +2637,10 @@ class _posts {
 				tooltip::display(
 					__("Request can only be accessed by administrators!"),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'posts::ajaxRequest', $this);
+				
 				return true;
 			}
 			
@@ -2427,15 +2654,27 @@ class _posts {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'posts::ajaxRequest', $this);
+				
 				return true;
 			}
 			
 			$GLOBALS['USER']->displayQuickList('#neweditpostform #entryOwner');
+			
+			api::callHooks(API_HOOK_AFTER,
+				'posts::ajaxRequest', $this, $users);
+			
 			return true;
 		}
 		
 		if ($keywords) {
 			$this->displayAdminAvailableKeywords();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'posts::ajaxRequest', $this, $keywords);
+			
 			return true;
 		}
 		
@@ -2446,15 +2685,24 @@ class _posts {
 			$page = new pages();
 			$page->displayLogin();
 			unset($page);
-			return true;
+			$result = true;
+			
+		} else {
+			$this->ajaxPaging = true;
+			$this->display();
+			$Result = true;
 		}
 		
-		$this->ajaxPaging = true;
-		$this->display();
+		api::callHooks(API_HOOK_AFTER,
+			'posts::ajaxRequest', $this, $result);
+		
 		return true;
 	}
 	
 	function displayTitle(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayTitle', $this, $row);
+		
 		echo
 			"<a href='" .
 				(JCORE_VERSION >= '0.6' && $row['URL']?
@@ -2463,13 +2711,25 @@ class _posts {
 				"'>" .
 				$row['Title'] .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayTitle', $this, $row);
 	}
 	
 	function displaySelectedTitle(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displaySelectedTitle', $this, $row);
+		
 		echo $row['Title'];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displaySelectedTitle', $this, $row);
 	}
 	
 	function displayDetails(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayDetails', $this, $row);
+		
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
 		echo
@@ -2487,33 +2747,40 @@ class _posts {
 				"<span class='post-views-number'>" .
 					sprintf(__("%s views"), $row['Views']) .
 				"</span>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayDetails', $this, $row);
 	}
 	
 	function displayAnnouncementInfo(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAnnouncementInfo', $this, $row);
+		
 		if ($row['StartDate'] && $row['EndDate']) {
 			echo
 				sprintf(__("Starting <b>%s</b> until <b>%s</b>"),
 					calendar::date($row['StartDate']),
 					calendar::date($row['EndDate']));
-			return;
-		}
-		
-		if ($row['StartDate']) {
+			
+		} else if ($row['StartDate']) {
 			echo
 				sprintf(__("Starting <b>%s</b>"),
 					calendar::date($row['StartDate']));
-			return;
-		}
-		
-		if ($row['EndDate']) {
+			
+		} else if ($row['EndDate']) {
 			echo
 				sprintf(__("Until <b>%s</b>"),
 					calendar::date($row['EndDate']));
-			return;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAnnouncementInfo', $this, $row);
 	}
 	
 	function displayPictures(&$row = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayPictures', $this, $row);
+		
 		$pictures = new postPictures();
 		
 		if ($row) {
@@ -2529,9 +2796,15 @@ class _posts {
 		
 		$pictures->display();
 		unset($pictures);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayPictures', $this, $row);
 	}
 	
 	function displayLatestPicture(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayLatestPicture', $this, $row);
+		
 		$pictures = new postPictures();
 		$pictures->selectedOwnerID = $row['ID'];
 		$pictures->limit = 1;
@@ -2539,9 +2812,15 @@ class _posts {
 		$pictures->customLink = $row['_Link'];
 		$pictures->display();
 		unset($pictures);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayLatestPicture', $this, $row);
 	}
 	
 	function displayContent(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayContent', $this, $row);
+		
 		$codes = new contentCodes();
 		$codes->fixParagraph = true;
 		
@@ -2551,9 +2830,15 @@ class _posts {
 		
 		$codes->display($row['Content']);
 		unset($codes);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayContent', $this, $row);
 	}
 	
 	function displayBody(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayBody', $this, $row);
+		
 		if ($row['Pictures'])
 			$this->displayPictures($row);
 		
@@ -2576,9 +2861,15 @@ class _posts {
 			echo
 				"</div>";
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayBody', $this, $row);
 	}
 	
 	function displayTeaserBody(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayTeaserBody', $this, $row);
+		
 		if ($row['Pictures'])
 			$this->displayLatestPicture($row);
 		
@@ -2592,9 +2883,15 @@ class _posts {
 			echo
 				"</div>";
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayTeaserBody', $this, $row);
 	}
 	
 	function displayCustomFields(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayCustomFields', $this, $row);
+		
 		$postsform = new postsForm();
 		$postsform->load(false);
 		
@@ -2608,17 +2905,29 @@ class _posts {
 			'NotSearchable', 'HideExpired'));
 		
 		unset($postsform);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayCustomFields', $this, $row);
 	}
 	
 	function displayRating(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayRating', $this, $row);
+		
 		$rating = new postRating();
 		$rating->guestRating = $row['EnableGuestRating'];
 		$rating->selectedOwnerID = $row['ID'];
 		$rating->display();
-		unset($rating);	
+		unset($rating);
+			
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayRating', $this, $row);
 	}
 	
 	function displayAttachments(&$row = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayAttachments', $this, $row);
+		
 		$attachments = new postAttachments();
 		
 		if ($row) {
@@ -2634,9 +2943,15 @@ class _posts {
 		
 		$attachments->display();
 		unset($attachments);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayAttachments', $this, $row);
 	}
 	
 	function displayComments(&$row = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayComments', $this, $row);
+		
 		$comments = new postComments();
 		
 		if ($row) {
@@ -2650,9 +2965,15 @@ class _posts {
 		
 		$comments->display();
 		unset($comments);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayComments', $this, $row);
 	}
 	
 	function displayKeywordsCloudLink(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayKeywordsCloudLink', $this, $row);
+		
 		echo  
 			"<a href='".$row['_SearchURL'] .
 				(strpos($row['_SearchURL'], '?') === false?
@@ -2663,9 +2984,15 @@ class _posts {
 				"style='font-size: ".$row['_FontPercent']."%;'>" .
 				ucfirst(trim($row['Keyword'])) .
 			"</a> ";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayKeywordsCloudLink', $this, $row);
 	}
 	
 	function displayKeywordsCloud($arguments = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayKeywordsCloud', $this, $arguments);
+		
 		$page = null;
 		$byranks = false;
 		
@@ -2747,9 +3074,15 @@ class _posts {
 		sql::run(" DROP TEMPORARY TABLE `{TMPKeywordsCloud}` ");
 		
 		echo "</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayKeywordsCloud', $this, $arguments);
 	}
 	
 	function displayCalendar($pagepath = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayCalendar', $this, $pagepath);
+		
 		$page = null;
 		
 		if ($pagepath)
@@ -2776,9 +3109,15 @@ class _posts {
 		$calendar = new postsCalendar(($page?$page['ID']:null));
 		$calendar->display();
 		unset($calendar);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayCalendar', $this, $pagepath);
 	}
 	
 	function displayKeywordLinks(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayKeywordLinks', $this, $row);
+		
 		$words = explode(',', $row['Keywords']);
 		foreach($words as $key => $word) {
 			if ($key)
@@ -2795,18 +3134,30 @@ class _posts {
 					ucfirst(trim($word)) .
 				"</a>";
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayKeywordLinks', $this, $row);
 	}
 	
 	function displayKeywords(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayKeywords', $this, $row);
+		
 		echo
 			"<span class='keywords-title'>" .
 				__("Tags").": " .
 			"</span> ";
 		
 		$this->displayKeywordLinks($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayKeywords', $this, $row);
 	}
 	
 	function displayFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayFunctions', $this, $row);
+		
 		if ($this->selectedID == $row['ID']) {
 			echo
 				"<a href='".$row['_BackLink']."' class='back comment'>" .
@@ -2868,11 +3219,20 @@ class _posts {
 					__("Edit").
 					"</span>" .
 				"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayFunctions', $this, $row);
 	}
 	
 	function displayRelatedPostDate(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayRelatedPostDate', $this, $row);
+		
 		echo
 			calendar::date($row['TimeStamp']);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayRelatedPostDate', $this, $row);
 	}
 	
 	function displayRelatedPosts(&$row) {
@@ -2896,6 +3256,9 @@ class _posts {
 			
 		if (!sql::rows($posts))
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayRelatedPosts', $this, $row);
 		
 		echo 
 			"<div class='related-posts'>" .
@@ -2978,9 +3341,15 @@ class _posts {
 		echo
 				"</ul>" .
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayRelatedPosts', $this, $row);
 	}
 	
 	function displayFormated(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayFormated', $this, $row);
+		
 		echo
 			"<" .
 			(IE_BROWSER < 9?
@@ -3182,9 +3551,15 @@ class _posts {
 		
 		if ($this->selectedID == $row['ID'] && $row['EnableComments'])
 			$this->displayComments($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayFormated', $this, $row);
 	}
 	
 	function displayOne(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayOne', $this, $row);
+		
 		echo
 			"<" .
 			(IE_BROWSER < 9?
@@ -3267,9 +3642,15 @@ class _posts {
 				"div":
 				"article") .
 			">";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayOne', $this, $row);
 	}
 	
 	function displaySelected(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displaySelected', $this, $row);
+		
 		$this->incViews($row);
 		
 		echo
@@ -3378,6 +3759,9 @@ class _posts {
 			
 		if ($this->selectedID == $row['ID'] && $row['EnableComments'])
 			$this->displayComments($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displaySelected', $this, $row);
 	}
 	
 	function displayBlockPosts($blockid) {
@@ -3435,6 +3819,9 @@ class _posts {
 		if (!$total)
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayBlockPosts', $this, $blockid);
+		
 		while ($row = sql::fetch($rows)) {
 			if ($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')] != $pageid) {
 				$this->selectedPage = sql::fetch(sql::run(
@@ -3493,12 +3880,18 @@ class _posts {
 			$i++;
 		}
 		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayBlockPosts', $this, $blockid);
+		
 		return $total;
 	}
 	
 	function displayArguments() {
 		if (!$this->arguments)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::displayArguments', $this);
 		
 		if (preg_match('/(^|\/)rand($|\/)/', $this->arguments)) {
 			$this->arguments = preg_replace('/(^|\/)rand($|\/)/', '\2', $this->arguments);
@@ -3570,6 +3963,11 @@ class _posts {
 				$this->keywordsCloudLimit = $this->limit;
 			
 			$this->displayKeywordsCloud($this->arguments);
+			
+			$result = true;
+			api::callHooks(API_HOOK_AFTER,
+				'posts::displayArguments', $this, $result);
+			
 			return true;
 		}
 		
@@ -3577,6 +3975,11 @@ class _posts {
 			$this->arguments = preg_replace('/(^|\/)calendar($|\/)/', '\2', $this->arguments);
 			
 			$this->displayCalendar($this->arguments);
+			
+			$result = true;
+			api::callHooks(API_HOOK_AFTER,
+				'posts::displayArguments', $this, $result);
+			
 			return true;
 		}
 		
@@ -3586,6 +3989,10 @@ class _posts {
 			$this->showPaging = false;
 			
 			$this->displayPictures();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'posts::displayArguments', $this, $this->ignorePaging);
+			
 			return true;
 		}
 		
@@ -3595,6 +4002,10 @@ class _posts {
 			$this->showPaging = false;
 			
 			$this->displayAttachments();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'posts::displayArguments', $this, $this->ignorePaging);
+			
 			return true;
 		}
 		
@@ -3604,14 +4015,22 @@ class _posts {
 			$this->showPaging = false;
 			
 			$this->displayComments();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'posts::displayArguments', $this, $this->ignorePaging);
+			
 			return true;
 		}
 		
 		$this->selectedPageID = null;
 		$this->selectedID = null;
 		
-		if (!$this->arguments)
+		if (!$this->arguments) {
+			api::callHooks(API_HOOK_AFTER,
+				'posts::displayArguments', $this);
+			
 			return false;
+		}
 		
 		$page = sql::fetch(sql::run(
 			" SELECT `ID`, `Path` FROM `{" .
@@ -3651,16 +4070,24 @@ class _posts {
 				" `OrderID`" .
 			" LIMIT 1"));
 		
-		if (!$page)
+		if (!$page) {
+			api::callHooks(API_HOOK_AFTER,
+				'posts::displayArguments', $this);
+			
 			return true;
+		}
 		
 		$this->selectedPageID = $page['ID'];
 		$this->arguments = preg_replace(
 			'/'.preg_quote($page['Path'], '/').'(\/|$)/i', '', 
 			$this->arguments, 1);
 		
-		if (!$this->arguments)
+		if (!$this->arguments) {
+			api::callHooks(API_HOOK_AFTER,
+				'posts::displayArguments', $this);
+			
 			return false;
+		}
 		
 		$post = sql::fetch(sql::run(
 			" SELECT `ID`, `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` FROM `{posts}` " .
@@ -3670,11 +4097,20 @@ class _posts {
 			" ORDER BY `Path` DESC, `OrderID`" .
 			" LIMIT 1"));
 			
-		if (!$post)
+		if (!$post) {
+			api::callHooks(API_HOOK_AFTER,
+				'posts::displayArguments', $this);
+			
 			return true;
+		}
 			
 		$this->selectedID = $post['ID'];
 		$this->selectedPageID = $post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::displayArguments', $this);
+		
+		return false;
 	}
 	
 	function display() {
@@ -3756,6 +4192,9 @@ class _posts {
 		if (!$total)
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'posts::display', $this);
+		
 		if (!$this->ajaxRequest)
 			echo
 				"<div class='posts'>";
@@ -3825,6 +4264,9 @@ class _posts {
 		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //posts
+		
+		api::callHooks(API_HOOK_AFTER,
+			'posts::display', $this);
 		
 		if ($this->latests)
 			return true;

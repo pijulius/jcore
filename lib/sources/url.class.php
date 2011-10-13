@@ -59,7 +59,6 @@ class _url {
 	
 	static function setPageTitle($title) {
 		url::$pageTitle = strip_tags($title);
-		
 	}
 	
 	static function setPageDescription($description) {
@@ -83,6 +82,9 @@ class _url {
 	}
 	
 	static function displayPageTitle($level = 0) {
+		api::callHooks(API_HOOK_BEFORE,
+			'url::displayPageTitle', $_ENV, $level);
+		
 		$title = url::getPageTitle();
 		
 		if ($level) {
@@ -93,18 +95,32 @@ class _url {
 				echo $titles[$i];
 			}
 			
-			return;
+		} else {
+			echo $title;
 		}
 		
-		echo $title;
+		api::callHooks(API_HOOK_AFTER,
+			'url::displayPageTitle', $_ENV, $level);
 	}
 	
 	static function displayPageDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'url::displayPageDescription', $_ENV);
+		
 		echo htmlspecialchars(url::getPageDescription(), ENT_QUOTES);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'url::displayPageDescription', $_ENV);
 	}
 	
 	static function displayPageKeywords() {
+		api::callHooks(API_HOOK_BEFORE,
+			'url::displayPageKeywords', $_ENV);
+		
 		echo htmlspecialchars(url::getPageKeywords(), ENT_QUOTES);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'url::displayPageKeywords', $_ENV);
 	}
 	
 	static function site() {
@@ -118,7 +134,7 @@ class _url {
 		$url = (defined('JCORE_URL')?JCORE_URL:SITE_URL);
 		
 		if (url::https())
-			return str_replace('http://', 'https://', $url);
+			$url = str_replace('http://', 'https://', $url);
 		
 		return $url;
 	}
@@ -138,7 +154,7 @@ class _url {
 		
 		if (!$notincludeargs)
 			return str_replace('&', '&amp;', $uri['query']);
-		
+			
 		$args = explode('&', $uri['query']);
 		$notincludeargs = explode(",", str_replace(" ", "", trim($notincludeargs, ' ,')));
 		
@@ -189,7 +205,7 @@ class _url {
 				(strpos((string)$_SERVER['REQUEST_URI'], '?') === false?
 					'?':
 					null);
-		
+			
 		$uri = @parse_url(strip_tags((string)$_SERVER['REQUEST_URI']));
 		
 		if ($notincludeargs == 'ALL')
@@ -197,7 +213,7 @@ class _url {
 		
 		if (!isset($uri['query']))
 			return (isset($uri['path'])?$uri['path']:'').'?';
-		
+			
 		$args = explode('&', $uri['query']);
 		$notincludeargs = explode(",", str_replace(" ", "", trim($notincludeargs, ' ,')));
 		
@@ -244,11 +260,11 @@ class _url {
 			$url = substr($url, 0, strpos($url, " "));
 			
 		if ($reverse)
-			return preg_replace('/^(.*?):\/\//', null, strtolower($url));
+			$url = preg_replace('/^(.*?):\/\//', null, strtolower($url));
 		
-		if (!preg_match('/^(\/|.*?:\/\/)/', $url) &&
+		else if (!preg_match('/^(\/|.*?:\/\/)/', $url) &&
 			preg_match('/(www|(.*?\..*))/', $url)) 
-				return "http://".$url;
+				$url = "http://".$url;
 		
 		return $url;
 	}
@@ -279,11 +295,11 @@ class _url {
 	
 	static function path($level= 0) {
 		if (!url::$pagePath)
-			return;
+			return '';
 			
 		if (!$level)
 			return trim(url::$pagePath, '/');
-			
+		
 		$path = null;
 		$exppaths = explode('/', url::$pagePath);
 		
@@ -310,10 +326,10 @@ class _url {
 	static function rootDomain($url = null) {
 		$url = @parse_url($url?$url:url::site());
 		
-		if (!isset($url['host']))
-			return null;
+		if (isset($url['host']))
+			return preg_replace('/(\/.*|^www\.)/', '', $url['host']);
 		
-		return preg_replace('/(\/.*|^www\.)/', '', $url['host']);
+		return null;
 	}
 	
 	static function getPathID($level = 0, $path = null) {
@@ -322,7 +338,7 @@ class _url {
 		
 		if (!$path)
 			return 0;
-		
+			
 		preg_match('/.*\/([0-9]*)(\/|$|&)/', $path, $matches);
 		
 		if (isset($matches[1]))
@@ -411,6 +427,9 @@ class _url {
 		if (!$displaypath)
 			return;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'url::displayPath', $_ENV, $level, $displaypath);
+		
 		$path = null;
 		$exppaths = explode('/', $displaypath);
 		
@@ -447,16 +466,31 @@ class _url {
 				$i++;
 			}
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'url::displayPath', $_ENV, $level, $displaypath);
 	}
 	
 	static function displayRootPath() {
+		api::callHooks(API_HOOK_BEFORE,
+			'url::displayRootPath', $_ENV);
+		
 		echo url::site();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'url::displayRootPath', $_ENV);
 	}
 	
 	static function displayError() {
+		api::callHooks(API_HOOK_BEFORE,
+			'url::displayError', $_ENV);
+		
 		$codes = new contentCodes();
 		$codes->display(PAGE_404_ERROR_TEXT);
 		unset($codes);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'url::displayError', $_ENV);
 	}
 	
 	static function displayValidXHTML() {
@@ -486,6 +520,9 @@ class _url {
 	static function displaySearch($search, $results = null) {
 		if (!$search)
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'url::displaySearch', $_ENV, $search, $results);
 		
 		$searchstr = $search;
 		$searches = array();
@@ -552,9 +589,18 @@ class _url {
 					"words are spelled correctly or try fewer keywords by " .
 					"clicking on them to remove."),
 				TOOLTIP_NOTIFICATION);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'url::displaySearch', $_ENV, $search, $results);
 	}
 	
 	function displayArguments() {
+		if (!isset($this->arguments))
+			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'url::displayArguments', $this);
+		
 		$encode = false;
 		$decode = false;
 			
@@ -577,6 +623,10 @@ class _url {
 				echo urldecode(url::get());
 			else
 				echo url::get();
+			
+			$result = true;
+			api::callHooks(API_HOOK_AFTER,
+				'url::displayArguments', $this, $result);
 			
 			return true;
 		}
@@ -653,12 +703,21 @@ class _url {
 		else
 			echo $content;
 		
+		$result = true;
+		api::callHooks(API_HOOK_AFTER,
+			'url::displayArguments', $this, $result);
+		
 		return true;
 	}
 	
 	function display() {
 		if ($this->displayArguments())
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'url::display', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'url::display', $this);
 	}
 }
 

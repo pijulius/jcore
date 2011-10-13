@@ -28,13 +28,26 @@ class _template {
 		if (!$row)
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'template::populate', $_ENV);
+		
 		template::$selected = $row;
-		return true;
+		
+		if (@is_file('template/'.WEBSITE_TEMPLATE.'/template.php'))
+			include_once('template/'.WEBSITE_TEMPLATE.'/template.php');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'template::populate', $_ENV, $row);
+		
+		return $row;
 	}
 	
 	function install() {
 		if (!isset($this->templateID) || !$this->templateID)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'template::install', $this);
 		
 		files::$debug = true;
 		sql::$debug = true;
@@ -75,6 +88,9 @@ class _template {
 				__("Please see detailed error messages above and try again."),
 				TOOLTIP_ERROR);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'template::install', $this);
+			
 			return false;
 		}
 		
@@ -84,9 +100,16 @@ class _template {
 				" `Installed` = 1" .
 				" WHERE `ID` = '".$this->templateID."'");
 			
-			if (sql::error())
+			if (sql::error()) {
+				api::callHooks(API_HOOK_AFTER,
+					'template::install', $this);
+				
 				return false;
+			}
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'template::install', $this, $successfiles);
 		
 		return true;
 	}
@@ -94,6 +117,9 @@ class _template {
 	function uninstall() {
 		if (!isset($this->templateID) || !$this->templateID)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'template::uninstall', $this);
 		
 		files::$debug = true;
 		sql::$debug = true;
@@ -128,6 +154,8 @@ class _template {
 		files::$debug = false;
 		sql::$debug = false;
 		
+		$result = true;
+		
 		if (JCORE_VERSION >= '0.9') {
 			sql::run(
 				" UPDATE `{templates}` SET " .
@@ -135,24 +163,30 @@ class _template {
 				" WHERE `ID` = '".$this->templateID."'");
 			
 			if (sql::error())
-				return false;
+				$result = false;
 		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'template::uninstall', $this, $result);
+		
+		return $result;
 	}
 	
+	// Class should be overwritten from template's own class
 	function installSQL() {
 		echo "<p>".__("No SQL queries to run.")."</p>";
 			
 		return true;
 	}
 	
+	// Class should be overwritten from template's own class
 	function installFiles() {
 		echo "<p>".__("No files to install.")."</p>";
 		
 		return true;
 	}
 	
+	// Class should be overwritten from template's own class
 	function installCustom() {
 		return true;
 	}
@@ -166,27 +200,33 @@ class _template {
 			" SET `jQueryPlugins` = '".sql::escape($plugins)."'" .
 			" WHERE `ID` = '".$this->templateID."'");
 		
-		return true;
+		return (sql::affected() != -1);
 	}
 	
+	// Class should be overwritten from template's own class
 	function uninstallSQL() {
 		echo "<p>".__("No SQL queries to run.")."</p>";
 		
 		return true;
 	}
 	
+	// Class should be overwritten from template's own class
 	function uninstallFiles() {
 		echo "<p>".__("No files to uninstall.")."</p>";
 		
 		return true;
 	}
 	
+	// Class should be overwritten from template's own class
 	function uninstallCustom() {
 		return true;
 	}
 	
 	// ************************************************   Admin Part
 	function displayInstallResults($title, $results, $success = false) {
+		api::callHooks(API_HOOK_BEFORE,
+			'template::displayInstallResults', $this, $title, $results, $success);
+		
 		echo
 			"<div tabindex='0' class='fc" .
 				(isset($success) && !$success?
@@ -205,6 +245,9 @@ class _template {
 					$results .
 				"</div>" .
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'template::displayInstallResults', $this, $title, $results, $success);
 	}
 	
 	// ************************************************   Client Part
@@ -213,10 +256,10 @@ class _template {
 	}
 	
 	static function getSelectedID () {
-		if (!template::$selected)
-			return 0;
+		if (template::$selected)
+			return template::$selected['ID'];
 		
-		return template::$selected['ID'];
+		return 0;
 	}
 }
 

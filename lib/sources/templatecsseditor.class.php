@@ -16,6 +16,9 @@ class _templateCSSEditor extends fileEditor {
 	var $adminPath = 'admin/site/template/templatecsseditor';
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateCSSEditor::templateCSSEditor', $this);
+		
 		parent::__construct();
 		
 		$this->file = SITE_PATH.'template/template.css';
@@ -24,9 +27,15 @@ class _templateCSSEditor extends fileEditor {
 		if (template::$selected)
 			$this->file = SITE_PATH.'template/' .
 				template::$selected['Name'].'/template.css';
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateCSSEditor::templateCSSEditor', $this);
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateCSSEditor::setupAdmin', $this);
+		
 		favoriteLinks::add(
 			__('Template Files'), 
 			'?path=admin/site/template/templateimages');
@@ -37,18 +46,34 @@ class _templateCSSEditor extends fileEditor {
 			__('Pages / Posts'), 
 			'?path=' .
 			(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateCSSEditor::setupAdmin', $this);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateCSSEditor::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Template'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateCSSEditor::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateCSSEditor::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'templateCSSEditor::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateCSSEditor::displayAdmin', $this);
+		
 		$this->displayAdminTitle(__("CSS Editor"));
 		$this->displayAdminDescription();
 		
@@ -64,15 +89,25 @@ class _templateCSSEditor extends fileEditor {
 		
 		echo
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateCSSEditor::displayAdmin', $this);
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateCSSEditor::ajaxRequest', $this);
+		
 		if (!$GLOBALS['USER']->loginok || 
 			!$GLOBALS['USER']->data['Admin']) 
 		{
 			tooltip::display(
 				__("Request can only be accessed by administrators!"),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'templateCSSEditor::ajaxRequest', $this);
+			
 			return true;
 		}
 		
@@ -85,10 +120,18 @@ class _templateCSSEditor extends fileEditor {
 				__("You do not have permission to access this path!"),
 				TOOLTIP_ERROR);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'templateCSSEditor::ajaxRequest', $this);
+			
 			return true;
 		}
 		
-		return parent::ajaxRequest();
+		$result = parent::ajaxRequest();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateCSSEditor::ajaxRequest', $this, $result);
+		
+		return $result;
 	}
 }
 

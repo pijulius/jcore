@@ -19,17 +19,29 @@ class _userGroupPermissions extends userPermissions {
 	var $adminPath = 'admin/members/usergroups/usergrouppermissions';
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'userGroupPermissions::setupAdmin', $this);
+		
 		parent::setupAdmin();
 		
 		favoriteLinks::add(
 			__('User Groups'), 
 			'?path=admin/members/usergroups');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userGroupPermissions::setupAdmin', $this);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'userGroupPermissions::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Group Permissions'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'userGroupPermissions::displayAdminTitle', $this, $ownertitle);
 	}
 }
 

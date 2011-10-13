@@ -84,6 +84,9 @@ class _comments {
 	var $userPermissionType = 0;
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::comments', $this);
+		
 		$this->commentURL = $this->getCommentURL();
 		$this->uriRequest = strtolower(get_class($this));
 		
@@ -111,10 +114,16 @@ class _comments {
 			
 			$this->userPermissionType = $userpermission['PermissionType'];
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::comments', $this);
 	}
 	
 	function SQL($commentid = null) {
-		return
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::SQL', $this);
+		
+		$sql =
 			" SELECT * FROM `{" . $this->sqlTable . "}`" .
 			" WHERE 1" .
 			($this->sqlRow && !$this->latests?
@@ -144,10 +153,18 @@ class _comments {
 				" `TimeStamp` DESC,":
 				" `TimeStamp`,") .
 			" `ID`";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::SQL', $this, $sql);
+		
+		return $sql;
 	}
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Comment'), 
@@ -156,9 +173,15 @@ class _comments {
 		favoriteLinks::add(
 			__('Settings'), 
 			'?path=admin/site/settings');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::setupAdminForm', $this, $form);
+		
 		$form->add(
 			__('Nickname'),
 			'UserName',
@@ -193,9 +216,15 @@ class _comments {
 		$form->setValueType(FORM_VALUE_TYPE_INT);
 		
 		$form->addValue('','');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::verifyAdmin', $this, $form);
+		
 		$search = null;
 		$decline = null;
 		$approve = null;
@@ -267,6 +296,9 @@ class _comments {
 				__("Comments have been successfully deleted."),
 				TOOLTIP_SUCCESS);
 				
+			api::callHooks(API_HOOK_AFTER,
+				'comments::verifyAdmin', $this, $form, $deleteall);
+			
 			return true;
 		}
 		
@@ -277,6 +309,9 @@ class _comments {
 				__("No comment selected! Please select at " .
 					"least one comment."),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'comments::verifyAdmin', $this, $form);
 			
 			return false;
 		}
@@ -291,6 +326,9 @@ class _comments {
 						"are now NOT visible to the public."),
 					TOOLTIP_SUCCESS);
 					
+				api::callHooks(API_HOOK_AFTER,
+					'comments::verifyAdmin', $this, $form, $decline);
+				
 				return true;
 			}
 			
@@ -303,6 +341,9 @@ class _comments {
 						"are now visible to the public."),
 					TOOLTIP_SUCCESS);
 					
+				api::callHooks(API_HOOK_AFTER,
+					'comments::verifyAdmin', $this, $form, $approve);
+				
 				return true;
 			}
 			
@@ -314,78 +355,105 @@ class _comments {
 					__("Comments have been successfully deleted."),
 					TOOLTIP_SUCCESS);
 					
+				api::callHooks(API_HOOK_AFTER,
+					'comments::verifyAdmin', $this, $form, $delete);
+				
 				return true;
 			}
 		}
 			
 		if ($decline) {
-			if (!$this->decline($id))
-				return false;
+			$result = $this->decline($id);
 			
-			tooltip::display(
-				__("Comment has been successfully declined and " .
-					"is now NOT visible to the public."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Comment has been successfully declined and " .
+						"is now NOT visible to the public."),
+					TOOLTIP_SUCCESS);
 				
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'comments::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
 		if ($approve) {
-			if (!$this->approve($id))
-				return false;
+			$result = $this->approve($id);
 			
-			tooltip::display(
-				__("Comment has been successfully approved and " .
-					"is now visible to the public."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Comment has been successfully approved and " .
+						"is now visible to the public."),
+					TOOLTIP_SUCCESS);
 				
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'comments::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
 		if ($delete) {
-			if (!$this->delete($id))
-				return false;
+			$result = $this->delete($id);
 			
-			tooltip::display(
-				__("Comment has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Comment has been successfully deleted."),
+					TOOLTIP_SUCCESS);
 				
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'comments::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if ($edit) {
-			if (!$this->edit($id, $form->getPostArray()))
-				return false;
+			$result = $this->edit($id, $form->getPostArray());
 			
+			if ($result)
+				tooltip::display(
+					__("Comment has been successfully updated.")." " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+				
+			api::callHooks(API_HOOK_AFTER,
+				'comments::verifyAdmin', $this, $form, $result);
+			
+			return $result;
+		}
+		
+		$newid = $this->add($form->getPostArray());
+		
+		if ($newid) {
 			tooltip::display(
-				__("Comment has been successfully updated.")." " .
-				"<a href='#adminform'>" .
+				__("Comment has been successfully created.")." " .
+				"<a href='".url::uri('id, edit, delete') .
+					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
 				
-			return true;
+			$form->reset();
 		}
 		
-		if (!$newid = $this->add($form->getPostArray()))
-			return false;
+		api::callHooks(API_HOOK_AFTER,
+			'comments::verifyAdmin', $this, $form, $newid);
 		
-		tooltip::display(
-			__("Comment has been successfully created.")." " .
-			"<a href='".url::uri('id, edit, delete') .
-				"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-				__("Edit") .
-			"</a>",
-			TOOLTIP_SUCCESS);
-			
-		$form->reset();
-		return true;
+		return $newid;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayAdminListHeader', $this);
+		
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' " .
@@ -398,12 +466,22 @@ class _comments {
 				__("Posted By")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Comment")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayAdminListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayAdminListHeaderFunctions', $this);
+		
 		if (defined('MODERATED_COMMENTS') && MODERATED_COMMENTS &&
 			defined('MODERATED_COMMENTS_BY_APPROVAL') && 
 			MODERATED_COMMENTS_BY_APPROVAL)
@@ -416,9 +494,15 @@ class _comments {
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayAdminListItem', $this, $row);
+		
 		$ids = null;
 		
 		if (isset($_POST['ids']))
@@ -490,12 +574,22 @@ class _comments {
 				"</div>" .
 				"</div>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayAdminListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayAdminListItemFunctions', $this, $row);
+		
 		if (defined('MODERATED_COMMENTS') && MODERATED_COMMENTS &&
 			defined('MODERATED_COMMENTS_BY_APPROVAL') && 
 			MODERATED_COMMENTS_BY_APPROVAL)
@@ -535,9 +629,15 @@ class _comments {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListSearch() {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayAdminListSearch', $this);
+		
 		$search = null;
 		
 		if (isset($_GET['search']))
@@ -551,9 +651,15 @@ class _comments {
 					htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
 			"<input type='submit' value='" .
 				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayAdminListSearch', $this);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayAdminListFunctions', $this);
+		
 		if (defined('MODERATED_COMMENTS') && MODERATED_COMMENTS &&
 			defined('MODERATED_COMMENTS_BY_APPROVAL') && 
 			MODERATED_COMMENTS_BY_APPROVAL)
@@ -570,9 +676,15 @@ class _comments {
 			"<input type='submit' name='deleteallsubmit' value='" .
 				htmlspecialchars(__("Delete All"), ENT_QUOTES) .
 				"' class='button confirm-link' /> ";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayAdminList', $this, $rows);
+		
 		echo
 			"<form action='".
 				url::uri('edit, delete, approve, decline')."' method='post'>";
@@ -624,20 +736,39 @@ class _comments {
 		
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__(trim(ucfirst(preg_replace('/([A-Z])/', ' \1', 
 				$this->sqlOwnerCountField)))), 
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
@@ -648,6 +779,9 @@ class _comments {
 			
 			return;
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayAdmin', $this);
 		
 		$search = null;
 		$delete = null;
@@ -785,6 +919,9 @@ class _comments {
 		unset($form);
 		
 		echo "</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayAdmin', $this);
 	}
 	
 	function add($values) {
@@ -810,6 +947,9 @@ class _comments {
 					
 			return false;
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::add', $this, $values);
 		
 		$newid = sql::run(
 			" INSERT INTO `{".$this->sqlTable."}` SET" .
@@ -844,6 +984,10 @@ class _comments {
 				sprintf(__("Comment couldn't be added! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'comments::add', $this, $values);
+			
 			return false;
 		}
 		
@@ -886,6 +1030,10 @@ class _comments {
 			(!$GLOBALS['USER']->loginok || !$GLOBALS['USER']->data['Admin']))
 		{
 			unset($email);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'comments::add', $this, $values, $newid);
+			
 			return $newid;
 		}
 		
@@ -927,6 +1075,9 @@ class _comments {
 			
 		unset($email);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::add', $this, $values, $newid);
+		
 		return $newid;
 	}
 	
@@ -936,6 +1087,9 @@ class _comments {
 		
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::edit', $this, $id, $values);
 		
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}` SET ".
@@ -956,15 +1110,14 @@ class _comments {
 						security::closeTags($values['Comment'])))."'" .
 			" WHERE `ID` = '".(int)$id."'");
 		
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		if (!$result) {
 			tooltip::display(
 				sprintf(__("Comment couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
-		
-		if (!$GLOBALS['USER']->data['Admin']) {
+			
+		} elseif (!$GLOBALS['USER']->data['Admin']) {
 			$email = new email();
 			$email->load('CommentEdit');
 			
@@ -990,12 +1143,18 @@ class _comments {
 			unset($email);
 		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'comments::edit', $this, $id, $values, $result);
+		
+		return $result;
 	}
 	
 	function delete($id) {
 		if (!$id)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::delete', $this, $id);
 		
 		foreach($this->getSubComments($id) as $subcomment)
 			sql::run(
@@ -1018,6 +1177,9 @@ class _comments {
 				" WHERE `ID` = '".$this->selectedOwnerID."'");
 		}
 					
+		api::callHooks(API_HOOK_AFTER,
+			'comments::delete', $this, $id);
+		
 		return true;
 	}
 	
@@ -1048,26 +1210,34 @@ class _comments {
 		if (!$id)
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::decline', $this, $id);
+		
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}` SET ".
 			" `TimeStamp` = `TimeStamp`," .
 			" `Pending` = 1" .
 			" WHERE `ID` = '".(int)$id."'");
 		
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		if (!$result)
 			tooltip::display(
 				sprintf(__("Comment couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'comments::decline', $this, $id, $result);
+		
+		return $result;
 	}
 	
 	function approve($id) {
 		if (!$id)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::approve', $this, $id);
 		
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}` SET ".
@@ -1075,82 +1245,91 @@ class _comments {
 			" `Pending` = 0" .
 			" WHERE `ID` = '".(int)$id."'");
 		
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		if (!$result) {
 			tooltip::display(
 				sprintf(__("Comment couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
-		
-		if (!defined('MODERATED_COMMENTS') || !MODERATED_COMMENTS ||
-			!defined('MODERATED_COMMENTS_BY_APPROVAL') ||
-			!MODERATED_COMMENTS_BY_APPROVAL)
-			return true;
-		
-		$comment = sql::fetch(sql::run(
-			" SELECT * FROM `{".$this->sqlTable."}` " .
-			" WHERE `ID` = '".(int)$id."'"));
-		
-		$email = new email();
-		$email->variables = array(
+			
+		} else {
+			if (!defined('MODERATED_COMMENTS') || !MODERATED_COMMENTS ||
+				!defined('MODERATED_COMMENTS_BY_APPROVAL') ||
+				!MODERATED_COMMENTS_BY_APPROVAL)
+			{
+				api::callHooks(API_HOOK_AFTER,
+					'comments::approve', $this, $id, $result);
+				
+				return $result;
+			}
+			
+			$comment = sql::fetch(sql::run(
+				" SELECT * FROM `{".$this->sqlTable."}` " .
+				" WHERE `ID` = '".(int)$id."'"));
+			
+			$email = new email();
+			$email->variables = array(
 				"CommentSectionTitle" => '', 
 				"CommentSection" => $this->selectedOwner,
 				"CommentBy" => $comment['UserName'],
 				"CommentBody" => $comment['Comment'],
 				"CommentURL" => str_replace('&amp;', '&', 
 					$this->commentURL)."#comment".(int)$id);
-		
-		$selectedowner = null;
-		
-		if ($this->sqlOwnerTable) {
-			$selectedowner = sql::fetch(sql::run(
-				" SELECT * FROM `{" .$this->sqlOwnerTable . "}`" .
-				" WHERE `ID` = '".$this->selectedOwnerID."'"));
 			
-			$email->variables["CommentSectionTitle"] = 
-					$selectedowner[$this->sqlOwnerField];
-		}
-		
-		if ($selectedowner && isset($selectedowner['UserID']) && $selectedowner['UserID'] &&
-			$selectedowner['UserID'] != $GLOBALS['USER']->data['ID'])
-		{
-			$email->reset();
-			$user = $GLOBALS['USER']->get($selectedowner['UserID']);
+			$selectedowner = null;
 			
-			if ($user && $user['Email'] != WEBMASTER_EMAIL) {
-				$email->load('CommentReply');
-				$email->toUser = $user;
-				$email->send();
-			}
-		}
-		
-		if (isset($comment['SubCommentOfID']) && (int)$comment['SubCommentOfID']) {
-			$email->reset();
-			$replytocomment = sql::fetch(sql::run(
-				" SELECT * FROM `{".$this->sqlTable."}` " .
-				" WHERE `ID` = '".(int)$comment['SubCommentOfID']."'"));
-			
-			if ($replytocomment['UserID'] && 
-				(!$selectedowner || !isset($selectedowner['UserID']) ||
-				$replytocomment['UserID'] != $selectedowner['UserID']) && 
-				$replytocomment['UserID'] != $GLOBALS['USER']->data['ID']) 
-			{
-				$email->load('CommentReply');
-				$email->toUserID = $replytocomment['UserID'];
-				$email->send();
+			if ($this->sqlOwnerTable) {
+				$selectedowner = sql::fetch(sql::run(
+					" SELECT * FROM `{" .$this->sqlOwnerTable . "}`" .
+					" WHERE `ID` = '".$this->selectedOwnerID."'"));
 				
-			} elseif (isset($replytocomment['Email']) && $replytocomment['Email']) {
-				$email->load('CommentReply');
-				$email->variables['UserName'] = $replytocomment['UserName'];
-				$email->to = $replytocomment['Email'];
-				$email->send();
+				$email->variables["CommentSectionTitle"] = 
+					$selectedowner[$this->sqlOwnerField];
 			}
-		}
 			
-		unset($email);
+			if ($selectedowner && isset($selectedowner['UserID']) && $selectedowner['UserID'] &&
+				$selectedowner['UserID'] != $GLOBALS['USER']->data['ID'])
+			{
+				$email->reset();
+				$user = $GLOBALS['USER']->get($selectedowner['UserID']);
+				
+				if ($user && $user['Email'] != WEBMASTER_EMAIL) {
+					$email->load('CommentReply');
+					$email->toUser = $user;
+					$email->send();
+				}
+			}
+			
+			if (isset($comment['SubCommentOfID']) && (int)$comment['SubCommentOfID']) {
+				$email->reset();
+				$replytocomment = sql::fetch(sql::run(
+					" SELECT * FROM `{".$this->sqlTable."}` " .
+					" WHERE `ID` = '".(int)$comment['SubCommentOfID']."'"));
+				
+				if ($replytocomment['UserID'] && 
+					(!$selectedowner || !isset($selectedowner['UserID']) ||
+					$replytocomment['UserID'] != $selectedowner['UserID']) && 
+					$replytocomment['UserID'] != $GLOBALS['USER']->data['ID']) 
+				{
+					$email->load('CommentReply');
+					$email->toUserID = $replytocomment['UserID'];
+					$email->send();
+					
+				} elseif (isset($replytocomment['Email']) && $replytocomment['Email']) {
+					$email->load('CommentReply');
+					$email->variables['UserName'] = $replytocomment['UserName'];
+					$email->to = $replytocomment['Email'];
+					$email->send();
+				}
+			}
+				
+			unset($email);
+		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'comments::approve', $this, $id, $result);
+		
+		return $result;
 	}
 	
 	// ************************************************   Client Part
@@ -1158,19 +1337,26 @@ class _comments {
 		$url = url::get();
 		
 		if ($pos = strpos($url, '#'))
-			return substr($url, 0, $pos);
+			$url = substr($url, 0, $pos);
 		
 		return $url;
 	}
 	
-	static function generateTeaser($description) {
+	static function generateTeaser($description, $length = 130) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::generateTeaser', $_ENV, $description, $length);
+		
 		$teaser = strip_tags($description);
 		
-		if (strlen($teaser) <= 130)
-			return $teaser;
+		if (strlen($teaser) > $length) {
+			list($teaser) = explode('<sep>', wordwrap($teaser, $length, '<sep>'));
+			$teaser .= " ...";
+		}
 		
-		list($teaser) = explode('<sep>', wordwrap($teaser, 130, '<sep>'));
-		return $teaser." ...";
+		api::callHooks(API_HOOK_AFTER,
+			'comments::generateTeaser', $_ENV, $description, $length, $teaser);
+		
+		return $teaser;
 	}
 	
 	function rate($id, $rating = 0) {
@@ -1219,6 +1405,9 @@ class _comments {
 			
 			return false;
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::rate', $this, $id, $rating);
 		
 		sql::run(
 			" INSERT INTO `{".$this->sqlTable."ratings}`" .
@@ -1269,10 +1458,16 @@ class _comments {
 			__("Thank you for rating this comment."),
 			TOOLTIP_SUCCESS);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::rate', $this, $id, $rating, $row);
+		
 		return true;
 	}
 	
 	function verify(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::verify', $this, $form);
+		
 		$commentid = null;
 		$delete = null;
 		$approve = false;
@@ -1294,6 +1489,9 @@ class _comments {
 					__("Only administrators can delete comments."),
 					TOOLTIP_ERROR);
 				
+				api::callHooks(API_HOOK_AFTER,
+					'comments::verify', $this, $form);
+				
 				return false;
 			}
 			
@@ -1301,27 +1499,39 @@ class _comments {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'comments::verify', $this, $form);
+				
 				return false;
 			}
 			
-			if (!$this->delete($commentid))
-				return false;
+			$result = $this->delete($commentid);
 			
-			tooltip::display(
-				__("Comment has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Comment has been successfully deleted."),
+					TOOLTIP_SUCCESS);
 				
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'comments::verify', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form)
+		if (!$form || (!$this->guestComments && !$GLOBALS['USER']->loginok)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::verify', $this, $form);
+			
 			return false;
+		}
 		
-		if (!$this->guestComments && !$GLOBALS['USER']->loginok)
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::verify', $this, $form);
+			
 			return false;
-		
-		if (!$form->verify())
-			return false;
+		}
 		
 		$commentid = $form->get('CommentID');
 		if ($commentid) {
@@ -1333,6 +1543,10 @@ class _comments {
 				tooltip::display(
 					__("Selected comment cannot be found!"),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'comments::verify', $this, $form);
+				
 				return false;
 			}
 			
@@ -1343,6 +1557,10 @@ class _comments {
 				tooltip::display(
 					__("You can only edit your own comments."),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'comments::verify', $this, $form);
+				
 				return false;
 			}
 			
@@ -1352,6 +1570,10 @@ class _comments {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'comments::verify', $this, $form);
+				
 				return false;
 			}
 			
@@ -1362,27 +1584,33 @@ class _comments {
 				$this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->approve($commentid);
 			
-			if (!$this->edit($commentid, $form->getPostArray()))
-				return false;
+			$result = $this->edit($commentid, $form->getPostArray());
 			
-			tooltip::display(
-				__("Your comment has been successfully updated.").
-				"<script>window.location='#comment".$commentid."';</script>",
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Your comment has been successfully updated.").
+					"<script>window.location='#comment".$commentid."';</script>",
+					TOOLTIP_SUCCESS);
 		
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'comments::verify', $this, $form, $result);
+			
+			return $result;
 		}
 		
 		$newid = $this->add($form->getPostArray());
 		
-		if (!$newid)
-			return false;
+		if ($newid) {
+			tooltip::display(
+				__("Thank you for your comment.").
+					"<script>window.location='#comment".$newid."';</script>",
+				TOOLTIP_SUCCESS);
+			
+			$form->reset();
+		}
 		
-		$form->reset();
-		tooltip::display(
-			__("Thank you for your comment.").
-				"<script>window.location='#comment".$newid."';</script>",
-			TOOLTIP_SUCCESS);
+		api::callHooks(API_HOOK_AFTER,
+			'comments::verify', $this, $form, $newid);
 		
 		return $newid;
 	}
@@ -1394,7 +1622,7 @@ class _comments {
 		if (defined('MODERATED_COMMENTS_BY_APPROVAL') &&
 			MODERATED_COMMENTS_BY_APPROVAL && $row['Pending'])
 			return true;
-			
+		
 		if (defined('MODERATED_COMMENTS_PENDING_MINUTES') &&
 			MODERATED_COMMENTS_PENDING_MINUTES)
 		{ 
@@ -1408,6 +1636,9 @@ class _comments {
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::ajaxRequest', $this);
+		
 		$commentid = null;
 		
 		if (isset($_GET[strtolower(get_class($this))]))
@@ -1446,28 +1677,31 @@ class _comments {
 			}
 			
 			if ($rateup) {
-				$this->rate($commentid, 1);
-				return true;
-			}
-		
-			if ($ratedown) {
-				$this->rate($commentid, -1);
-				return true;
-			}
-		
-			if ($reply) {
-				$this->displayReplyForm($commentid);
-				return true;
-			}
+				$result = $this->rate($commentid, 1);
 				
-			if ($edit) {
-				$this->displayEditForm($commentid);
-				return true;
+			} elseif ($ratedown) {
+				$result = $this->rate($commentid, -1);
+				
+			} elseif ($reply) {
+				$result = $this->displayReplyForm($commentid);
+				
+			} elseif ($edit) {
+				$result = $this->displayEditForm($commentid);
 			}
+			
+			api::callHooks(API_HOOK_AFTER,
+				'comments::ajaxRequest', $this, $result);
+			
+			return true;
 		}
 		
+		$result = true;
 		$this->ajaxPaging = true;
 		$this->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::ajaxRequest', $this, $result);
+		
 		return true;
 	}
 	
@@ -1497,10 +1731,14 @@ class _comments {
 					null):
 				null) .
 			" LIMIT 1"));
+		
 		return (int)$row['Rows'];
 	}
 	
 	function setupForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::setupForm', $this, $form);
+		
 		$form->action .= '#comments';
 		
 		$form->add(
@@ -1539,6 +1777,9 @@ class _comments {
 				null,
 				FORM_INPUT_TYPE_VERIFICATION_CODE);
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::setupForm', $this, $form);
 	}
 	
 	function displayReplyForm($tocommentid = null) {
@@ -1546,6 +1787,7 @@ class _comments {
 			tooltip::display(
 				__("Only registered users can comment."),
 				TOOLTIP_NOTIFICATION);
+			
 			return;
 		}
 		
@@ -1553,6 +1795,9 @@ class _comments {
 			__("Quick Reply"),
 			'quickreply');
 					
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayReplyForm', $this, $tocommentid, $form);
+		
 		$form->action = url::referer(true);
 		$form->footer = '';
 		
@@ -1580,6 +1825,9 @@ class _comments {
 		
 		$form->display();
 		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayReplyForm', $this, $tocommentid, $form);
+		
 		unset($form);
 	}
 	
@@ -1595,6 +1843,7 @@ class _comments {
 			tooltip::display(
 				__("Selected comment cannot be found!"),
 				TOOLTIP_ERROR);
+			
 			return;
 		}
 		
@@ -1605,12 +1854,16 @@ class _comments {
 			tooltip::display(
 				__("You can only edit your own comments."),
 				TOOLTIP_ERROR);
+			
 			return;
 		}
 		
 		$form = new form(
 			__("Edit Comment"),
 			'editcomment');
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayEditForm', $this, $commentid, $form);
 		
 		$form->action = url::referer(true);
 		$form->footer = '';
@@ -1647,10 +1900,16 @@ class _comments {
 		
 		$form->display();
 		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayEditForm', $this, $commentid, $form);
+		
 		unset($form);
 	}
 	
 	function displayFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayFunctions', $this, $row);
+		
 		if ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin'] &&
 			$this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 		{
@@ -1718,9 +1977,15 @@ class _comments {
 						__("Reply") .
 					"</span>" .
 				"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayFunctions', $this, $row);
 	}
 	
 	function displayRating(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayRating', $this, $row);
+		
 		$visiblerating = 0;
 		
 		if (JCORE_VERSION >= '0.8')
@@ -1753,18 +2018,22 @@ class _comments {
 				"</a>";
 		}
 		
-		if (!$visiblerating)
-			return;
+		if ($visiblerating)
+			echo
+				"<span class='comment-rating comment'>" .
+					$visiblerating .
+				"</span>";
 		
-		echo
-			"<span class='comment-rating comment'>" .
-				$visiblerating .
-			"</span>";
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayRating', $this, $row);
 	}
 	
 	function displayIsPending(&$row) {
 		if (!$pending = $this->isPending($row))
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayIsPending', $this, $row);
 		
 		if (defined('MODERATED_COMMENTS_BY_APPROVAL') &&
 			MODERATED_COMMENTS_BY_APPROVAL && $pending)
@@ -1787,14 +2056,26 @@ class _comments {
 					__("Pending")."!" .
 				")</span>";
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayIsPending', $this, $row);
 	}
 	
 	function displayIP(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayIP', $this, $row);
+		
 		echo
 			" (".security::long2ip($row['IP']).")";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayIP', $this, $row);
 	}
 	
 	function displayDetails(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayDetails', $this, $row);
+		
 		echo
 			"<span class='details-date'>" .
 			calendar::dateTime($row['TimeStamp']) .
@@ -1814,12 +2095,21 @@ class _comments {
 		}
 		
 		$this->displayIsPending($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayDetails', $this, $row);
 	}
 	
 	function displayComment(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayComment', $this, $row);
+		
 		echo
 			preg_replace('/\<a /i', "<a target='_blank' rel='nofollow' ",
 				nl2br($row['Comment']));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayComment', $this, $row);
 	}
 	
 	function displaySubComments(&$row) {
@@ -1828,6 +2118,9 @@ class _comments {
 		
 		if (!sql::rows($subrows))
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displaySubComments', $this, $row);
 		
 		while($subrow = sql::fetch($subrows)) {
 			if ($subrow['SubCommentOfID'])
@@ -1843,16 +2136,30 @@ class _comments {
 				echo 
 					"</div>";
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displaySubComments', $this, $row);
 	}
 	
 	function displayAvatar(&$row) {
-		if ($row['UserID'])
-			return $GLOBALS['USER']->displayAvatar($row['UserID']);
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayAvatar', $this, $row);
 		
-		return $GLOBALS['USER']->displayAvatar($row['Email']);
+		if ($row['UserID'])
+			$result = $GLOBALS['USER']->displayAvatar($row['UserID']);
+		else
+			$result = $GLOBALS['USER']->displayAvatar($row['Email']);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayAvatar', $this, $row);
+		
+		return $result;
 	}
 	
 	function displayFormated(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayFormated', $this, $row);
+		
 		if ($row['UserID']) {
 			$row['_User'] = $GLOBALS['USER']->get($row['UserID']);
 			$row['_User']['DisplayUserName'] = $row['UserName'];
@@ -1981,9 +2288,15 @@ class _comments {
 		
 		if (!$this->latests)
 			$this->displaySubComments($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayFormated', $this, $row);
 	}
 	
 	function displayOne(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayOne', $this, $row);
+		
 		if ($row['UserID']) {
 			$row['_User'] = $GLOBALS['USER']->get($row['UserID']);
 			$row['_User']['DisplayUserName'] = $row['UserName'];
@@ -2067,16 +2380,31 @@ class _comments {
 		
 		if (!$this->latests)
 			$this->displaySubComments($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayOne', $this, $row);
 	}
 	
 	function displayTitle() {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayTitle', $this);
+		
 		echo
 			__("Comments") .
 			" (".$this->countItems().")";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayTitle', $this);
 	}
 	
 	function displayForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::displayForm', $this);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::displayForm', $this);
 	}
 	
 	function display() {
@@ -2087,6 +2415,9 @@ class _comments {
 			
 			return;
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::display', $this);
 		
 		$replyto = null;
 		$edit = null;
@@ -2274,6 +2605,9 @@ class _comments {
 		
 		if (!$this->ajaxRequest)
 			echo "</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::display', $this, $paging->items);
 		
 		return $paging->items;
 	}

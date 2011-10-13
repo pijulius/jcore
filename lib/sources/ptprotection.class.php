@@ -104,20 +104,24 @@ class _PTProtection {
 			" SELECT `UserID` FROM `{ptprotectionbans}`" .
 			" WHERE `UserID` = '".(int)$userid."'" .
 			" AND `EndTimeStamp` > NOW()"));
-			
+		
+		$result = false;
+		
 		// If UserID is banned return error message, otherwise return false
-		if ($row['UserID']) 
-			return true;
-		
-		$this->get($userid);
-		
-		if ($this->simultaneousLogins >= $this->maximumSimultaneousLogins) {
-			$this->banUser($userid, $this->protectionTimeMinutes);
+		if ($row['UserID']) { 
+			$result = true;
 			
-			return true;
+		} else { 
+			$this->get($userid);
+			
+			if ($this->simultaneousLogins >= $this->maximumSimultaneousLogins) {
+				$this->banUser($userid, $this->protectionTimeMinutes);
+				
+				$result = true;
+			}
 		}
 		
-		return false;
+		return $result;
 	}
 }
 

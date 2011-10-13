@@ -47,6 +47,9 @@ class _pictures {
 	var $ajaxRequest = null;
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::pictures', $this);
+		
 		$this->uriRequest = strtolower(get_class($this));
 		$this->subFolder = date('Ym');
 		$this->rootPath = SITE_PATH.'sitefiles/image/';
@@ -54,10 +57,16 @@ class _pictures {
 		
 		if ($this->sqlRow && isset($_GET[strtolower($this->sqlRow)]))
 			$this->selectedOwnerID = (int)$_GET[strtolower($this->sqlRow)];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::pictures', $this);
 	}
 	
 	function SQL() {
-		return
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::SQL', $this);
+		
+		$sql =
 			" SELECT * FROM `{" .$this->sqlTable."}`" .
 			" WHERE 1" .
 			($this->sqlRow && !$this->latests?
@@ -70,10 +79,18 @@ class _pictures {
 					" `TimeStamp` DESC,":
 					" `OrderID`,") .
 				" `ID` DESC");
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::SQL', $this, $sql);
+		
+		return $sql;
 	}
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Picture'), 
@@ -85,9 +102,15 @@ class _pictures {
 		favoriteLinks::add(
 			__('Content Files'), 
 			'?path=admin/content/contentfiles');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::setupAdminForm', $this, $form);
+		
 		$edit = null;
 		
 		if (isset($_GET['edit']))
@@ -318,9 +341,15 @@ class _pictures {
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::verifyAdmin', $this, $form);
+		
 		$reorder = null;
 		$orders = null;
 		$delete = null;
@@ -343,10 +372,7 @@ class _pictures {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
-			if (!$orders)
-				return false;
-			
-			foreach($orders as $oid => $ovalue) {
+			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{".$this->sqlTable ."}`" .
 					" SET `OrderID` = '".(int)$ovalue."'," .
@@ -358,22 +384,32 @@ class _pictures {
 				__("Pictures have been successfully re-ordered."),
 				TOOLTIP_SUCCESS);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::verifyAdmin', $this, $form, $orders);
+			
 			return true;
 		}
 		
 		if ($delete) {
-			if (!$this->delete($id))
-				return false;
+			$result = $this->delete($id);
 			
-			tooltip::display(
-				__("Picture has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Picture has been successfully deleted."),
+					TOOLTIP_SUCCESS);
 			
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if (!$edit) {
 			if (!$form->get('Files') && !$form->get('PictureID') && 
@@ -384,6 +420,9 @@ class _pictures {
 						"Please select a file / picture to upload or define an already " .
 						"uploaded picture."),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'pictures::verifyAdmin', $this, $form);
 				
 				return false;
 			}
@@ -432,7 +471,12 @@ class _pictures {
 						$this->rootPath,
 						$thumbnail, $watermark,
 						$sharpen))
+				{
+					api::callHooks(API_HOOK_AFTER,
+						'pictures::verifyAdmin', $this, $form);
+					
 					return false;
+				}
 				
 				$form->set('File', $filename);
 			}
@@ -448,6 +492,10 @@ class _pictures {
 							__("Thumbnail couldn't be updated as the " .
 								"selected picture cannot be found!"),
 							TOOLTIP_ERROR);
+						
+						api::callHooks(API_HOOK_AFTER,
+							'pictures::verifyAdmin', $this, $form);
+						
 						return false;
 					}
 					
@@ -463,21 +511,29 @@ class _pictures {
 			
 			if ($form->get('RegenerateThumbnail') && 
 				!$this->regenerateThumbnail($id, $sharpen))
+			{
+				api::callHooks(API_HOOK_AFTER,
+					'pictures::verifyAdmin', $this, $form);
+				
 				return false;
+			}
 			
 			$form->setValue('RegenerateThumbnail', false);
 			
-			if (!$this->edit($id, $form->getPostArray()))
-				return false;
-				
-			tooltip::display(
-				__("Picture has been successfully updated.")." " .
-				"<a href='#adminform'>" .
-					__("Edit") .
-				"</a>",
-				TOOLTIP_SUCCESS);
+			$result = $this->edit($id, $form->getPostArray());
 			
-			return true;
+			if ($result)
+				tooltip::display(
+					__("Picture has been successfully updated.")." " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
 		if (!$form->get('Files') && $form->get('PictureID')) {
@@ -494,19 +550,24 @@ class _pictures {
 			if (JCORE_VERSION >= '0.5' && !$picture['Thumbnail'])
 				$form->set('NoThumbnail', 1);
 			
-			if (!$newid = $this->add($form->getPostArray()))
-				return false;
+			$newid = $this->add($form->getPostArray());
 			
-			tooltip::display(
-				__("Picture has been successfully added.")." " .
-				"<a href='".url::uri('id, edit, delete') .
-					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-					__("Edit") .
-				"</a>",
-				TOOLTIP_SUCCESS);
+			if ($newid) {
+				tooltip::display(
+					__("Picture has been successfully added.")." " .
+					"<a href='".url::uri('id, edit, delete') .
+						"&amp;id=".$newid."&amp;edit=1#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+				
+				$form->reset();
+			}
 			
-			$form->reset();
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::verifyAdmin', $this, $form, $newid);
+			
+			return $newid;
 		}
 		
 		$files = $form->getFile('Files');
@@ -565,8 +626,12 @@ class _pictures {
 					implode(', ', $failedfiles)),
 				TOOLTIP_ERROR);
 			
-			if (!$successfiles || !count($successfiles))
+			if (!$successfiles || !count($successfiles)) {
+				api::callHooks(API_HOOK_AFTER,
+					'pictures::verifyAdmin', $this, $form);
+				
 				return false;
+			}
 		}
 		
 		tooltip::display(
@@ -576,10 +641,17 @@ class _pictures {
 			TOOLTIP_SUCCESS);
 		
 		$form->reset();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::verifyAdmin', $this, $form, $successfiles);
+		
 		return true;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Order")."</span></th>" .
@@ -587,20 +659,36 @@ class _pictures {
 				__("Picture")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Details")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayAdminListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayAdminListItem', $this, $row);
+		
 		$href = url::uri().
 			"&amp;request=".$this->uriRequest .
 			"&amp;view=".$row['ID']."&amp;ajax=1";
@@ -687,12 +775,22 @@ class _pictures {
 				"<br />" .
 				"</div>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayAdminListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -708,17 +806,29 @@ class _pictures {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayAdminListFunctions', $this);
+		
 		echo 
 			"<input type='submit' name='reordersubmit' value='" .
 				htmlspecialchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayAdminList', $this, $rows);
+		
 		echo
 			"<form action='".
 				url::uri('edit, delete')."' method='post'>";
@@ -770,20 +880,39 @@ class _pictures {
 		
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle( 
 			__(trim(ucfirst(preg_replace('/([A-Z])/', ' \1', 
 				$this->sqlOwnerCountField)))), 
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
@@ -794,6 +923,9 @@ class _pictures {
 			
 			return;
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayAdmin', $this);
 		
 		$delete = null;
 		$edit = null;
@@ -929,12 +1061,18 @@ class _pictures {
 		
 		echo
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayAdmin', $this);
 	}
 	
 	function add($values) {
 		if (!is_array($values))
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::add', $this, $values);
+		
 		if ($values['OrderID'] == '') {
 			sql::run(
 				" UPDATE `{".$this->sqlTable."}` SET " .
@@ -995,10 +1133,8 @@ class _pictures {
 				sprintf(__("Picture couldn't be created! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
-		
-		if ($this->sqlOwnerTable) {
+			
+		} else if ($this->sqlOwnerTable) {
 			sql::run(
 				" UPDATE `{".$this->sqlOwnerTable."}` SET " .
 				" `".$this->sqlOwnerCountField."` = `".
@@ -1006,7 +1142,10 @@ class _pictures {
 				" `TimeStamp` = `TimeStamp`" .
 				" WHERE `ID` = '".$this->selectedOwnerID."'");
 		}
-				
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::add', $this, $values, $newid);
+		
 		return $newid;
 	}
 	
@@ -1016,6 +1155,9 @@ class _pictures {
 		
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::edit', $this, $id, $values);
 		
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}` SET ".
@@ -1047,20 +1189,26 @@ class _pictures {
 				(int)$values['OrderID']."'" .
 			" WHERE `ID` = '".(int)$id."'");
 		
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result)
 			tooltip::display(
 				sprintf(__("Picture couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::edit', $this, $id, $values, $result);
+		
+		return $result;
 	}
 	
 	function delete($id) {
 		if (!$id)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::delete', $this, $id);
 		
 		$row = sql::fetch(sql::run(
 			" SELECT `Location` FROM `{".$this->sqlTable."}`" .
@@ -1097,6 +1245,9 @@ class _pictures {
 				" WHERE `ID` = '".$this->selectedOwnerID."'");
 		}
 					
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::delete', $this, $id);
+		
 		return true;
 	}
 	
@@ -1122,8 +1273,9 @@ class _pictures {
 	    if ($threshold > 255)    $threshold = 255; 
     	 
 	    $radius = abs(round($radius));     // Only integers make sense. 
-    	if ($radius == 0) { 
-        	return $img; imagedestroy($img); break;        } 
+    	if ($radius == 0) 
+        	return $img; 
+         
 	    $w = imagesx($img); $h = imagesy($img); 
     	$imgCanvas = imagecreatetruecolor($w, $h); 
     	$imgBlur = imagecreatetruecolor($w, $h); 
@@ -1230,10 +1382,18 @@ class _pictures {
 	}
 	
 	function uploadThumbnail($file, $to, $filename = null) {
-		return files::upload(
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::uploadThumbnail', $this, $file, $to, $filename);
+		
+		$result = files::upload(
 			$file,
 			$to.$this->thumbnailsFolder.$this->subFolder.'/'.$filename,
 			FILE_TYPE_IMAGE);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::uploadThumbnail', $this, $file, $to, $filename, $result);
+		
+		return $result;
 	}
 	
 	function createThumbnail($image, $thumb_width = NULL, $thumb_height = NULL, $save_image = NULL, $sharpen = true, $timeout = 60) {
@@ -1290,6 +1450,9 @@ class _pictures {
 			
 			return false;
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::createThumbnail', $this, $image, $thumb_width, $thumb_height, $save_image, $sharpen, $timeout);
 		
 		$src_img = null;
 		
@@ -1365,6 +1528,9 @@ class _pictures {
     	imagedestroy($dst_img);
    		imagedestroy($src_img);
 	   	
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::createThumbnail', $this, $image, $thumb_width, $thumb_height, $save_image, $sharpen, $timeout, $success);
+		
 	   	return $success;
 	}
 	
@@ -1384,19 +1550,29 @@ class _pictures {
 			return false;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::regenerateThumbnail', $this, $picid, $sharpen);
+		
 		$picpath = $this->rootPath.'/';
 		$thumbpath = $this->rootPath.$this->thumbnailsFolder.'/';
 		$filename = $picture['Location'];
 		
-		if (JCORE_VERSION >= '0.5')
-			return $this->createThumbnail($picpath.$filename, 
+		if (JCORE_VERSION >= '0.5') {
+			$result = $this->createThumbnail($picpath.$filename, 
 				$this->thumbnailWidth, $this->thumbnailHeight, 
 				$thumbpath.$filename, $sharpen);
-		
-		copy($picpath.$filename, $picpath.$this->largePicture($filename));
-		return $this->createThumbnail($picpath.$filename, 
+			
+		} else {
+			copy($picpath.$filename, $picpath.$this->largePicture($filename));
+			$result = $this->createThumbnail($picpath.$filename, 
 				$this->thumbnailWidth, $this->thumbnailHeight, 
 				$picpath.$filename, $sharpen);
+		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::regenerateThumbnail', $this, $picid, $sharpen, $result);
+		
+		return $result;
 	}
 	
 	function addWatermark($file, $watermark, $watermarkx = '100%', $watermarky = '100%', $watermarktype = PICTURE_WATERMARK_TYPE_TEXT, $timeout = 60) {
@@ -1447,6 +1623,9 @@ class _pictures {
 			return false;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::addWatermark', $this, $file, $watermark, $watermarkx, $watermarky, $watermarktype, $timeout);
+		
 		if (!ini_get('safe_mode') && $timeout)
 			@set_time_limit($timeout);
 		
@@ -1483,6 +1662,9 @@ class _pictures {
 						"Please try again by defining a JPEG or PNG watermark file."), $watermark),
 					TOOLTIP_ERROR);
 			
+				api::callHooks(API_HOOK_AFTER,
+					'pictures::addWatermark', $this, $file, $watermark, $watermarkx, $watermarky, $watermarktype, $timeout);
+				
 				return false;
 			}
 			
@@ -1570,15 +1752,25 @@ class _pictures {
 	
    		imagedestroy($img);
    		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::addWatermark', $this, $file, $watermark, $watermarkx, $watermarky, $watermarktype, $timeout, $status);
+		
    		return $status;
 	}
 	
 	function upload($file, $to, $thumbnail = true, $watermark = true, $sharpen = true) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::upload', $this, $file, $to, $thumbnail, $watermark, $sharpen);
+		
 		$picpath = $to.$this->subFolder.'/';
 		$thumbpath = $to.$this->thumbnailsFolder.$this->subFolder.'/';
 		
-		if (!$filename = files::upload($file, $picpath, FILE_TYPE_IMAGE))
+		if (!$filename = files::upload($file, $picpath, FILE_TYPE_IMAGE)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::upload', $this, $file, $to, $thumbnail, $watermark, $sharpen);
+			
 			return false;
+		}
 			
 		if (defined('PICTURE_WATERMARK') && PICTURE_WATERMARK && $watermark) {
 			$watermarkposition = explode(' ', 
@@ -1606,6 +1798,9 @@ class _pictures {
 					$picpath.$filename, $sharpen);
 			}
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::upload', $this, $file, $to, $thumbnail, $watermark, $sharpen, $filename);
 		
 		return $filename;
 	}
@@ -1655,11 +1850,17 @@ class _pictures {
 			return false;
 		}
 
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::download', $this, $id, $force);
+		
 		session_write_close();
 		files::display($file, $force);
 		
 		if (JCORE_VERSION >= '0.5' && !$force && !security::isBot())
 			$this->incViews($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::download', $this, $id, $force);
 		
 		return true;
 	}
@@ -1692,6 +1893,9 @@ class _pictures {
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::ajaxRequest', $this);
+		
 		$view = null;
 		$download = null;
 		
@@ -1701,18 +1905,28 @@ class _pictures {
 		if (isset($_GET['download']))
 			$download = (int)$_GET['download'];
 		
-		if ($view)
-			return $this->download($view);
+		if ($view) {
+			$result = $this->download($view);
+			
+		} else if ($download) {
+			$result = $this->download($download, true);
+			
+		} else {
+			$result = true;
+			$this->ajaxPaging = true;
+			$this->display();
+		}
 		
-		if ($download)
-			return $this->download($download, true);
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::ajaxRequest', $this, $result);
 		
-		$this->ajaxPaging = true;
-		$this->display();
-		return true;
+		return $result;
 	}
 	
 	function displayPicture(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayPicture', $this, $row);
+		
 		if (!isset($row['_ThumbnailLocation']) || !$row['_ThumbnailLocation'])
 			$row['_ThumbnailLocation'] = $this->rootURL.
 				(JCORE_VERSION >= '0.5' && $row['Thumbnail']?
@@ -1731,13 +1945,25 @@ class _pictures {
 					"border='0' ":
 					null) .
 				"/>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayPicture', $this, $row);
 	}
 	
 	function displayTitle(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayTitle', $this, $row);
+		
 		echo $row['Title'];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayTitle', $this, $row);
 	}
 	
 	function displayDetails(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayDetails', $this, $row);
+		
 		echo
 			"<span class='details-date'>" .
 				calendar::date($row['TimeStamp']) .
@@ -1751,9 +1977,15 @@ class _pictures {
 				"<span class='picture-views-number'>" .
 					sprintf(__("%s views"), $row['Views']) .
 				"</span>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayDetails', $this, $row);
 	}
 	
 	function displayFormated(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayFormated', $this, $row);
+		
 		if (!isset($row['_Link']) || !$row['_Link'])
 			$row['_Link'] = $this->generateLink($row);
 		
@@ -1822,11 +2054,17 @@ class _pictures {
 		
 		echo
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayFormated', $this, $row);
 	}
 	
 	function displayOne(&$row) {
 		if (!$row['Location'])
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::displayOne', $this, $row);
 		
 		if (!isset($row['_Link']) || !$row['_Link'])
 			$row['_Link'] = $this->generateLink($row);
@@ -1868,6 +2106,9 @@ class _pictures {
 		echo
 				"</div>" .
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::displayOne', $this, $row);
 	}
 	
 	function display() {
@@ -1910,6 +2151,9 @@ class _pictures {
 		if (!sql::rows($rows))
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'pictures::display', $this);
+		
 		if (!$this->ajaxRequest)
 			echo
 				"<div class='".
@@ -1943,6 +2187,9 @@ class _pictures {
 		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //pictures
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pictures::display', $this);
 		
 		if ($this->latests)
 			return true;

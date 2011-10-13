@@ -17,6 +17,9 @@ class _postsCalendar extends monthCalendar {
 	var $weekDaysFormat = 'D';
 	
 	function __construct($pageid = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsCalendar::postsCalendar', $this, $pageid);
+		
 		parent::__construct();
 		
 		$this->uriRequest = "posts/" .
@@ -34,9 +37,15 @@ class _postsCalendar extends monthCalendar {
 				$this->time = strtotime(preg_replace('/.*?date:([0-9\-]+)/', '\1', 
 					$search));
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsCalendar::postsCalendar', $this, $pageid);
 	}
 	
 	function displayDay($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsCalendar::displayDay', $this, $time);
+		
 		$posts = sql::rows(sql::run(
 			" SELECT `ID` FROM `{posts}`" .
 			" WHERE 1" .
@@ -60,9 +69,15 @@ class _postsCalendar extends monthCalendar {
 		
 		if ($posts)
 			echo "</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsCalendar::displayDay', $this, $time);
 	}
 	
 	function display() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsCalendar::display', $this);
+		
 		$page = null;
 		
 		if (!$this->pageID) {
@@ -79,6 +94,9 @@ class _postsCalendar extends monthCalendar {
 			$this->searchURL = url::site()."index.php?";
 		
 		parent::display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsCalendar::display', $this);
 	}
 }
 

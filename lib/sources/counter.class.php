@@ -15,6 +15,9 @@ define('COUNTER_NOTIFICATION', 'notification');
 
 class _counter {
 	static function construct($items, $type = COUNTER_NORMAL) {
+		api::callHooks(API_HOOK_BEFORE,
+			'counter::construct', $_ENV, $items, $type);
+		
 		if (is_array($items)) {
 			if (!$type && isset($items['Type']))
 				$type = $items['Type'];
@@ -25,7 +28,7 @@ class _counter {
 				$items = 0;
 		}
 		
-		return
+		$result =
 				"<span class='counter" .
 					($type?
 						' '.$type:
@@ -37,10 +40,21 @@ class _counter {
 						"</span>" .
 					"</span>" .
 				"</span>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'counter::construct', $_ENV, $items, $type, $result);
+		
+		return $result;
 	}
 	
 	static function display($items, $type = COUNTER_NORMAL) {
+		api::callHooks(API_HOOK_BEFORE,
+			'counter::display', $_ENV, $items, $type);
+		
 		echo counter::construct($items, $type);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'counter::display', $_ENV, $items, $type);
 	}
 }
 

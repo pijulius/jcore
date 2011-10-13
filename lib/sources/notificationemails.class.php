@@ -14,14 +14,24 @@ class _notificationEmails {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::countAdminItems', $this);
+		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{notificationemails}`" .
 			" LIMIT 1"));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::countAdminItems', $this, $row['Rows']);
+		
 		return $row['Rows'];
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::setupAdminForm', $this, $form);
+		
 		$form->add(
 			__('Email ID'),
 			'EmailID',
@@ -47,9 +57,15 @@ class _notificationEmails {
 				'350px') .
 			'; height: 200px;');
 		$form->setValueType(FORM_VALUE_TYPE_HTML);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::verifyAdmin', $this, $form);
+		
 		$reset = null;
 		$resetall = null;
 		$edit = null;
@@ -79,42 +95,62 @@ class _notificationEmails {
 				__("Emails have been successfully reset."),
 				TOOLTIP_SUCCESS);
 				
+			api::callHooks(API_HOOK_AFTER,
+				'notificationEmails::verifyAdmin', $this, $form, $reset);
+			
 			return true;
 		}
 		
 		if ($resetall) {
-			if (!$this->reset())
-				return false;
+			$result = $this->reset();
 			
-			tooltip::display(
-				__("Emails have been successfully reset."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Emails have been successfully reset."),
+					TOOLTIP_SUCCESS);
 				
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'notificationEmails::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'notificationEmails::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 			
 		if ($edit) {
-			if (!$this->edit($id, $form->getPostArray()))
-				return false;
-				
-			tooltip::display(
-				__("Email has been successfully updated.")." " .
-				"<a href='#adminform'>" .
-					__("Edit") .
-				"</a>",
-				TOOLTIP_SUCCESS);
+			$result = $this->edit($id, $form->getPostArray());
 			
-			return true;
+			if ($result)
+				tooltip::display(
+					__("Email has been successfully updated.")." " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'notificationEmails::verifyAdmin', $this, $form, $reset);
+			
+			return $result;
 		}
 		
 		$form->reset();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::verifyAdmin', $this, $form);
+		
 		return true;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::displayAdminListHeader', $this);
+		
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' " .
@@ -125,18 +161,34 @@ class _notificationEmails {
 			"</th>" .
 			"<th><span class='nowrap'>".
 				__("Email ID / Subject")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::displayAdminListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::displayAdminListItem', $this, $row);
+		
 		$ids = null;
 		
 		if (isset($_POST['ids']))
@@ -164,12 +216,22 @@ class _notificationEmails {
 					$row['Subject'] .
 				"</div>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::displayAdminListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -178,9 +240,15 @@ class _notificationEmails {
 					"&amp;id=".$row['ID']."&amp;edit=1#adminform'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListItemSelected(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::displayAdminListItemSelected', $this, $row);
+		
 		admin::displayItemData(
 			__("Subject"),
 			$row['Subject']);
@@ -189,9 +257,15 @@ class _notificationEmails {
 			"<hr />");
 		admin::displayItemData(
 			nl2br(htmlspecialchars($row['Body'])));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::displayAdminListItemSelected', $this, $row);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::displayAdminListFunctions', $this);
+		
 		echo
 			"<input type='submit' name='resetsubmit' value='" .
 				htmlspecialchars(__("Reset"), ENT_QUOTES) .
@@ -199,9 +273,15 @@ class _notificationEmails {
 			"<input type='submit' name='resetallsubmit' value='" .
 				htmlspecialchars(__("Reset All"), ENT_QUOTES) .
 				"' class='button confirm-link' /> ";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::displayAdminList', $this, $rows);
+		
 		$id = null;
 		
 		if (isset($_GET['id']))
@@ -273,22 +353,44 @@ class _notificationEmails {
 		
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Notification Emails Administration'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::displayAdmin', $this);
+		
 		$edit = null;
 		$id = null;
 		
@@ -371,6 +473,9 @@ class _notificationEmails {
 		
 		echo 
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::displayAdmin', $this);
 	}
 	
 	function add($values, $quiet = false) {
@@ -386,6 +491,9 @@ class _notificationEmails {
 			return false;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::add', $this, $values);
+		
 		$newid = sql::run(
 			" INSERT INTO `{notificationemails}` SET ".
 			" `EmailID` = '".
@@ -395,13 +503,14 @@ class _notificationEmails {
 			" `Body` = '".
 				sql::escape($values['Body'])."'");
 			
-		if (!$newid) {
+		if (!$newid)
 			tooltip::display(
 				sprintf(__("Email couldn't be added! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::add', $this, $values, $newid);
 		
 		return $newid;
 	}
@@ -412,6 +521,9 @@ class _notificationEmails {
 		
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::edit', $this, $id, $values);
 		
 		sql::run(
 			" UPDATE `{notificationemails}` SET ".
@@ -425,24 +537,33 @@ class _notificationEmails {
 				sql::escape($values['Body'])."'" .
 			" WHERE `ID` = '".(int)$id."'");
 			
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result)
 			tooltip::display(
 				sprintf(__("Email couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::edit', $this, $id, $values, $result);
+		
+		return $result;
 	}
 	
 	function delete($id) {
 		if (!$id)
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::delete', $this, $id);
+		
 		sql::run(
 			" DELETE FROM `{notificationemails}` " .
 			" WHERE `ID` = '".$id."'");
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::delete', $this, $id);
 		
 		return true;
 	}
@@ -460,31 +581,58 @@ class _notificationEmails {
 				return false;
 			}
 			
-			if (!isset(email::$templates[$row['EmailID']]))
-				return $this->delete($id);
+			api::callHooks(API_HOOK_BEFORE,
+				'notificationEmails::reset', $this, $id);
 			
-			return $this->edit($id, array(
+			if (!isset(email::$templates[$row['EmailID']]))
+				$result = $this->delete($id);
+			else
+				$result = $this->edit($id, array(
 					'Subject' => email::$templates[$row['EmailID']]['Subject'],
 					'Body' => email::$templates[$row['EmailID']]['Body']));
+			
+			api::callHooks(API_HOOK_AFTER,
+				'notificationEmails::reset', $this, $id, $result);
+			
+			return $result;
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::reset', $this, $id);
 		
 		$rows = sql::run(
 			" SELECT * FROM `{notificationemails}`");
 		
+		$result = true;
 		while($row = sql::fetch($rows)) {
-			if (!isset(email::$templates[$row['EmailID']]))
-				return $this->delete($row['ID']);
+			if (!isset(email::$templates[$row['EmailID']])) {
+				if (!$this->delete($row['ID'])) {
+					$result = false;
+					break;
+				}
+				
+				continue;
+			}
 			
 			if (!$this->edit($row['ID'], array(
 					'Subject' => email::$templates[$row['EmailID']]['Subject'],
 					'Body' => email::$templates[$row['EmailID']]['Body'])))
-				return false;
+			{
+				$result = false;
+				break;
+			}
 		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::reset', $this, $id, $result);
+		
+		return $result;
 	}
 	
 	function refresh() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notificationEmails::refresh', $this);
+		
 		foreach(email::$templates as $emailid => $email)
 			if (isset($email['Save']) && $email['Save'])
 				$this->add(array(
@@ -492,6 +640,9 @@ class _notificationEmails {
 					'Subject' => $email['Subject'],
 					'Body' => $email['Body']),
 					true);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notificationEmails::refresh', $this);
 	}
 	
 	// ************************************************   Client Part
@@ -499,14 +650,9 @@ class _notificationEmails {
 		if (!$id)
 			return null;
 		
-		$row = sql::fetch(sql::run(
+		return sql::fetch(sql::run(
 			" SELECT * FROM `{notificationemails}`" .
 			" WHERE `EmailID` = '".sql::escape($id)."'"));
-		
-		if (!$row)
-			return null;
-		
-		return $row;
 	}
 }
 

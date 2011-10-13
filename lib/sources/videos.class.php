@@ -39,6 +39,9 @@ class _videos {
 	var $ajaxRequest = null;
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::videos', $this);
+		
 		$this->uriRequest = strtolower(get_class($this));
 		$this->subFolder = date('Ym');
 		$this->rootPath = SITE_PATH.'sitefiles/media/';
@@ -49,10 +52,16 @@ class _videos {
 		
 		if (isset($_GET['videoid']))
 			$this->selectedID = (int)$_GET['videoid'];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::videos', $this);
 	}
 	
 	function SQL() {
-		return
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::SQL', $this);
+		
+		$sql =
 			" SELECT * FROM `{" .$this->sqlTable."}`" .
 			" WHERE 1" .
 			($this->selectedID && !$this->latests?
@@ -67,10 +76,18 @@ class _videos {
 					" `TimeStamp` DESC,":
 					" `OrderID`,") .
 				" `ID` DESC");
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::SQL', $this, $sql);
+		
+		return $sql;
 	}
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Video'), 
@@ -79,9 +96,15 @@ class _videos {
 		favoriteLinks::add(
 			__('Content Files'), 
 			'?path=admin/content/contentfiles');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::setupAdminForm', $this, $form);
+		
 		$edit = null;
 		
 		if (isset($_GET['edit']))
@@ -204,9 +227,15 @@ class _videos {
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::verifyAdmin', $this, $form);
+		
 		$reorder = null;
 		$orders = null;
 		$delete = null;
@@ -229,10 +258,7 @@ class _videos {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
-			if (!$orders)
-				return false;
-			
-			foreach($orders as $oid => $ovalue) {
+			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{".$this->sqlTable ."}`" .
 					" SET `OrderID` = '".(int)$ovalue."'," .
@@ -244,22 +270,32 @@ class _videos {
 				__("Videos have been successfully re-ordered."),
 				TOOLTIP_SUCCESS);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'videos::verifyAdmin', $this, $form, $reorder);
+			
 			return true;
 		}
 		
 		if ($delete) {
-			if (!$this->delete($id))
-				return false;
+			$result = $this->delete($id);
 			
-			tooltip::display(
-				__("Video has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Video has been successfully deleted."),
+					TOOLTIP_SUCCESS);
 			
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'videos::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if (!$edit && !$form->get('File') && 
 			!$form->get('VideoID') && !count($form->get('Locations'))) 
@@ -269,6 +305,9 @@ class _videos {
 					"Please select a file / video to upload or define an already " .
 					"uploaded video."),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'videos::verifyAdmin', $this, $form);
 			
 			return false;
 		}
@@ -280,7 +319,12 @@ class _videos {
 			if (!$filename = $this->upload(
 					$form->getFile('File'), 
 					$this->rootPath))
+			{
+				api::callHooks(API_HOOK_AFTER,
+					'videos::verifyAdmin', $this, $form);
+				
 				return false;
+			}
 			
 			if (!$form->get('Title'))
 				$form->set('Title', preg_replace('/(.*(\/|\\\)|^)(.*)\..*/', '\3', 
@@ -310,36 +354,48 @@ class _videos {
 						__("Video \"%s\" is not embeddable, \"%s\"."),
 						$form->get('Location'), $video['NoEmbed']),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'videos::verifyAdmin', $this, $form);
+				
 				return false;
 			}
 			
-			if (!$this->edit($id, $postarray))
-				return false;
-				
-			tooltip::display(
-				__("Video has been successfully updated.")." " .
-				"<a href='#adminform'>" .
-					__("Edit") .
-				"</a>",
-				TOOLTIP_SUCCESS);
+			$result = $this->edit($id, $postarray);
 			
-			return true;
+			if ($result)
+				tooltip::display(
+					__("Video has been successfully updated.")." " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'videos::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
 		if ($form->get('File')) {
-			if (!$newid = $this->add($form->getPostArray()))
-				return false;
+			$newid = $this->add($form->getPostArray());
 			
-			tooltip::display(
-				__("Video has been successfully uploaded.")." ".
-				"<a href='".url::uri('id, edit, delete') .
-					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-					__("Edit") .
-				"</a>",
-				TOOLTIP_SUCCESS);
+			if ($newid) {
+				tooltip::display(
+					__("Video has been successfully uploaded.")." ".
+					"<a href='".url::uri('id, edit, delete') .
+						"&amp;id=".$newid."&amp;edit=1#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+				
+				$form->reset();
+			}
 			
-			$form->reset();
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'videos::verifyAdmin', $this, $form, $newid);
+			
+			return $newid;
 		}
 		
 		if (!count($form->get('Locations')) && $form->get('VideoID')) {
@@ -351,19 +407,24 @@ class _videos {
 			$form->set('File', $video['Location']);
 			$form->set('CapFile', $video['CapLocation']);
 			
-			if (!$newid = $this->add($form->getPostArray()))
-				return false;
+			$newid = $this->add($form->getPostArray());
 			
-			tooltip::display(
-				__("Video has been successfully added.")." " .
-				"<a href='".url::uri('id, edit, delete') .
-					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-					__("Edit") .
-				"</a>",
-				TOOLTIP_SUCCESS);
+			if ($newid) {
+				tooltip::display(
+					__("Video has been successfully added.")." " .
+					"<a href='".url::uri('id, edit, delete') .
+						"&amp;id=".$newid."&amp;edit=1#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+				
+				$form->reset();
+			}
 			
-			$form->reset();
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'videos::verifyAdmin', $this, $form, $newid);
+			
+			return $newid;
 		}
 		
 		$customtitle = $form->get('Title');
@@ -422,8 +483,12 @@ class _videos {
 					implode(', ', $failedurls)),
 				TOOLTIP_ERROR);
 			
-			if (!$successurls || !count($successurls))
+			if (!$successurls || !count($successurls)) {
+				api::callHooks(API_HOOK_AFTER,
+					'videos::verifyAdmin', $this, $form);
+				
 				return false;
+			}
 		}
 		
 		tooltip::display(
@@ -433,10 +498,17 @@ class _videos {
 			TOOLTIP_SUCCESS);
 		
 		$form->reset();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::verifyAdmin', $this, $form, $successurls);
+		
 		return true;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Order")."</span></th>" .
@@ -444,20 +516,36 @@ class _videos {
 				__("Video")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Title / Added on")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayAdminListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayAdminListItem', $this, $row);
+		
 		$href = url::uri().
 			"&amp;request=".$this->uriRequest .
 			"&amp;view=".$row['ID']."&amp;ajax=1";
@@ -500,12 +588,22 @@ class _videos {
 		echo				
 				"</div>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayAdminListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -521,17 +619,29 @@ class _videos {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayAdminListFunctions', $this);
+		
 		echo 
 			"<input type='submit' name='reordersubmit' value='" .
 				htmlspecialchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayAdminList', $this, $rows);
+		
 		echo
 			"<form action='".
 				url::uri('edit, delete')."' method='post'>";
@@ -583,20 +693,39 @@ class _videos {
 		
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle( 
 			__(trim(ucfirst(preg_replace('/([A-Z])/', ' \1', 
 				$this->sqlOwnerCountField)))), 
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
@@ -607,6 +736,9 @@ class _videos {
 			
 			return;
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayAdmin', $this);
 		
 		$delete = null;
 		$edit = null;
@@ -727,12 +859,18 @@ class _videos {
 		
 		echo
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayAdmin', $this);
 	}
 	
 	function add($values) {
 		if (!is_array($values))
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::add', $this, $values);
+		
 		if ($values['OrderID'] == '') {
 			sql::run(
 				" UPDATE `{".$this->sqlTable."}` SET " .
@@ -792,10 +930,8 @@ class _videos {
 				sprintf(__("Video couldn't be created! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
-		
-		if ($this->sqlOwnerTable) {
+			
+		} else if ($this->sqlOwnerTable) {
 			sql::run(
 				" UPDATE `{".$this->sqlOwnerTable."}` SET " .
 				" `".$this->sqlOwnerCountField."` = `".
@@ -804,6 +940,9 @@ class _videos {
 				" WHERE `ID` = '".$this->selectedOwnerID."'");
 		}
 				
+		api::callHooks(API_HOOK_AFTER,
+			'videos::add', $this, $values, $newid);
+		
 		return $newid;
 	}
 	
@@ -813,6 +952,9 @@ class _videos {
 		
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::edit', $this, $id, $values);
 		
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}` SET ".
@@ -843,20 +985,26 @@ class _videos {
 				(int)$values['OrderID']."'" .
 			" WHERE `ID` = '".(int)$id."'");
 		
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result)
 			tooltip::display(
 				sprintf(__("Video couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'videos::edit', $this, $id, $values, $result);
+		
+		return $result;
 	}
 	
 	function delete($id) {
 		if (!$id)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::delete', $this, $id);
 		
 		$row = sql::fetch(sql::run(
 			" SELECT `Location`, `CapLocation` FROM `{".$this->sqlTable."}`" .
@@ -886,6 +1034,9 @@ class _videos {
 				" WHERE `ID` = '".$this->selectedOwnerID."'");
 		}
 					
+		api::callHooks(API_HOOK_AFTER,
+			'videos::delete', $this, $id);
+		
 		return true;
 	}
 	
@@ -893,11 +1044,15 @@ class _videos {
 		if (strpos($file, '://') !== false)
 			return $file;
 		
-		$videopath = $to.$this->subFolder.'/';
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::upload', $this, $file, $to);
 		
-		if (!$filename = files::upload($file, $videopath, FILE_TYPE_VIDEO))
-			return false;
-			
+		$videopath = $to.$this->subFolder.'/';
+		$filename = files::upload($file, $videopath, FILE_TYPE_VIDEO);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::upload', $this, $file, $to, $filename);
+		
 		return $filename;
 	}
 	
@@ -905,14 +1060,17 @@ class _videos {
 		if (strpos($file, '://') !== false)
 			return $file;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::uploadCap', $this, $file, $to);
+		
 		$pictures = new pictures();
 		$pictures->subFolder = $this->subFolder;
 		$pictures->thumbnailsFolder = '';
 		$filename = $pictures->upload($file, $to);
 		unset($pictures);
 			
-		if (!$filename)
-			return false;
+		api::callHooks(API_HOOK_AFTER,
+			'videos::uploadCap', $this, $file, $to, $filename);
 		
 		return $filename;
 	}
@@ -1035,19 +1193,27 @@ class _videos {
 		if (!$url)
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::getOnlineVideo', $_ENV, $url);
+		
+		$result = false;
+		
 		if (preg_match('/dailymotion\.com\//i', $url))
-			return videos::getDailyMotionVideo($url);
+			$result = videos::getDailyMotionVideo($url);
 		
-		if (preg_match('/youtube\.com\//i', $url))
-			return videos::getYouTubeVideo($url);
+		else if (preg_match('/youtube\.com\//i', $url))
+			$result = videos::getYouTubeVideo($url);
 		
-		if (preg_match('/vimeo\.com\//i', $url))
-			return videos::getVimeoVideo($url);
+		else if (preg_match('/vimeo\.com\//i', $url))
+			$result = videos::getVimeoVideo($url);
 		
-		if (preg_match('/metacafe\.com\//i', $url))
-			return videos::getMetacafeVideo($url);
+		else if (preg_match('/metacafe\.com\//i', $url))
+			$result = videos::getMetacafeVideo($url);
 		
-		return false;
+		api::callHooks(API_HOOK_AFTER,
+			'videos::getOnlineVideo', $_ENV, $url, $result);
+		
+		return $result;
 	}
 	
 	// ************************************************   Client Part
@@ -1082,25 +1248,29 @@ class _videos {
 			return false;
 		}
 
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::download', $this, $id);
+		
 		session_write_close();
 		files::display($file);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::download', $this, $id, $row);
 		
 		return true;
 	}
 	
 	function generateLink(&$row) {
-		$link = url::uri('videoid').
-			"&amp;request=".$this->uriRequest .
-			"&amp;videoid=".$row['ID'];
-		
 		if ($this->customLink) {
 			if (is_array($this->customLink))
-				$link = $this->customLink[$row['ID']];
-			else
-				$link = $this->customLink;
+				return $this->customLink[$row['ID']];
+			
+			return $this->customLink;
 		}
 		
-		return $link;
+		return url::uri('videoid').
+			"&amp;request=".$this->uriRequest .
+			"&amp;videoid=".$row['ID'];
 	}
 		
 	function incViews(&$row) {
@@ -1112,25 +1282,44 @@ class _videos {
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::ajaxRequest', $this);
+		
 		$get = null;
 		
 		if (isset($_GET['get']))
 			$get = (int)$_GET['get'];
 		
-		if ($get)
-			return $this->download($get);
+		if ($get) {
+			$result = $this->download($get);
+			
+		} else {
+			$this->ajaxPaging = true;
+			$this->display();
+			$result = true;
+		}
 		
-		$this->ajaxPaging = true;
-		$this->display();
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'videos::ajaxRequest', $this, $result);
+		
+		return $result;
 	}
 	
 	function displayPlayButton(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayPlayButton', $this, $row);
+		
 		echo
 			"<span class='video-play-button rounded-corners'></span>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayPlayButton', $this, $row);
 	}
 	
 	function displayCap(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayCap', $this, $row);
+		
 		echo
 			"<img src='".
 				(strpos($row['CapLocation'], '://') !== false?
@@ -1140,9 +1329,15 @@ class _videos {
 				"title='".htmlspecialchars($row['Title'], ENT_QUOTES)."' " .
 				"alt='".htmlspecialchars($row['Title'], ENT_QUOTES)."' " .
 				"border='0' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayCap', $this, $row);
 	}
 	
 	function displayPreview(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayPreview', $this, $row);
+		
 		if (!isset($row['_Link']) || !$row['_Link'])
 			$row['_Link'] = $this->generateLink($row);
 		
@@ -1160,13 +1355,25 @@ class _videos {
 		
 		echo
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayPreview', $this, $row);
 	}
 	
 	function displayTitle(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayTitle', $this, $row);
+		
 		echo $row['Title'];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayTitle', $this, $row);
 	}
 	
 	function displayDetails(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayDetails', $this, $row);
+		
 		echo
 			"<span class='details-date'>" .
 				calendar::date($row['TimeStamp']) .
@@ -1180,9 +1387,15 @@ class _videos {
 				"<span class='video-views-number'>" .
 					sprintf(__("%s views"), $row['Views']) .
 				"</span>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayDetails', $this, $row);
 	}
 	
 	function displayVideoPlayer(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayVideoPlayer', $this, $row);
+		
 		$html5video = 
 			"<video controls='controls' " .
 				"width='".$this->videoWidth."' height='".$this->videoHeight."'>" .
@@ -1211,9 +1424,15 @@ class _videos {
 				"if (!$.jCore.hasFlash()) " .
 					"$('.video".$row['ID']." video').trigger('play');" .
 			"</script>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayVideoPlayer', $this, $row);
 	}
 	
 	function displayFlashVideo(&$row, $parameters = array(), $fallbackcontent = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayFlashVideo', $this, $row);
+		
 		$params = null;
 		
 		foreach($parameters as $key => $value)
@@ -1238,42 +1457,78 @@ class _videos {
 				$params .
 				$fallbackcontent .
 			"</object>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayFlashVideo', $this, $row);
 	}
 	
 	function displayIframeVideo(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayIframeVideo', $this, $row);
+		
 		echo
 			"<iframe " .
 				"width='".$this->videoWidth."' height='".$this->videoHeight."' " .
 				"src='".$row['Location']."' frameborder='0' allowfullscreen='true'>
 			</iframe>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayIframeVideo', $this, $row);
 	}
 	
 	function displayDailyMotionVideo(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayDailyMotionVideo', $this, $row);
+		
 		$row['Location'] .= '&amp;autoplay=1';
 		$this->displayFlashVideo($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayDailyMotionVideo', $this, $row);
 	}
 	
 	function displayYouTubeVideo(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayYouTubeVideo', $this, $row);
+		
 		$row['Location'] = str_replace('/v/', '/embed/', $row['Location']) .
 			'&amp;fs=1&amp;autoplay=1';
 		
 		$this->displayIframeVideo($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayYouTubeVideo', $this, $row);
 	}
 	
 	function displayVimeoVideo(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayVimeoVideo', $this, $row);
+		
 		preg_match('/([0-9]*)$/', $row['Location'], $matches);
 		$row['Location'] = 'http://player.vimeo.com/video/' .
 			$matches[1].'?show_title=1&amp;show_byline=1&amp;show_portrait=0&amp;fullscreen=1&amp;autoplay=1';
 		
 		$this->displayIframeVideo($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayVimeoVideo', $this, $row);
 	}
 	
 	function displayMetacafeVideo(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayMetacafeVideo', $this, $row);
+		
 		$row['Location'] .= '?playerVars=autoPlay=yes';
 		$this->displayFlashVideo($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayMetacafeVideo', $this, $row);
 	}
 	
 	function displayLocalVideo(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayLocalVideo', $this, $row);
+		
 		$file = $row['Location'];
 		
 		$row['Location'] = url::site().'index.php?'.
@@ -1281,47 +1536,58 @@ class _videos {
 			"&get=".$row['ID']."&ajax=1";
 		
 		$this->displayVideoPlayer($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayLocalVideo', $this, $row);
+		
 		return true;
 	}
 	
 	function displayRemoteVideo(&$row) {
-		if (preg_match('/dailymotion\.com\//i', $row['Location'])) {
-			$this->displayYouTubeVideo($row);
-			return true;
-		}
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayRemoteVideo', $this, $row);
 		
-		if (preg_match('/youtube\.com\//i', $row['Location'])) {
+		if (preg_match('/dailymotion\.com\//i', $row['Location']))
 			$this->displayYouTubeVideo($row);
-			return true;
-		}
 		
-		if (preg_match('/vimeo\.com\//i', $row['Location'])) {
+		else if (preg_match('/youtube\.com\//i', $row['Location']))
+			$this->displayYouTubeVideo($row);
+		
+		else if (preg_match('/vimeo\.com\//i', $row['Location']))
 			$this->displayVimeoVideo($row);
-			return true;
-		}
 		
-		if (preg_match('/metacafe\.com\//i', $row['Location'])) {
+		else if (preg_match('/metacafe\.com\//i', $row['Location']))
 			$this->displayMetacafeVideo($row);
-			return true;
-		}
 		
-		if (preg_match('/\.swf$/i', $row['Location'])) {
+		else if (preg_match('/\.swf$/i', $row['Location']))
 			$this->displayFlashVideo($row);
-			return true;
-		}
 		
-		$this->displayVideoPlayer($row);
+		else
+			$this->displayVideoPlayer($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayRemoteVideo', $this, $row);
+		
 		return true;
 	}
 	
 	function displayVideo(&$row) {
-		if (strpos($row['Location'], '://') !== false)
-			return $this->displayRemoteVideo($row);
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayVideo', $this, $row);
 		
-		return $this->displayLocalVideo($row);
+		if (strpos($row['Location'], '://') !== false)
+			$this->displayRemoteVideo($row);
+		else
+			$this->displayLocalVideo($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayVideo', $this, $row);
 	}
 	
 	function displayFormated(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayFormated', $this, $row);
+		
 		if (!isset($row['_Link']) || !$row['_Link'])
 			$row['_Link'] = $this->generateLink($row);
 		
@@ -1369,14 +1635,17 @@ class _videos {
 		
 		echo
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayFormated', $this, $row);
 	}
 	
 	function displaySelected(&$row) {
-		if (!security::isBot())
-			$this->incViews($row);
-		
 		if (!$row['Location'])
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displaySelected', $this, $row);
 		
 		echo
 			"<div class='video" .
@@ -1391,11 +1660,20 @@ class _videos {
 		
 		echo
 			"</div>";
+		
+		if (!security::isBot())
+			$this->incViews($row);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displaySelected', $this, $row);
 	}
 	
 	function displayOne(&$row) {
 		if (!$row['Location'])
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::displayOne', $this, $row);
 		
 		echo
 			"<div class='video".$row['ID']." video-preview video-preview-num" .
@@ -1417,6 +1695,9 @@ class _videos {
 		echo
 				"</div>" .
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::displayOne', $this, $row);
 	}
 	
 	function display() {
@@ -1473,6 +1754,9 @@ class _videos {
 		if (!sql::rows($rows))
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'videos::display', $this);
+		
 		if (!$this->ajaxRequest)
 			echo
 				"<div class='".
@@ -1506,6 +1790,9 @@ class _videos {
 		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //videos
+		
+		api::callHooks(API_HOOK_AFTER,
+			'videos::display', $this);
 		
 		if ($this->latests)
 			return true;

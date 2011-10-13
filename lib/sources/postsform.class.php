@@ -13,17 +13,28 @@ include_once('lib/dynamicforms.class.php');
 
 class _postsForm extends dynamicForms {
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsForm::postsForm', $this);
+		
 		parent::__construct(
 			__('Posts'), 'posts');
 		
 		$this->textsDomain = 'messages';
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsForm::postsForm', $this);
 	}
 	
 	function verify($customdatahandling = true) {
-		if (!parent::verify(true))
-			return false;
+		api::callHooks(API_HOOK_BEFORE,
+			'postsForm::verify', $this, $customdatahandling);
 		
-		return true;
+		$result = parent::verify(true);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsForm::verify', $this, $customdatahandling, $result);
+		
+		return $result;
 	}
 }
 

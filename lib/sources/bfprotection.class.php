@@ -39,11 +39,13 @@ class _BFProtection {
 		if (!BRUTE_FORCE_PROTECTION_ENABLED)
 			return false;
 		
-		return sql::run(
+		$newid = sql::run(
 			" INSERT INTO `{bfprotection}` SET" .
 			" `Username` = '".sql::escape($user)."'," .
 			" `IP` = '".security::ip2long($ip)."'," .
 			" `TimeStamp` = NOW()");
+		
+		return $newid;
 	}
 	
 	function clear($ip) {
@@ -128,6 +130,7 @@ class _BFProtection {
 			" WHERE `IP` = '".security::ip2long($ip)."'"));
 			
 		$this->failureAttempts = (int)$row['Rows'];
+		
 		return $this->failureAttempts;
 	}
 	

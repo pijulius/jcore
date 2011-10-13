@@ -19,15 +19,24 @@ class _updates {
 	var $adminPath = 'admin/site/updates';
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::updates', $this);
+		
 		$this->rootPath = SITE_PATH.'sitefiles/var/updates/';
 		
 		if (isset($_GET['update']))
 			$this->selectedUpdate = strip_tags((string)$_GET['update']);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'updates::updates', $this);
 	}
 	
 	function install(&$update) {
 		if (!$update)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::install', $this, $update);
 		
 		if ($update['SQL'] || (defined('JCORE_PATH') && JCORE_PATH && $update['Client']) ||
 			((!defined('JCORE_PATH') || !JCORE_PATH) && $update['Server']))
@@ -51,6 +60,9 @@ class _updates {
 							"and it is accessible by me or contact webmaster."),
 						TOOLTIP_ERROR);
 					
+					api::callHooks(API_HOOK_AFTER,
+						'updates::install', $this, $update);
+					
 					return false;
 				}
 			}
@@ -65,6 +77,9 @@ class _updates {
 						"and it is accessible by me or contact webmaster."),
 					TOOLTIP_ERROR);
 				
+				api::callHooks(API_HOOK_AFTER,
+					'updates::install', $this, $update);
+				
 				return false;
 			}
 		}
@@ -78,6 +93,9 @@ class _updates {
 					__("Please make sure you have an active internet connection " .
 						"and it is accessible by me or contact webmaster."),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'updates::install', $this, $update);
 				
 				return false;
 			}
@@ -94,11 +112,8 @@ class _updates {
 		
 		url::flushDisplay();
 		
-		if (!$this->testing) {
-			$settings = new settings();
-			$settings->set('Maintenance_Website_Suspended', '1');
-			unset($settings);
-		}
+		if (!$this->testing)
+			settings::set('Maintenance_Website_Suspended', '1');
 		
 		ob_start();
 		
@@ -146,25 +161,29 @@ class _updates {
 		if (!$successfiles || ((isset($_POST['ftpuser']) && $_POST['ftpuser']) && $this->testing))
 			$this->displayInstallFTPForm();
 		
-		if (!$successfiles || !$successsql)
+		if (!$successfiles || !$successsql) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::install', $this, $update);
+			
 			return false;
-		
-		if (!$this->testing) {
-			$settings = new settings();
-			$settings->set('Maintenance_Website_Suspended', '0');
-			unset($settings);
 		}
 		
-		if (!$packagefile)
-			return false;
+		if (!$this->testing)
+			settings::set('Maintenance_Website_Suspended', '0');
 		
-		return true;
+		$result = $successfiles;
+		if (!$packagefile) 
+			$result = false;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'updates::install', $this, $update, $result);
+		
+		return $result;
 	}
 	
 	function installSQL($sqlfile) {
 		if (!$sqlfile) {
 			echo "<p>".__("No SQL queries to run.")."</p>";
-			
 			return true;
 		}
 		
@@ -173,7 +192,6 @@ class _updates {
 				sprintf(__("File \"%s\" couldn't be found!"),
 					$sqlfile),
 				TOOLTIP_ERROR);
-			
 			return false;
 		}
 		
@@ -186,7 +204,6 @@ class _updates {
 					strtoupper(__("Error")) .
 				"</b>" .
 				" (".__("Empty or invalid update!").")<br />";
-			
 			return false;
 		}
 		
@@ -287,7 +304,6 @@ class _updates {
 	function installFiles($packagefile) {
 		if (!$packagefile) {
 			echo "<p>".__("No files to install.")."</p>";
-			
 			return true;
 		}
 		
@@ -296,7 +312,6 @@ class _updates {
 				sprintf(__("File \"%s\" couldn't be found!"),
 					$packagefile),
 				TOOLTIP_ERROR);
-			
 			return false;
 		}
 		
@@ -309,7 +324,6 @@ class _updates {
 					strtoupper(__("Error")) .
 				"</b>" .
 				" (".__("Out of Memory!").")<br />";
-			
 			return false;
 		}
 		
@@ -637,6 +651,9 @@ class _updates {
 	}
 	
 	function displayInstallResults($title, $results, $success = false) {
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::displayInstallResults', $this, $title, $results, $success);
+		
 		echo
 			"<div tabindex='0' class='fc" .
 				(!$success?
@@ -653,9 +670,15 @@ class _updates {
 					$results .
 				"</div>" .
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'updates::displayInstallResults', $this, $title, $results, $success);
 	}
 	
 	function displayInstallFTPForm() {
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::displayInstallFTPForm', $this);
+		
 		$form = new form(
 			__("Update using FTP"),
 			'updateinstallftp');
@@ -702,9 +725,15 @@ class _updates {
 		unset($form);
 		
 		echo "<br />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'updates::displayInstallFTPForm', $this);
 	}
 	
 	function displayInstallFunctions($installbutton = false) {
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::displayInstallFunctions', $this, $installbutton);
+		
 		if ($installbutton)
 			echo
 				"<input type='submit' name='install' value='" .
@@ -715,6 +744,9 @@ class _updates {
 			"<input type='submit' name='refresh' value='" .
 				htmlspecialchars(__("Test Update"), ENT_QUOTES) .
 				"' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'updates::displayInstallFunctions', $this, $installbutton);
 	}
 	
 	function displayInstall($update = null) {
@@ -726,6 +758,9 @@ class _updates {
 		
 		if (isset($_POST['install']) && $_POST['install'])
 			$this->testing = false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::displayInstall', $this, $update);
 		
 		echo
 			"<form action='".url::uri()."' id='updateinstallform' method='post'>";
@@ -756,14 +791,17 @@ class _updates {
 		
 		if (!$this->testing && $success) {
 			echo "</form>";
-			return true;
+			
+		} else {
+			$this->displayInstallFunctions($success);
+			
+			echo
+				"</form>" .
+				"<div class='clear-both'></div>";
 		}
 		
-		$this->displayInstallFunctions($success);
-		
-		echo
-			"</form>" .
-			"<div class='clear-both'></div>";
+		api::callHooks(API_HOOK_AFTER,
+			'updates::displayInstall', $this, $update);
 	}
 	
 	// ************************************************   Admin Part
@@ -786,15 +824,25 @@ class _updates {
 			return 0;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::countAdminItems', $this);
+		
+		$result = 0;
 		if ($updates = $this->get())
-			return array(
+			$result = array(
 				'Rows' => count($updates),
 				'Type' => COUNTER_IMPORTANT);
 		
-		return 0;
+		api::callHooks(API_HOOK_AFTER,
+			'updates::countAdminItems', $this, $result);
+		
+		return $result;
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('Check for Updates'), 
@@ -803,15 +851,27 @@ class _updates {
 		favoriteLinks::add(
 			__('View Website'), 
 			SITE_URL);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'updates::setupAdmin', $this);
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Updates")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'updates::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::displayAdminListItem', $this, $row);
+		
 		echo
 			"<td class='auto-width'>" .
 				"<div class='admin-content-preview'>" .
@@ -850,11 +910,17 @@ class _updates {
 					"<div class='clear-both'></div>" .
 				"</div>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'updates::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminList(&$rows) {
 		if (!$rows || !is_array($rows) || !count($rows))
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::displayAdminList', $this, $rows);
 		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
@@ -895,15 +961,27 @@ class _updates {
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE && $this->selectedUpdate)
 			$this->displayInstall($rows[$this->selectedUpdate]);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'updates::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Updates Administration'), 
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'updates::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::displayAdminDescription', $this);
+		
 		echo
 			"<p>" .
 				__("Please note, " .
@@ -919,9 +997,15 @@ class _updates {
 				sprintf(__("Last checked on %s"), 
 					calendar::dateTime($_SESSION['UPDATES_TIMESTAMP'])) .
 				"</p>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'updates::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::displayAdmin', $this);
+		
 		$check = false;
 		
 		if (isset($_GET['check']))
@@ -946,6 +1030,9 @@ class _updates {
 		
 		echo
 			"</div>"; //admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'updates::displayAdmin', $this);
 	}
 	
 	// ************************************************   Client Part
@@ -976,7 +1063,7 @@ class _updates {
 			}
 			
 			if ($currentver == $matches[1] && !$refreshcache)
-				return 	array();
+				return array();
 			
 			$serverver = $matches[1];
 		}
@@ -992,7 +1079,6 @@ class _updates {
 					__("Please make sure you have an active internet connection " .
 						"and it is accessible by me or contact webmaster."),
 					TOOLTIP_ERROR);
-			
 				return false;
 			}
 			
@@ -1090,7 +1176,6 @@ class _updates {
 				"</script>";
 			
 			url::flushDisplay();
-			
 			return false;
 		}
 		
@@ -1191,7 +1276,6 @@ class _updates {
 					sprintf(__("Please make sure \"%s\" is writable by me " .
 						"or contact webmaster."), $this->rootPath),
 					TOOLTIP_ERROR);
-				
 				return false;
 			}
 		}
@@ -1282,6 +1366,9 @@ class _updates {
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'updates::ajaxRequest', $this);
+		
 		$counter = null;
 		
 		if (isset($_GET['counter']))
@@ -1294,6 +1381,10 @@ class _updates {
 				tooltip::display(
 					__("Request can only be accessed by administrators!"),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'updates::ajaxRequest', $this);
+				
 				return true;
 			}
 			
@@ -1306,8 +1397,14 @@ class _updates {
 				counter::display('!', COUNTER_IMPORTANT);
 			}
 			
+			api::callHooks(API_HOOK_AFTER,
+				'updates::ajaxRequest', $this, $counter);
+			
 			return true;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'updates::ajaxRequest', $this);
 		
 		return true;
 	}

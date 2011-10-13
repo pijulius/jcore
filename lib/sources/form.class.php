@@ -103,6 +103,9 @@ class _form {
 		'Value' => null);
 	
 	function __construct($title = null, $id = null, $method = 'post') {
+		api::callHooks(API_HOOK_BEFORE,
+			'form::form', $this, $title, $id, $method);
+		
 		$this->title = $title;
 		$this->id = ($id?$id:preg_replace('/ /', '', strtolower($title)));
 		$this->action = url::uri();
@@ -110,24 +113,41 @@ class _form {
 		
 		if (isset($GLOBALS['_'.strtoupper($this->method)]['formpage']))
 			$this->selectedPage = (int)$GLOBALS['_'.strtoupper($this->method)]['formpage'];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'form::form', $this, $title, $id, $method);
 	}
 	
 	function submitted() {
-		if (isset($GLOBALS['_'.strtoupper($this->method)][$this->id.'submit']))
-			return (string)$GLOBALS['_'.strtoupper($this->method)][$this->id.'submit'];
+		api::callHooks(API_HOOK_BEFORE,
+			'form::submitted', $this);
 		
-		foreach($this->elements as $element) {
-			if ($element['Type'] == FORM_INPUT_TYPE_SUBMIT && 
-				isset($GLOBALS['_'.strtoupper($this->method)][$element['Name']]))
-			{
-				return (string)$GLOBALS['_'.strtoupper($this->method)][$element['Name']];
+		$result = false;
+		
+		if (isset($GLOBALS['_'.strtoupper($this->method)][$this->id.'submit'])) {
+			$result = (string)$GLOBALS['_'.strtoupper($this->method)][$this->id.'submit'];
+			
+		} else {
+			foreach($this->elements as $element) {
+				if ($element['Type'] == FORM_INPUT_TYPE_SUBMIT && 
+					isset($GLOBALS['_'.strtoupper($this->method)][$element['Name']]))
+				{
+					$result = (string)$GLOBALS['_'.strtoupper($this->method)][$element['Name']];
+					break;
+				}
 			}
 		}
 		
-		return false;
+		api::callHooks(API_HOOK_AFTER,
+			'form::submitted', $this, $result);
+		
+		return $result;
 	}
 	
 	function reset($elementname = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'form::reset', $this, $elementname);
+		
 		foreach($this->elements as $elementnum => $element) {
 			if (!$elementname || $elementname == $element['Name'])
 				unset($GLOBALS['_'.strtoupper($this->method)][$element['Name']]);
@@ -153,13 +173,25 @@ class _form {
 		}
 		
 		$this->selectedPage = 1;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'form::reset', $this, $elementname);
 	}
 	
 	function clear() {
+		api::callHooks(API_HOOK_BEFORE,
+			'form::clear', $this);
+		
 		$this->elements = array();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'form::clear', $this);
 	}
 	
 	function getPostArray() {
+		api::callHooks(API_HOOK_BEFORE,
+			'form::getPostArray', $this);
+		
 		$post = array();
 		
 		foreach($this->elements as $element) {
@@ -171,49 +203,42 @@ class _form {
 			$post[$elementid] = $this->get($elementid);
 		}
 			
+		api::callHooks(API_HOOK_AFTER,
+			'form::getPostArray', $this, $post);
+		
 		return $post;
 	}
 	
 	function getElementID($elementname = null) {
 		if (!$elementname)
 			return count($this->elements)-1;
-		
-		$elementid = null;
-		
+			
 		foreach($this->elements as $elementnum => $element) {
 			if (!isset($element['Name']))
 				continue;
 			
 			if ($element['Name'] == $elementname || 
 				preg_replace('/\[.*\]/', '', $element['Name']) == $elementname) 
-			{
-				$elementid = $elementnum;
-				break;
-			}
+				return $elementnum;
 		}
 		
-		return $elementid;
+		return null;
 	}
 			
 	function getElementIDByTitle($elementtitle = null) {
 		if (!$elementtitle)
 			return count($this->elements)-1;
-		
-		$elementid = null;
-		
+			
 		foreach($this->elements as $elementnum => $element) {
 			if (!isset($element['Title']))
 				continue;
 			
 			if ($element['Title'] == $elementtitle || 
 				preg_replace('/\[.*\]/', '', $element['Title']) == $elementtitle) 
-			{
-				$elementid = $elementnum;
-				break;
-			}
+				return $elementnum;
 		}
 		
-		return $elementid;
+		return null;
 	}
 			
 	function updateElement($title, $name, $type = FORM_INPUT_TYPE_TEXT, 
@@ -312,7 +337,6 @@ class _form {
 				$this->elements[$elementid]['ValueType'] = FORM_VALUE_TYPE_TEXT;
 			
 			$this->elements[$elementid]['Attributes'] .= " autocomplete='off' autocapitalize='off' autocorrect='off'";
-			
 			return $elementid;
 		}
 		
@@ -446,9 +470,6 @@ class _form {
 			$file = $tmpfiles;
 		}
 		
-		if (!$file)
-			return false;
-		
 		return $file;
 	}
 	
@@ -576,8 +597,11 @@ class _form {
 	{
 		$inserttoid = $this->getElementID($insertto);
 		
-		if (!$insertto)
+		if (!isset($insertto))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'form::insert', $this, $insertto, $title, $name, $type, $required, $value, $inserttype);
 		
 		if ($inserttype == FORM_INSERT_AFTER)
 			$inserttoid++;
@@ -585,15 +609,28 @@ class _form {
 		array_splice($this->elements, $inserttoid, count($this->elements), 
 			array_merge(array($this->emptyElement), array_slice($this->elements, $inserttoid)));
 		
-		return $this->updateElement(
-			$title, $name, $type, $required, $value, $inserttoid); 
+		$result = $this->updateElement(
+			$title, $name, $type, $required, $value, $inserttoid);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'form::insert', $this, $insertto, $title, $name, $type, $required, $value, $inserttype, $result);
+		
+		return $result; 
 	}
 	
 	function add($title, $name, $type = FORM_INPUT_TYPE_TEXT, 
 				$required = false, $value = null) 
 	{
-		return $this->updateElement(
-			$title, $name, $type, $required, $value); 
+		api::callHooks(API_HOOK_BEFORE,
+			'form::add', $this, $title, $name, $type, $required, $value);
+		
+		$result = $this->updateElement(
+			$title, $name, $type, $required, $value);
+		 
+		api::callHooks(API_HOOK_BEFORE,
+			'form::add', $this, $title, $name, $type, $required, $value, $result);
+		
+		return $result;
 	}
 	
 	function edit($elementname, $title = null, $name = null, 
@@ -604,6 +641,9 @@ class _form {
 		if (!isset($elementid))
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'form::edit', $this, $elementname, $title, $name, $type, $required, $value);
+		
 		if (!isset($title))
 			$title = $this->elements[$elementid]['Title'];
 		
@@ -619,8 +659,13 @@ class _form {
 		if (!isset($value))
 			$value = $this->elements[$elementid]['OriginalValue'];
 		
-		return $this->updateElement(
-			$title, $name, $type, $required, $value, $elementid); 
+		$result = $this->updateElement(
+			$title, $name, $type, $required, $value, $elementid);
+		 
+		api::callHooks(API_HOOK_AFTER,
+			'form::edit', $this, $elementname, $title, $name, $type, $required, $value, $result);
+		
+		return $result;
 	}
 	
 	function editByTitle($elementtitle, $title = null, $name = null, 
@@ -631,6 +676,9 @@ class _form {
 		if (!isset($elementid))
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'form::editByTitle', $this, $elementtitle, $title, $name, $type, $required, $value);
+		
 		if (!isset($title))
 			$title = $this->elements[$elementid]['Title'];
 		
@@ -646,19 +694,31 @@ class _form {
 		if (!isset($value))
 			$value = $this->elements[$elementid]['OriginalValue'];
 		
-		return $this->updateElement(
-			$title, $name, $type, $required, $value, $elementid); 
+		$result = $this->updateElement(
+			$title, $name, $type, $required, $value, $elementid);
+		 
+		api::callHooks(API_HOOK_AFTER,
+			'form::editByTitle', $this, $elementtitle, $title, $name, $type, $required, $value, $result);
+		
+		return $result;
 	}
 	
 	function delete($elementname) 
 	{
 		$elementid = $this->getElementID($elementname);
 		
-		if (!isset($elementid))
+		if (!isset($elementid)) 
 			return false;
 		
-		array_splice($this->elements, $elementid, 1);
-		return true;
+		api::callHooks(API_HOOK_BEFORE,
+			'form::delete', $this, $elementname);
+		
+		$result = array_splice($this->elements, $elementid, 1);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'form::delete', $this, $elementname, $result);
+		
+		return $result;
 	}
 	
 	static function parseFloat($floatString){
@@ -668,7 +728,7 @@ class _form {
 	static function parseArray($array) {
 		if (!is_array($array))
 			return array();
-		
+			
 		$strippedarray = array();
 		
 		foreach($array as $key => $value) {
@@ -680,7 +740,7 @@ class _form {
 			else
 				$strippedarray[$key] = form::parseString($value);
 		}
-			
+		
 		return $strippedarray;
 	}
 	
@@ -688,9 +748,7 @@ class _form {
 		if (!$content)
 			return null;
 		
-		$content = (string)$content;
-		
-		$content = strip_tags($content, 
+		$content = strip_tags((string)$content, 
 			'<a><b><i><u><span><br><hr><em><blockquote><code><strong>');
 		
 		$content = preg_replace(
@@ -825,6 +883,9 @@ class _form {
 	}
 	
 	function addSubmitButtons() {
+		api::callHooks(API_HOOK_BEFORE,
+			'form::addSubmitButtons', $this);
+		
 		form::add(
 			__('Submit'),
 			$this->id.'submit',
@@ -834,6 +895,9 @@ class _form {
 			__('Reset'),
 			$this->id.'reset',
 			FORM_INPUT_TYPE_RESET);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'form::addSubmitButtons', $this);
 	}
 	
 	function setAttributes($elementname, $value = null) {
@@ -979,21 +1043,19 @@ class _form {
 		
 		if ($method == FORM_ELEMENT_ARRAY) {
 			$this->elements[$elementid][$key][] = $elementname;
-			return true;
-		}
-		
-		if ($method == FORM_ELEMENT_ADD) {
-			$this->elements[$elementid][$key] .= $elementname;
-			return true;
-		}
-		
-		$this->elements[$elementid][$key] = $elementname;
-		
-		if ($key == 'ValueType') {
-			$submittedvalue = $this->get($elementid);
 			
-			if (isset($submittedvalue))
-				$this->elements[$elementid]['Value'] = $submittedvalue;
+		} elseif ($method == FORM_ELEMENT_ADD) {
+			$this->elements[$elementid][$key] .= $elementname;
+			
+		} else {
+			$this->elements[$elementid][$key] = $elementname;
+			
+			if ($key == 'ValueType') {
+				$submittedvalue = $this->get($elementid);
+				
+				if (isset($submittedvalue))
+					$this->elements[$elementid]['Value'] = $submittedvalue;
+			}
 		}
 		
 		return true;
@@ -1045,6 +1107,9 @@ class _form {
 		if (!$this->submitted())
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'form::verify', $this);
+		
 		$currentpage = 1;
 		$errors = array();
 		
@@ -1061,6 +1126,10 @@ class _form {
 				if ($currentpage > $this->selectedPage) {
 					if (!count($errors)) {
 						$this->selectedPage++;
+						
+						api::callHooks(API_HOOK_AFTER,
+							'form::verify', $this);
+						
 						return false;
 					}
 					
@@ -1158,16 +1227,25 @@ class _form {
 					"and try again.");
 			
 			tooltip::display($error, TOOLTIP_ERROR);
-			return false;
+			$result = false;
+			
+		} else if (!$this->verifyToken()) {
+			$result = false;
+			
+		} else {
+			$result = true;
 		}
 		
-		if (!$this->verifyToken())
-			return false;
+		api::callHooks(API_HOOK_AFTER,
+			'form::verify', $this, $result);
 		
-		return true;
+		return $result;
 	}
 	
 	function displayData($values, $ignoreelements = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'form::displayData', $this, $values, $ignoreelements);
+		
 		$prevelement = null;
 		
 		foreach($this->elements as $element) {
@@ -1279,11 +1357,17 @@ class _form {
 			
 			$prevelement = $element;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'form::displayData', $this, $values, $ignoreelements);
 	}
 	
 	function displayElements($elements) {
 		if (!is_array($elements))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'form::displayElements', $this, $elements);
 		
 		if (!$this->ignorePageBreaks && $this->selectedPage)
 			echo
@@ -2041,22 +2125,40 @@ class _form {
 		if (!isset($this->footer) || $this->footer)
 			echo
 				"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'form::displayElements', $this, $elements);
 	}
 	
 	function displayToken() {
+		api::callHooks(API_HOOK_BEFORE,
+			'form::displayToken', $this);
+		
 		echo
 			"<input type='hidden' name='_FormSecurityToken' value='".security::genToken()."' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'form::displayToken', $this);
 	}
 	
 	function displayTitle() {
+		api::callHooks(API_HOOK_BEFORE,
+			'form::displayTitle', $this);
+		
 		echo $this->title;
 		
 		if (!$this->ignorePageBreaks && count((array)$this->pageBreakElements))
 			echo " ".sprintf(__("(Step %s of %s)"),
 				$this->selectedPage, count($this->pageBreakElements)+1);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'form::displayTitle', $this);
 	}
 	
 	function displayContent() {
+		api::callHooks(API_HOOK_BEFORE,
+			'form::displayContent', $this);
+		
 		if ($this->displayFormElement)		
 			echo
 				"<form action='".$this->action."' method='".$this->method."' " .
@@ -2068,16 +2170,28 @@ class _form {
 		if ($this->displayFormElement)		
 			echo
 				"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'form::displayContent', $this);
 	}
 	
-	function displayFooter($requiredelements = 0) {
+	function displayFooter() {
+		api::callHooks(API_HOOK_BEFORE,
+			'form::displayFooter', $this);
+		
 		echo
 			$this->footer;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'form::displayFooter', $this);
 	}
 	
 	function displayDefaultFooter($requiredelements = 0) {
 		if (!$requiredelements)
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'form::displayDefaultFooter', $this, $requiredelements);
 		
 		if (JCORE_VERSION >= '0.6') {
 			echo
@@ -2093,17 +2207,22 @@ class _form {
 			echo
 				"</p>";
 			
-			return;
+		} else {
+			echo
+				"<br />" .
+				__("Field(s) marked with an asterisk (*) is/are required.");
 		}
 		
-		echo
-			"<br />" .
-			__("Field(s) marked with an asterisk (*) is/are required.");
+		api::callHooks(API_HOOK_AFTER,
+			'form::displayDefaultFooter', $this, $requiredelements);
 	}
 	
 	function display($formdesign = true) {
 		if (!is_array($this->elements))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'form::display', $this, $formdesign);
 		
 		if (!$formdesign)
 			$this->displayDesign = false;
@@ -2139,6 +2258,9 @@ class _form {
 		
 		echo
 			"</div>"; //#formid
+		
+		api::callHooks(API_HOOK_AFTER,
+			'form::display', $this, $formdesign);
 	}
 }
 

@@ -34,7 +34,10 @@ class _modules {
 	var $searchable = false;
 	
 	function SQL() {
-		return
+		api::callHooks(API_HOOK_BEFORE,
+			'modules::SQL', $this);
+		
+		$sql =
 			" SELECT * FROM `{".$this->sqlTable."}`, `{modules}` " .
 			" WHERE `".$this->sqlRow."` = '".$this->selectedOwnerID."'" .
 			" AND `ModuleID` = `ID`" .
@@ -43,9 +46,17 @@ class _modules {
 				" AND `Deactivated` = 0":
 				null) .
 			" ORDER BY `Name`";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'modules::SQL', $this, $sql);
+		
+		return $sql;
 	}
 	
 	function install() {
+		api::callHooks(API_HOOK_BEFORE,
+			'modules::install', $this);
+		
 		if (!isset($this->moduleID) || !$this->moduleID) {
 			$module = ucfirst(get_class($this));
 			$exists = modules::get($module);
@@ -64,8 +75,12 @@ class _modules {
 						null) .
 					" `Installed` = 0");
 			
-			if (sql::error())
+			if (sql::error()) {
+				api::callHooks(API_HOOK_AFTER,
+					'modules::install', $this);
+				
 				return false;
+			}
 		}
 		
 		files::$debug = true;
@@ -107,6 +122,9 @@ class _modules {
 				__("Please see detailed error messages above and try again."),
 				TOOLTIP_ERROR);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'modules::install', $this);
+			
 			return false;
 		}
 		
@@ -124,8 +142,12 @@ class _modules {
 					"template/template.js"),
 				TOOLTIP_ERROR);
 		
-		if (!$csssuccess || !$jssuccess)
+		if (!$csssuccess || !$jssuccess) {
+			api::callHooks(API_HOOK_AFTER,
+				'modules::install', $this);
+			
 			return false;
+		}
 		
 		sql::run(
 			" UPDATE `{modules}` SET " .
@@ -138,13 +160,18 @@ class _modules {
 			" `Installed` = 1" .
 			" WHERE `ID` = '".$this->moduleID."'");
 		
-		if (sql::error())
-			return false;
+		$result = !sql::error();
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'modules::install', $this, $result);
+		
+		return $result;
 	}
 	
 	function uninstall() {
+		api::callHooks(API_HOOK_BEFORE,
+			'modules::uninstall', $this);
+		
 		if (!isset($this->moduleID) || !$this->moduleID) {
 			$module = ucfirst(get_class($this));
 			
@@ -193,24 +220,29 @@ class _modules {
 			" `Installed` = 0" .
 			" WHERE `ID` = '".$this->moduleID."'");
 		
-		if (sql::error())
-			return false;
+		$result = !sql::error();
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'modules::uninstall', $this, $result);
+		
+		return $result;
 	}
 	
+	// Class should be overwritten from module's own class
 	function installSQL() {
 		echo "<p>".__("No SQL queries to run.")."</p>";
 			
 		return true;
 	}
 	
+	// Class should be overwritten from module's own class
 	function installFiles() {
 		echo "<p>".__("No files to install.")."</p>";
 		
 		return true;
 	}
 	
+	// Class should be overwritten from module's own class
 	function installCustom() {
 		return true;
 	}
@@ -231,24 +263,30 @@ class _modules {
 		return true;
 	}
 	
+	// Class should be overwritten from module's own class
 	function uninstallSQL() {
 		echo "<p>".__("No SQL queries to run.")."</p>";
 		
 		return true;
 	}
 	
+	// Class should be overwritten from module's own class
 	function uninstallFiles() {
 		echo "<p>".__("No files to uninstall.")."</p>";
 		
 		return true;
 	}
 	
+	// Class should be overwritten from module's own class
 	function uninstallCustom() {
 		return true;
 	}
 	
 	// ************************************************   Admin Part
 	function displayInstallResults($title, $results, $success = false) {
+		api::callHooks(API_HOOK_BEFORE,
+			'modules::displayInstallResults', $this, $title, $results, $success);
+		
 		echo
 			"<div tabindex='0' class='fc" .
 				(isset($success) && !$success?
@@ -267,35 +305,65 @@ class _modules {
 					$results .
 				"</div>" .
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'modules::displayInstallResults', $this, $title, $results, $success);
 	}
 	
 	function displayInstallNotification() {
+		api::callHooks(API_HOOK_BEFORE,
+			'modules::displayInstallNotification', $this);
+		
 		tooltip::display(
 			__("This module needs to be installed before it can be used."),
 			TOOLTIP_NOTIFICATION);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'modules::displayInstallNotification', $this);
 	}
 	
 	function displayInstallFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'modules::displayInstallFunctions', $this);
+		
 		echo
 			"<input type='submit' name='submit' value='" .
 				htmlspecialchars(__("Install Module"), ENT_QUOTES) .
 				"' class='button submit' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'modules::displayInstallFunctions', $this);
 	}
 	
 	function displayInstallTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'modules::displayInstallTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Module Installation'), 
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'modules::displayInstallTitle', $this, $ownertitle);
 	}
 	
 	function displayInstallDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'modules::displayInstallDescription', $this);
+		
 		echo 
 			"<p>" .
 				modules::getDescription(ucfirst(get_class($this))) .
 			"</p>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'modules::displayInstallDescription', $this);
 	}
 	
 	function displayInstall() {
+		api::callHooks(API_HOOK_BEFORE,
+			'modules::displayInstall', $this);
+		
 		$install = null;
 		
 		if (isset($_POST['install']))
@@ -316,6 +384,10 @@ class _modules {
 				TOOLTIP_SUCCESS);
 			
 			echo "</div>"; //admin-content
+			
+			api::callHooks(API_HOOK_AFTER,
+				'modules::displayInstall', $this);
+			
 			return true;
 		}
 		
@@ -334,119 +406,101 @@ class _modules {
 			
 		echo 
 			"</div>"; //admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'modules::displayInstall', $this);
 	}
 	
 	function displayAdmin() {
 		if ($this->installed(get_class($this)))
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'modules::displayAdmin', $this);
+		
 		$this->displayInstall();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'modules::displayAdmin', $this);
+		
 		return true;
 	}
 	
 	static function loadAdmin() {
-		modules::loadModules((JCORE_VERSION < '0.3'?true:false));
-		ksort(modules::$available);
+		api::callHooks(API_HOOK_BEFORE,
+			'modules::loadAdmin', $_ENV);
 		
-		foreach(modules::$available as $id => $details) {
-			if (JCORE_VERSION >= '0.9' && 
-				(!isset(modules::$loaded[$id]) || !modules::$loaded[$id]))
-				continue;
-			
+		foreach(modules::$loaded as $id => $details) {
 			admin::add('Modules', $id, 
 				"<a href='".url::uri('ALL')."?path=admin/modules/".strtolower($id)."' " .
-					"title='".htmlspecialchars($details['Description'], ENT_QUOTES)."'>" .
+					"title='".htmlspecialchars($details['Description'], ENT_QUOTES)."'" .
+					(isset($details['Icon']) && $details['Icon']?
+						" style=\"background-image: url('".$details['Icon']."');\"":
+						null) .
+					">" .
 					"<span>".$details['Title']."</span>" .
 				"</a>");
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'modules::loadAdmin', $_ENV);
 	}
 	
 	// ************************************************   Client Part
-	static function loadModules($skipinstalledcheck = false) {
+	static function loadModules() {
+		api::callHooks(API_HOOK_BEFORE,
+			'modules::loadModules', $_ENV);
+		
 		$rows = sql::run(
-			" SELECT * FROM `{modules}`" .
+			" SELECT `Name` FROM `{modules}`" .
 			" WHERE 1" .
-			(!$skipinstalledcheck?
+			(JCORE_VERSION >= '0.3'?
 				" AND `Installed` = 1":
 				null) .
 			(JCORE_VERSION >= '0.9'?
 				" AND `Deactivated` = 0":
 				null) .
 			" ORDER BY `Name`");
-			
-		while($row = sql::fetch($rows)) {
-			modules::load(strtolower($row['Name']), false, $skipinstalledcheck);
-		}
 		
-		if (!$skipinstalledcheck)
-			return true;
+		while($row = sql::fetch($rows))
+			modules::load($row['Name']);
 		
-		if (!is_dir(SITE_PATH.'lib/modules'))
-			return false;
+		api::callHooks(API_HOOK_AFTER,
+			'modules::loadModules', $_ENV);
 		
-		if (!$dh = opendir(SITE_PATH.'lib/modules'))
-			return false;
-		
-		while (($file = readdir($dh)) !== false) {
-			if (strpos($file, '.') === 0)
-				continue;
-			
-			if (is_file(SITE_PATH.'lib/modules/'.$file)) {
-				preg_match('/(.*)\.class\.php$/', $file, $matches);
-				
-				if (isset($matches[1]) && $matches[1])
-					modules::load($matches[1], false, $skipinstalledcheck);
-				
-				continue;
-			}
-			
-			if (is_dir(SITE_PATH.'lib/modules/'.$file) &&
-				is_file(SITE_PATH.'lib/modules/'.$file.'/'.$file.'.class.php'))
-			{
-				modules::load($file, false, $skipinstalledcheck);
-				continue;
-			}
-		}
-		
-		closedir($dh);
 		return true;
 	}
 	
-	static function load($module, $quiet = false, $skipinstalledcheck = false) {
+	static function load($module, $quiet = false) {
 		if (!$module)
 			return false;
 		
-		$module = strtolower(preg_replace(
-					'/[^a-zA-Z0-9\@\.\_\-]/', '', $module));
+		$module = strtolower($module);
 		
-		if (isset(modules::$loaded[$module]) && (!$skipinstalledcheck || modules::$loaded[$module]))
+		if (isset(modules::$loaded[$module]))
 			return modules::$loaded[$module];
 		
 		modules::$loaded[$module] = false;
 		
 		if (!isset(modules::$available[$module]))
 			modules::$available[$module] = array(
-				'Title' => ucwords(preg_replace('/-|_/', ' ', $module)),
-				'Description' => '');
+				'Title' =>
+					ucwords(preg_replace('/-|_/', ' ', $module)),
+				'Description' => '',
+				'Icon' => '');
 		
-		if (@is_dir(SITE_PATH.'lib/modules/'.$module) || (defined('JCORE_PATH') &&
-			JCORE_PATH && @is_dir(JCORE_PATH.'lib/modules/'.$module)))
-			include_once('lib/modules/'.$module.'/'.$module.'.class.php');
+		$moduleclass = preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '', $module);
+		
+		if (@is_dir(SITE_PATH.'lib/modules/'.$moduleclass) || (defined('JCORE_PATH') &&
+			JCORE_PATH && @is_dir(JCORE_PATH.'lib/modules/'.$moduleclass)))
+			include_once('lib/modules/'.$moduleclass.'/'.$moduleclass.'.class.php');
 		else
-			include_once('lib/modules/'.$module.'.class.php');
+			include_once('lib/modules/'.$moduleclass.'.class.php');
 		
 		if (!class_exists($module))
 			return false;
 			
-		if (!$skipinstalledcheck) {
-			$exists = modules::get($module);
-			
-			if (!$exists || !$exists['Installed'] || 
-				(JCORE_VERSION >= '0.9' && $exists['Deactivated']))
-				return false;
-		}
-		
-		modules::$loaded[$module] = true;
+		modules::$loaded[$module] = modules::$available[$module];
 		
 		if ($quiet)
 			return true;
@@ -470,7 +524,7 @@ class _modules {
 		return true;
 	}
 	
-	static function register($id, $title, $description = null) {
+	static function register($id, $title, $description = null, $icon = null) {
 		if (!$id)
 			return;
 		
@@ -484,19 +538,27 @@ class _modules {
 		if (class_exists($modulename))
 			$$modulename = new $modulename();
 		
+		if ($icon && stripos($icon, 'http://') === false) {
+			if (stripos($icon, '/') === false)
+				$icon = url::jCore().'lib/icons/48/'.$icon;
+			else
+				$icon = url::jCore().$icon;
+		}
+		
 		modules::$available[$modulename] = array(
 			'Title' => _($title),
-			'Description' => _($description));
+			'Description' => _($description),
+			'Icon' => $icon);
 		
 		if (class_exists($modulename))
 			unset($$modulename);
 	}
 	
-	static function get($id = null) {
-		if ($id)
+	static function get($name = null) {
+		if ($name)
 			return sql::fetch(sql::run(
 				" SELECT * FROM `{modules}`" .
-				" WHERE `Name` LIKE '".sql::escape($id)."'" .
+				" WHERE `Name` LIKE '".sql::escape($name)."'" .
 				" LIMIT 1"));
 		
 		return sql::run(
@@ -515,15 +577,10 @@ class _modules {
 		if (is_object($id))
 			$id = strtolower(get_class($id));
 		
-		$installed = sql::fetch(sql::run(
+		return sql::fetch(sql::run(
 			" SELECT `ID` FROM `{modules}`" .
 			" WHERE `Name` LIKE '".sql::escape($id)."'" .
 			" AND `Installed` = 1"));
-		
-		if ($installed)
-			return true;
-			
-		return false;
 	}
 	
 	static function getTitle($id = null) {
@@ -542,6 +599,15 @@ class _modules {
 			return false;
 		
 		return modules::$available[$id]['Description'];
+	}
+	
+	static function getIcon($id = null) {
+		$id = strtolower($id);
+		
+		if (!$id || !isset(modules::$available[$id]))
+			return false;
+		
+		return modules::$available[$id]['Icon'];
 	}
 	
 	static function getOwnerMenu($name, $languageid = 0, $moduleitemid = 0) {
@@ -576,7 +642,7 @@ class _modules {
 		if (!$modulepages['PageIDs'])
 			return false;
 			
-		$page = sql::fetch(sql::run(
+		return sql::fetch(sql::run(
 			" SELECT * FROM `{" .
 				(JCORE_VERSION >= '0.8'?
 					'pages':
@@ -590,11 +656,6 @@ class _modules {
 					null) .
 				" `OrderID`" .
 			" LIMIT 1"));
-		
-		if (!$page)
-			return false;
-			
-		return $page;
 	}
 	
 	static function getOwnerURL($name, $moduleitemid = 0, $languageid = 0) {
@@ -617,7 +678,7 @@ class _modules {
 					$selectedlanguage['Path'].'/':
 					null) .
 				$page['Path'].'?';
-			
+		
 		return url::site().'index.php?' .
 			(isset($selectedlanguage)?
 				'&amp;languageid='.$selectedlanguage['ID']:
@@ -670,6 +731,9 @@ class _modules {
 		if (!sql::rows($rows))
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'modules::display', $this);
+		
 		$display = false;
 		$owner = sql::fetch(sql::run(
 			" SELECT * FROM `{".$this->sqlOwnerTable. "}`" .
@@ -698,6 +762,9 @@ class _modules {
 				unset($$modulename);
 			}
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'modules::display', $this, $display);
 		
 		return $display;
 	}

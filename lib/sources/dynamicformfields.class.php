@@ -20,15 +20,24 @@ class _dynamicFormFields {
 	var $adminPath = 'admin/content/dynamicforms/dynamicformfields';
 	
 	function __construct($formid = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::dynamicFormFields', $this);
+		
 		if ($formid) {
 			$form = dynamicForms::getForm($formid);
 			$this->formID = $form['ID'];
 			$this->storageSQLTable = $form['SQLTable'];
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::dynamicFormFields', $this);
 	}
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Field'), 
@@ -41,9 +50,15 @@ class _dynamicFormFields {
 			__('Pages / Posts'), 
 			'?path=' .
 			(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::setupAdminForm', $this, $form);
+		
 		$form->add(
 			'FormID',
 			'FormID',
@@ -320,9 +335,15 @@ class _dynamicFormFields {
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::verifyAdmin', $this, $form);
+		
 		$reorder = null;
 		$orders = null;
 		$delete = null;
@@ -345,10 +366,7 @@ class _dynamicFormFields {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
-			if (!$orders)
-				return false;
-			
-			foreach($orders as $oid => $ovalue) {
+			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{dynamicformfields}` " .
 					" SET `OrderID` = '".(int)$ovalue."'" .
@@ -358,6 +376,9 @@ class _dynamicFormFields {
 			tooltip::display(
 				__("Fields have been successfully re-ordered."),
 				TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormFields::verifyAdmin', $this, $form, $reorder);
 			
 			return true;
 		}
@@ -372,21 +393,31 @@ class _dynamicFormFields {
 					__("You are NOT allowed to delete a protected field!"),
 					TOOLTIP_ERROR);
 				
+				api::callHooks(API_HOOK_AFTER,
+					'dynamicFormFields::verifyAdmin', $this, $form);
+				
 				return false;
 			}
 			
-			if (!$this->delete($id))
-				return false;
+			$result = $this->delete($id);
 			
-			tooltip::display(
-				__("Field has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Field has been successfully deleted."),
+					TOOLTIP_SUCCESS);
 			
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormFields::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormFields::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 			
 		if (!$form->get('Name') && 
 			!in_array($form->get('TypeID'), array(
@@ -400,35 +431,46 @@ class _dynamicFormFields {
 		}
 		
 		if ($edit) {
-			if (!$this->edit($id, $form->getPostArray()))
-				return false;
-				
+			$result = $this->edit($id, $form->getPostArray());
+			
+			if ($result)
+				tooltip::display(
+					__("Field has been successfully updated.")." " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormFields::verifyAdmin', $this, $form, $result);
+			
+			return $result;
+		}
+		
+		$newid = $this->add($form->getPostArray());
+		
+		if ($newid) {
 			tooltip::display(
-				__("Field has been successfully updated.")." " .
-				"<a href='#adminform'>" .
+				__("Field has been successfully created.")." " .
+				"<a href='".url::uri('id, edit, delete') .
+					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
 			
-			return true;
+			$form->reset();
 		}
 		
-		if (!$newid = $this->add($form->getPostArray()))
-			return false;
-			
-		tooltip::display(
-			__("Field has been successfully created.")." " .
-			"<a href='".url::uri('id, edit, delete') .
-				"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-				__("Edit") .
-			"</a>",
-			TOOLTIP_SUCCESS);
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::verifyAdmin', $this, $form, $newid);
 		
-		$form->reset();
-		return true;
+		return $newid;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Order")."</span></th>" .
@@ -436,24 +478,42 @@ class _dynamicFormFields {
 				__("Title / Type")."</span></th>" .
 			"<th style='text-align: right;'><span class='nowrap'>".
 				__("Value Type")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::displayAdminListHeaderOptions', $this);
+		
 		if (JCORE_VERSION < '0.7')
 			echo
 				"<th><span class='nowrap'>".
 					__("Values")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::displayAdminListItem', $this, $row);
+		
 		echo
 			"<td>" .
 				"<input type='text' name='orders[".$row['ID']."]' " .
@@ -478,9 +538,15 @@ class _dynamicFormFields {
 					form::valueType2Text($row['ValueType']):
 					null) .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::displayAdminListItemOptions', $this, $row);
+		
 		if (JCORE_VERSION < '0.7') {
 			if (JCORE_VERSION >= '0.5')
 				$values = sql::fetch(sql::run(
@@ -507,9 +573,15 @@ class _dynamicFormFields {
 					"</a>" .
 				"</td>";
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -536,9 +608,15 @@ class _dynamicFormFields {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListItemSelected(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::displayAdminListItemSelected', $this, $row);
+		
 		if ($row['Name'])
 			admin::displayItemData(
 				__("Field Name"),
@@ -595,17 +673,29 @@ class _dynamicFormFields {
 			admin::displayItemData(
 				nl2br($row['Values']));
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::displayAdminListItemSelected', $this, $row);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::displayAdminListFunctions', $this);
+		
 		echo 
 			"<input type='submit' name='reordersubmit' value='".
 				htmlspecialchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::displayAdminList', $this, $rows);
+		
 		$id = null;
 		
 		if (isset($_GET['id']))
@@ -675,21 +765,43 @@ class _dynamicFormFields {
 				
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(__('Form Fields'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::displayAdmin', $this);
+		
 		if (!$this->formID)
 			$this->formID = admin::getPathID();
 		
@@ -720,6 +832,10 @@ class _dynamicFormFields {
 				TOOLTIP_ERROR);
 				
 			echo "</div>";
+			
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormFields::displayAdmin', $this);
+			
 			return;
 		}
 		
@@ -801,6 +917,9 @@ class _dynamicFormFields {
 		
 		echo
 			"</div>"; //admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::displayAdmin', $this);
 	}
 	
 	function add($values) {
@@ -820,6 +939,9 @@ class _dynamicFormFields {
 			}
 		}
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::add', $this, $values);
+		
 		if ($values['OrderID'] == '') {
 			$row = sql::fetch(sql::run(
 				" SELECT `OrderID` FROM `{dynamicformfields}` " .
@@ -889,13 +1011,14 @@ class _dynamicFormFields {
 				(int)$values['OrderID'] .
 				"'");
 			
-		if (!$newid) {
+		if (!$newid)
 			tooltip::display(
 				sprintf(__("Field couldn't be created! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::add', $this, $values, $newid);
 		
 		return $newid;
 	}
@@ -923,6 +1046,9 @@ class _dynamicFormFields {
 				return false;
 			}
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::edit', $this, $id, $values);
 		
 		sql::run(
 			" UPDATE `{dynamicformfields}` SET ".
@@ -980,15 +1106,18 @@ class _dynamicFormFields {
 				"'" .
 			" WHERE `ID` = '".(int)$id."'");
 			
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result)
 			tooltip::display(
 				sprintf(__("Field couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::edit', $this, $id, $values, $result);
+		
+		return $result;
 	}
 	
 	function addDBField($values) {
@@ -1004,6 +1133,9 @@ class _dynamicFormFields {
 			
 		if ($exists)
 			return true;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::addDBField', $this, $values);
 		
 		switch($values['ValueType']) {
 			case FORM_VALUE_TYPE_BOOL:
@@ -1053,8 +1185,12 @@ class _dynamicFormFields {
 					" ADD `".$values['Name']."` VARCHAR( 255 ) NOT NULL DEFAULT '';");
 		}
 		
-		if (sql::error())
+		if (sql::error()) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormFields::addDBField', $this, $values);
+			
 			return false;
+		}
 			
 		if (JCORE_VERSION >= '0.7' && in_array($values['ValueType'], array(
 			FORM_VALUE_TYPE_BOOL, FORM_VALUE_TYPE_DATE, 
@@ -1076,7 +1212,12 @@ class _dynamicFormFields {
 					" DROP INDEX `".$values['Name']."`;");
 		}
 		
-		return true;
+		$newid = true;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::addDBField', $this, $values, $newid);
+		
+		return $newid;
 	}
 	
 	function editDBField($id, $values) {
@@ -1101,6 +1242,9 @@ class _dynamicFormFields {
 			return false;
 		}
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::editDBField', $this, $id, $values);
+		
 		$newexists = sql::fetch(sql::run(
 			" SHOW COLUMNS FROM `{".$this->storageSQLTable . "}`" .
 			" WHERE `Field` = '".$values['Name']."'"));
@@ -1112,8 +1256,14 @@ class _dynamicFormFields {
 			" SHOW COLUMNS FROM `{".$this->storageSQLTable . "}`" .
 			" WHERE `Field` = '".$row['Name']."'"));
 			
-		if (!$row['Name'] || (!$oldexists && !$newexists))
-			return $this->addDBField($values);
+		if (!$row['Name'] || (!$oldexists && !$newexists)) {
+			$result = $this->addDBField($values);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormFields::editDBField', $this, $id, $values);
+			
+			return $result;
+		}
 		
 		switch($values['ValueType']) {
 			case FORM_VALUE_TYPE_BOOL:
@@ -1163,8 +1313,12 @@ class _dynamicFormFields {
 					" CHANGE `".$row['Name']."` `".$values['Name']."` VARCHAR( 255 ) NOT NULL DEFAULT '';");
 		}
 		
-		if (sql::error())
+		if (sql::error()) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormFields::editDBField', $this, $id, $values);
+			
 			return false;
+		}
 			
 		if (JCORE_VERSION >= '0.7' && in_array($values['ValueType'], array(
 			FORM_VALUE_TYPE_BOOL, FORM_VALUE_TYPE_DATE, 
@@ -1186,13 +1340,21 @@ class _dynamicFormFields {
 					" DROP INDEX `".$values['Name']."`;");
 		}
 		
-		return true;
+		$result = true;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::editDBField', $this, $id, $values, $result);
+		
+		return $result;
 	}
 	
 	function delete($id) {
 		if (!$id)
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormFields::delete', $this, $id);
+		
 		$row = sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicformfields}` " .
 			" WHERE `ID` = '".$id."'"));
@@ -1213,8 +1375,12 @@ class _dynamicFormFields {
 						" ALTER TABLE `{".$this->storageSQLTable."}`" .
 						" DROP `".$row['Name']."`;");
 					
-					if (sql::error(true))
+					if (sql::error(true)) {
+						api::callHooks(API_HOOK_AFTER,
+							'dynamicFormFields::delete', $this, $id);
+						
 						return false;
+					}
 				}
 			}
 		}
@@ -1235,6 +1401,9 @@ class _dynamicFormFields {
 		sql::run(
 			" DELETE FROM `{dynamicformfields}` " .
 			" WHERE `ID` = '".$id."'");
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormFields::delete', $this, $id);
 		
 		return true;
 	}

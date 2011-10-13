@@ -1060,6 +1060,9 @@ class newsletterSubscriptions {
 				"</div>" .
 				"<div class='comment' style='padding-left: 10px;'>" .
 					calendar::dateTime($row['TimeStamp']) .
+					(isset($row['IP']) && $row['IP']?
+						" (".security::long2ip($row['IP']).")":
+						null) .
 				"</div>" .
 			"</td>" .
 			"<td style='text-align: right;'>" .
@@ -1362,6 +1365,9 @@ class newsletterSubscriptions {
 			" INSERT INTO `{newslettersubscriptions}` SET ".
 			" `Email` = '" .
 				sql::escape($values['Email'])."'," .
+			(JCORE_VERSION >= '1.0'?
+				" `IP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."',":
+				null) .
 			" `TimeStamp` = " .
 				($values['TimeStamp']?
 					"'".sql::escape($values['TimeStamp'])."'":
@@ -2431,6 +2437,9 @@ class newsletter extends modules {
 			"CREATE TABLE IF NOT EXISTS `{newslettersubscriptions}` (" .
 			" `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT ," .
 			" `Email` VARCHAR( 255 ) NOT NULL default '' ," .
+			(JCORE_VERSION >= '1.0'?
+				" `IP` DECIMAL( 39, 0 ) NOT NULL default '0' ,":
+				null) .
 			" `TimeStamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ," .
 			" `ListID` SMALLINT UNSIGNED NOT NULL default '1'," .
 			" `Confirmed` tinyint(1) unsigned NOT NULL default '0'," .

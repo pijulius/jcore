@@ -25,6 +25,9 @@ class _contentCodes {
 	var $ignoreCodes = null;
 	
 	function run($code, $arguments) {
+		api::callHooks(API_HOOK_BEFORE,
+			'contentCodes::run', $this, $code, $arguments);
+		
 		switch($code) {
 			case 'translate':
 				if ($this->ignoreCodes && in_array('translate', $this->ignoreCodes))
@@ -128,7 +131,7 @@ class _contentCodes {
 				preg_match('/(.*?)(\/|$)(.*)/', $arguments, $matches);
 					
 				$modules = new modules();
-				if (!$modules->load($matches[1]))
+				if (!isset(modules::$loaded[$matches[1]]) || !modules::$loaded[$matches[1]])
 					break;
 					
 				$modulename = new $matches[1]();
@@ -157,6 +160,9 @@ class _contentCodes {
 			default:
 				break;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'contentCodes::run', $this, $code, $arguments);
 	}
 	
 	static function random($arguments) {
@@ -211,40 +217,56 @@ class _contentCodes {
 		if (!$constant)
 			return null;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'contentCodes::displayDefinitions', $_ENV, $constant);
+		
 		if (is_array($constant))
 			$constant = $constant[1];
 		
 		if ($constant == 'SITE_URL')
-			return url::site();
+			$result = url::site();
 		
-		if ($constant == 'JCORE_URL')
-			return url::jCore();
+		else if ($constant == 'JCORE_URL')
+			$result = url::jCore();
 		
-		if ($constant == 'SECURITY_TOKEN')
-			return security::genToken();
+		else if ($constant == 'SECURITY_TOKEN')
+			$result = security::genToken();
 		
-		if (!defined($constant))
-			return null;
+		else if (!defined($constant))
+			$result = null;
 		
-		if (in_array($constant, array(
+		else if (in_array($constant, array(
 			'SQL_HOST',
 			'SQL_DATABASE',
 			'SQL_USER',
 			'SQL_PASS',
 			'SITE_PATH',
 			'JCORE_PATH')))
-			return null;
+			$result = null;
+			
+		else
+			$result = constant($constant);
 		
-		return constant($constant);
+		api::callHooks(API_HOOK_AFTER,
+			'contentCodes::displayDefinitions', $_ENV, $constant, $result);
+		
+		return $result;
 	}
 	
 	function display($content) {
+		api::callHooks(API_HOOK_BEFORE,
+			'contentCodes::display', $this, $content);
+		
 		contentCodes::replaceDefinitions($content);
 		
 		preg_match_all('/(<p>[^>]+)?\{([a-zA-Z0-9\-\_]+?)\}(.*?)\{\/\2\}/', $content, $matches);
 		
 		if (!isset($matches[2]) || !count($matches[2])) {
 			echo $content;
+			
+			api::callHooks(API_HOOK_AFTER,
+				'contentCodes::display', $this, $content);
+			
 			return;
 		}
 		
@@ -263,6 +285,9 @@ class _contentCodes {
 		}
 		
 		echo $contents[count($contents)-1];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'contentCodes::display', $this, $content);
 	}
 }
 

@@ -21,12 +21,6 @@ define('SETTINGS_TYPE_TIMESTAMP', 8);
 define('SETTINGS_TYPE_PASSWORD', 9);
 define('SETTINGS_TYPE_COLOR', 10);
 
-define('D_OPTIMIZATION', 1);
-define('D_NOTIFICATION', 2);
-define('D_WARNING', 4);
-define('D_ERROR', 8);
-define('D_ALL', 9);
-
 if (!defined('DEBUG'))
 	define('DEBUG', null);
 
@@ -106,6 +100,7 @@ if (!defined('SF_BROWSER')) {
 		define('SF_BROWSER', false);
 }
 
+include_once('lib/api.class.php');
 include_once('lib/sql.class.php');
  
 class _settings {
@@ -114,14 +109,23 @@ class _settings {
 	var $textsDomain = 'messages';
 	
 	function __construct($table = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'settings::settings', $this);
+		
 		if ($table)
 			$this->sqlTable = $table;
 		
 		$this->textsDomain = languages::$selectedTextsDomain;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'settings::settings', $this);
 	}
 	
 	// ************************************************   Admin Part
 	function verifyAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'settings::verifyAdmin', $this);
+		
 		$update = null;
 		$settings = null;
 		
@@ -173,8 +177,14 @@ class _settings {
 				"</a>",
 				TOOLTIP_SUCCESS);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'settings::verifyAdmin', $this, $update);
+			
 			return true;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'settings::verifyAdmin', $this);
 		
 		return false;
 	}
@@ -182,6 +192,9 @@ class _settings {
 	function displayAdminItemTitle($settingstitle, $sectiontitle = null) {
 		if (!$settingstitle)
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'settings::displayAdminItemTitle', $this, $settingstitle, $sectiontitle);
 		
 		$exptitles = explode('_', $sectiontitle);
 		
@@ -195,18 +208,34 @@ class _settings {
 		}
 		
 		echo __(trim(str_replace('_', ' ', $settingstitle)), $this->textsDomain);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'settings::displayAdminItemTitle', $this, $settingstitle, $sectiontitle);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'settings::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Settings Administration'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'settings::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'settings::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'settings::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'settings::displayAdmin', $this);
+
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
 		
@@ -390,17 +419,33 @@ class _settings {
 		
 		echo
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'settings::displayAdmin', $this);
 	}
 	
 	function add($id, $value, $type = SETTINGS_TYPE_TEXT) {
+		api::callHooks(API_HOOK_BEFORE,
+			'settings::add', $this, $id, $value, $type);
+		
 		sql::run(
 			" INSERT INTO `{".$this->sqlTable."}`" .
 			" SET `ID` = '".sql::escape($id)."', " .
 			" `Value` = '".sql::escape($value)."'," .
 			" `TypeID` = '".(int)$type."'");
+		
+		$result = (sql::affected() != -1);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'settings::add', $this, $id, $value, $type, $result);
+		
+		return $result;
 	}
 	
 	function edit($id, $value, $type = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'settings::edit', $this, $id, $value, $type);
+		
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}`" .
 			" SET `Value` = '".sql::escape($value)."'" .
@@ -408,41 +453,90 @@ class _settings {
 				", `TypeID` = '".(int)$type."'":
 				null) .
 			" WHERE `ID` = '".sql::escape($id)."'");
+		
+		$result = (sql::affected() != -1);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'settings::edit', $this, $id, $value, $type, $result);
+		
+		return $result;
 	}
 	
 	function delete($id) {
+		api::callHooks(API_HOOK_BEFORE,
+			'settings::delete', $this, $id);
+		
 		sql::run(
 			" DELETE FROM `{".$this->sqlTable."}`" .
 			" WHERE `ID` = '".sql::escape($id)."'");
-	}
-	
-	function set($id, $value) {
-		return $this->edit($id, $value);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'settings::delete', $this, $id);
 	}
 	
 	// ************************************************   Client Part
-	function get($id) {
-		$row = sql::fetch(sql::run(
-			" SELECT `Value` " .
-			" FROM `{".$this->sqlTable."}`" .
-			" WHERE `ID` = '".sql::escape($id)."'"));
+	static function set($table, $id, $value = null) {
+		$env = (isset($this)?$this:$_ENV);
 		
-		if (!$row)
-			return null;
+		if (!isset($value)) {
+			$value = $id;
+			$id = $table;
+			$table = null;
+		}
 		
-		return $row['Value'];
+		if (!$table)
+			$table = (isset($this)?$this->sqlTable:'settings');
+		
+		sql::run(
+			" UPDATE `{".$table."}`" .
+			" SET `Value` = '".sql::escape($value)."'" .
+			" WHERE `ID` = '".sql::escape($id)."'");
+		
+		return (sql::affected() != -1);
 	}
 	
-	function getType($id) {
+	static function get($table, $id = null) {
+		$env = (isset($this)?$this:$_ENV);
+		
+		if (!isset($id)) {
+			$id = $table;
+			$table = null;
+		}
+		
+		if (!$table)
+			$table = (isset($this)?$this->sqlTable:'settings');
+		
 		$row = sql::fetch(sql::run(
-			" SELECT `TypeID` " .
-			" FROM `{".$this->sqlTable."}`" .
+			" SELECT `Value` " .
+			" FROM `{".$table."}`" .
 			" WHERE `ID` = '".sql::escape($id)."'"));
 		
-		if (!$row)
-			return null;
+		if ($row)
+			return $row['Value'];
 		
-		return $row['TypeID'];
+		return null;
+	}
+	
+	static function getType($table, $id = null) {
+		$env = (isset($this)?$this:$_ENV);
+		
+		if (!isset($id)) {
+			$id = $table;
+			$table = null;
+		}
+		
+		if (!$table)
+			$table = (isset($this)?$this->sqlTable:'settings');
+		
+		$row = sql::fetch(sql::run(
+			" SELECT `TypeID` " .
+			" FROM `{".$table."}`" .
+			" WHERE `ID` = '".sql::escape($id)."'"));
+		
+		if ($row)
+			return $row['TypeID'];
+		
+		return null;
 	}
 	
 	static function iniGet($var, $parse = false) {
@@ -451,10 +545,7 @@ class _settings {
 		
 		$value = ini_get($var);
 		
-		if (!$parse)
-			return $value;
-		
-		if (!is_numeric($value)) {
+		if ($parse && !is_numeric($value)) {
     		if (strpos($value, 'M') !== false)
         		$value = intval($value)*1024*1024;
     		elseif (strpos($value, 'K') !== false)
@@ -466,14 +557,19 @@ class _settings {
 		return $value;
 	}
 	
-	function defineSettings() {
+	static function defineSettings($table = null) {
+		$env = (isset($this)?$this:$_ENV);
+		
+		if (!$table)
+			$table = (isset($this)?$this->sqlTable:'settings');
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'settings::defineSettings', $env, $table);
+		
 		$rows = sql::run(
-			" SELECT * FROM `{".$this->sqlTable."}`" .
+			" SELECT * FROM `{".$table."}`" .
 			" WHERE `TypeID` > 0");
 			
-		if (!$rows)
-			return false;
-		
 		while ($row = sql::fetch($rows))
 			if (!defined(strtoupper($row['ID'])))
 				define(strtoupper($row['ID']), 
@@ -485,15 +581,19 @@ class _settings {
 		if (JCORE_VERSION <= '0.1' && !defined('AJAX_PAGING'))
 			define('AJAX_PAGING', false);
 		
-		if (defined('MANUAL_GETTEXT') && MANUAL_GETTEXT && $this->sqlTable == 'settings')
+		if (defined('MANUAL_GETTEXT') && MANUAL_GETTEXT && $table == 'settings')
 			include_once('lib/gettext/gettext.inc');
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'settings::defineSettings', $env, $table);
 	}
 	
 	static function displayMaintenanceNotification() {
 		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'settings::displayMaintenanceNotification', $_ENV);
 		
 		if (((defined('MAINTENANCE_SUSPEND_WEBSITE') && MAINTENANCE_SUSPEND_WEBSITE) ||
 			(defined('MAINTENANCE_WEBSITE_SUSPENDED') && MAINTENANCE_WEBSITE_SUSPENDED)))
@@ -505,14 +605,16 @@ class _settings {
 				TOOLTIP_NOTIFICATION);
 		}
 		
-		if (!defined('MAINTENANCE_NOTIFICATION_TEXT') || 
-			!MAINTENANCE_NOTIFICATION_TEXT)
-			return false;
+		if (defined('MAINTENANCE_NOTIFICATION_TEXT') && 
+			MAINTENANCE_NOTIFICATION_TEXT)
+		{
+			tooltip::display(
+				MAINTENANCE_NOTIFICATION_TEXT,
+				TOOLTIP_NOTIFICATION);
+		}
 		
-		tooltip::display(
-			MAINTENANCE_NOTIFICATION_TEXT,
-			TOOLTIP_NOTIFICATION);
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'settings::displayMaintenanceNotification', $_ENV);
 	}
 }
 

@@ -14,6 +14,9 @@ class _postsHandling {
 	
 	// ************************************************   Admin Part
 	function verifyAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::verifyAdmin', $this);
+		
 		$delete = null;
 		$copy = null;
 		$move = null;
@@ -40,24 +43,34 @@ class _postsHandling {
 			$topageid = (int)$_POST['topageid'];
 		
 		if ($delete) {
-			if (!$this->delete($id))
-				return false;
-				
-			tooltip::display(
-				__("Post has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			$result = $this->delete($id);
 			
-			return true;
+			if ($result)
+				tooltip::display(
+					__("Post has been successfully deleted."),
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'postsHandling::verifyAdmin', $this, $result);
+			
+			return $result;
 		}
 		
-		if (!$copy && !$move)
+		if (!$copy && !$move) {
+			api::callHooks(API_HOOK_AFTER,
+				'postsHandling::verifyAdmin', $this);
+			
 			return false;
+		}
 			
 		if (!$ids) {
 			tooltip::display(
 				__("No posts selected! Please select at least one post that you " .
 					"would like to copy and/or move."),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'postsHandling::verifyAdmin', $this);
 			
 			return false;
 		}
@@ -67,6 +80,9 @@ class _postsHandling {
 				__("No page selected to copy and/or move posts to! Please select " .
 					"a page to move the posts to at the bottom of the list."),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'postsHandling::verifyAdmin', $this);
 			
 			return false;
 		}
@@ -86,6 +102,9 @@ class _postsHandling {
 					"deleted meanwhile."),
 				TOOLTIP_ERROR);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'postsHandling::verifyAdmin', $this);
+			
 			return false;
 		}
 		
@@ -100,6 +119,9 @@ class _postsHandling {
 					$topage['Title']),
 				TOOLTIP_SUCCESS);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'postsHandling::verifyAdmin', $this, $move);
+			
 			return true;
 		}
 		
@@ -113,10 +135,16 @@ class _postsHandling {
 				$topage['Title']),
 			TOOLTIP_SUCCESS);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::verifyAdmin', $this, $copy);
+		
 		return true;
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('Pages / Posts'), 
@@ -129,9 +157,15 @@ class _postsHandling {
 		favoriteLinks::add(
 			__('View Website'), 
 			SITE_URL);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::setupAdmin', $this);
 	}
 	
 	function displayAdminListHeader($pageroute = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::displayAdminListHeader', $this, $pageroute);
+		
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' alt='.list' " .
@@ -145,20 +179,36 @@ class _postsHandling {
 				$pageroute .
 				"</div>" .
 			"</th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::displayAdminListHeader', $this, $pageroute);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::displayAdminListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::displayAdminListItem', $this, $row);
+		
 		$ids = null;
 		
 		if (isset($_POST['postids']))
@@ -197,12 +247,22 @@ class _postsHandling {
 					", ".sprintf(__("%s views"), $row['Views']) .
 				"</div>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::displayAdminListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -224,15 +284,27 @@ class _postsHandling {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListItemSelected(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::displayAdminListItemSelected', $this, $row);
+		
 		$post = new posts();
 		$post->displayAdminListItemSelected($row);
 		unset($post);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::displayAdminListItemSelected', $this, $row);
 	}
 	
 	function displayAdminListSearch() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::displayAdminListSearch', $this);
+		
 		$pageid = null;
 		$search = null;
 		
@@ -286,9 +358,15 @@ class _postsHandling {
 			"</select> " .
 			"<input type='submit' value='" .
 				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::displayAdminListSearch', $this);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::displayAdminListFunctions', $this);
+		
 		$topageid = null;
 		
 		if (isset($_POST['topageid']))
@@ -337,9 +415,15 @@ class _postsHandling {
 				htmlspecialchars(__("Copy"), ENT_QUOTES)."' class='button submit' /> " .
 			"<input type='submit' name='movesubmit' value='" .
 				htmlspecialchars(__("Move"), ENT_QUOTES)."' class='button' /> ";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::displayAdminList', $this, $rows);
+		
 		$id = null;
 		
 		if (isset($_GET['id']))
@@ -447,18 +531,34 @@ class _postsHandling {
 		
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Handling Posts'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::displayAdmin', $this);
+		
 		$pageid = null;
 		$search = null;
 		
@@ -517,12 +617,18 @@ class _postsHandling {
 		
 		echo 
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::displayAdmin', $this);
 	}
 	
 	function copy($postid, $topageid) {
 		if (!$postid || !$topageid)
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::copy', $this, $postid, $topageid);
+		
 		$columns = sql::run(
 			" SHOW COLUMNS FROM `{posts}`" .
 			" WHERE `Field` != 'ID'");
@@ -542,6 +648,10 @@ class _postsHandling {
 				sprintf(__("Post couldn't be copied! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'postsHandling::copy', $this, $postid, $topageid);
+			
 			return false;
 		}
 		
@@ -631,6 +741,9 @@ class _postsHandling {
 				$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]);
 		}
 		
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::copy', $this, $postid, $topageid, $newpostid);
+		
 		return $newpostid;
 	}
 	
@@ -638,6 +751,9 @@ class _postsHandling {
 		if (!$postid || !$topageid)
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::move', $this, $postid, $topageid);
+		
 		$post = sql::fetch(sql::run(
 			" SELECT * FROM `{posts}`" .
 			" WHERE `ID` = '".(int)$postid."'"));
@@ -656,11 +772,17 @@ class _postsHandling {
 			" `TimeStamp` = `TimeStamp`" .
 			" WHERE `ID` = '".(int)$postid."'");
 		
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result) {
 			tooltip::display(
 				sprintf(__("Post couldn't be moved! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'postsHandling::move', $this, $postid, $topageid);
+			
 			return false;
 		}
 		
@@ -685,29 +807,30 @@ class _postsHandling {
 					(int)$post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]."'");
 		}
 		
-		if (sql::affected() == -1) {
-			tooltip::display(
-				sprintf(__("Post couldn't be moved! Error: %s"), 
-					sql::error()),
-				TOOLTIP_ERROR);
-			return false;
-		}
-		
 		if (JCORE_VERSION >= '0.7')
 			posts::updateKeywordsCloud(
 				$post['Keywords'], $post['Keywords'],
 				$topageid, $post[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]);
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::move', $this, $postid, $topageid, $result);
+		
+		return $result;
 	}
 	
 	function delete($id) {
 		if (!$id)
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'postsHandling::delete', $this, $id);
+		
 		$posts = new posts();
 		$deleted = $posts->delete($id);
 		unset($posts);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postsHandling::delete', $this, $id, $deleted);
 		
 		return $deleted;	
 	}

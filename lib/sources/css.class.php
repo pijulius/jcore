@@ -140,6 +140,9 @@ class _css {
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'css::ajaxRequest', $this);
+		
 		session_write_close();
 		$cachetime = 60*60*24*365;
 		
@@ -148,6 +151,9 @@ class _css {
 		header('Expires: '.gmdate('D, d M Y H:i:s', time()+$cachetime).' GMT');
 		
 		css::displayCSS();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'css::ajaxRequest', $this);
 		
 		return true;
 	}
@@ -226,6 +232,9 @@ class _css {
 			return true;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'css::displayCSS', $_ENV);
+		
 		ob_start(array('css', 'compress'));
 		css::$parseURLs = true;
 		
@@ -280,10 +289,17 @@ class _css {
 				@file_get_contents(SITE_PATH.'template/template.css')."\n";
 		
 		ob_end_flush();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'css::displayCSS', $_ENV);
+		
 		return true;
 	}
 	
 	static function display() {
+		api::callHooks(API_HOOK_BEFORE,
+			'css::display', $_ENV);
+		
 		$filemtime = @filemtime(SITE_PATH.'template/template.css');
 		
 		if (defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE &&
@@ -345,6 +361,9 @@ class _css {
 						null) .
 					"' " .
 					"type='text/css' rel='stylesheet' />\n";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'css::display', $_ENV);
 	}
 }
 

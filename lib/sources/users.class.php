@@ -103,14 +103,24 @@ class _users {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::countAdminItems', $this);
+		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{users}`" .
 			" LIMIT 1"));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::countAdminItems', $this, $row['Rows']);
+		
 		return $row['Rows'];
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New User'), 
@@ -128,9 +138,15 @@ class _users {
 		favoriteLinks::add(
 			__('Settings'), 
 			'?path=admin/site/settings');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::setupAdmin', $this);
 	}
 	
-	function setupAdminForm(&$form, $membersModuleAvailable = false) {
+	function setupAdminForm(&$form, $membersModuleAvailable = false, $groupids = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::setupAdminForm', $this, $form, $membersModuleAvailable);
+		
 		$groupid = null;
 		$edit = null;
 		
@@ -207,9 +223,15 @@ class _users {
 						$groupid);
 					$form->setValueType(FORM_VALUE_TYPE_INT);
 					
-					$form->addValue('', '');
-					while($group = sql::fetch($groups))
+					if (!$groupids)
+						$form->addValue('', '');
+					
+					while($group = sql::fetch($groups)) {
+						if ($groupids && !in_array($group['ID'], (array)$groupids))
+							continue;
+						
 						$form->addValue($group['ID'], $group['GroupName']);
+					}
 				}
 			}
 				
@@ -344,9 +366,15 @@ class _users {
 						$groupid);
 					$form->setValueType(FORM_VALUE_TYPE_INT);
 					
-					$form->addValue('', '');
-					while($group = sql::fetch($groups))
+					if (!$groupids)
+						$form->addValue('', '');
+					
+					while($group = sql::fetch($groups)) {
+						if ($groupids && !in_array($group['ID'], (array)$groupids))
+							continue;
+						
 						$form->addValue($group['ID'], $group['GroupName']);
+					}
 				}
 			}
 			
@@ -358,9 +386,15 @@ class _users {
 		
 		$form->setTooltipText('Password', 
 			sprintf(__("minimum %s characters"), MINIMUM_PASSWORD_LENGTH));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::setupAdminForm', $this, $form, $membersModuleAvailable);
 	}
 	
-	function verifyAdmin(&$form) {
+	function verifyAdmin(&$form, $groupids = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::verifyAdmin', $this, $form);
+		
 		$activate = null;
 		$suspend = null;
 		$delete = null;
@@ -397,6 +431,9 @@ class _users {
 					"least one user."),
 				TOOLTIP_ERROR);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'users::verifyAdmin', $this, $form);
+			
 			return false;
 		}
 		
@@ -414,7 +451,7 @@ class _users {
 						(int)$id != $GLOBALS['USER']->data['ID'])
 						continue;
 					
-					$this->activate((int)$id);
+					$this->activate((int)$id, $groupids);
 				}
 				
 				tooltip::display(
@@ -422,6 +459,9 @@ class _users {
 						"able to login."),
 					TOOLTIP_SUCCESS);
 					
+				api::callHooks(API_HOOK_AFTER,
+					'users::verifyAdmin', $this, $form, $activate);
+				
 				return true;
 			}
 			
@@ -434,13 +474,16 @@ class _users {
 						(int)$id != $GLOBALS['USER']->data['ID'])
 						continue;
 					
-					$this->suspend((int)$id);
+					$this->suspend((int)$id, $groupids);
 				}
 				
 				tooltip::display(
 					__("Users have been successfully suspended."),
 					TOOLTIP_SUCCESS);
 					
+				api::callHooks(API_HOOK_AFTER,
+					'users::verifyAdmin', $this, $form, $suspend);
+				
 				return true;
 			}
 			
@@ -453,68 +496,93 @@ class _users {
 						(int)$id != $GLOBALS['USER']->data['ID'])
 						continue;
 					
-					$this->delete((int)$id);
+					$this->delete((int)$id, $groupids);
 				}
 				
 				tooltip::display(
 					__("Users have been successfully deleted."),
 					TOOLTIP_SUCCESS);
 					
+				api::callHooks(API_HOOK_AFTER,
+					'users::verifyAdmin', $this, $form, $delete);
+				
 				return true;
 			}
 		}
 			
 		if ($delete) {
-			if (!$this->delete($id))
-				return false;
-		
-			tooltip::display(
-				__("User has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			$result = $this->delete($id, $groupids);
+			
+			if ($result)
+				tooltip::display(
+					__("User has been successfully deleted."),
+					TOOLTIP_SUCCESS);
 				
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'users::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if ($edit) {
 			$form->setValue('RePassword', $form->get('Password'));
 			
-			if (!$this->edit($id, $form->getPostArray()))
-				return false;
+			$result = $this->edit($id, $form->getPostArray(), $groupids);
 			
+			if ($result)
+				tooltip::display(
+					__("User has been successfully updated.")." " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'users::verifyAdmin', $this, $form, $result);
+			
+			return $result;
+		}
+		
+		if ($this->userPermissionIDs || $this->userPermissionType & USER_PERMISSION_TYPE_OWN) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::verifyAdmin', $this, $form);
+			
+			return false;
+		}
+		
+		$newid = $this->add($form->getPostArray(), $groupids); 
+		
+		if ($newid) {
 			tooltip::display(
-				__("User has been successfully updated.")." " .
-				"<a href='#adminform'>" .
+				__("User has been successfully created and a notification email " .
+					"with the login information has been sent to the email " .
+					"address specified.")." ".
+				"<a href='".url::uri('id, edit, delete') .
+					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
-				
-			return true;
+			
+			$form->reset();
 		}
 		
-		if ($this->userPermissionIDs || $this->userPermissionType & USER_PERMISSION_TYPE_OWN)
-			return false;
+		api::callHooks(API_HOOK_AFTER,
+			'users::verifyAdmin', $this, $form, $newid);
 		
-		if (!$newid = $this->add($form->getPostArray())) 
-			return false;
-		
-		tooltip::display(
-			__("User has been successfully created and a notification email " .
-				"with the login information has been sent to the email " .
-				"address specified.")." ".
-			"<a href='".url::uri('id, edit, delete') .
-				"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-				__("Edit") .
-			"</a>",
-			TOOLTIP_SUCCESS);
-		
-		$form->reset();
-		return true;
+		return $newid;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAdminListHeader', $this);
+		
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' " .
@@ -536,23 +604,41 @@ class _users {
 		echo
 			"<th style='text-align: right;'><span class='nowrap'>".
 				__("Email")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAdminListHeaderOptions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Permissions")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAdminListItem', $this, $row);
+		
 		$ids = null;
 		$group = null;
 		
@@ -606,9 +692,15 @@ class _users {
 					$row['Email'] .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAdminListItemOptions', $this, $row);
+		
 		$permissions = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{userpermissions}`" .
@@ -629,9 +721,15 @@ class _users {
 		echo
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -647,9 +745,15 @@ class _users {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListItemSelected(&$row, $membersModuleAvailable = false) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAdminListItemSelected', $this, $row, $membersModuleAvailable);
+		
 		if (JCORE_VERSION >= '0.7') {
 			echo
 				"<div class='align-right'>";
@@ -712,9 +816,15 @@ class _users {
 			admin::displayItemData(
 				__("Account Pending"),
 				__("Yes"));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAdminListItemSelected', $this, $row, $membersModuleAvailable);
 	}
 	
-	function displayAdminListSearch() {
+	function displayAdminListSearch($groupids = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAdminListSearch', $this, $groupids);
+		
 		$search = null;
 		$groupid = null;
 		
@@ -739,7 +849,10 @@ class _users {
 						"onchange='this.form.submit();'>" .
 						"<option value=''>"._("All")."</option>";
 				
-				while($group = sql::fetch($groups))
+				while($group = sql::fetch($groups)) {
+					if ($groupids && !in_array($group['ID'], (array)$groupids))
+						continue;
+					
 					echo
 						"<option value='".$group['ID']."'" .
 							($group['ID'] == $groupid?
@@ -748,6 +861,7 @@ class _users {
 							">" .
 							$group['GroupName'] .
 						"</option>";
+				}
 				
 				echo
 					"</select> ";
@@ -757,9 +871,15 @@ class _users {
 		echo
 			"<input type='submit' value='" .
 				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAdminListSearch', $this, $groupids);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAdminListFunctions', $this);
+		
 		echo
 			"<input type='submit' name='activatesubmit' value='" .
 				htmlspecialchars(__("Activate"), ENT_QUOTES) .
@@ -770,9 +890,15 @@ class _users {
 			"<input type='submit' name='deletesubmit' value='" .
 				htmlspecialchars(__("Delete"), ENT_QUOTES) .
 				"' class='button confirm-link' /> ";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminList(&$rows, $membersModuleAvailable = false) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAdminList', $this, $rows, $membersModuleAvailable);
+		
 		$id = null;
 		
 		if (isset($_GET['id']))
@@ -843,27 +969,50 @@ class _users {
 		
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAdminList', $this, $rows, $membersModuleAvailable);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Users Administration'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAdmin', $this);
+		
 		$search = null;
 		$groupid = null;
 		$delete = null;
 		$edit = null;
 		$id = null;
+		$groupids = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags((string)$_GET['search']));
@@ -880,11 +1029,23 @@ class _users {
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
 		
+		if (JCORE_VERSION >= '0.8' &&
+			isset($GLOBALS['USER']->data['GroupID']) && 
+			$GLOBALS['USER']->data['GroupID'])
+		{
+			$gpermission = userPermissions::check(
+				(int)$GLOBALS['USER']->data['ID'],
+				'admin/members/usergroups');
+			
+			if (~$gpermission['PermissionType'] & USER_PERMISSION_TYPE_WRITE)
+				$groupids = userGroups::get($GLOBALS['USER']->data['GroupID'], true);
+		}
+		
 		echo
 			"<div style='float: right;'>" .
 				"<form action='".url::uri('ALL')."' method='get'>";
 		
-		$this->displayAdminListSearch();
+		$this->displayAdminListSearch($groupids);
 		
 		echo
 				"</form>" .
@@ -907,7 +1068,7 @@ class _users {
 		if (!$edit)
 			$form->action = url::uri('id, delete, limit');
 		
-		$this->setupAdminForm($form, $membersModuleAvailable);
+		$this->setupAdminForm($form, $membersModuleAvailable, $groupids);
 		$form->addSubmitButtons();
 		
 		if ($edit) {
@@ -931,11 +1092,14 @@ class _users {
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
 					" AND `ID` = '".(int)$GLOBALS['USER']->data['ID']."'":
+					null) .
+				($groupids?
+					" AND `GroupID` IN (".implode(',', (array)$groupids).")":
 					null)));
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			((!$edit && !$delete) || $selected))
-			$verifyok = $this->verifyAdmin($form);
+			$verifyok = $this->verifyAdmin($form, $groupids);
 		
 		$paging = new paging(20);
 		$paging->ignoreArgs = 'id, edit, delete';
@@ -948,6 +1112,9 @@ class _users {
 					null) .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
 					" AND `ID` = '".(int)$GLOBALS['USER']->data['ID']."'":
+					null) .
+				($groupids?
+					" AND `GroupID` IN (".implode(',', (array)$groupids).")":
 					null) .
 				(JCORE_VERSION >= '0.8' && $groupid?
 					" AND `GroupID` = '".(int)$groupid."'":
@@ -992,9 +1159,19 @@ class _users {
 			
 		echo 
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAdmin', $this);
 	}
 	
-	function add($values) {
+	function add($values, $groupids = null) {
+		if (!is_array($values))
+			return false;
+		
+		if (JCORE_VERSION >= '0.8' && 
+			$groupids && !in_array($values['GroupID'], (array)$groupids))
+			return false;
+		
 		if ((!$GLOBALS['USER']->loginok || !$GLOBALS['USER']->data['Admin']) &&
 			defined('REGISTRATIONS_SUSPENDED') && REGISTRATIONS_SUSPENDED) 
 		{
@@ -1037,6 +1214,9 @@ class _users {
 		if ((!$GLOBALS['USER']->loginok || !$GLOBALS['USER']->data['Admin']) &&
 			!$this->checkEmail($values['Email']))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'users::add', $this, $values);
 		
 		if (isset($values['Password']) && $values['Password'])
 			$password = $values['Password'];
@@ -1086,6 +1266,10 @@ class _users {
 				sprintf(__("User couldn't be registered! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'users::add', $this, $values);
+			
 			return false;
 		}
 		
@@ -1120,20 +1304,22 @@ class _users {
 			unset($email);
 		}
 			
+		api::callHooks(API_HOOK_AFTER,
+			'users::add', $this, $values, $newid);
+		
 		return $newid;
 	}
 	
-	function edit($id, $values) {
+	function edit($id, $values, $groupids = null) {
 		if (!$id)			
 			return false;
 		
-		if (!is_array($values)) {
-			tooltip::display(
-				__("No data defined to update user to!"),
-				TOOLTIP_ERROR);
-			
+		if (!is_array($values))
 			return false;
-		}
+		
+		if (JCORE_VERSION >= '0.8' && 
+			$groupids && !in_array($values['GroupID'], (array)$groupids))
+			return false;
 		
 		if (!$values['UserName'] || !$values['Email']) {
 			tooltip::display(
@@ -1167,6 +1353,9 @@ class _users {
 		if ((!$GLOBALS['USER']->loginok || !$GLOBALS['USER']->data['Admin']) &&
 			!$this->checkEmail($values['Email'], $id))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'users::edit', $this, $id, $values);
 		
 		$query = 
 			" `UserName` = '".
@@ -1208,22 +1397,34 @@ class _users {
 			" `TimeStamp` = `TimeStamp`" .
 			" WHERE `ID` = '".$id."'");
 			
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result)
 			tooltip::display(
 				sprintf(__("User couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
+		else
+			$this->refresh();
 		
-		$this->refresh();
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'users::edit', $this, $id, $values, $result);
+		
+		return $result;
 	}
 	
-	function delete($id) {
+	function delete($id, $groupids = null) {
 		if (!$id)
 			return false;
 			
+		$user = users::get((int)$id);
+		if (JCORE_VERSION >= '0.8' && 
+			$groupids && !in_array($user['GroupID'], (array)$groupids))
+			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'users::delete', $this, $id);
+		
 		sql::run(
 			" DELETE FROM `{users}`" .
 			" WHERE `ID` = '".(int)$id."'");
@@ -1232,6 +1433,9 @@ class _users {
 			" DELETE FROM `{userlogins}`" .
 			" WHERE `UserID` = '".(int)$id."'");
 			
+		api::callHooks(API_HOOK_AFTER,
+			'users::delete', $this, $id);
+		
 		return true;
 	}
 	
@@ -1252,23 +1456,41 @@ class _users {
 	}
 	
 	function refresh() {
-		if (!$this->data['ID'])
-			return false;
+		api::callHooks(API_HOOK_BEFORE,
+			'users::get', $this);
+		
+		$result = false;
+		
+		if (isset($this->data['ID']) && $this->data['ID']) {
+			$result = true;
 			
-		$this->data = sql::fetch(sql::run(
-			" SELECT * FROM `{users}`" .
-			" WHERE `ID` = '".$this->data['ID']."'"));
+			$this->data = sql::fetch(sql::run(
+				" SELECT * FROM `{users}`" .
+				" WHERE `ID` = '".$this->data['ID']."'"));
+		}
 			
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'users::get', $this, $result);
+		
+		return $result;
 	}
 	
 	function kickOut($id) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::kickOut', $this, $id);
+		
 		sql::run(
 			" DELETE FROM `{userlogins}` " .
 			" WHERE `UserID` = '".(int)$id."'");
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::kickOut', $this, $id);
 	}
 	
 	function reset() {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::reset', $this);
+		
 		if (isset($_COOKIE['memberloginid']))
 			sql::run(
 				" DELETE FROM `{userlogins}`" .
@@ -1287,9 +1509,15 @@ class _users {
 		} while (strpos($cookiedomain, '.') !== false);
 		
 		unset($_COOKIE['memberloginid']);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::reset', $this);
 	}
 	
 	function check() {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::check', $this);
+		
 		$logout = null;
 		$rememberme = null;
 		$member = null;
@@ -1319,6 +1547,10 @@ class _users {
 		if ($logout) {
 			$this->reset();
 			header('Location: '.str_replace('&amp;', '&', url::uri('logout, memberlogout, requestpassword')));
+			
+			api::callHooks(API_HOOK_AFTER,
+				'users::check', $this);
+			
 			exit();
 		}
 		
@@ -1327,6 +1559,10 @@ class _users {
 			if ($bfprotection->failureAttempts >= $bfprotection->maximumFailureAttempts) {
 				$bfprotection->add($member, strip_tags((string)$_SERVER['REMOTE_ADDR']));
 				$this->verifyError = 3;
+				
+				api::callHooks(API_HOOK_AFTER,
+					'users::check', $this);
+				
 				return false;
 			}
 			
@@ -1349,6 +1585,10 @@ class _users {
 			if ($record && !$record['Password']) {
 				$this->loginok = false;
 				$this->verifyError = 7;
+				
+				api::callHooks(API_HOOK_AFTER,
+					'users::check', $this);
+				
 				return false;
 			}
 			
@@ -1357,11 +1597,19 @@ class _users {
 				
 				$this->loginok = false;
 				$this->verifyError = 2;
+				
+				api::callHooks(API_HOOK_AFTER,
+					'users::check', $this);
+				
 				return false;
 			}
 		
 			if ($record['Suspended']) {
 				$this->verifyError = 1;
+				
+				api::callHooks(API_HOOK_AFTER,
+					'users::check', $this);
+				
 				return false;
 			}
 			
@@ -1369,6 +1617,10 @@ class _users {
 				LOGINS_SUSPENDED) 
 			{
 				$this->verifyError = 6;
+				
+				api::callHooks(API_HOOK_AFTER,
+					'users::check', $this);
+				
 				return false;
 			}
 		
@@ -1378,6 +1630,10 @@ class _users {
 			if ($ptprotection->verify($record['ID'])) {
 				$this->kickOut($record['ID']);
 				$this->verifyError = 4;
+				
+				api::callHooks(API_HOOK_AFTER,
+					'users::check', $this);
+				
 				return false;
 			}
 			
@@ -1398,6 +1654,10 @@ class _users {
 			
 			if (sql::error()) {
 				$this->verifyError = 5;
+				
+				api::callHooks(API_HOOK_AFTER,
+					'users::check', $this);
+				
 				return false;
 			}
 	  
@@ -1433,6 +1693,10 @@ class _users {
 					0, '/', $cookiedomain, false, true);
 			
 			header("Location: ".str_replace('&amp;', '&', url::uri('login, requestpassword')));
+			
+			api::callHooks(API_HOOK_AFTER,
+				'users::check', $this);
+			
 			exit();
 		}
 		
@@ -1447,6 +1711,10 @@ class _users {
 						
 			if (!$record) {
 				$this->reset();
+				
+				api::callHooks(API_HOOK_AFTER,
+					'users::check', $this);
+				
 				return false;
 			}
 			
@@ -1456,12 +1724,20 @@ class _users {
 				$record['FromIP'] != security::ip2long((string)$_SERVER['REMOTE_ADDR'])) 
 			{
 				$this->reset();
+				
+				api::callHooks(API_HOOK_AFTER,
+					'users::check', $this);
+				
 				return false;
 			}
 			
 			if ($this->data['Suspended']) {
 				$this->reset();
 				$this->verifyError = 1;
+				
+				api::callHooks(API_HOOK_AFTER,
+					'users::check', $this);
+				
 				return false;
 			}
 			
@@ -1470,6 +1746,10 @@ class _users {
 			{
 				$this->reset();
 				$this->verifyError = 6;
+				
+				api::callHooks(API_HOOK_AFTER,
+					'users::check', $this);
+				
 				return false;
 			}
 		
@@ -1495,8 +1775,14 @@ class _users {
 						0, '/', $cookiedomain, false, true);
 			}
 			
+			api::callHooks(API_HOOK_AFTER,
+				'users::check', $this, $record);
+			
 			return true;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::check', $this);
 		
 		return false;
 	}
@@ -1510,7 +1796,6 @@ class _users {
 				__("Incorrect username. Usernames may consist of a-z, 0-9 and " .
 					"underscores only."),
 				TOOLTIP_ERROR);
-			
 			return false;
 		}
 			
@@ -1521,13 +1806,12 @@ class _users {
 				" AND `ID` != '".(int)$userid."'":
 				null) .
 			" LIMIT 1"));
-			
+		
 		if ($usernameexists) {
 			tooltip::display(
 				__("Username is already taken. " .
 					"Please choose a different username or login."),
 				TOOLTIP_ERROR);
-			
 			return false;
 		}
 		
@@ -1545,7 +1829,7 @@ class _users {
 				" AND `ID` != '".(int)$userid."'":
 				null) .
 			" LIMIT 1"));
-			
+		
 		if ($emailexists) {
 			tooltip::display(
 				__("Email address is already in use.")." " .
@@ -1553,7 +1837,6 @@ class _users {
 					__("Forgot your password?") .
 				"</a>.",
 				TOOLTIP_ERROR);
-			
 			return false;
 		}
 		
@@ -1595,6 +1878,9 @@ class _users {
 			return false;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'users::addRequest', $this, $values);
+		
 		$newrequestid = security::randomChars(21);
 		
 		sql::run(
@@ -1610,16 +1896,20 @@ class _users {
 			" `RequestID` = '".$newrequestid."'," .
 			" `FromIP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'");
 			
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result)
 			tooltip::display(
 				sprintf(__("Request couldn't be stored! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			
-			return false;
-		}
+		else
+			$result = $newrequestid;
 		
-		return $newrequestid;
+		api::callHooks(API_HOOK_AFTER,
+			'users::addRequest', $this, $values, $result);
+		
+		return $result;
 	}
 	
 	function getRequest($requestid) {
@@ -1640,16 +1930,21 @@ class _users {
 			" WHERE `TimeStamp` < DATE_SUB(NOW(), INTERVAL 3 HOUR)");
 	}
 	
-	static function activate($id) {
+	static function activate($id, $groupids = null) {
 		if (!$id)
 			return false;
 		
-		$user = sql::fetch(sql::run(
-			" SELECT * FROM `{users}`" .
-			" WHERE `ID` = '".(int)$id."'"));
+		$user = users::get((int)$id);
 		
 		if ($user['Password'])
 			return true;
+		
+		if (JCORE_VERSION >= '0.8' && 
+			$groupids && !in_array($user['GroupID'], (array)$groupids))
+			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'users::activate', $_ENV, $id);
 		
 		$latestrequest = sql::fetch(sql::run(
 			" SELECT `Data` FROM `{userrequests}`" .
@@ -1674,16 +1969,16 @@ class _users {
 			" `Password` = '".sql::escape($password)."'," .
 			" `TimeStamp` = `TimeStamp`" .
 			" WHERE `ID` = '".(int)$id."'");
-			
-		if (sql::affected() == -1) {
+		
+		$result = (sql::affected() != -1);
+		
+		if (!$result) {
 			tooltip::display(
 				sprintf(__("User couldn't be activated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
-		
-		if ($newpassword) {
+			
+		} else if ($newpassword) {
 			$email = new email();
 			$email->load('UserRegistration');
 			$email->toUserID = (int)$id;
@@ -1692,28 +1987,42 @@ class _users {
 			unset($email);
 		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'users::activate', $_ENV, $id, $result);
+		
+		return $result;
 	}
 	
-	static function suspend($id) {
+	static function suspend($id, $groupids = null) {
 		if (!$id)
 			return false;
 			
+		$user = users::get((int)$id);
+		if (JCORE_VERSION >= '0.8' && 
+			$groupids && !in_array($user['GroupID'], (array)$groupids))
+			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'users::suspend', $_ENV, $id);
+		
 		sql::run(
 			" UPDATE `{users}` SET" .
 			" `Suspended` = 1," .
 			" `TimeStamp` = `TimeStamp`" .
 			" WHERE `ID` = '".(int)$id."'");
 			
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result)
 			tooltip::display(
 				sprintf(__("User couldn't be suspended! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'users::suspend', $_ENV, $id, $result);
+		
+		return $result;
 	}
 	
 	static function fastCheck($column = null) {
@@ -1785,6 +2094,9 @@ class _users {
 			return false;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'users::requestPassword', $this, $values);
+		
 		$email = new email();
 		$email->force = true;
 		
@@ -1808,8 +2120,12 @@ class _users {
 					'RequestTypeID' => REQUEST_TYPE_NEW_PASSWORD));
 			}
 			
-			if (!$newid)
+			if (!$newid) {
+				api::callHooks(API_HOOK_AFTER,
+					'users::requestPassword', $this, $values);
+				
 				return false;
+			}
 				
 			$email->variables = $user;
 			$email->variables['RequestID'] = $newid;
@@ -1823,8 +2139,12 @@ class _users {
 			$email->to = $user['UserName']." <".
 				$user['Email'].">";
 			
-			if (!$email->send())
+			if (!$email->send()) {
+				api::callHooks(API_HOOK_AFTER,
+					'users::requestPassword', $this, $values);
+				
 				return false;
+			}
 		}
 		
 		unset($email);
@@ -1853,6 +2173,9 @@ class _users {
 					" the \"Bulk / Junk E-Mail\" folders. Please check those folders" .
 					" too."),
 				TOOLTIP_NOTIFICATION);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::requestPassword', $this, $values, $newid);
 		
 		return true;
 	}
@@ -1888,6 +2211,9 @@ class _users {
 			return true;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'users::request', $this);
+		
 		switch($request['RequestTypeID']) {
 			case REQUEST_TYPE_NEW_ACCOUNT:
 				sql::run(
@@ -1896,19 +2222,23 @@ class _users {
 					" `TimeStamp` = `TimeStamp`" .
 					" WHERE `ID` = '".$user['ID']."'");
 					
-				if (sql::affected() == -1) {
+				$result = (sql::affected() != -1);
+				
+				if (!$result)
 					tooltip::display(
 						sprintf(__("Your account couldn't be" .
 							" activated! Error: %s"), 
 							sql::error()),
 						TOOLTIP_ERROR);
-					return true;
-				}
+				else
+					tooltip::display(
+						__("<b>Your Account has been Activated</b><br />" .
+							" Thank you for registering."),
+						TOOLTIP_SUCCESS);
 				
-				tooltip::display(
-					__("<b>Your Account has been Activated</b><br />" .
-						" Thank you for registering."),
-					TOOLTIP_SUCCESS);
+				api::callHooks(API_HOOK_AFTER,
+					'users::request', $this, $result);
+				
 				return true;
 			
 			case REQUEST_TYPE_NEW_PASSWORD:
@@ -1919,21 +2249,25 @@ class _users {
 						" `TimeStamp` = `TimeStamp`" .
 						" WHERE `ID` = '".$user['ID']."'");
 						
-					if (sql::affected() == -1) {
+					$result = (sql::affected() != -1);
+					
+					if (!$result)
 						tooltip::display(
 							sprintf(__("Your new password couldn't be" .
 								" activated! Error: %s"), 
 								sql::error()),
 							TOOLTIP_ERROR);
-						return true;
-					}
+					else
+						tooltip::display(
+							__("<b>Your New Password has been Activated</b><br />" .
+								" Please copy and paste your new password" .
+								" from the email you received to prevent" .
+								" any misspelling issues."),
+							TOOLTIP_SUCCESS);
 					
-					tooltip::display(
-						__("<b>Your New Password has been Activated</b><br />" .
-							" Please copy and paste your new password" .
-							" from the email you received to prevent" .
-							" any misspelling issues."),
-						TOOLTIP_SUCCESS);
+					api::callHooks(API_HOOK_AFTER,
+						'users::request', $this, $result);
+					
 					return true;
 				}
 				
@@ -1945,59 +2279,78 @@ class _users {
 					" `TimeStamp` = `TimeStamp`" .
 					" WHERE `ID` = '".$user['ID']."'");
 				
-				if (sql::affected() == -1) {
+				$result = (sql::affected() != -1);
+				
+				if (!$result) {
 					tooltip::display(
 						sprintf(__("Your new password couldn't be" .
 							" activated! Error: %s"), 
 							sql::error()),
 						TOOLTIP_ERROR);
-					return true;
+					
+				} else {
+					$email = new email();
+					$email->force = true;
+					$email->load('NewPassword');
+					
+					$email->variables = array(
+						'NewPassword' => $password);
+					
+					$email->toUserID = $user['ID'];
+					$email->send();
+					unset($email);
+				
+					tooltip::display(
+						__("<b>Your New Password has been Sent</b><br />" .
+							" A notification email has been sent" .
+							" to your email address with the new login information."),
+						TOOLTIP_SUCCESS);
+						
+					tooltip::display(
+						__("<b>IMPORTANT:</b> Some email providers put messages" .
+							" received from addresses, which are not in your contact list, in" .
+							" the \"Bulk / Junk E-Mail\" folders. Please check those folders" .
+							" too."),
+						TOOLTIP_NOTIFICATION);
 				}
-					
-				$email = new email();
-				$email->force = true;
-				$email->load('NewPassword');
 				
-				$email->variables = array(
-					'NewPassword' => $password);
+				api::callHooks(API_HOOK_AFTER,
+					'users::request', $this, $result);
 				
-				$email->toUserID = $user['ID'];
-				$email->send();
-				unset($email);
-			
-				tooltip::display(
-					__("<b>Your New Password has been Sent</b><br />" .
-						" A notification email has been sent" .
-						" to your email address with the new login information."),
-					TOOLTIP_SUCCESS);
-					
-				tooltip::display(
-					__("<b>IMPORTANT:</b> Some email providers put messages" .
-						" received from addresses, which are not in your contact list, in" .
-						" the \"Bulk / Junk E-Mail\" folders. Please check those folders" .
-						" too."),
-					TOOLTIP_NOTIFICATION);
 				return true;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::request', $this);
 		
 		return true;
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::ajaxRequest', $this);
+		
 		$login = null;
 		
 		if (isset($_GET['quicklogin']))
 			$login = (int)$_GET['quicklogin'];
 		
+		$result = false;
 		if ($login) {
 			$this->displayQuickLogin();
-			return true;
+			$result = true;
 		}
 		
-		return false;
+		api::callHooks(API_HOOK_AFTER,
+			'users::ajaxRequest', $this, $result);
+		
+		return $result;
 	}
 	
 	function constructUserName($row, $format = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::constructUserName', $this, $row, $format);
+		
 		$username = $row['UserName'];
 		
 		if (strpos($format, '%s') === false)
@@ -2007,7 +2360,7 @@ class _users {
 			$username = $row['DisplayUserName'];
 		
 		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
-			return
+			$result =
 				"<span class='user-name'>" .
 					sprintf($format,
 						"<a class='user-name-link' href='".
@@ -2020,24 +2373,33 @@ class _users {
 						"</a>") .
 				"</span>";
 		
-		if (!isset($row['Website']) || !$row['Website'])
-			return
+		else if (!isset($row['Website']) || !$row['Website'])
+			$result =
 				"<span class='user-name'>" .
 					sprintf($format, $username) .
 				"</span>";
 		
-		return
-			"<span class='user-name'>" .
-				sprintf($format,
-					"<a class='user-name-link' href='".
-						htmlspecialchars($row['Website'], ENT_QUOTES).
-						"' rel='nofollow' target='_blank'>".
-						$username .
-					"</a>") .
-			"</span>";
+		else
+			$result =
+				"<span class='user-name'>" .
+					sprintf($format,
+						"<a class='user-name-link' href='".
+							htmlspecialchars($row['Website'], ENT_QUOTES).
+							"' rel='nofollow' target='_blank'>".
+							$username .
+						"</a>") .
+				"</span>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::constructUserName', $this, $row, $format, $result);
+		
+		return $result;
 	}
 	
 	function setupQuickAccountForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::setupQuickAccountForm', $this, $form);
+		
 		$referer = url::referer(true);
 		
 		if(strpos($referer, '?') !== false)
@@ -2055,9 +2417,15 @@ class _users {
 			"[ <a href='".$logoutlink."'>".__("Logout")."</a> ]",
 			null,
 			FORM_STATIC_TEXT);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::setupQuickAccountForm', $this, $form);
 	}
 	
 	function setupQuickLoginForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::setupQuickLoginForm', $this, $form);
+		
 		$form->add(
 			__('Username'),
 			'member',
@@ -2067,10 +2435,16 @@ class _users {
 			__('Password'),
 			'password',
 			FORM_INPUT_TYPE_PASSWORD);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::setupQuickLoginForm', $this, $form);
 	}
 	
 	
 	function setupLoginForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::setupLoginForm', $this, $form);
+		
 		$form->add(
 			__('Username'),
 			'member',
@@ -2091,9 +2465,15 @@ class _users {
 			"</label>",
 			'rememberme',
 			FORM_STATIC_TEXT);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::setupLoginForm', $this, $form);
 	}
 	
 	function setupRequestPasswordForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::setupRequestPasswordForm', $this, $form);
+		
 		$form->add(
 			__("Please enter the email address you have provided at registration / join."),
 			null,
@@ -2104,11 +2484,17 @@ class _users {
 			'Email',
 			FORM_INPUT_TYPE_EMAIL,
 			true);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::setupRequestPasswordForm', $this, $form);
 	}
 	
 	function displayAvatar($useridoremail = null, $size = null, $default = null) {
 		if (defined('AVATARS_DISABLED') && AVATARS_DISABLED)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayAvatar', $this, $useridoremail, $size, $default);
 		
 		if (!isset($useridoremail) && $this->loginok)
 			$useridoremail = $this->data['Email'];
@@ -2150,10 +2536,16 @@ class _users {
 					"class='gavatar' />" .
 			"</div>";
 		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayAvatar', $this, $useridoremail, $size, $default);
+		
 		return true;
 	}
 	
 	function displayQuickList($target = null, $multiple = false, $format = '%UserName%', $separator = ',') {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayQuickList', $this, $target, $multiple, $format, $separator);
+		
 		$search = null;
 		
 		if (isset($_POST['ajaxsearch']))
@@ -2313,13 +2705,25 @@ class _users {
 		if (!isset($search) && !isset($_GET['ajaxlimit']))
 			echo
 				"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayQuickList', $this, $target, $multiple, $format, $separator);
 	}
 	
 	function displayQuickAccountForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayQuickAccountForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayQuickAccountForm', $this, $form);
 	}
 	
 	function displayQuickAccount() {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayQuickAccount', $this);
+		
 		$form = new form(
 			__('Quick Account'),
 			'quickaccount');
@@ -2330,10 +2734,19 @@ class _users {
 		$this->setupQuickAccountForm($form);
 		$this->displayQuickAccountForm($form);
 		unset($form);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayQuickAccount', $this);
 	}
 	
 	function displayQuickLoginForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayQuickLoginForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayQuickLoginForm', $this, $form);
 	}
 	
 	function displayQuickLogin() {
@@ -2341,6 +2754,9 @@ class _users {
 			$this->displayQuickAccount();
 			return true;
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayQuickLogin', $this);
 		
 		$referer = url::referer(true);
 		
@@ -2375,16 +2791,28 @@ class _users {
 		$this->displayQuickLoginForm($form);
 		unset($form);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayQuickLogin', $this);
+		
 		return true;
 	}
 	
 	function displayLoginForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayLoginForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayLoginForm', $this, $form);
 	}
 	
 	function displayLogin() {
 		if (requests::$ajax)
 			return $this->displayQuickLogin();
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayLogin', $this);
 		
 		$form = new form(
 			__('Member Login'),
@@ -2416,14 +2844,26 @@ class _users {
 		$this->displayLoginForm($form);
 		unset($form);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayLogin', $this);
+		
 		return true;
 	}
 	
 	function displayRequestPasswordForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayRequestPasswordForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayRequestPasswordForm', $this, $form);
 	}
 	
 	function displayRequestPassword() {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayRequestPassword', $this);
+		
 		$form = new form(
 			__('Request a New Password'),
 			'requestanewpassword');
@@ -2455,6 +2895,9 @@ class _users {
 		
 		unset($form);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayRequestPassword', $this);
+		
 		return true;
 	}
 	
@@ -2462,9 +2905,16 @@ class _users {
 		if (!$this->verifyError && !$this->result)
 			return;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayResult', $this);
+		
 		if ($this->result) {
 			echo $this->result;
 			unset($this->result);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayResult', $this);
+			
 			return;
 		}
 			
@@ -2540,13 +2990,25 @@ class _users {
 				
 		unset($this->verifyError);
 		unset($bfprotection);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayResult', $this);
 	}
 	
 	function displayUserName($row, $format = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::displayUserName', $this, $row, $format);
+		
 		echo $this->constructUserName($row, $format);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'users::displayUserName', $this, $row, $format);
 	}
 	
 	function display($login = false) {
+		api::callHooks(API_HOOK_BEFORE,
+			'users::display', $this, $login);
+		
 		$this->displayResult();
 		
 		$requestpassword = null;
@@ -2558,10 +3020,13 @@ class _users {
 			$login = true;
 		
 		if ($requestpassword)
-			return $this->displayRequestPassword();
+			$this->displayRequestPassword();
+			
+		elseif ($login)
+			$this->displayLogin();
 		
-		if ($login)
-			return $this->displayLogin();
+		api::callHooks(API_HOOK_AFTER,
+			'users::display', $this, $login);
 	}
 }
 

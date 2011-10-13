@@ -13,24 +13,37 @@ class _dynamicFormData {
 	var $formID = 0;
 	var $storageSQLTable;
 	var $storagePath;
-	var $storageURL;
 	var $storageSubFolder;
 	var $adminPath = 'admin/content/dynamicforms/dynamicformdata';
 	
 	function __construct($formid = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::dynamicFormData', $this, $formid);
+		
 		$this->storageSubFolder = date('Ym');
 		$this->storagePath = SITE_PATH.'sitefiles/file/';
-		$this->storageURL = url::site().'sitefiles/file/';
+		
+		if (!$formid && isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
+			$formid = admin::getPathID();
 		
 		if ($formid) {
 			$form = dynamicForms::getForm($formid);
 			$this->formID = $form['ID'];
 			$this->storageSQLTable = $form['SQLTable'];
+			
+			if (JCORE_VERSION >= '1.0' && $form['StorageDirectory'])
+				$this->storagePath .= $form['StorageDirectory'].'/';
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::dynamicFormData', $this, $formid);
 	}
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Data'), 
@@ -43,9 +56,15 @@ class _dynamicFormData {
 			__('Pages / Posts'), 
 			'?path=' .
 			(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form, $owner) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::setupAdminForm', $this, $form, $owner);
+		
 		$dynamicform = new dynamicForms($owner['FormID']);
 		$dynamicform->textsDomain = 'messages';
 		$dynamicform->load();
@@ -57,9 +76,15 @@ class _dynamicFormData {
 		$form->pageBreakElements = $dynamicform->pageBreakElements;
 		
 		unset($dynamicform);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::setupAdminForm', $this, $form, $owner);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::verifyAdmin', $this, $form);
+		
 		$search = null;
 		$deleteall = null;
 		$exportall = null;
@@ -110,6 +135,9 @@ class _dynamicFormData {
 				__("Data has been successfully deleted."),
 				TOOLTIP_SUCCESS);
 				
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormData::verifyAdmin', $this, $form, $deleteall);
+			
 			return true;
 		}
 		
@@ -125,7 +153,12 @@ class _dynamicFormData {
 							dynamicForms::searchableFields($owner['FormID']):
 							array('ID'))):
 					null)))
+			{
+				api::callHooks(API_HOOK_AFTER,
+					'dynamicFormData::verifyAdmin', $this, $form);
+				
 				return false;
+			}
 			
 			tooltip::display(
 				__("Data has been successfully exported.")." " .
@@ -145,6 +178,9 @@ class _dynamicFormData {
 				"</script>",
 				TOOLTIP_SUCCESS);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormData::verifyAdmin', $this, $form, $file);
+			
 			return true;
 		}
 		
@@ -156,22 +192,32 @@ class _dynamicFormData {
 				__("Data has been successfully deleted."),
 				TOOLTIP_SUCCESS);
 				
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormData::verifyAdmin', $this, $form, $delete);
+			
 			return true;
 		}
 			
 		if ($delete) {
-			if (!$this->delete($id))
-				return false;
-				
-			tooltip::display(
-				__("Data has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			$result = $this->delete($id);
 			
-			return true;
+			if ($result)
+				tooltip::display(
+					__("Data has been successfully deleted."),
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormData::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormData::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		$ignorefields = null;
 		
@@ -184,8 +230,12 @@ class _dynamicFormData {
 					continue;
 				}
 				
-				if (!$filename = $this->upload($file))
+				if (!$filename = $this->upload($file)) {
+					api::callHooks(API_HOOK_AFTER,
+						'dynamicFormData::verifyAdmin', $this, $form);
+					
 					return false;
+				}
 				
 				$form->set($form->elements[$fieldid]['Name'], 
 					$this->storageSubFolder.'/'.$filename);
@@ -193,35 +243,46 @@ class _dynamicFormData {
 		}
 		
 		if ($edit) {
-			if (!$this->edit($id, $form->getPostArray(), $ignorefields))
-				return false;
-				
+			$result = $this->edit($id, $form->getPostArray(), $ignorefields);
+			
+			if ($result)
+				tooltip::display(
+					__("Data has been successfully updated.")." " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormData::verifyAdmin', $this, $form, $result);
+			
+			return $result;
+		}
+		
+		$newid = $this->add($form->getPostArray());
+		
+		if ($newid) {
 			tooltip::display(
-				__("Data has been successfully updated.")." " .
-				"<a href='#adminform'>" .
+				__("Data has been successfully added.")." " .
+				"<a href='".url::uri('id, edit, delete') .
+					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
 			
-			return true;
+			$form->reset();
 		}
 		
-		if (!$newid = $this->add($form->getPostArray()))
-			return false;
-			
-		tooltip::display(
-			__("Data has been successfully added.")." " .
-			"<a href='".url::uri('id, edit, delete') .
-				"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-				__("Edit") .
-			"</a>",
-			TOOLTIP_SUCCESS);
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::verifyAdmin', $this, $form, $newid);
 		
-		$form->reset();
-		return true;
+		return $newid;
 	}
 	
 	function displayAdminListHeader(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::displayAdminListHeader', $this, $form);
+		
 		echo
 			"<th>" .
 				"<input type='checkbox' class='checkbox-all' " .
@@ -282,20 +343,36 @@ class _dynamicFormData {
 			
 			$column++;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::displayAdminListHeader', $this, $form);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::displayAdminListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row, &$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::displayAdminListItem', $this, $row, $form);
+		
 		$ids = null;
 		
 		if (isset($_POST['ids']))
@@ -372,8 +449,10 @@ class _dynamicFormData {
 			
 			if ($element['Type'] == FORM_INPUT_TYPE_FILE)
 				echo
-					"<a href='".$this->storageURL.'/' .
-						$row[$element['Name']]."'>";
+					"<a href='".url::uri('id, edit, delete, request, download') .
+						"&amp;request=".url::path() .
+						"&amp;download=".$row[$element['Name']] .
+						"&amp;ajax=1'>";
 			 
 			switch($element['ValueType']) {
 				case FORM_VALUE_TYPE_BOOL:
@@ -419,12 +498,22 @@ class _dynamicFormData {
 			
 			$column++;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::displayAdminListItem', $this, $row, $form);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::displayAdminListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -440,9 +529,15 @@ class _dynamicFormData {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListItemSelected(&$row, &$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::displayAdminListItemSelected', $this, $row, $form);
+		
 		$elements = $form->elements;
 		
 		if ($form->fileElements && is_array($form->fileElements) && 
@@ -457,8 +552,10 @@ class _dynamicFormData {
 					(isset($elements[$fieldid]['AdditionalPreText'])?
 						$elements[$fieldid]['AdditionalPreText']:
 						null) .
-					"<a href='".$this->storageURL."/" .
-						$row[$elements[$fieldid]['Name']]."'>";
+					"<a href='".url::uri('id, edit, delete, request, download') .
+						"&amp;request=".url::path() .
+						"&amp;download=".$row[$elements[$fieldid]['Name']] .
+						"&amp;ajax=1'>";
 				
 				$elements[$fieldid]['AdditionalText'] =
 					"</a>" .
@@ -472,9 +569,15 @@ class _dynamicFormData {
 		$dynamicform->elements = $elements;
 		$dynamicform->displayData($row);
 		unset($dynamicform);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::displayAdminListItemSelected', $this, $row, $form);
 	}
 	
 	function displayAdminListSearch() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::displayAdminListSearch', $this);
+		
 		$search = null;
 		
 		if (isset($_GET['search']))
@@ -488,9 +591,15 @@ class _dynamicFormData {
 				htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
 			"<input type='submit' value='" .
 				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::displayAdminListSearch', $this);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::displayAdminListFunctions', $this);
+		
 		echo
 			"<input type='submit' name='deletesubmit' value='" .
 				htmlspecialchars(__("Delete"), ENT_QUOTES) .
@@ -501,9 +610,15 @@ class _dynamicFormData {
 			"<input type='submit' name='exportallsubmit' value='" .
 				htmlspecialchars(__("Export All"), ENT_QUOTES) .
 				"' class='button' /> ";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminList(&$rows, &$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::displayAdminList', $this, $rows, $form);
+		
 		$id = null;
 		
 		if (isset($_GET['id']))
@@ -574,22 +689,44 @@ class _dynamicFormData {
 		
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::displayAdminList', $this, $rows, $form);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Data'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::displayAdmin', $this);
+		
 		$search = null;
 		$delete = null;
 		$edit = null;
@@ -635,6 +772,10 @@ class _dynamicFormData {
 				TOOLTIP_ERROR);
 				
 			echo "</div>";
+			
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormData::displayAdmin', $this);
+			
 			return false;
 		}
 		
@@ -656,6 +797,10 @@ class _dynamicFormData {
 				"<div class='clear-both'></div>";
 				
 			echo "</div>";
+			
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormData::displayAdmin', $this);
+			
 			return false;
 		}
 		
@@ -665,6 +810,10 @@ class _dynamicFormData {
 				TOOLTIP_NOTIFICATION);
 				
 			echo "</div>";
+			
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormData::displayAdmin', $this);
+			
 			return false;
 		}
 		
@@ -744,6 +893,9 @@ class _dynamicFormData {
 		
 		echo
 			"</div>"; //admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::displayAdmin', $this);
 	}
 	
 	function add($values, $ignorefields = null) {
@@ -796,20 +948,25 @@ class _dynamicFormData {
 				__("Nothing to store! Please define some fields for your form and make sure " .
 					"their Value Types are set."),
 				TOOLTIP_ERROR);
+			
 			return false;
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::add', $this, $values, $ignorefields);
 		
 		$newid = sql::run(
 			" INSERT INTO `{" .$this->storageSQLTable. "}`" .
 			" SET ".substr($query, 0, -1));
 		
-		if (!$newid) {
+		if (!$newid)
 			tooltip::display(
 				sprintf(__("Could not save data to the DB! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::add', $this, $values, $ignorefields, $newid);
 		
 		return $newid;
 	}
@@ -866,32 +1023,45 @@ class _dynamicFormData {
 				__("Nothing to store! Please define some fields for your form and make sure " .
 					"their Value Types are set."),
 				TOOLTIP_ERROR);
+			
 			return false;
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::edit', $this, $id, $values, $ignorefields);
 		
 		sql::run(
 			" UPDATE `{".$this->storageSQLTable."}` SET ".
 			substr($query, 0, -1) .
 			" WHERE `ID` = '".(int)$id."'");
 			
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result)
 			tooltip::display(
 				sprintf(__("Could not update DB data! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::edit', $this, $id, $values, $ignorefields, $result);
+		
+		return $result;
 	}
 	
 	function delete($id) {
 		if (!$id)
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::delete', $this, $id);
+		
 		sql::run(
 			" DELETE FROM `{".$this->storageSQLTable. "}`" .
 			" WHERE `ID` = '".$id."'");
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::delete', $this, $id);
 		
 		return true;
 	}
@@ -909,11 +1079,15 @@ class _dynamicFormData {
 				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
 					SITE_PATH.'sitefiles/var/forms/'),
 				TOOLTIP_ERROR);
+			
 			return false;
 		}
 		
 		if (!$fp = @fopen($file, 'w'))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::export', $this, $searchquery, $filename);
 		
 		$rows = sql::run(
 			" SELECT * FROM `{".$this->storageSQLTable."}`" .
@@ -939,42 +1113,58 @@ class _dynamicFormData {
 		}
 		
 		fclose($fp);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::export', $this, $searchquery, $filename);
+		
 		return $filename;
 	}
 	
 	function upload($file, $to = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::upload', $this, $file, $to);
+		
 		if (!$to)
 			$to = $this->storagePath;
 		
-		if (!$filename = files::upload($file, $to.$this->storageSubFolder.'/'))
-			return false;
+		$filename = files::upload($file, $to.$this->storageSubFolder.'/');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::upload', $this, $file, $to, $filename);
 		
 		return $filename;
 	}
 	
-	function download($filename) {
-		$file = SITE_PATH.'sitefiles/var/forms/'.$filename;
-		
+	function download($file) {
 		if (!is_file($file)) {
 			tooltip::display(
 				sprintf(__("File \"%s\" cannot be found!"),
-					$filename),
+					$file),
 				TOOLTIP_ERROR);
-				
+			
 			return false;
 		}
 
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::download', $this, $file);
+		
 		session_write_close();
 		files::display($file, true);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::download', $this, $file);
 		
 		return true;
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dynamicFormData::ajaxRequest', $this);
+		
 		$download = null;
 		
 		if (isset($_GET['download'])) {
-			preg_match('/([^(\/|\\\)]*)$/', strip_tags((string)$_GET['download']), $matches);
+			preg_match('/(([0-9]+\/)?[^(\/|\\\)]*)$/', strip_tags((string)$_GET['download']), $matches);
 			
 			if (isset($matches[1]) && $matches[1] != '.' && $matches[1] != '..')
 				$download = $matches[1];
@@ -986,6 +1176,10 @@ class _dynamicFormData {
 			tooltip::display(
 				__("Request can only be accessed by administrators!"),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormData::ajaxRequest', $this);
+			
 			return true;
 		}
 		
@@ -998,32 +1192,28 @@ class _dynamicFormData {
 				__("You do not have permission to access this path!"),
 				TOOLTIP_ERROR);
 			
-			return true;
-		}
-		
-		if (!$GLOBALS['USER']->loginok || 
-			!$GLOBALS['USER']->data['Admin']) 
-		{
-			tooltip::display(
-				__("Request can only be accessed by administrators!"),
-				TOOLTIP_ERROR);
-			return true;
-		}
-		
-		$permission = userPermissions::check(
-			(int)$GLOBALS['USER']->data['ID'],
-			$this->adminPath);
-		
-		if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
-			tooltip::display(
-				__("You do not have permission to access this path!"),
-				TOOLTIP_ERROR);
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormData::ajaxRequest', $this);
 			
 			return true;
 		}
 		
-		if ($download)
-			return $this->download($download);
+		if ($download) {
+			if (strpos($download, '/') !== false)
+				$file = $this->storagePath.$download;
+			else
+				$file = SITE_PATH.'sitefiles/var/forms/'.$download;
+			
+			$result = $this->download($file);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicFormData::ajaxRequest', $this, $result);
+			
+			return $result;
+		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dynamicFormData::ajaxRequest', $this);
 		
 		return true;
 	}

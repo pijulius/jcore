@@ -21,34 +21,46 @@ class _postComments extends comments {
 		'admin/content/postsatglance/postcomments');
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postComments::postComments', $this);
+		
 		parent::__construct();
 		
 		$this->selectedOwner = __('Post');
 		$this->uriRequest = "posts/".$this->uriRequest;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postComments::postComments', $this);
 	}
 	
 	static function getCommentURL($comment = null) {
 		if ($comment)
-			return
-				posts::getPostURL($comment['PostID']);
+			return posts::getPostURL($comment['PostID']);
 		
 		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
-			return 
-				posts::getPostURL(admin::getPathID());
+			return posts::getPostURL(admin::getPathID());
 		
-		return 
-			parent::getCommentURL();
+		return parent::getCommentURL();
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postComments::ajaxRequest', $this);
+		
 		if (!posts::checkAccess($this->selectedOwnerID)) {
 			$page = new pages();
 			$page->displayLogin();
 			unset($page);
-			return true;
+			$result = true;
+			
+		} else {
+			$result = parent::ajaxRequest();
 		}
 		
-		return parent::ajaxRequest();
+		api::callHooks(API_HOOK_AFTER,
+			'postComments::ajaxRequest', $this, $result);
+		
+		return $result;
 	}
 }
 

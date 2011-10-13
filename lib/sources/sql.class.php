@@ -15,6 +15,11 @@ include_once('lib/languages.class.php');
 if (!defined('SQL_PREFIX'))
 	define('SQL_PREFIX', '');
 
+if (DEBUG) {
+	include_once('lib/debug.class.php');
+	debug::start();
+}
+
 class _sql {
 	static $link = null;
 	static $debug = false;
@@ -55,7 +60,7 @@ class _sql {
 		if (!sql::$link)
 			return false;
 		
-		return @mysql_select_db($db, sql::$link); 
+		return @mysql_select_db($db, sql::$link);
 	}
 
 	static function login() {
@@ -80,7 +85,7 @@ class _sql {
 				'/`{([a-zA-Z0-9\_\-]*?)}`/', 
 				'`\1`', 
 				$query);
-			
+		
 		return preg_replace(
 			'/`{([a-zA-Z0-9\_\-]*?)}`/', 
 			'`'.preg_replace('/[^a-zA-Z0-9\_\-]/',
@@ -92,6 +97,7 @@ class _sql {
 		$string = preg_replace('/^\^|\$$/', '', $string);
 		$string = str_replace('.*', '*', $string);
 		$string = str_replace('$|^', ', ', $string);
+		
 		return $string;
 	}
 	
@@ -103,11 +109,12 @@ class _sql {
 		$string = preg_replace('/, ?/', ', ', $string);
 		$string = str_replace('*', '.*', $string);
 		$string = str_replace(', ', '$|^', $string);
+		
 		return $string;
 	}
 	
 	static function run($query, $debug = false) {
-		if (DEBUG & D_OPTIMIZATION &&
+		if (DEBUG &&
 			preg_match('/^ *?SELECT.*?WHERE/i', $query) && !preg_match('/`\{TMP[a-zA-Z0-9]+\}`/', $query) &&
 			$explains = @mysql_query('EXPLAIN '.sql::prefixTable($query), sql::$link))
 		{
@@ -151,11 +158,11 @@ class _sql {
 		return $result;
 	}
 	
-	static function fetch($result) {
-	    if (!$result)
+	static function fetch($rows) {
+	    if (!$rows)
 	    	return false;
 		
-		return mysql_fetch_array($result, MYSQL_ASSOC);
+		return mysql_fetch_array($rows, MYSQL_ASSOC);
 	}
 	
 	static function seek(&$rows, $to = 0) {
@@ -165,11 +172,11 @@ class _sql {
 		return mysql_data_seek($rows, $to);
 	}
 	
-	static function rows($result) {
-	    if (!$result)
+	static function rows($rows) {
+	    if (!$rows)
 	    	return false;
 		
-		return mysql_num_rows($result);
+		return mysql_num_rows($rows);
 	}
 	
 	static function affected() {
@@ -205,7 +212,10 @@ class _sql {
 			$row = sql::fetch(sql::run($query, $debug));
 		}
 		
-		return $row['Rows'];	
+		if (isset($row['Rows']))
+			return $row['Rows'];
+		
+		return 0;	
 	}
 	
 	static function search($search, $fields = array('Title'), $type = 'AND', 
@@ -279,6 +289,7 @@ class _sql {
 		
 		if (!$commandquery && !$searchquery)
 			return " AND (NOT 1)";
+			
 		
 		return " AND (" .
 			($commandquery?
@@ -294,7 +305,7 @@ class _sql {
 	}
 	
 	static function lastQuery() {
-		return sql::$lastQuery;		
+		return sql::$lastQuery;
 	}
 	
 	static function error() {
@@ -302,7 +313,14 @@ class _sql {
 	}
 
 	static function logout() {
-    	return mysql_close(sql::$link);
+    	$result = mysql_close(sql::$link);
+		
+    	if (DEBUG && !requests::$ajax) {
+    		debug::end();
+    		debug::display();
+    	}
+    	
+		return $result;
 	}
 
 	static function link() {
@@ -323,7 +341,10 @@ class _sql {
 			exit();
 		}
 		
-		exit(
+		api::callHooks(API_HOOK_BEFORE,
+			'sql::fatalError', $_ENV, $message);
+		
+		echo
 			"<html>" .
 			"<head>" .
 			"<title>" .
@@ -351,7 +372,12 @@ class _sql {
 				"</p>" .
 			"</div>" .
 			"</body>" .
-			"</html>");
+			"</html>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'sql::fatalError', $_ENV, $message);
+		
+		exit;
 	}
 	
 	static function displayError() {
@@ -359,6 +385,9 @@ class _sql {
 		
 		if (!$error)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'sql::displayError', $_ENV);
 		
 		if (isset($GLOBALS['USER']) && 
 			$GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin']) 
@@ -400,19 +429,26 @@ class _sql {
 				TOOLTIP_ERROR);
 		}
 		
+		api::callHooks(API_HOOK_AFTER,
+			'sql::displayError', $_ENV, $error);
+		
 		return $error;
 	}
 	
 	static function display($quiet = false) {
+		$error = sql::error();
 		if ($quiet)
-			return sql::error();
+			return $error;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'sql::display', $_ENV);
 		
 		echo 
 			"<p class='sql-query'>" .
 				"<code>".
 					htmlspecialchars(sql::$lastQuery).";<br />";
 		
-		if (!sql::error() && preg_match('/^ *?SELECT/i', sql::$lastQuery) &&
+		if (!$error && preg_match('/^ *?SELECT/i', sql::$lastQuery) &&
 			$explains = @mysql_query('EXPLAIN '.sql::prefixTable(sql::$lastQuery), sql::$link))
 		{
 			echo
@@ -433,11 +469,11 @@ class _sql {
 		echo
 				"</code><br />";
 		
-		if (sql::error())
+		if ($error)
 			echo "<b class='red'>" .
 					strtoupper(__("Error")) .
 				"</b> " .
-				"(".sql::error().")";
+				"(".$error.")";
 		else
 			echo "<b>" .
 					strtoupper(__("Ok")) .
@@ -455,7 +491,10 @@ class _sql {
 				"</br>" .
 			"</p>";
 		
-		return sql::error();
+		api::callHooks(API_HOOK_AFTER,
+			'sql::display', $_ENV, $error);
+		
+		return $error;
 	}
 } 
 

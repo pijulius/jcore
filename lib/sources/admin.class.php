@@ -58,6 +58,9 @@ class _admin {
 	static $sections = null;
 	
 	static function add($section, $itemid, $item) {
+		api::callHooks(API_HOOK_BEFORE,
+			'admin::add', $_ENV, $section, $itemid, $item);
+		
 		preg_match('/(\?|&)path=(.*?)(&|\'|")/i', $item, $matches);
 		
 		$userpermission = userPermissions::check((int)$GLOBALS['USER']->data['ID'], 
@@ -65,8 +68,27 @@ class _admin {
 				$matches[2]:
 				null));
 		
-		if ($userpermission['PermissionType'])
+		$result = false;
+		
+		if ($userpermission['PermissionType']) {
+			$result = $itemid;
 			admin::$sections[$section]['Items'][$itemid] = $item;
+		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'admin::add', $_ENV, $section, $itemid, $item);
+		
+		return $result;
+	}
+	
+	static function remove($section, $itemid) {
+		api::callHooks(API_HOOK_BEFORE,
+			'admin::remove', $_ENV, $section, $itemid);
+		
+		unset(admin::$sections[$section]['Items'][$itemid]);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'admin::remove', $_ENV, $section, $itemid);
 	}
 	
 	static function path($level= 0) {
@@ -92,6 +114,9 @@ class _admin {
 	}
 	
 	function setup() {
+		api::callHooks(API_HOOK_BEFORE,
+			'admin::setup', $this);
+		
 		$this->add('Content', 
 			(JCORE_VERSION >= '0.8'?'Pages':'MenuItems'), 
 			"<a href='".url::uri('ALL')."?path=" .
@@ -349,6 +374,9 @@ class _admin {
 			"</a>");
 			
 		modules::loadAdmin();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'admin::setup', $this);
 	}
 	
 	static function displayCSSLinks() {
@@ -363,10 +391,19 @@ class _admin {
 	}
 	
 	static function displayPath() {
+		api::callHooks(API_HOOK_BEFORE,
+			'admin::displayPath');
+		
 		url::displayPath();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'admin::displayPath');
 	}
 	
 	static function displayTitle($title, $ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'admin::displayTitle', $_ENV, $title, $ownertitle);
+		
 		echo
 			"<h3 class='admin-title'>" .
 				$title .
@@ -376,9 +413,15 @@ class _admin {
 					"</span>":
 					null) .
 			"</h3>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'admin::displayTitle', $_ENV, $title, $ownertitle);
 	}
 	
 	static function displayHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'admin::displayHeader');
+		
 		if (JCORE_VERSION <= '0.2')
 			admin::displayCSSLinks();
 		
@@ -411,38 +454,55 @@ class _admin {
 		echo
 				"</div>" .
 				"<div class='post-content'>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'admin::displayHeader');
 	}
 	
 	static function displayItemData($title, $value = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'admin::displayItemData', $_ENV, $title, $value);
+		
 		if (!isset($value)) {
 			echo
 				"<div class='form-entry preview'>" .
 					$title .
 				"</div>";
-			return;
+		} else {
+			echo
+				"<div class='form-entry preview'>" .
+					"<div class='form-entry-title'>" .
+						$title.":" .
+					"</div>" .
+					"<div class='form-entry-content bold'>" .
+						$value .
+					"</div>" .
+				"</div>";
 		}
 		
-		echo
-			"<div class='form-entry preview'>" .
-				"<div class='form-entry-title'>" .
-					$title.":" .
-				"</div>" .
-				"<div class='form-entry-content bold'>" .
-					$value .
-				"</div>" .
-			"</div>";
+		api::callHooks(API_HOOK_AFTER,
+			'admin::displayItemData', $_ENV, $title, $value);
 	}
 	
 	static function displayFooter() {
+		api::callHooks(API_HOOK_BEFORE,
+			'admin::displayFooter');
+		
 		echo
 				"</div>" .
 			"</div>" .
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'admin::displayFooter');
 	}
 	
 	static function displaySection($sectionid) {
 		if (!count(admin::$sections[$sectionid]['Items']))
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'admin::displaySection', $_ENV, $sectionid);
 		
 		echo 
 		"<div tabindex='0' class='fc" .
@@ -466,8 +526,8 @@ class _admin {
 				$class = 'templateManager';
 			
 			if (ADMIN_ITEMS_COUNTER_ENABLED &&
-				class_exists($class) && method_exists($class, "countAdminItems")) 
-			{
+				class_exists($class) && method_exists($class, "countAdminItems"))
+			{ 
 				$class = new $class;
 				$itemscount = $class->countAdminItems();
 				unset($class);
@@ -489,9 +549,15 @@ class _admin {
 				"<div class='clear-both'></div>" .
 			"</div>" .
 		"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'admin::displaySection', $_ENV, $sectionid);
 	}
 	
 	function display() {
+		api::callHooks(API_HOOK_BEFORE,
+			'admin::display', $this);
+		
 		$this->setup();
 		
 		if (!$GLOBALS['USER']->loginok) {
@@ -500,6 +566,10 @@ class _admin {
 			$GLOBALS['USER']->displayLogin();
 			
 			$this->displayFooter();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'admin::display', $this);
+			
 			return;
 		}
 		
@@ -517,6 +587,10 @@ class _admin {
 				TOOLTIP_NOTIFICATION);
 				
 			$this->displayFooter();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'admin::display', $this);
+			
 			return;
 		}
 		
@@ -536,6 +610,10 @@ class _admin {
 				TOOLTIP_ERROR);
 			
 			$this->displayFooter();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'admin::display', $this);
+			
 			return;
 		}
 		
@@ -578,12 +656,16 @@ class _admin {
 					TOOLTIP_ERROR);
 				
 				$this->displayFooter();
+				
+				api::callHooks(API_HOOK_AFTER,
+					'admin::display', $this);
+				
 				return;
 			}
 			
 			$item = new $class;
 			
-			if (!$this->checkPath($item->adminPath)) {
+			if (isset($item->adminPath) && !$this->checkPath($item->adminPath)) {
 				$this->displayHeader();
 				
 				echo
@@ -594,6 +676,10 @@ class _admin {
 					TOOLTIP_ERROR);
 					
 				$this->displayFooter();
+				
+				api::callHooks(API_HOOK_AFTER,
+					'admin::display', $this);
+				
 				return;
 			}
 			
@@ -613,6 +699,10 @@ class _admin {
 			unset($item);
 			
 			$this->displayFooter();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'admin::display', $this);
+			
 			return;
 		}
 		
@@ -629,6 +719,9 @@ class _admin {
 		echo "</div>";
 		
 		$this->displayFooter();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'admin::display', $this);
 	}
 }
 

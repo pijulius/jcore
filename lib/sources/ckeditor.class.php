@@ -11,8 +11,13 @@
  
 include_once('lib/ckeditorfilemanager.class.php');
 
+if (defined('COMPRESSION_DISABLED'))
+	_ckEditor::$compression = (COMPRESSION_DISABLED?false:true);
+
 class _ckEditor {
 	static $loaded = false;
+	static $compression = true;
+	
 	var $ckFuncNum = 1;
 	var $ajaxRequest = null;
 	
@@ -21,10 +26,14 @@ class _ckEditor {
 		// http://cksource.com/forums/viewtopic.php?f=11&t=15966
 		$buffer = str_replace('resizable=yes', 'resizable=yes,scrollbars=yes', $buffer);
 		
+		if (!ckEditor::$compression)
+			return $buffer;
+		
 		if (false !== stripos((string)$_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip')) {
 			header('Vary: Accept-Encoding');
 			header('Content-Encoding: gzip');
 			return gzencode($buffer);
+		
 		}
 		
 		if (false !== stripos((string)$_SERVER['HTTP_ACCEPT_ENCODING'], 'deflate')) {
@@ -38,6 +47,9 @@ class _ckEditor {
 	
 	function upload() {
 		include_once('lib/attachments.class.php');
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'ckeditor::upload', $this);
 		
 		$url = null;
 		$message = null;
@@ -54,10 +66,16 @@ class _ckEditor {
 		unset($attachments);
 		
 		$this->setUploadResult($url, $message);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'ckeditor::upload', $this);
 	}
 	
 	function uploadFlash() {
 		include_once('lib/flash.class.php');
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'ckeditor::uploadFlash', $this);
 		
 		$url = null;
 		$message = null;
@@ -74,10 +92,16 @@ class _ckEditor {
 		unset($flash);
 		
 		$this->setUploadResult($url, $message);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'ckeditor::uploadFlash', $this);
 	}
 	
 	function uploadImage() {
 		include_once('lib/pictures.class.php');
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'ckeditor::uploadImage', $this);
 		
 		$url = null;
 		$message = null;
@@ -94,11 +118,17 @@ class _ckEditor {
 		unset($pictures);
 		
 		$this->setUploadResult($url, $message);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'ckeditor::uploadImage', $this);
 	}
 	
 	function setUploadResult($url, $message = null) {
 		if (!$this->ckFuncNum)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'ckeditor::setUploadResult', $this, $url, $message);
 		
 		echo
 			"<script type='text/javascript'>" .
@@ -109,10 +139,16 @@ class _ckEditor {
 				"');" .
 			"</script>";
 		
+		api::callHooks(API_HOOK_AFTER,
+			'ckeditor::setUploadResult', $this, $url, $message);
+		
 		return true;
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'ckeditor::ajaxRequest', $this);
+		
 		$upload = null;
 		$file = null;
 		$image = null;
@@ -141,6 +177,10 @@ class _ckEditor {
 				tooltip::display(
 					__("Request can only be accessed by administrators!"),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'ckeditor::ajaxRequest', $this);
+				
 				return false;
 			}
 		
@@ -154,6 +194,8 @@ class _ckEditor {
 				$permission = userPermissions::check(
 					(int)$GLOBALS['USER']->data['ID'],
 					(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
+			
+			$result = false;
 			
 			echo 
 				"<html>" .
@@ -186,6 +228,9 @@ class _ckEditor {
 				"</body>" .
 				"</html>";
 			
+			api::callHooks(API_HOOK_AFTER,
+				'ckeditor::ajaxRequest', $this, $result);
+			
 			return true;
 		}
 		
@@ -197,6 +242,9 @@ class _ckEditor {
 		header('Expires: '.gmdate('D, d M Y H:i:s', time()+$cachetime).' GMT');
 		
 		ckEditor::displayJS();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'ckeditor::ajaxRequest', $this, $cachetime);
 		
 		return true;
 	}
@@ -220,6 +268,9 @@ class _ckEditor {
 			return true;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'ckeditor::displayJS', $_ENV, $compress);
+		
 		echo 
 			@file_get_contents('lib/ckeditor/ckeditor.js', 
 				FILE_USE_INCLUDE_PATH)."\n";
@@ -227,10 +278,16 @@ class _ckEditor {
 		if ($compress)
 			ob_end_flush();
 		
+		api::callHooks(API_HOOK_AFTER,
+			'ckeditor::displayJS', $_ENV, $compress);
+		
 		return true;
 	}
 	
 	static function display($inputelement = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'ckeditor::display', $_ENV, $inputelement);
+		
 		if (!ckEditor::$loaded) {
 			if (defined('JCORE_PATH'))
 				$filemtime = @filemtime(JCORE_PATH.'lib/ckeditor/ckeditor.js');
@@ -278,6 +335,9 @@ class _ckEditor {
 				");" .
 				"</script>";
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'ckeditor::display', $_ENV, $inputelement);
 	}
 }
 

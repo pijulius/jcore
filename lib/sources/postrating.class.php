@@ -21,21 +21,36 @@ class _postRating extends starRating {
 		'admin/content/postsatglance/postrating');
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postRating::postRating', $this);
+		
 		parent::__construct();
 		
 		$this->selectedOwner = __('Post');
 		$this->uriRequest = "posts/".$this->uriRequest;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postRating::postRating', $this);
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postRating::ajaxRequest', $this);
+		
 		if (!posts::checkAccess($this->selectedOwnerID)) {
 			$page = new pages();
 			$page->displayLogin();
 			unset($page);
-			return true;
+			$result = true;
+			
+		} else {
+			$result = parent::ajaxRequest();
 		}
 		
-		return parent::ajaxRequest();
+		api::callHooks(API_HOOK_AFTER,
+			'postRating::ajaxRequest', $this, $result);
+		
+		return $result;
 	}
 }
 

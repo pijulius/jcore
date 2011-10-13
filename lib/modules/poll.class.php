@@ -2027,59 +2027,16 @@ class poll extends modules {
 			" WHERE `MembersOnly` = 1" .
 			" LIMIT 1"));
 			
-		if ($row['Rows']) {
-			if (!files::exists($attachmentspath.'.htaccess') &&
-				!files::create($attachmentspath.'.htaccess',
-					'deny from all'))
-			{
-				tooltip::display(
-					_("Directory couldn't be protected!")." " .
-					sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
-						$attachmentspath),
-					TOOLTIP_ERROR);
-				
-				return false;
-			}
-			
-			if (!files::exists($picturespath.'.htaccess') &&
-				!files::create($picturespath.'.htaccess',
-					'deny from all'))
-			{
-				tooltip::display(
-					_("Directory couldn't be protected!")." " .
-					sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
-						$picturespath),
-					TOOLTIP_ERROR);
-				
-				return false;
-			}
-			
-			if (!files::exists($picturespath.'thumbnail/.htaccess') &&
-				!files::create($picturespath.'thumbnail/.htaccess',
-					'allow from all'))
-			{
-				tooltip::display(
-					_("Directory couldn't be protected!")." " .
-					sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
-						$picturespath.'thumbnail/'),
-					TOOLTIP_ERROR);
-				
-				return false;
-			}
-			
-			return true;
-		}
+		if ($row['Rows'])
+			return 
+				(dirs::protect($attachmentspath) &&
+				 dirs::protect($picturespath) &&
+				 dirs::protect($picturespath.'thumbnail/', 'allow from all'));
 		
-		if (files::exists($attachmentspath.'.htaccess'))
-			files::delete($attachmentspath.'.htaccess');
-		
-		if (files::exists($picturespath.'.htaccess'))
-			files::delete($picturespath.'.htaccess');
-		
-		if (files::exists($picturespath.'thumbnail/.htaccess'))
-			files::delete($picturespath.'thumbnail/.htaccess');
-		
-		return true;
+		return 
+			(dirs::unprotect($attachmentspath) &&
+			 dirs::unprotect($picturespath) &&
+			 dirs::unprotect($picturespath.'thumbnail/'));
 	}
 	
 	// ************************************************   Client Part

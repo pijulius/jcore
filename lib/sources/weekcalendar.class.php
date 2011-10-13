@@ -26,6 +26,9 @@ class _weekCalendar {
 	var $ajaxRequest = null;
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'weekCalendar::weekCalendar', $this);
+		
 		$this->time = time();
 		$this->uriRequest = strtolower(get_class($this));
 		
@@ -40,27 +43,50 @@ class _weekCalendar {
 		
 		if (isset($_GET[$this->variable]))
 			$this->time = (int)$_GET[$this->variable];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'weekCalendar::weekCalendar', $this);
 	}
 	
 	function startDay() {
+		api::callHooks(API_HOOK_BEFORE,
+			'weekCalendar::startDay', $this);
+		
 		$time = strtotime('+'.$this->offset.' week', $this->time);
 		$weekday = date('w', $time);
 		
 		if ($this->firstWeekDay == $weekday)
-			return $time;
+			$result = $time;
 		
-		if ($this->firstWeekDay > $weekday)
-			return mktime(0, 0, 0, date('m', $time), date('d', $time)+($this->firstWeekDay-$weekday), date('Y', $time));
+		else if ($this->firstWeekDay > $weekday)
+			$result = mktime(0, 0, 0, date('m', $time), date('d', $time)+($this->firstWeekDay-$weekday), date('Y', $time));
 		
-		return mktime(0, 0, 0, date('m', $time), date('d', $time)-($weekday-$this->firstWeekDay), date('Y', $time));
+		else
+			$result = mktime(0, 0, 0, date('m', $time), date('d', $time)-($weekday-$this->firstWeekDay), date('Y', $time));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'weekCalendar::startDay', $this, $result);
+		
+		return $result;
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'weekCalendar::ajaxRequest', $this);
+		
 		$this->display();
+		
+		$result = true;
+		api::callHooks(API_HOOK_AFTER,
+			'weekCalendar::ajaxRequest', $this, $result);
+		
 		return true;
 	}
 	
 	function displayNavigation($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'weekCalendar::displayNavigation', $this, $time);
+		
 		echo
 			"<div class='calendar-title'>";
 		
@@ -80,14 +106,26 @@ class _weekCalendar {
 				"</div>" .
 				"<div class='clear-both'></div>" .
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'weekCalendar::displayNavigation', $this, $time);
 	}
 	
 	function displayTime($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'weekCalendar::displayTime', $this, $time);
+		
 		echo
 			date($this->timeFormat, $time);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'weekCalendar::displayTime', $this, $time);
 	}
 	
 	function displayPrevMonthButton($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'weekCalendar::displayPrevMonthButton', $this, $time);
+		
 		echo
 			"<a class='calendar-prev more ajax-content-link' href='" .
 				url::uri($this->variable.', request') .
@@ -96,9 +134,15 @@ class _weekCalendar {
 				"target='.week-calendar.".$this->cssClass."'>" .
 				"<span>&lt;&lt;</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'weekCalendar::displayPrevMonthButton', $this, $time);
 	}
 	
 	function displayPrevButton($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'weekCalendar::displayPrevButton', $this, $time);
+		
 		echo
 			"<a class='calendar-prev ajax-content-link' href='" .
 				url::uri($this->variable.', request') .
@@ -107,9 +151,15 @@ class _weekCalendar {
 				"target='.week-calendar.".$this->cssClass."'>" .
 				"<span>&lt;</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'weekCalendar::displayPrevButton', $this, $time);
 	}
 	
 	function displayNextMonthButton($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'weekCalendar::displayNextMonthButton', $this, $time);
+		
 		echo
 			"<a class='calendar-next more ajax-content-link' href='" .
 				url::uri($this->variable.', request') .
@@ -118,9 +168,15 @@ class _weekCalendar {
 				"target='.week-calendar.".$this->cssClass."'>" .
 				"<span>&gt;&gt;</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'weekCalendar::displayNextMonthButton', $this, $time);
 	}
 	
 	function displayNextButton($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'weekCalendar::displayNextButton', $this, $time);
+		
 		echo
 			"<a class='calendar-next ajax-content-link' href='" .
 				url::uri($this->variable.', request') .
@@ -129,22 +185,44 @@ class _weekCalendar {
 				"target='.week-calendar.".$this->cssClass."'>" .
 				"<span>&gt;</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'weekCalendar::displayNextButton', $this, $time);
 	}
 	
 	function displayDayTitle($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'weekCalendar::displayDayTitle', $this, $time);
+		
 		echo
 			__(date($this->weekDaysFormat, $time));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'weekCalendar::displayDayTitle', $this, $time);
 	}
 	
 	function displayHalfHour($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'weekCalendar::displayHalfHour', $this, $time);
+		api::callHooks(API_HOOK_AFTER,
+			'weekCalendar::displayHalfHour', $this, $time);
 	}
 	
 	function displayHour($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'weekCalendar::displayHour', $this, $time);
+		
 		echo
 			date($this->hourFormat, $time);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'weekCalendar::displayHour', $this, $time);
 	}
 	
 	function display() {
+		api::callHooks(API_HOOK_BEFORE,
+			'weekCalendar::display', $this);
+		
 		$startday = $this->startDay();
 		
 		if (JCORE_VERSION >= '0.7') {
@@ -238,6 +316,9 @@ class _weekCalendar {
 				echo
 					"</div>";
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'weekCalendar::display', $this);
 	}
 }
  

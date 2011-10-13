@@ -23,6 +23,9 @@ class _dayCalendar {
 	var $ajaxRequest = null;
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dayCalendar::dayCalendar', $this);
+		
 		$this->time = time();
 		$this->uriRequest = strtolower(get_class($this));
 		
@@ -34,14 +37,27 @@ class _dayCalendar {
 		
 		if (isset($_GET[$this->variable]))
 			$this->time = (int)$_GET[$this->variable];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dayCalendar::dayCalendar', $this);
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dayCalendar::ajaxRequest', $this);
+		
 		$this->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dayCalendar::ajaxRequest', $this);
+		
 		return true;
 	}
 	
 	function displayNavigation($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dayCalendar::displayNavigation', $this, $time);
+		
 		echo
 			"<div class='calendar-navigation'>";
 		
@@ -61,14 +77,26 @@ class _dayCalendar {
 				"</div>" .
 				"<div class='clear-both'></div>" .
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dayCalendar::displayNavigation', $this, $time);
 	}
 	
 	function displayTime($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dayCalendar::displayTime', $this, $time);
+		
 		echo
 			date($this->timeFormat, $time);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dayCalendar::displayTime', $this, $time);
 	}
 	
 	function displayPrevWeekButton($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dayCalendar::displayPrevWeekButton', $this, $time);
+		
 		echo
 			"<a class='calendar-prev more ajax-content-link' href='" .
 				url::uri($this->variable.', request') .
@@ -77,9 +105,15 @@ class _dayCalendar {
 				"target='.day-calendar.".$this->cssClass."'>" .
 				"<span>&lt;&lt;</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dayCalendar::displayPrevWeekButton', $this, $time);
 	}
 	
 	function displayPrevButton($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dayCalendar::displayPrevButton', $this, $time);
+		
 		echo
 			"<a class='calendar-prev ajax-content-link' href='" .
 				url::uri($this->variable.', request') .
@@ -88,9 +122,15 @@ class _dayCalendar {
 				"target='.day-calendar.".$this->cssClass."'>" .
 				"<span>&lt;</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dayCalendar::displayPrevButton', $this, $time);
 	}
 	
 	function displayNextWeekButton($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dayCalendar::displayNextWeekButton', $this, $time);
+		
 		echo
 			"<a class='calendar-next more ajax-content-link' href='" .
 				url::uri($this->variable.', request') .
@@ -99,9 +139,15 @@ class _dayCalendar {
 				"target='.day-calendar.".$this->cssClass."'>" .
 				"<span>&gt;&gt;</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dayCalendar::displayNextWeekButton', $this, $time);
 	}
 	
 	function displayNextButton($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dayCalendar::displayNextButton', $this, $time);
+		
 		echo
 			"<a class='calendar-next ajax-content-link' href='" .
 				url::uri($this->variable.', request') .
@@ -110,22 +156,44 @@ class _dayCalendar {
 				"target='.day-calendar.".$this->cssClass."'>" .
 				"<span>&gt;</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dayCalendar::displayNextButton', $this, $time);
 	}
 	
 	function displayDayTitle($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dayCalendar::displayDayTitle', $this, $time);
+		
 		echo
 			__(date($this->dayFormat, $time));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dayCalendar::displayDayTitle', $this, $time);
 	}
 	
 	function displayHalfHour($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dayCalendar::displayHalfHour', $this, $time);
+		api::callHooks(API_HOOK_AFTER,
+			'dayCalendar::displayHalfHour', $this, $time);
 	}
 	
 	function displayHour($time) {
+		api::callHooks(API_HOOK_BEFORE,
+			'dayCalendar::displayHour', $this, $time);
+		
 		echo
 			date($this->hourFormat, $time);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dayCalendar::displayHour', $this, $time);
 	}
 	
 	function display() {
+		api::callHooks(API_HOOK_BEFORE,
+			'dayCalendar::display', $this);
+		
 		$offsettime = strtotime('+'.$this->offset.' day', $this->time);
 		
 		if (JCORE_VERSION >= '0.7') {
@@ -209,6 +277,9 @@ class _dayCalendar {
 				echo
 					"</div>";
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'dayCalendar::display', $this);
 	}
 }
  

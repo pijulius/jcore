@@ -21,21 +21,36 @@ class _postAttachments extends attachments {
 		'admin/content/postsatglance/postattachments');
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postAttachments::postAttachments', $this);
+		
 		parent::__construct();
 		
 		$this->selectedOwner = __('Post');
 		$this->uriRequest = "posts/".$this->uriRequest;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'postAttachments::postAttachments', $this);
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'postAttachments::ajaxRequest', $this);
+		
 		if (!posts::checkAccess($this->selectedOwnerID)) {
 			$page = new pages();
 			$page->displayLogin();
 			unset($page);
-			return true;
+			$result = true;
+			
+		} else {
+			$result = parent::ajaxRequest();
 		}
 		
-		return parent::ajaxRequest();
+		api::callHooks(API_HOOK_AFTER,
+			'postAttachments::ajaxRequest', $this, $result);
+		
+		return $result;
 	}
 }
 

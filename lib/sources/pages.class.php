@@ -27,8 +27,14 @@ class _pages {
 	static $selected = null;
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::pages', $this);
+		
 		if (isset($_GET['pageid']))
 			$this->selectedID = (int)$_GET['pageid'];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::pages', $this);
 	}
 	
 	static function populate() {
@@ -40,6 +46,9 @@ class _pages {
 		
 		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::populate', $_ENV);
 		
 		$path = null;
 		$selected = null;
@@ -115,6 +124,10 @@ class _pages {
 				$_GET['menuid'] = $selected['ID'];
 			
 			$_GET['pageid'] = $selected['ID'];
+			
+			api::callHooks(API_HOOK_AFTER,
+				'pages::populate', $_ENV, $selected['ID']);
+			
 			return;
 		}
 		
@@ -123,10 +136,16 @@ class _pages {
 		
 		url::addPageTitle(__('Address Not Found'));
 		$_GET['pageid'] = 0;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::populate', $_ENV);
 	}
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::countAdminItems', $this);
+		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{" .
@@ -135,10 +154,17 @@ class _pages {
 					'menuitems') .
 				"}`" .
 			" LIMIT 1"));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::countAdminItems', $this, $row['Rows']);
+		
 		return $row['Rows'];
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Page'), 
@@ -150,9 +176,15 @@ class _pages {
 		favoriteLinks::add(
 			__('Content Files'), 
 			'?path=admin/content/contentfiles');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::setupAdminForm', $this, $form);
+		
 		$form->add(
 			__('Title'),
 			'Title',
@@ -228,9 +260,6 @@ class _pages {
 					$module['Name']);
 				
 				if (!$modulename || !modules::load($modulename))
-					continue;
-				
-				if (!method_exists($modulename, 'display'))
 					continue;
 				
 				$form->add(
@@ -492,9 +521,15 @@ class _pages {
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::verifyAdmin', $this, $form);
+		
 		$reorder = null;
 		$orders = null;
 		$delete = null;
@@ -517,10 +552,7 @@ class _pages {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
-			if (!$orders)
-				return false;
-			
-			foreach($orders as $oid => $ovalue) {
+			foreach((array)$orders as $oid => $ovalue) {
 				if (JCORE_VERSION >= '0.9') {
 					$page = sql::fetch(sql::run(
 						" SELECT `OrderID` FROM `{pages}`" .
@@ -554,22 +586,32 @@ class _pages {
 				__("Pages have been successfully re-ordered."),
 				TOOLTIP_SUCCESS);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'pages::verifyAdmin', $this, $form, $reorder);
+			
 			return true;
 		}
 		
 		if ($delete) {
-			if (!$this->delete($id))
-				return false;
+			$result = $this->delete($id);
 			
-			tooltip::display(
-				__("Page and all its subpages have been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Page and all its subpages have been successfully deleted."),
+					TOOLTIP_SUCCESS);
 			
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'pages::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if (!$form->get('Path')) {
 			$path = '';
@@ -598,6 +640,9 @@ class _pages {
 						__("Page cannot be subpage of itself!"),
 						TOOLTIP_ERROR);
 					
+					api::callHooks(API_HOOK_AFTER,
+						'pages::verifyAdmin', $this, $form);
+					
 					return false;
 				}
 			}
@@ -622,66 +667,85 @@ class _pages {
 				"</a>",
 				TOOLTIP_ERROR);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'pages::verifyAdmin', $this, $form);
+			
 			return false;
 		}
 			
 		if ($edit) {
-			if (!$this->edit($id, $form->getPostArray()))
-				return false;
+			$result = $this->edit($id, $form->getPostArray());
 			
+			if ($result) {
+				$page = sql::fetch(sql::run(
+					" SELECT * FROM `{" .
+						(JCORE_VERSION >= '0.8'?
+							'pages':
+							'menuitems') .
+						"}`" .
+					" WHERE `ID` = '".(int)$id."'"));
+				
+				tooltip::display(
+					__("Page has been successfully updated.")." " .
+					"<a href='".$this->generateLink($page)."' target='_blank'>" .
+						__("View Page") .
+					"</a>" .
+					" - " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			}
+			
+			api::callHooks(API_HOOK_AFTER,
+				'pages::verifyAdmin', $this, $form, $result);
+			
+			return $result;
+		}
+		
+		if ($this->userPermissionIDs) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::verifyAdmin', $this, $form);
+			
+			return false;
+		}
+		
+		$newid = $this->add($form->getPostArray());
+		
+		if ($newid) {
 			$page = sql::fetch(sql::run(
 				" SELECT * FROM `{" .
 					(JCORE_VERSION >= '0.8'?
 						'pages':
 						'menuitems') .
 					"}`" .
-				" WHERE `ID` = '".(int)$id."'"));
+				" WHERE `ID` = '".(int)$newid."'"));
 			
 			tooltip::display(
-				__("Page has been successfully updated.")." " .
-				"<a href='".$this->generateLink($page)."' target='_blank'>" .
-					__("View Page") .
-				"</a>" .
-				" - " .
-				"<a href='#adminform'>" .
-					__("Edit") .
-				"</a>",
+				__("Page has been successfully created.")." " .
+					"<a href='".$this->generateLink($page)."' target='_blank'>" .
+						__("View Page") .
+					"</a>" .
+					" - " .
+					"<a href='".url::uri('id, edit, delete') .
+						"&amp;id=".$newid."&amp;edit=1#adminform'>" .
+						__("Edit") .
+					"</a>",
 				TOOLTIP_SUCCESS);
-			
-			return true;
+				
+			$form->reset();
 		}
 		
-		if ($this->userPermissionIDs)
-			return false;
+		api::callHooks(API_HOOK_AFTER,
+			'pages::verifyAdmin', $this, $form, $newid);
 		
-		if (!$newid = $this->add($form->getPostArray()))
-			return false;
-			
-		$page = sql::fetch(sql::run(
-			" SELECT * FROM `{" .
-				(JCORE_VERSION >= '0.8'?
-					'pages':
-					'menuitems') .
-				"}`" .
-			" WHERE `ID` = '".(int)$newid."'"));
-		
-		tooltip::display(
-			__("Page has been successfully created.")." " .
-				"<a href='".$this->generateLink($page)."' target='_blank'>" .
-					__("View Page") .
-				"</a>" .
-				" - " .
-				"<a href='".url::uri('id, edit, delete') .
-					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-					__("Edit") .
-				"</a>",
-			TOOLTIP_SUCCESS);
-			
-		$form->reset();
-		return true;
+		return $newid;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Order")."</span></th>" .
@@ -702,23 +766,41 @@ class _pages {
 		echo
 			"<th style='text-align: right;'><span class='nowrap'>".
 				__("Limit")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayAdminListHeaderOptions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Posts")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayAdminListItem', $this, $row);
+		
 		$tooltiptxt = null;
 			
 		if (JCORE_VERSION >= '0.9' && $row['LayoutID'] &&
@@ -888,9 +970,15 @@ class _pages {
 					$row['Limit']:
 					null) .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayAdminListItemOptions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link posts' " .
@@ -908,9 +996,15 @@ class _pages {
 		echo
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -926,14 +1020,23 @@ class _pages {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayAdminListFunctions', $this);
+		
 		echo
 			"<input type='submit' name='reordersubmit' value='".
 				htmlspecialchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminListLanguages($pageid, $language) {
@@ -944,6 +1047,9 @@ class _pages {
 		
 		if (!$pages)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayAdminListLanguages', $this, $pageid, $language);
 		
 		echo 
 		"<div tabindex='0' class='fc" . 
@@ -960,12 +1066,19 @@ class _pages {
 			"</div>" .
 		"</div>";
 		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayAdminListLanguages', $this, $pageid, $language);
+		
 		return true;
 	}
 	
 	function displayAdminListItems($pageid = 0, $subpageof = 0, $rowpair = false, $language = null) {
 		if ($this->userPermissionIDs && $subpageof)
 			return false;
+		
+		if (!$subpageof)
+			api::callHooks(API_HOOK_BEFORE,
+				'pages::displayAdminListItems', $this, $pageid);
 		
 		$rows = sql::run(
 			" SELECT * FROM `{" .
@@ -987,8 +1100,13 @@ class _pages {
 				null) .
 			" ORDER BY `OrderID`");
 		
-		if (!sql::rows($rows))
+		if (!sql::rows($rows)) {
+			if (!$subpageof)
+				api::callHooks(API_HOOK_AFTER,
+					'pages::displayAdminListItems', $this, $pageid);
+			
 			return false;
+		}
 			
 		if ($subpageof) {
 			echo 
@@ -1046,10 +1164,17 @@ class _pages {
 				"</table>";
 		}
 		
+		if (!$subpageof)
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayAdminListItems', $this, $pageid);
+		
 		return true;
 	}
 	
 	function displayAdminList(&$rows, &$languages = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayAdminList', $this, $rows, $languages);
+		
 		echo
 			"<form action='".url::uri('edit, delete')."' method='post'>";
 		
@@ -1145,22 +1270,44 @@ class _pages {
 				
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayAdminList', $this, $rows, $languages);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Pages Administration'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayAdmin', $this);
+		
 		$delete = null;
 		$edit = null;
 		$id = null;
@@ -1315,11 +1462,17 @@ class _pages {
 		
 		echo 
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayAdmin', $this);
 	}
 	
 	function add($values) {
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::add', $this, $values);
 		
 		if (!isset($values['LanguageID']))
 			$values['LanguageID'] = null;
@@ -1443,6 +1596,10 @@ class _pages {
 				sprintf(__("Page couldn't be created! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'pages::add', $this, $values);
+			
 			return false;
 		}
 		
@@ -1551,6 +1708,9 @@ class _pages {
 			unset($sitemap);
 		}
 		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::add', $this, $values, $newid);
+		
 		return $newid;
 	}
 	
@@ -1561,6 +1721,9 @@ class _pages {
 		if (!is_array($values))
 			return false;
 			
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::edit', $this, $id, $values);
+		
 		if (!isset($values['LanguageID']))
 			$values['LanguageID'] = null;
 			
@@ -1667,11 +1830,17 @@ class _pages {
 				(int)$values['OrderID']."'" .
 			" WHERE `ID` = '".(int)$id."'");
 		
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result) {
 			tooltip::display(
 				sprintf(__("Page couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'pages::edit', $this, $id, $values);
+			
 			return false;
 		}
 		
@@ -1900,12 +2069,18 @@ class _pages {
 		unset($posts);
 		unset($sitemap);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::edit', $this, $id, $values, $result);
+		
 		return true;
 	}
 	
 	function delete($id) {
 		if (!$id)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::delete', $this, $id);
 		
 		$posts = new posts();
 		$pageids = array($id);
@@ -1990,10 +2165,16 @@ class _pages {
 		unset($sitemap);
 		unset($posts);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::delete', $this, $id);
+		
 		return true;
 	}
 	
 	function updateSitemap() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::updateSitemap', $this);
+		
 		$sitemap = new sitemap();
 		
 		$rows = sql::run(
@@ -2030,45 +2211,13 @@ class _pages {
 				'LastModified' => $lastmodified));
 		}
 		
-		if (!$sitemap->save()) {
-			unset($sitemap);
-			return false;
-		}
-		
+		$result = $sitemap->save();
 		unset($sitemap);
-		return true;
-	}
-	
-	function protectSiteFiles() {
-		if (!$this->attachmentsPath)
-			return false;
 		
-		$row = sql::fetch(sql::run(
-			" SELECT COUNT(*) AS `Rows` FROM `{filesharings}` " .
-			" WHERE `MembersOnly` = 1" .
-			" LIMIT 1"));
-			
-		if ($row['Rows']) {
-			if (!files::exists($this->attachmentsPath.'.htaccess') &&
-				!files::create($this->attachmentsPath.'.htaccess',
-					'deny from all'))
-			{
-				tooltip::display(
-					_("Directory couldn't be protected!")." " .
-					sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
-						$this->attachmentsPath),
-					TOOLTIP_ERROR);
-				
-				return false;
-			}
-			
-			return true;
-		}
+		api::callHooks(API_HOOK_AFTER,
+			'pages::updateSitemap', $this, $result);
 		
-		if (files::exists($this->attachmentsPath.'.htaccess'))
-			files::delete($this->attachmentsPath.'.htaccess');
-		
-		return true;
+		return $result;
 	}
 	
 	// ************************************************   Client Part
@@ -2295,12 +2444,10 @@ class _pages {
 		if (!isset($languageid) && languages::$selected)
 			$languageid = languages::$selected['ID'];
 		
-		$page = pages::getHome($languageid, '`ID`');
+		if ($page = pages::getHome($languageid, '`ID`'))
+			return $page['ID'];
 		
-		if (!$page)
-			return 0;
-		
-		return $page['ID'];
+		return 0;
 	}
 	
 	static function getHomeIDs() {
@@ -2333,10 +2480,10 @@ class _pages {
 	}
 	
 	static function getSelectedID () {
-		if (!pages::$selected)
-			return 0;
+		if (pages::$selected)
+			return pages::$selected['ID'];
 		
-		return pages::$selected['ID'];
+		return 0;
 	}
 	
 	// DEPRECATED! Since 0.9 there are no more alias pages allowed!
@@ -2391,6 +2538,9 @@ class _pages {
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::ajaxRequest', $this);
+		
 		$keywords = null;
 		
 		if (isset($_GET['keywords']))
@@ -2400,8 +2550,15 @@ class _pages {
 			$posts = new posts();
 			$posts->displayAdminAvailableKeywords('#neweditpageform #entryPostKeywords');
 			unset($posts);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'pages::ajaxRequest', $this, $keywords);
+			
 			return true;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::ajaxRequest', $this);
 		
 		return true;
 	}
@@ -2409,6 +2566,9 @@ class _pages {
 	static function displayModules($pageid) {
 		if (!$pageid)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayModules', $_ENV, $pageid);
 		
 		$modules = new modules();
 		$modules->sqlTable = (JCORE_VERSION >= '0.8'?'pagemodules':'menuitemmodules');
@@ -2419,12 +2579,18 @@ class _pages {
 		$display = $modules->display();
 		unset($modules);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayModules', $_ENV, $pageid, $display);
+		
 		return $display;
 	}
 	
 	static function displayForms($pageid) {
 		if (!$pageid)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayForms', $_ENV, $pageid);
 		
 		$dformids = sql::fetch(sql::run(
 			" SELECT GROUP_CONCAT(`FormID` SEPARATOR ',') AS `FormIDs`" .
@@ -2433,43 +2599,66 @@ class _pages {
 			" GROUP BY `PageID`" .
 			" LIMIT 1"));
 		
-		if (!$dformids)
-			return false;
-		
-		$dforms = sql::run(
-			" SELECT `FormID` FROM `{dynamicforms}`" .
-			" WHERE `ID` IN (".$dformids['FormIDs'].")" .
-			" ORDER BY `FormID`, `ID`");
-		
-		while($dform = sql::fetch($dforms)) {
-			$form = new dynamicForms($dform['FormID']);
-			$form->load();
-			$form->verify();
-			$form->display();
-			unset($form);
+		if ($dformids) {
+			$dforms = sql::run(
+				" SELECT `FormID` FROM `{dynamicforms}`" .
+				" WHERE `ID` IN (".$dformids['FormIDs'].")" .
+				" ORDER BY `FormID`, `ID`");
+			
+			while($dform = sql::fetch($dforms)) {
+				$form = new dynamicForms($dform['FormID']);
+				$form->load();
+				$form->verify();
+				$form->display();
+				unset($form);
+			}
 		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayForms', $_ENV, $pageid, $dformids);
+		
+		return $dformids;
 	}
 	
 	function displayLogin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayLogin', $this);
+		
 		tooltip::display(
 			__("This area is limited to members only. " .
 				"Please login below."),
 			TOOLTIP_NOTIFICATION);
 		
 		$GLOBALS['USER']->displayLogin();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayLogin', $this);
 	}
 	
 	function displayTitle(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayTitle', $this, $row);
+		
 		echo $row['Title'];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayTitle', $this, $row);
 	}
 	
 	function displayContent(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayContent', $this, $row);
+		
 		echo "<p></p>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayContent', $this, $row);
 	}
 	
 	function displaySelected(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displaySelected', $this, $row);
+		
 		echo
 			"<div class='post page'>" .
 				"<h1 class='post-title page'>";
@@ -2485,6 +2674,9 @@ class _pages {
 		echo
 				"</div>" .
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displaySelected', $this, $row);
 	}
 	
 	function displayPath($level = 0, $page = null) {
@@ -2493,6 +2685,9 @@ class _pages {
 			
 		if (!$page)
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayPath', $this, $level, $page);
 		
 		$i = 0;
 		$backtrace = $this->getBackTraceTree($page['ID']);
@@ -2510,6 +2705,9 @@ class _pages {
 			
 			$i++;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayPath', $this, $level, $page);
 	}
 	
 	function displayArguments() {
@@ -2518,6 +2716,9 @@ class _pages {
 		
 		if (!$this->arguments)
 			return true;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::displayArguments', $this);
 		
 		$page = null;
 		$argtype = null;
@@ -2546,8 +2747,12 @@ class _pages {
 				" LIMIT 1"));
 		}
 		
-		if (!$page)
+		if (!$page) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayArguments', $this);
+			
 			return true;
+		}
 		
 		if ($argtype) {
 			switch($argtype) {
@@ -2563,14 +2768,22 @@ class _pages {
 					echo $page[$argtype];
 			}
 			
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayArguments', $this, $argtype);
+			
 			return true;
 		}
 		
+		$result = false;
 		if ($page['ID'] == $this->selectedID)
-			return true;
+			$result = true;
+		else
+			$this->selectedID = $page['ID'];
 		
-		$this->selectedID = $page['ID'];
-		return false;
+		api::callHooks(API_HOOK_AFTER,
+			'pages::displayArguments', $this, $result);
+		
+		return $result;
 	}
 	
 	function display() {
@@ -2609,6 +2822,9 @@ class _pages {
 			return true;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'pages::display', $this);
+		
 		$posts = new posts();
 		$posts->selectedPageID = $this->selectedID;
 		
@@ -2628,6 +2844,10 @@ class _pages {
 		}
 		
 		unset($posts);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'pages::display', $this);
+		
 		return true;
 	}
 }

@@ -16,6 +16,9 @@ class _templateJSEditor extends fileEditor {
 	var $adminPath = 'admin/site/template/templatejseditor';
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateJSEditor::templateJSEditor', $this);
+		
 		parent::__construct();
 		
 		$this->file = SITE_PATH.'template/template.js';
@@ -24,9 +27,15 @@ class _templateJSEditor extends fileEditor {
 		if (template::$selected)
 			$this->file = SITE_PATH.'template/' .
 				template::$selected['Name'].'/template.js';
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateJSEditor::templateJSEditor', $this);
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateJSEditor::setupAdmin', $this);
+		
 		favoriteLinks::add(
 			__('CSS Editor'), 
 			'?path=admin/site/template/templatecsseditor');
@@ -37,18 +46,34 @@ class _templateJSEditor extends fileEditor {
 			__('Pages / Posts'), 
 			'?path=' .
 			(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateJSEditor::setupAdmin', $this);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateJSEditor::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Template'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateJSEditor::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateJSEditor::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'templateJSEditor::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateJSEditor::displayAdmin', $this);
+		
 		$this->displayAdminTitle(__("JS Editor"));
 		$this->displayAdminDescription();
 		
@@ -64,15 +89,25 @@ class _templateJSEditor extends fileEditor {
 		
 		echo
 			"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateJSEditor::displayAdmin', $this);
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateJSEditor::ajaxRequest', $this);
+		
 		if (!$GLOBALS['USER']->loginok || 
 			!$GLOBALS['USER']->data['Admin']) 
 		{
 			tooltip::display(
 				__("Request can only be accessed by administrators!"),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'templateJSEditor::ajaxRequest', $this);
+			
 			return true;
 		}
 		
@@ -85,10 +120,18 @@ class _templateJSEditor extends fileEditor {
 				__("You do not have permission to access this path!"),
 				TOOLTIP_ERROR);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'templateJSEditor::ajaxRequest', $this);
+			
 			return true;
 		}
 		
-		return parent::ajaxRequest();
+		$result = parent::ajaxRequest();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateJSEditor::ajaxRequest', $this, $result);
+		
+		return $result;
 	}
 }
 

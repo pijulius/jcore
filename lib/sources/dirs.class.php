@@ -11,7 +11,7 @@
 
 class _dirs {
  	static function exists($dir) {
- 		return is_dir($dir);
+ 		return @is_dir($dir);
  	}
  	
  	static function isWritable($dir) {
@@ -51,6 +51,27 @@ class _dirs {
 		}
 		
 		return $dir_array; 
+ 	}
+ 	
+ 	static function protect($directory, $method = 'deny from all') {
+		if (!files::create($directory.'/.htaccess', $method)) {
+			tooltip::display(
+				_("Directory couldn't be protected!")." " .
+				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
+					$directory),
+				TOOLTIP_ERROR);
+			
+			return false;
+		}
+		
+		return true;
+ 	}
+ 	
+ 	static function unprotect($directory) {
+		if (files::exists($directory.'/.htaccess'))
+			return files::delete($directory.'/.htaccess');
+		
+		return true;
  	}
 }
 

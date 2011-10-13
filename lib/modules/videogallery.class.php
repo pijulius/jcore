@@ -2496,27 +2496,10 @@ class videoGallery extends modules {
 			" WHERE `MembersOnly` = 1" .
 			" LIMIT 1"));
 			
-		if ($row['Rows']) {
-			if (!files::exists($this->videosPath.'.htaccess') &&
-				!files::create($this->videosPath.'.htaccess',
-					"deny from all\n<FilesMatch \".(jpg|gif|jpeg|png|bmp)$\">\nallow from all\n</FilesMatch>"))
-			{
-				tooltip::display(
-					_("Directory couldn't be protected!")." " .
-					sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
-						$this->videosPath),
-					TOOLTIP_ERROR);
-				
-				return false;
-			}
-			
-			return true;
-		}
+		if ($row['Rows'])
+			return dirs::protect($this->videosPath);
 		
-		if (files::exists($this->videosPath.'.htaccess'))
-			files::delete($this->videosPath.'.htaccess');
-		
-		return true;
+		return dirs::unprotect($this->videosPath);
 	}
 	
 	static function getTree($galleryid = 0, $firstcall = true,

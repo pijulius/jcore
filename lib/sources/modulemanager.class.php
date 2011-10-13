@@ -14,15 +14,32 @@ class _moduleManager {
 	var $adminPath = 'admin/site/modules';
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::moduleManager', $this);
+		
 		$this->rootPath = SITE_PATH.'lib/modules/';
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::moduleManager', $this);
 	}
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
-		return modules::count();
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::countAdminItems', $this);
+		
+		$result = modules::count();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::countAdminItems', $this, $result);
+		
+		return $result;
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('Upload Module'), 
@@ -35,9 +52,15 @@ class _moduleManager {
 		favoriteLinks::add(
 			__('Get Modules'), 
 			'http://jcore.net/modules');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::setupAdminForm', $this, $form);
+		
 		$form->add(
 			__('Module File'),
 			'Files[]',
@@ -64,9 +87,15 @@ class _moduleManager {
 			"</div>",
 			null,
 			FORM_STATIC_TEXT);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::verifyAdmin', $this, $form);
+		
 		$activate = null;
 		$deactivate = null;
 		$delete = null;
@@ -86,62 +115,79 @@ class _moduleManager {
 				strip_tags((string)$_GET['id'])));
 		
 		if ($delete) {
-			if (!$this->delete($id))
-				return false;
+			$result = $this->delete($id);
 			
-			tooltip::display(
-				__("Module has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Module has been successfully deleted."),
+					TOOLTIP_SUCCESS);
 				
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
 		if ($activate) {
-			if (!$this->activate($id))
-				return false;
+			$result = $this->activate($id);
 			
-			tooltip::display(
-				__("Module has been successfully activated.")." " .
-				"<a href='?path=admin/modules/".$id."'>" .
-					__("View Module") .
-				"</a>" .
-				" - " .
-				"<a href='".url::uri('id, activate')."'>" .
-					__("Refresh") .
-				"</a>",
-				TOOLTIP_SUCCESS);
-			
-			echo
-				"<script type='text/javascript'>" .
-				"$('link[rel=\"stylesheet\"]').each(function () {" .
-					"this.href = this.href+'&reload';});" .
-				"</script>";
+			if ($result) {
+				tooltip::display(
+					__("Module has been successfully activated.")." " .
+					"<a href='?path=admin/modules/".$id."'>" .
+						__("View Module") .
+					"</a>" .
+					" - " .
+					"<a href='".url::uri('id, activate')."'>" .
+						__("Refresh") .
+					"</a>",
+					TOOLTIP_SUCCESS);
 				
-			return true;
+				echo
+					"<script type='text/javascript'>" .
+					"$('link[rel=\"stylesheet\"]').each(function () {" .
+						"this.href = this.href+'&reload';});" .
+					"</script>";
+			}
+			
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
 		if ($deactivate) {
-			if (!$this->deactivate($id))
-				return false;
+			$result = $this->deactivate($id);
 			
-			tooltip::display(
-				__("Module has been successfully deactivated.")." " .
-				"<a href='".url::uri('id, deactivate')."'>" .
-					__("Refresh") .
-				"</a>",
-				TOOLTIP_SUCCESS);
-				
-			return true;
+			if ($result)
+				tooltip::display(
+					__("Module has been successfully deactivated.")." " .
+					"<a href='".url::uri('id, deactivate')."'>" .
+						__("Refresh") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if (!$form->get('Files')) {
 			tooltip::display(
 				__("No module selected to be uploaded! " .
 					"Please select at least one module to upload."),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::verifyAdmin', $this, $form);
 			
 			return false;
 		}
@@ -166,8 +212,12 @@ class _moduleManager {
 					implode(', ', $failedfiles)),
 				TOOLTIP_ERROR);
 			
-			if (!$successfiles || !count($successfiles))
+			if (!$successfiles || !count($successfiles)) {
+				api::callHooks(API_HOOK_AFTER,
+					'moduleManager::verifyAdmin', $this, $form);
+				
 				return false;
+			}
 		}
 		
 		tooltip::display(
@@ -177,26 +227,49 @@ class _moduleManager {
 			TOOLTIP_SUCCESS);
 		
 		$form->reset();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::verifyAdmin', $this, $form, $successfiles);
+		
 		return true;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Module")."</span></th>" .
 			"<th></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::displayAdminListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::displayAdminListItem', $this, $row);
+		
 		echo
 			"<td align='center' style='width: 100px;'>" .
 				"<div class='admin-content-preview'>" .
@@ -208,6 +281,9 @@ class _moduleManager {
 						"<a" .
 							($row['_Activated']?
 								" href='?path=admin/modules/".$row['ID']."'":
+								null) .
+							(isset($row['Icon']) && $row['Icon']?
+								" style=\"background-image: url('".$row['Icon']."');\"":
 								null) .
 							"></a>" .
 					"</div>";
@@ -261,9 +337,15 @@ class _moduleManager {
 					"</div>" .
 				"</div>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemActivation(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::displayAdminListItemActivation', $this, $row);
+		
 		$url = url::uri('id, delete, activate, deactivate').
 			"&amp;id=".urlencode($row['ID']);
 		
@@ -283,29 +365,44 @@ class _moduleManager {
 					"</a>" .
 				"</div>";
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::displayAdminListItemActivation', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::displayAdminListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::displayAdminListItemFunctions', $this, $row);
+		
 		if ($row['_Global'] && !$row['_Activated'] && !$row['_Installed']) {
 			echo
 				"<td></td>";
-			return;
+		} else {
+			echo
+				"<td align='center'>" .
+					"<a class='admin-link delete confirm-link' " .
+						"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
+						"href='".url::uri('id, delete, activate, deactivate') .
+						"&amp;id=".urlencode($row['ID'])."&amp;delete=1'>" .
+					"</a>" .
+				"</td>";
 		}
 		
-		echo
-			"<td align='center'>" .
-				"<a class='admin-link delete confirm-link' " .
-					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
-					"href='".url::uri('id, delete, activate, deactivate') .
-					"&amp;id=".urlencode($row['ID'])."&amp;delete=1'>" .
-				"</a>" .
-			"</td>";
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminList(&$modules) {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::displayAdminList', $this, $modules);
+		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>";
@@ -327,6 +424,7 @@ class _moduleManager {
 			$row['ID'] = $key;
 			$row['Title'] = modules::getTitle($row['ID']);
 			$row['Description'] = modules::getDescription($row['ID']);
+			$row['Icon'] = modules::getIcon($row['ID']);
 			
 			$row['_Installed'] = false;
 			$row['_Activated'] = false;
@@ -370,19 +468,37 @@ class _moduleManager {
 		
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::displayAdminList', $this, $modules);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Modules Administration'), 
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::displayAdminDescription', $this);
+		
 		echo
 			"<p>" .
 				__("Below are the available modules found in the \"<b>modules/</b>\" folder. " .
@@ -390,9 +506,15 @@ class _moduleManager {
 					"\"<b>modules/</b>\" folder, or using the form below select the " .
 					"module package file (e.g. module.tar.gz).") .
 			"</p>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::displayAdmin', $this);
+		
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
 		
@@ -500,24 +622,31 @@ class _moduleManager {
 		
 		echo
 			"</div>"; //admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::displayAdmin', $this);
 	}
 	
 	function add($values) {
 		if (!is_array($values))
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::add', $this, $values);
+		
 		$newid = sql::run(
 			" INSERT INTO `{modules}` SET" .
 			" `Name` = '".
 				sql::escape($values['Name'])."'");
 		
-		if (!$newid) {
+		if (!$newid)
 			tooltip::display(
 				sprintf(__("Module couldn't be added! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::add', $this, $values, $newid);
 		
 		return $newid;
 	}
@@ -525,6 +654,9 @@ class _moduleManager {
 	function delete($id) {
 		if (!$id)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::delete', $this, $id);
 		
 		if (modules::load($id, true, true)) {
 			$exists = modules::get($id);
@@ -534,8 +666,12 @@ class _moduleManager {
 			$success = $module->uninstall();
 			unset($module);
 			
-			if (!$success)
+			if (!$success) {
+				api::callHooks(API_HOOK_AFTER,
+					'moduleManager::delete', $this, $id);
+				
 				return false;
+			}
 			
 			sql::run(
 				" DELETE FROM `{modules}` " .
@@ -563,8 +699,15 @@ class _moduleManager {
 						'/':
 						'.class.php')),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::delete', $this, $id);
+			
 			return false;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::delete', $this, $id);
 		
 		return true;
 	}
@@ -581,22 +724,36 @@ class _moduleManager {
 			return false;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::activate', $this, $id);
+		
 		$exists = modules::get($id);
 		
 		if ($exists && $exists['Installed']) {
-			if (JCORE_VERSION < '0.9')
+			if (JCORE_VERSION < '0.9') {
+				api::callHooks(API_HOOK_AFTER,
+					'moduleManager::activate', $this, $id);
+				
 				return true;
+			}
 			
 			sql::run(
 				" UPDATE `{modules}` SET " .
 				" `Deactivated` = 0" .
 				" WHERE `ID` = '".$exists['ID']."'");
 			
-			if (sql::error())
+			if (sql::error()) {
+				api::callHooks(API_HOOK_AFTER,
+					'moduleManager::activate', $this, $id);
+				
 				return false;
+			}
 			
 			css::update();
 			jQuery::update();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::activate', $this, $id, $exists);
 			
 			return true;
 		}
@@ -607,13 +764,20 @@ class _moduleManager {
 			$newid = $this->add(array(
 				'Name' => $id));
 		
-		if (!$newid)
+		if (!$newid) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::activate', $this, $id);
+			
 			return false;
+		}
 		
 		$module = new $id;
 		$module->moduleID = $newid;
 		$success = $module->install();
 		unset($module);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::activate', $this, $id, $success);
 		
 		return $success;
 	}
@@ -634,22 +798,33 @@ class _moduleManager {
 		if (!$exists)
 			return true;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::deactivate', $this, $id);
+		
 		if (JCORE_VERSION >= '0.9') {
 			sql::run(
 				" UPDATE `{modules}` SET " .
 				" `Deactivated` = 1" .
 				" WHERE `ID` = '".$exists['ID']."'");
 			
-			if (sql::error())
+			if (sql::error()) {
+				api::callHooks(API_HOOK_AFTER,
+					'moduleManager::deactivate', $this, $id);
+				
 				return false;
+			}
 			
 		} else {
 			sql::run(
 				" DELETE FROM `{modules}`" .
 				" WHERE `ID` = '".$exists['ID']."'");
 			
-			if (sql::error())
+			if (sql::error()) {
+				api::callHooks(API_HOOK_AFTER,
+					'moduleManager::deactivate', $this, $id);
+				
 				return false;
+			}
 			
 			sql::run(
 				" DELETE FROM `{" .
@@ -659,19 +834,33 @@ class _moduleManager {
 					"}`" .
 				" WHERE `ModuleID` = '".$exists['ID']."'");
 			
-			if (sql::error())
+			if (sql::error()) {
+				api::callHooks(API_HOOK_AFTER,
+					'moduleManager::deactivate', $this, $id);
+				
 				return false;
+			}
 		}
 		
 		css::update();
 		jQuery::update();
 		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::deactivate', $this, $id, $exists);
+		
 		return true;
 	}
 	
 	function upload($file) {
-		if (!$filename = files::upload($file, $this->rootPath, FILE_TYPE_UPLOAD))
+		api::callHooks(API_HOOK_BEFORE,
+			'moduleManager::upload', $this, $file);
+		
+		if (!$filename = files::upload($file, $this->rootPath, FILE_TYPE_UPLOAD)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::upload', $this, $file);
+			
 			return false;
+		}
 		
 		if (security::checkOutOfMemory(@filesize($this->rootPath.$filename), 3)) {
 			tooltip::display(
@@ -680,6 +869,9 @@ class _moduleManager {
 					"Please try to extract it manually or increment the PHP " .
 					"memory limit."),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::upload', $this, $file);
 			
 			return false;
 		}
@@ -696,6 +888,9 @@ class _moduleManager {
 			
 			files::delete($this->rootPath.$filename);
 			unset($tar);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::upload', $this, $file);
 			
 			return false;
 		}
@@ -716,6 +911,9 @@ class _moduleManager {
 			files::delete($this->rootPath.$filename);
 			unset($tar);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::upload', $this, $file);
+			
 			return false;
 		}
 		
@@ -730,6 +928,9 @@ class _moduleManager {
 				
 				files::delete($this->rootPath.$filename);
 				unset($tar);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'moduleManager::upload', $this, $file);
 				
 				return false;
 		
@@ -752,12 +953,18 @@ class _moduleManager {
 				files::delete($this->rootPath.$filename);
 				unset($tar);
 				
+				api::callHooks(API_HOOK_AFTER,
+					'moduleManager::upload', $this, $file);
+				
 				return false;
 			}
 		}
 		
 		files::delete($this->rootPath.$filename);
 		unset($tar);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'moduleManager::upload', $this, $file, $filename);
 		
 		return true;
 	}

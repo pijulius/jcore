@@ -14,29 +14,53 @@ class _favoriteLinks {
 	static $links = array();
 	
 	function SQL() {
-		return
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::SQL', $this);
+		
+		$sql = 
 			" SELECT * FROM `{favoritelinks}` " .
 			" WHERE `Deactivated` = 0" .
-			" ORDER BY `OrderID`, `ID`";		
+			" ORDER BY `OrderID`, `ID`";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::SQL', $this, $sql);
+		
+		return $sql;		
 	}
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::countAdminItems', $this);
+		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{favoritelinks}`" .
 			" LIMIT 1"));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::countAdminItems', $this, $row['Rows']);
+		
 		return $row['Rows'];
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Link'), 
 				'?path='.admin::path().'#adminform');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::setupAdminForm', $this, $form);
+		
 		$form->add(
 			__('Title'),
 			'Title',
@@ -80,9 +104,15 @@ class _favoriteLinks {
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::verifyAdmin', $this, $form);
+		
 		$reorder = null;
 		$orders = null;
 		$delete = null;
@@ -105,10 +135,7 @@ class _favoriteLinks {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
-			if (!$orders)
-				return false;
-			
-			foreach($orders as $oid => $ovalue) {
+			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{favoritelinks}` " .
 					" SET `OrderID` = '".(int)$ovalue."'" .
@@ -119,72 +146,109 @@ class _favoriteLinks {
 				__("Links have been successfully re-ordered."),
 				TOOLTIP_SUCCESS);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::verifyAdmin', $this, $form, $reorder);
+			
 			return true;
 		}
 		
 		if ($delete) {
-			if (!$this->dbDelete($id))
-				return false;
+			$result = $this->dbDelete($id);
 			
-			tooltip::display(
-				__("Link has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Link has been successfully deleted."),
+					TOOLTIP_SUCCESS);
 			
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 			
 		if ($edit) {
-			if (!$this->dbEdit($id, $form->getPostArray()))
-				return false;
-				
+			$result = $this->dbEdit($id, $form->getPostArray());
+			
+			if ($result)
+				tooltip::display(
+					__("Link has been successfully updated.")." " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::verifyAdmin', $this, $form, $result);
+			
+			return $result;
+		}
+		
+		$newid = $this->dbAdd($form->getPostArray());
+		
+		if ($newid) {
 			tooltip::display(
-				__("Link has been successfully updated.")." " .
-				"<a href='#adminform'>" .
+				__("Link has been successfully created.")." " .
+				"<a href='".url::uri('id, edit, delete') .
+					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
 			
-			return true;
+			$form->reset();
 		}
 		
-		if (!$newid = $this->dbAdd($form->getPostArray()))
-			return false;
-				
-		tooltip::display(
-			__("Link has been successfully created.")." " .
-			"<a href='".url::uri('id, edit, delete') .
-				"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-				__("Edit") .
-			"</a>",
-			TOOLTIP_SUCCESS);
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::verifyAdmin', $this, $result, $newid);
 		
-		$form->reset();
-		return true;
+		return $result;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Order")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Title / Link")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::displayAdminListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::displayAdminListItem', $this, $row);
+		
 		echo
 			"<td>" .
 				"<input type='text' name='orders[".$row['ID']."]' " .
@@ -201,12 +265,22 @@ class _favoriteLinks {
 					$row['Link'] .
 				"</div>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::displayAdminListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -222,17 +296,29 @@ class _favoriteLinks {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::displayAdminListFunctions', $this);
+		
 		echo
 			"<input type='submit' name='reordersubmit' value='".
 				htmlspecialchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::displayAdminList', $this, $rows);
+		
 		echo
 			"<form action='".url::uri('edit, delete')."' method='post'>" .
 			"<table cellpadding='0' cellspacing='0' class='list'>" .
@@ -282,22 +368,44 @@ class _favoriteLinks {
 				
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Favorite Links Administration'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::displayAdmin', $this);
+		
 		$delete = null;
 		$edit = null;
 		$id = null;
@@ -373,11 +481,17 @@ class _favoriteLinks {
 		
 		echo 
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::displayAdmin', $this);
 	}
 	
 	function dbAdd($values) {
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::dbAdd', $this, $values);
 		
 		if ($values['OrderID'] == '') {
 			$row = sql::fetch(sql::run(
@@ -408,13 +522,14 @@ class _favoriteLinks {
 			" `OrderID` = '".
 				(int)$values['OrderID']."'");
 			
-		if (!$newid) {
+		if (!$newid)
 			tooltip::display(
 				sprintf(__("Link couldn't be added! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::dbAdd', $this, $values, $newid);
 		
 		return $newid;
 	}
@@ -425,6 +540,9 @@ class _favoriteLinks {
 		
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::dbEdit', $this, $id, $values);
 		
 		sql::run(
 			" UPDATE `{favoritelinks}` SET ".
@@ -441,48 +559,83 @@ class _favoriteLinks {
 				(int)$values['OrderID']."'" .
 			" WHERE `ID` = '".(int)$id."'");
 			
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result)
 			tooltip::display(
 				sprintf(__("Link couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::dbEdit', $this, $id, $values, $result);
+		
+		return $result;
 	}
 	
 	function dbDelete($id) {
 		if (!$id)
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::dbDelete', $this, $id);
+		
 		sql::run(
 			" DELETE FROM `{favoritelinks}` " .
 			" WHERE `ID` = '".$id."'");
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::dbDelete', $this, $id);
 		
 		return true;
 	}
 	
 	// ************************************************   Client Part
 	static function add($title, $link) {
-		if (isset(favoriteLinks::$links[$link]))
-			return false;
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::add', $_ENV, $title, $link);
 		
-		preg_match('/(\?|&)path=(.*?)(#|&|\'|"|$)/i', $link, $matches);
+		if (isset(favoriteLinks::$links[$link])) {
+			$result = false;
+			
+		} else {
+			preg_match('/(\?|&)path=(.*?)(#|&|\'|"|$)/i', $link, $matches);
+			
+			$userpermission = userPermissions::check((int)$GLOBALS['USER']->data['ID'], 
+				(isset($matches[2])?
+					$matches[2]:
+					null));
+			
+			if ($userpermission['PermissionType'])
+				favoriteLinks::$links[$link] = $title;
+			
+			$result = $link;
+		}
 		
-		$userpermission = userPermissions::check((int)$GLOBALS['USER']->data['ID'], 
-			(isset($matches[2])?
-				$matches[2]:
-				null));
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::add', $_ENV, $title, $link, $result);
 		
-		if ($userpermission['PermissionType'])
-			favoriteLinks::$links[$link] = $title;
+		return $result;
+	}
+	
+	static function remove($link) {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::remove', $_ENV, $link);
 		
-		return true;
+		unset(favoriteLinks::$links[$link]);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::remove', $_ENV, $link);
 	}
 
 	static function clear() {
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::clear', $_ENV);
+		
 		favoriteLinks::$links = array();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::clear', $_ENV);
 	}
 	
 	function display() {
@@ -498,8 +651,13 @@ class _favoriteLinks {
 		
 		if (!favoriteLinks::$links || !is_array(favoriteLinks::$links) ||
 			!count(favoriteLinks::$links))
+		{
 			return;
-			
+		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'favoriteLinks::display', $this);
+		
 		if (count(favoriteLinks::$links) == 1) {
 			echo
 				"<div class='admin-favorite-links'>" .
@@ -513,6 +671,9 @@ class _favoriteLinks {
 						"</a>" .
 					"</div>" .
 				"</div>";
+			
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::display', $this);
 			
 			return;
 		}
@@ -556,6 +717,9 @@ class _favoriteLinks {
 							"</div>" .
 						"</div>" .
 					"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'favoriteLinks::display', $this);
 	}
 }
 

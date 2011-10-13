@@ -15,19 +15,35 @@ class _templateManager {
 	var $adminPath = 'admin/site/template';
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::templateManager', $this);
+		
 		$this->rootPath = SITE_PATH.'template/';
 		$this->rootURL = SITE_URL.'template/';
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::templateManager', $this);
 	}
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
-		if (template::$selected)
-			return 1;
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::countAdminItems', $this);
 		
-		return 0;
+		$result = 0;
+		if (template::$selected)
+			$result = 1;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::countAdminItems', $this, $result);
+		
+		return $result;
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('Upload Template'), 
@@ -45,9 +61,15 @@ class _templateManager {
 		favoriteLinks::add(
 			__('View Website'), 
 			SITE_URL);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::setupAdminForm', $this, $form);
+		
 		$form->add(
 			__('Template File'),
 			'Files[]',
@@ -74,9 +96,15 @@ class _templateManager {
 			"</div>",
 			null,
 			FORM_STATIC_TEXT);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::verifyAdmin', $this, $form);
+		
 		$activate = null;
 		$deactivate = null;
 		$setadmin = null;
@@ -103,80 +131,102 @@ class _templateManager {
 			$id = strip_tags((string)$_GET['id']);
 		
 		if ($delete) {
-			if (!$this->delete($id))
-				return false;
+			$result = $this->delete($id);
 			
-			tooltip::display(
-				__("Template has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			if ($result)
+				tooltip::display(
+					__("Template has been successfully deleted."),
+					TOOLTIP_SUCCESS);
 				
-			return true;
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
 		if ($activate) {
-			if (!$this->activate($id))
-				return false;
+			$result = $this->activate($id);
 			
-			tooltip::display(
-				__("Template has been successfully activated.")." " .
-				"<a href='".SITE_URL."' target='_blank'>" .
-					__("View Website") .
-				"</a>",
-				TOOLTIP_SUCCESS);
-				
-			return true;
+			if ($result)
+				tooltip::display(
+					__("Template has been successfully activated.")." " .
+					"<a href='".SITE_URL."' target='_blank'>" .
+						__("View Website") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
 		if ($deactivate) {
-			if (!$this->deactivate($id))
-				return false;
+			$result = $this->deactivate($id);
 			
-			tooltip::display(
-				__("Default template has been successfully reset for your website.")." " .
-				"<a href='".SITE_URL."' target='_blank'>" .
-					__("View Website") .
-				"</a>",
-				TOOLTIP_SUCCESS);
-				
-			return true;
+			if ($result)
+				tooltip::display(
+					__("Default template has been successfully reset for your website.")." " .
+					"<a href='".SITE_URL."' target='_blank'>" .
+						__("View Website") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
 		if ($setadmin) {
-			if (!$this->setAdmin($id))
-				return false;
+			$result = $this->setAdmin($id);
 			
-			tooltip::display(
-				__("Template has been successfully set for Admin section.")." " .
-				"<a href='".url::uri('ALL').'?'.url::arg('path')."'>" .
-					__("Refresh") .
-				"</a>",
-				TOOLTIP_SUCCESS);
-				
-			return true;
+			if ($result)
+				tooltip::display(
+					__("Template has been successfully set for Admin section.")." " .
+					"<a href='".url::uri('ALL').'?'.url::arg('path')."'>" .
+						__("Refresh") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
 		if ($unsetadmin) {
-			if (!$this->unsetAdmin($id))
-				return false;
+			$result = $this->unsetAdmin($id);
 			
-			tooltip::display(
-				__("Default template has been successfully reset for Admin section.")." " .
-				"<a href='".url::uri('ALL').'?'.url::arg('path')."'>" .
-					__("Refresh") .
-				"</a>",
-				TOOLTIP_SUCCESS);
-				
-			return true;
+			if ($result)
+				tooltip::display(
+					__("Default template has been successfully reset for Admin section.")." " .
+					"<a href='".url::uri('ALL').'?'.url::arg('path')."'>" .
+						__("Refresh") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if (!$form->get('Files')) {
 			tooltip::display(
 				__("No template selected to be uploaded! " .
 					"Please select at least one template to upload."),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::verifyAdmin', $this, $form);
 			
 			return false;
 		}
@@ -201,8 +251,12 @@ class _templateManager {
 					implode(', ', $failedfiles)),
 				TOOLTIP_ERROR);
 			
-			if (!$successfiles || !count($successfiles))
+			if (!$successfiles || !count($successfiles)) {
+				api::callHooks(API_HOOK_AFTER,
+					'templateManager::verifyAdmin', $this, $form);
+				
 				return false;
+			}
 		}
 		
 		tooltip::display(
@@ -212,26 +266,49 @@ class _templateManager {
 			TOOLTIP_SUCCESS);
 		
 		$form->reset();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::verifyAdmin', $this, $form, $successfiles);
+		
 		return true;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Template")."</span></th>" .
 			"<th></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::displayAdminListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::displayAdminListItem', $this, $row);
+		
 		echo
 			"<td align='center' style='width: " .
 				($row['_Activated']?
@@ -301,9 +378,15 @@ class _templateManager {
 					"</div>" .
 				"</div>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemActivation(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::displayAdminListItemActivation', $this, $row);
+		
 		$url = url::uri('id, delete, activate, deactivate, setadmin, unsetadmin').
 			"&amp;id=".urlencode($row['ID']);
 		
@@ -317,9 +400,7 @@ class _templateManager {
 					"</a>" .
 				"</div>";
 			
-			$settings = new settings();
-			
-			if ($settings->get('Website_Template_SetForAdmin')) {
+			if (settings::get('Website_Template_SetForAdmin')) {
 				echo
 					"<div class='button' style='float: none; margin: 10px 0 0 0;'>" .
 						"<a href='".$url."&amp;unsetadmin=1' " .
@@ -339,8 +420,6 @@ class _templateManager {
 					"</div>";
 			}
 			
-			unset($settings);
-			
 		} else {
 			echo
 				"<div class='button' style='float: none; margin: 10px 0 0 0;'>" .
@@ -351,12 +430,22 @@ class _templateManager {
 					"</a>" .
 				"</div>";
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::displayAdminListItemActivation', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::displayAdminListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
@@ -365,9 +454,15 @@ class _templateManager {
 					"&amp;id=".urlencode($row['ID'])."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminList(&$templates, $selectedtemplate = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::displayAdminList', $this, $templates, $selectedtemplate);
+		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>";
@@ -427,25 +522,43 @@ class _templateManager {
 		
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::displayAdminList', $this, $templates, $selectedtemplate);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::displayAdminTitle', $this, $ownertitle);
+		
 		if (JCORE_VERSION >= '0.7') {
 			admin::displayTitle(
 				__('Template Administration'), 
 				$ownertitle);
-			return;
+			
+		} else {
+			echo
+				__('Template Administration');
 		}
 		
-		echo
-			__('Template Administration');
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::displayAdminDescription', $this);
+		
 		echo
 			"<p>" .
 				__("Below are the available templates found in the \"<b>template/</b>\" folder. " .
@@ -453,9 +566,15 @@ class _templateManager {
 					"\"<b>template/</b>\" folder, or using the form below select the " .
 					"template package file (e.g. template-name.tar.gz).") .
 			"</p>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::displayAdminDescription', $this);
 	}
 	
 	function displayAdminSections() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::displayAdminSections', $this);
+		
 		echo
 			"<div class='admin-section-item as-site-template-css-editor'>" .
 				"<a href='".url::uri('ALL') .
@@ -509,9 +628,15 @@ class _templateManager {
 						"</span>" .
 					"</a>" .
 				"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::displayAdminSections', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::displayAdmin', $this);
+		
 		if (JCORE_VERSION < '0.7')
 			$this->displayAdminDescription();
 		else
@@ -611,24 +736,31 @@ class _templateManager {
 		
 		echo
 			"</div>"; //admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::displayAdmin', $this);
 	}
 	
 	function add($values) {
 		if (!is_array($values))
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::add', $this, $values);
+		
 		$newid = sql::run(
 			" INSERT INTO `{templates}` SET" .
 			" `Name` = '".
 				sql::escape($values['Name'])."'");
 		
-		if (!$newid) {
+		if (!$newid)
 			tooltip::display(
 				sprintf(__("Template couldn't be added! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::add', $this, $values, $newid);
 		
 		return $newid;
 	}
@@ -637,13 +769,20 @@ class _templateManager {
 		if (!$id)
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::delete', $this, $id);
+		
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{templates}`" .
 			" WHERE `Name` = '".sql::escape($id)."'"));
 		
 		if ($exists) {
-			if (!$this->deactivate($id))
+			if (!$this->deactivate($id)) {
+				api::callHooks(API_HOOK_AFTER,
+					'templateManager::delete', $this, $id);
+				
 				return false;
+			}
 			
 			@include_once($this->rootPath.$exists['Name'].'/template.php');
 			
@@ -655,8 +794,12 @@ class _templateManager {
 				$success = $installer->uninstall();
 				unset($installer);
 				
-				if (!$success)
+				if (!$success) {
+					api::callHooks(API_HOOK_AFTER,
+						'templateManager::delete', $this, $id);
+					
 					return false;
+				}
 			}
 			
 			sql::run(
@@ -673,23 +816,31 @@ class _templateManager {
 					" WHERE `TemplateID` = '".(int)$exists['ID']."'");
 		}
 		
+		$result = true;
+		
 		if (is_dir($this->rootPath.$id) && 
-			!dirs::delete($this->rootPath.$id)) 
-		{
+			!dirs::delete($this->rootPath.$id))
+			$result = false;
+		 
+		if (!$result)
 			tooltip::display(
 				sprintf(__("Template couldn't be deleted but it is now safe " .
 					"to be deleted manually by just simply removing " .
 					"the \"%s\" folder."), 'template/'.$id.'/'),
 				TOOLTIP_ERROR);
-			return false;
-		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::delete', $this, $id, $result);
+		
+		return $result;
 	}
 	
 	function cleanUp($templateid) {
 		if (!$templateid)
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::cleanUp', $this, $templateid);
 		
 		sql::run(
 			" DELETE FROM `{blocks}`" .
@@ -705,6 +856,9 @@ class _templateManager {
 				" DELETE FROM `{templates}`" .
 				" WHERE `ID` = '".(int)$templateid."'");
 		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::cleanUp', $this, $templateid);
+		
 		return true;
 	}
 	
@@ -712,19 +866,23 @@ class _templateManager {
 		if (!$id)
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::activate', $this, $id);
+		
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{templates}`" .
 			" WHERE `Name` = '".sql::escape($id)."'"));
 		
 		if ($exists && (JCORE_VERSION < '0.9' || $exists['Installed'])) {
-			$settings = new settings();
-			$settings->set('Website_Template', $exists['Name']);
-			$settings->set('Website_Template_SetForAdmin', '0');
-			unset($settings);
+			settings::set('Website_Template', $exists['Name']);
+			settings::set('Website_Template_SetForAdmin', '0');
 			
 			$this->autoSetup($exists['ID']);
-			
 			template::$selected = $exists;
+			
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::activate', $this, $id, $exists);
+			
 			return true;
 		}
 		
@@ -734,8 +892,12 @@ class _templateManager {
 			$newid = $this->add(array(
 				'Name' => $id));
 		
-		if (!$newid)
+		if (!$newid) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::activate', $this, $id);
+			
 			return false;
+		}
 		
 		@include_once($this->rootPath.$id.'/template.php');
 		
@@ -745,6 +907,10 @@ class _templateManager {
 			tooltip::display(
 				__("Invalid or template installer script cannot be found."),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::activate', $this, $id);
+			
 			return false;
 		}
 		
@@ -761,21 +927,25 @@ class _templateManager {
 				__("Please see detailed error messages above and try again."),
 				TOOLTIP_ERROR);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::activate', $this, $id);
+			
 			return false;
 		}
 		
-		$settings = new settings();
-		$settings->set('Website_Template', $id);
-		$settings->set('Website_Template_SetForAdmin', '0');
-		unset($settings);
+		settings::set('Website_Template', $id);
+		settings::set('Website_Template_SetForAdmin', '0');
 		
 		$template = sql::fetch(sql::run(
 			" SELECT * FROM `{templates}`" .
 			" WHERE `ID` = '".(int)$newid."'"));
 		
 		$this->autoSetup($template['ID']);
-		
 		template::$selected = $template;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::activate', $this, $id, $template);
+		
 		return true;
 	}
 	
@@ -797,14 +967,19 @@ class _templateManager {
 		if ($exists['Name'] != WEBSITE_TEMPLATE)
 			return true;
 		
-		$settings = new settings();
-		$settings->set('Website_Template', '');
-		$settings->set('Website_Template_SetForAdmin', '0');
-		unset($settings);
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::deactivate', $this, $id);
+		
+		settings::set('Website_Template', '');
+		settings::set('Website_Template_SetForAdmin', '0');
 		
 		$this->autoSetup();
 		
 		template::$selected = null;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::deactivate', $this, $id, $exists);
+		
 		return true;
 	}
 	
@@ -823,9 +998,13 @@ class _templateManager {
 			return false;
 		}
 		
-		$settings = new settings();
-		$settings->set('Website_Template_SetForAdmin', '1');
-		unset($settings);
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::setAdmin', $this, $id);
+		
+		settings::set('Website_Template_SetForAdmin', '1');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::setAdmin', $this, $id, $exists);
 		
 		return true;
 	}
@@ -845,9 +1024,13 @@ class _templateManager {
 			return false;
 		}
 		
-		$settings = new settings();
-		$settings->set('Website_Template_SetForAdmin', '0');
-		unset($settings);
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::unsetAdmin', $this, $id);
+		
+		settings::set('Website_Template_SetForAdmin', '0');
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::unsetAdmin', $this, $id, $exists);
 		
 		return true;
 	}
@@ -902,6 +1085,9 @@ class _templateManager {
 			return false;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::upload', $this, $file);
+		
 		foreach($tar->directories as $directory) {
 			if (@is_dir($this->rootPath.$directory['name']) && 
 				!@is_writable($this->rootPath.$directory['name']))
@@ -913,6 +1099,9 @@ class _templateManager {
 				
 				files::delete($this->rootPath.$filename);
 				unset($tar);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'templateManager::upload', $this, $file);
 				
 				return false;
 		
@@ -935,12 +1124,19 @@ class _templateManager {
 				files::delete($this->rootPath.$filename);
 				unset($tar);
 				
+				api::callHooks(API_HOOK_AFTER,
+					'templateManager::upload', $this, $file);
+				
 				return false;
 			}
 		}
 		
 		files::delete($this->rootPath.$filename);
 		unset($tar);
+		
+		$result = true;
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::upload', $this, $file, $result);
 		
 		return true;
 	}
@@ -969,11 +1165,14 @@ class _templateManager {
 	}
 	
 	function autoSetup($templateid = 0) {
+		api::callHooks(API_HOOK_BEFORE,
+			'templateManager::autoSetup', $this, $templateid);
+		
 		// Set menu blocks to their new places
 		
 		$rows = sql::run(
 			" SELECT * FROM `{menus}`" .
-			" ORDER BY `BlockID` = 0, `BlockID`, `OrderID`, `ID`");
+			" ORDER BY `ID`");
 		
 		$ids = sql::fetch(sql::run(
 			" SELECT GROUP_CONCAT(`ID` ORDER BY `ID` SEPARATOR '|') AS `IDs`" .
@@ -990,7 +1189,8 @@ class _templateManager {
 			$prev = null;
 			
 			while($row = sql::fetch($rows)) {
-				if ($prev && $prev['BlockID'] != $row['BlockID'])
+				if ($prev && $prev[(JCORE_VERSION >= '1.0'?'BlockIDs':'BlockID')] 
+					!= $row[(JCORE_VERSION >= '1.0'?'BlockIDs':'BlockID')])
 					$i++;
 				
 				$prev = $row;
@@ -999,7 +1199,8 @@ class _templateManager {
 				
 				sql::run(
 					" UPDATE `{menus}` SET" .
-					" `BlockID` = '".(int)$blockids[$i]."'" .
+					" `".(JCORE_VERSION >= '1.0'?'BlockIDs':'BlockID')."` = " .
+						"'".(int)$blockids[$i]."'" .
 					" WHERE `ID` = '".$row['ID']."'");
 			}
 		}
@@ -1076,6 +1277,9 @@ class _templateManager {
 					" WHERE `ID` = '".$row['ID']."'");
 			}
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'templateManager::autoSetup', $this, $templateid);
 	}
 }
 

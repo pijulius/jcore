@@ -35,10 +35,7 @@ if (defined('JCORE_PATH'))
 	set_include_path(get_include_path().PATH_SEPARATOR.JCORE_PATH);
 
 include_once('lib/settings.class.php');
-
-$settings = new settings();
-$settings->defineSettings();
-unset($settings);
+settings::defineSettings();
 
 if (defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE) {
 	if (defined('JCORE_PATH'))

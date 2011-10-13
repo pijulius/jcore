@@ -396,18 +396,6 @@ class search extends modules {
 				$onlyin = explode(',', $row['ModuleIDs']);
 		}
 		
-		$rows = sql::run(
-			" SELECT " .
-			" `ID`," .
-			" `Name`," .
-			" `Name` AS `Title`, " .
-			" 0 AS `SubItemOfID`," .
-			" 0 AS `PathDeepnes`" .
-			" FROM `{modules}` " .
-			" WHERE `Installed` = 1" .
-			" AND `Searchable` = 1" .
-			" ORDER BY `Name`");
-			
 		$tree = array();
 		
 		if (!$onlyin || in_array(65536, $onlyin))
@@ -419,16 +407,30 @@ class search extends modules {
 				'SubItemOfID' => 0,
 				'PathDeepnes' => 0);
 		
-		while($row = sql::fetch($rows)) {
-			if ($onlyin && !in_array($row['ID'], $onlyin))
-				continue;
+		if (modules::$loaded && count(modules::$loaded)) {
+			$rows = sql::run(
+				" SELECT " .
+				" `ID`," .
+				" `Name`," .
+				" `Name` AS `Title`, " .
+				" 0 AS `SubItemOfID`," .
+				" 0 AS `PathDeepnes`" .
+				" FROM `{modules}` " .
+				" WHERE `Searchable` = 1" .
+				" AND `Installed` = 1" .
+				" AND `Name` IN ('" .
+					implode("','", array_keys(modules::$loaded))."')" .
+				" ORDER BY `Name`");
 			
-			$row['Path'] = 'modules/'.
-				strtolower($row['Title']);
-			
-			modules::load($row['Title'], true);
-			$row['Title'] = modules::getTitle($row['Title']);
-			$tree[] = $row;
+			while($row = sql::fetch($rows)) {
+				if ($onlyin && !in_array($row['ID'], $onlyin))
+					continue;
+				
+				$row['Title'] = modules::getTitle($row['Title']);
+				$row['Path'] = 'modules/'.
+					strtolower($row['Name']);
+				$tree[] = $row;
+			}
 		}
 		
 		return $tree;

@@ -9,7 +9,8 @@
  *  For licensing, see LICENSE or http://jcore.net/license
  ****************************************************************************/
  
-include_once('config.inc.php'); 
+include_once('config.inc.php');
+include_once('lib/api.class.php'); 
 
 date_default_timezone_set(PAGE_TIMEZONE);
 sql::setTimeZone();

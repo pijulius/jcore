@@ -21,14 +21,24 @@ class _notes {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::countAdminItems', $this);
+		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{notes}`" .
 			" LIMIT 1"));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::countAdminItems', $this, $row['Rows']);
+		
 		return $row['Rows'];
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Note'), 
@@ -41,9 +51,15 @@ class _notes {
 		favoriteLinks::add(
 			__('View Website'), 
 			SITE_URL);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::setupAdminForm', $this, $form);
+		
 		$form->add(
 			__('Title'),
 			'Title',
@@ -101,9 +117,15 @@ class _notes {
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::verifyAdmin', $this, $form);
+		
 		$delete = null;
 		$edit = null;
 		$id = null;
@@ -118,71 +140,107 @@ class _notes {
 			$id = (int)$_GET['id'];
 		
 		if ($delete) {
-			if (!$this->delete($id))
-				return false;
-				
-			tooltip::display(
-				__("Note has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			$result = $this->delete($id);
 			
-			return true;
+			if ($result)
+				tooltip::display(
+					__("Note has been successfully deleted."),
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'notes::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'notes::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if ($edit) {
-			if (!$this->edit($id, $form->getPostArray()))
-				return false;
-				
+			$result = $this->edit($id, $form->getPostArray());
+			
+			if ($result)
+				tooltip::display(
+					__("Note has been successfully updated.")." ".
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'notes::verifyAdmin', $this, $form, $result);
+			
+			return $result;
+		}
+		
+		$newid = $this->add($form->getPostArray());
+		
+		if ($newid) {
 			tooltip::display(
-				__("Note has been successfully updated.")." ".
-				"<a href='#adminform'>" .
+				__("Note has been successfully created.")." " .
+				"<a href='".url::uri('id, edit, delete') .
+					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
-			
-			return true;
+					
+			$form->reset();
 		}
 		
-		if (!$newid = $this->add($form->getPostArray()))
-			return false;
-			
-		tooltip::display(
-			__("Note has been successfully created.")." " .
-			"<a href='".url::uri('id, edit, delete') .
-				"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-				__("Edit") .
-			"</a>",
-			TOOLTIP_SUCCESS);
-				
-		$form->reset();
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'notes::verifyAdmin', $this, $form, $newid);
+		
+		return $newid;
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Title / Created on")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::displayAdminListHeaderOptions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Comments")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Attachments")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::displayAdminListItem', $this, $row);
+		
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
 		echo
@@ -201,9 +259,15 @@ class _notes {
 					$GLOBALS['USER']->constructUserName($user, __('by %s')) .
 				"</div>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::displayAdminListItemOptions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link comments' " .
@@ -231,9 +295,15 @@ class _notes {
 		echo
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -249,9 +319,15 @@ class _notes {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListItemSelected(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::displayAdminListItemSelected', $this, $row);
+		
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
 		admin::displayItemData(
@@ -271,9 +347,15 @@ class _notes {
 			"<hr />");
 		admin::displayItemData(
 			$row['Content']);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::displayAdminListItemSelected', $this, $row);
 	}
 	
 	function displayAdminListSearch() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::displayAdminListSearch', $this);
+		
 		$search = null;
 		
 		if (isset($_GET['search']))
@@ -286,9 +368,15 @@ class _notes {
 				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
 			"<input type='submit' value='" .
 				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::displayAdminListSearch', $this);
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::displayAdminList', $this, $rows);
+		
 		$id = null;
 		
 		if (isset($_GET['id']))
@@ -354,22 +442,43 @@ class _notes {
 		echo
 			"</form>";
 	
+		api::callHooks(API_HOOK_AFTER,
+			'notes::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('Notes Administration'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'notes::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::displayAdmin', $this);
+		
 		$search = null;
 		$delete = null;
 		$edit = null;
@@ -486,11 +595,17 @@ class _notes {
 		
 		echo 
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::displayAdmin', $this);
 	}
 	
 	function add($values) {
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::add', $this, $values);
 		
 		$newid = sql::run(
 			" INSERT INTO `{notes}` SET ".
@@ -516,13 +631,14 @@ class _notes {
 					(int)$GLOBALS['USER']->data['ID']) .
 				"'");
 		
-		if (!$newid) {
+		if (!$newid)
 			tooltip::display(
 				sprintf(__("Note couldn't be created! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'notes::add', $this, $values, $newid);
 		
 		return $newid;
 	}
@@ -548,6 +664,9 @@ class _notes {
 			return false;
 		}
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::edit', $this, $id, $values);
+		
 		sql::run(
 			" UPDATE `{notes}` SET ".
 			" `Title` = '".
@@ -571,15 +690,18 @@ class _notes {
 				(int)$values['StatusID']."'" .
 			" WHERE `ID` = '".(int)$id."'");
 			
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result)
 			tooltip::display(
 				sprintf(__("Note couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'notes::edit', $this, $id, $values, $result);
+		
+		return $result;
 	}
 	
 	function delete($id) {
@@ -599,6 +721,9 @@ class _notes {
 			
 			return false;
 		}
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'notes::delete', $this, $id);
 		
 		$comments = new noteComments();
 		
@@ -626,6 +751,9 @@ class _notes {
 			" DELETE FROM `{notes}` " .
 			" WHERE `ID` = '".$id."'");
 			
+		api::callHooks(API_HOOK_AFTER,
+			'notes::delete', $this, $id);
+		
 		return true;
 	}
 	

@@ -18,10 +18,16 @@ class _noteComments extends comments {
 	var $adminPath = 'admin/site/notes/notecomments';
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'noteComments::noteComments', $this);
+		
 		parent::__construct();
 		
 		$this->selectedOwner = __('Note');
 		$this->uriRequest = "notes&amp;comments=1";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'noteComments::noteComments', $this);
 	}
 }
 

@@ -21,11 +21,17 @@ class _paging {
 	var $ajax = false;
 		
 	function __construct($limit = 10, $otherargs = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'paging::paging', $this, $limit, $otherargs);
+		
 		$this->limit = "0,".$limit;
 		$this->defaultLimit = $limit;
 		
 		$this->track($this->variable);
 		$this->otherArgs = $otherargs;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'paging::paging', $this, $limit, $otherargs);
 	}
 	
 	function parse($variable) {
@@ -75,70 +81,122 @@ class _paging {
 		$this->limit = "0,".$this->defaultLimit;
 	}
 	
+	function setTotalItems($items) {
+		$this->items = $items;
+	}
+	
 	function displayLastPage($link) {
+		api::callHooks(API_HOOK_BEFORE,
+			'paging::displayLastPage', $this, $link);
+		
 		echo
 			"<a title='".htmlspecialchars(__("Last page"), ENT_QUOTES)."' " .
 				"href='".$link."'>" .
 				"<span>&gt;&gt;</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'paging::displayLastPage', $this, $link);
 	}
 	
 	function displayNextPage($link) {
+		api::callHooks(API_HOOK_BEFORE,
+			'paging::displayNextPage', $this, $link);
+		
 		echo
 			"<a title='".htmlspecialchars(__("Next page"), ENT_QUOTES)."' " .
 				"href='".$link."'>" .
 				"<span>&gt;</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'paging::displayNextPage', $this, $link);
 	}
 	
 	function displayMorePages($link) {
+		api::callHooks(API_HOOK_BEFORE,
+			'paging::displayMorePages', $this, $link);
+		
 		echo
 			"<span class='comment'" .
 				(JCORE_VERSION < '0.5'?
 					" style='float: left;'":
 					null) .
 				">&nbsp;...&nbsp;</span>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'paging::displayMorePages', $this, $link);
 	}
 	
 	function displayPage($link, $page) {
+		api::callHooks(API_HOOK_BEFORE,
+			'paging::displayPage', $this, $link, $page);
+		
 		echo
 			"<a title='".htmlspecialchars(sprintf(__("Page (%s)"), $page), ENT_QUOTES)."' " .
 				"href='".$link."'>" .
 				"<span>".$page."</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'paging::displayPage', $this, $link, $page);
 	}
 	
 	function displayLessPages($link) {
+		api::callHooks(API_HOOK_BEFORE,
+			'paging::displayLessPages', $this, $link);
+		
 		echo
 			"<span class='comment'" .
 				(JCORE_VERSION < '0.5'?
 					" style='float: left;'":
 					null) .
 				">&nbsp;...&nbsp;</span>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'paging::displayLessPages', $this, $link);
 	}
 	
 	function displayPrevPage($link) {
+		api::callHooks(API_HOOK_BEFORE,
+			'paging::displayPrevPage', $this, $link);
+		
 		echo
 			"<a title='".htmlspecialchars(__("Previous page"), ENT_QUOTES)."' " .
 				"href='".$link."'>" .
 				"<span>&lt;</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'paging::displayPrevPage', $this, $link);
 	}
 	
 	function displayFirstPage($link) {
+		api::callHooks(API_HOOK_BEFORE,
+			'paging::displayFirstPage', $this, $link);
+		
 		echo
 			"<a title='".htmlspecialchars(__("First page"), ENT_QUOTES)."' " .
 				"href='".$link."'>" .
 				"<span>&lt;&lt;</span>" .
 			"</a>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'paging::displayFirstPage', $this, $link);
 	}
 	
 	function displayTitle($selectedpage = 0, $totalpages = 0) {
+		api::callHooks(API_HOOK_BEFORE,
+			'paging::displayTitle', $this, $selectedpage, $totalpages);
+		
 		if (JCORE_VERSION >= '1.0')
 			echo 
 				sprintf(__("Page %s of %s"), $selectedpage, $totalpages).":";
 		else
 			echo __("Pages").":";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'paging::displayTitle', $this, $selectedpage, $totalpages);
 	}
 	
 	function display() {
@@ -163,6 +221,9 @@ class _paging {
 		
 		if ($totalpagenum < 2)
 			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'paging::display', $this);
 		
 		$startpagenum = 1;
 		if ($currentpagenum > round($this->pageNumbers/2))
@@ -307,10 +368,9 @@ class _paging {
 					"<div class='clear-both'></div>" .
 				"</div>" .
 			"</div>";
-	}
-	
-	function setTotalItems($items) {
-		$this->items = $items;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'paging::display', $this);
 	}
 }
 

@@ -20,6 +20,9 @@ class _rss {
 	var $ajaxRequest = null;
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::rss', $this);
+		
 		$this->file = SITE_PATH.'rss/rss.xml';
 		
 		$this->channel['Title'] = PAGE_TITLE;
@@ -29,18 +32,31 @@ class _rss {
 		$this->channel['WebMaster'] = WEBMASTER_EMAIL;
 		$this->channel['TTL'] = 60;
 		$this->channel['Logo'] = SITE_URL.'template/images/favicon.png';
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::rss', $this);
 	}
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::countAdminItems', $this);
+		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{rssfeeds}`" .
 			" LIMIT 1"));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::countAdminItems', $this, $row['Rows']);
+		
 		return $row['Rows'];
 	}
 	
 	function setupAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::setupAdmin', $this);
+		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
 				__('New Feed'), 
@@ -50,9 +66,15 @@ class _rss {
 			__('Pages / Posts'), 
 			'?path=' .
 			(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::setupAdmin', $this);
 	}
 	
 	function setupAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::setupAdminForm', $this, $form);
+		
 		$form->add(
 			__('Title'),
 			'Title',
@@ -108,9 +130,15 @@ class _rss {
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::setupAdminForm', $this, $form);
 	}
 	
 	function verifyAdmin(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::verifyAdmin', $this, $form);
+		
 		$reorder = null;
 		$orders = null;
 		$delete = null;
@@ -133,7 +161,7 @@ class _rss {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
-			foreach($orders as $oid => $ovalue) {
+			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{rssfeeds}` " .
 					" SET `OrderID` = '".(int)$ovalue."'" .
@@ -144,61 +172,82 @@ class _rss {
 				__("RSS feeds have been successfully re-ordered."),
 				TOOLTIP_SUCCESS);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'rss::verifyAdmin', $this, $form, $reorder);
+			
 			return true;
 		}
 		
 		if ($delete && $id) {
-			if (!$this->deleteFeed($id))
-				return false;
-				
-			tooltip::display(
-				__("RSS feed has been successfully deleted."),
-				TOOLTIP_SUCCESS);
+			$result = $this->deleteFeed($id);
 			
-			return true;
+			if ($result)
+				tooltip::display(
+					__("RSS feed has been successfully deleted."),
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'rss::verifyAdmin', $this, $form, $result);
+			
+			return $result;
 		}
 		
-		if (!$form->verify())
+		if (!$form->verify()) {
+			api::callHooks(API_HOOK_AFTER,
+				'rss::verifyAdmin', $this, $form);
+			
 			return false;
+		}
 		
 		if ($edit) {
-			if (!$this->editFeed($id, $form->getPostArray()))
-				return false;
-				
+			$result = $this->editFeed($id, $form->getPostArray());
+			
+			if ($result)
+				tooltip::display(
+					__("RSS feed has been successfully updated.")." " .
+					"<a href='".$form->get('FeedURL')."' target='_blank'>" .
+						__("View RSS") .
+					"</a>" .
+					" - " .
+					"<a href='#adminform'>" .
+						__("Edit") .
+					"</a>",
+					TOOLTIP_SUCCESS);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'rss::verifyAdmin', $this, $form, $result);
+			
+			return $result;
+		}
+		
+		$newid = $this->addFeed($form->getPostArray());
+		
+		if ($newid) {
 			tooltip::display(
-				__("RSS feed has been successfully updated.")." " .
+				__("RSS feed has been successfully created.")." " .
 				"<a href='".$form->get('FeedURL')."' target='_blank'>" .
 					__("View RSS") .
 				"</a>" .
 				" - " .
-				"<a href='#adminform'>" .
+				"<a href='".url::uri('id, edit, delete') .
+					"&amp;id=".$newid."&amp;edit=1#adminform'>" .
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
-			
-			return true;
+				
+			$form->reset();
 		}
 		
-		if (!$newid = $this->addFeed($form->getPostArray()))
-			return false;
-				
-		tooltip::display(
-			__("RSS feed has been successfully created.")." " .
-			"<a href='".$form->get('FeedURL')."' target='_blank'>" .
-				__("View RSS") .
-			"</a>" .
-			" - " .
-			"<a href='".url::uri('id, edit, delete') .
-				"&amp;id=".$newid."&amp;edit=1#adminform'>" .
-				__("Edit") .
-			"</a>",
-			TOOLTIP_SUCCESS);
-			
-		$form->reset();
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'rss::verifyAdmin', $this, $form, $newid);
+		
+		return $newid;
 	}
 	
 	function displayAdminAvailableFeeds() {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::displayAdminAvailableFeeds', $this);
+		
 		if (!isset($_GET['ajaxlimit']))
 			echo
 				"<div class='rss-feeds-available-feeds'>";
@@ -286,28 +335,50 @@ class _rss {
 		if (!isset($_GET['ajaxlimit']))
 			echo
 				"</div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::displayAdminAvailableFeeds', $this);
 	}
 	
 	function displayAdminListHeader() {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::displayAdminListHeader', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Order")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Title / Feed URL")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::displayAdminListHeader', $this);
 	}
 	
 	function displayAdminListHeaderOptions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::displayAdminListHeaderOptions', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'rss::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::displayAdminListHeaderFunctions', $this);
+		
 		echo
 			"<th><span class='nowrap'>".
 				__("Edit")."</span></th>" .
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::displayAdminListHeaderFunctions', $this);
 	}
 	
 	function displayAdminListItem(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::displayAdminListItem', $this, $row);
+		
 		echo
 			"<td>" .
 				"<input type='text' name='orders[".$row['ID']."]' " .
@@ -328,12 +399,22 @@ class _rss {
 					"</a>" .
 				"</div>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::displayAdminListItem', $this, $row);
 	}
 	
 	function displayAdminListItemOptions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::displayAdminListItemOptions', $this, $row);
+		api::callHooks(API_HOOK_AFTER,
+			'rss::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::displayAdminListItemFunctions', $this, $row);
+		
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
@@ -349,17 +430,29 @@ class _rss {
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::displayAdminListItemFunctions', $this, $row);
 	}
 	
 	function displayAdminListFunctions() {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::displayAdminListFunctions', $this);
+		
 		echo 
 			"<input type='submit' name='reordersubmit' value='".
 				htmlspecialchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
 				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::displayAdminListFunctions', $this);
 	}
 	
 	function displayAdminList(&$rows) {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::displayAdminList', $this, $rows);
+		
 		echo
 			"<form action='".url::uri('edit, delete')."' method='post'>";
 		
@@ -410,22 +503,44 @@ class _rss {
 				
 		echo
 			"</form>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::displayAdminList', $this, $rows);
 	}
 	
 	function displayAdminForm(&$form) {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::displayAdminForm', $this, $form);
+		
 		$form->display();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::displayAdminForm', $this, $form);
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::displayAdminTitle', $this, $ownertitle);
+		
 		admin::displayTitle(
 			__('RSS Feeds Administration'),
 			$ownertitle);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::displayAdminTitle', $this, $ownertitle);
 	}
 	
 	function displayAdminDescription() {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::displayAdminDescription', $this);
+		api::callHooks(API_HOOK_AFTER,
+			'rss::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::displayAdmin', $this);
+		
 		$delete = null;
 		$edit = null;
 		$id = null;
@@ -501,11 +616,17 @@ class _rss {
 		
 		echo 
 			"</div>";	//admin-content
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::displayAdmin', $this);
 	}
 	
 	function addFeed($values) {
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::addFeed', $this, $values);
 		
 		if ($values['OrderID'] == '') {
 			$row = sql::fetch(sql::run(
@@ -535,13 +656,14 @@ class _rss {
 			" `OrderID` = '".
 				(int)$values['OrderID']."'");
 		
-		if (!$newid) {
+		if (!$newid)
 			tooltip::display(
 				sprintf(__("Feed couldn't be created! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::addFeed', $this, $values, $newid);
 		
 		return $newid;
 	}
@@ -552,6 +674,9 @@ class _rss {
 		
 		if (!is_array($values))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::editFeed', $this, $id, $values);
 		
 		sql::run(
 			" UPDATE `{rssfeeds}` SET ".
@@ -568,25 +693,34 @@ class _rss {
 				(int)$values['OrderID']."'" .
 			" WHERE `ID` = '".(int)$id."'");
 		
-		if (sql::affected() == -1) {
+		$result = (sql::affected() != -1);
+		
+		if (!$result)
 			tooltip::display(
 				sprintf(__("Feed couldn't be updated! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
-			return false;
-		}
 		
-		return true;
+		api::callHooks(API_HOOK_AFTER,
+			'rss::editFeed', $this, $id, $values, $result);
+		
+		return $result;
 	}
 	
 	function deleteFeed($id) {
 		if (!$id)
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::deleteFeed', $this, $id);
+		
 		sql::run(
 			" DELETE FROM `{rssfeeds}` " .
 			" WHERE `ID` = '".(int)$id."'");
 			
+		api::callHooks(API_HOOK_AFTER,
+			'rss::deleteFeed', $this, $id);
+		
 		return true;
 	}
 	
@@ -594,7 +728,7 @@ class _rss {
 	function getItemID($link = null) {
 		if (!$link)
 			return count($this->items)-1;
-		
+			
 		$itemid = null;
 		
 		foreach($this->items as $itemnum => $item) {
@@ -613,6 +747,9 @@ class _rss {
 	function add($item) {
 		if (!isset($item) || !is_array($item))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::add', $this, $item);
 		
 		if (!isset($item['Title']))
 			$item['Title'] = PAGE_TITLE;
@@ -633,6 +770,12 @@ class _rss {
 			$item['Comments'] = 0;	
 		
 		$this->items[] = $item;
+		$newid = $this->getItemID();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::add', $this, $item, $newid);
+		
+		return $newid;
 	}
 	
 	function edit($link, $item) {
@@ -645,6 +788,9 @@ class _rss {
 		$itemid = $this->getItemID($link);
 		if (!isset($itemid))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::edit', $this, $item, $itemid);
 		
 		if (isset($item['Title']))
 			$this->items[$itemid]['Title'] = $item['Title'];
@@ -664,6 +810,9 @@ class _rss {
 		if (isset($item['Comments']))
 			$this->items[$itemid]['Comments'] = $item['Comments'];
 
+		api::callHooks(API_HOOK_AFTER,
+			'rss::edit', $this, $item, $itemid);
+		
 		return true;
 	}
 	
@@ -675,7 +824,14 @@ class _rss {
 		if (!isset($itemid))
 			return false;
 		
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::delete', $this, $link);
+		
 		array_splice($this->items, $itemid, 1);
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::delete', $this, $link);
+		
 		return true;
 	}
 	
@@ -690,6 +846,9 @@ class _rss {
 		
 		if (!isset($items[1]))
 			return false;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::load', $this, $file);
 		
 		foreach($items[1] as $item) {
 			preg_match_all('/<(title|link|description|pubdate|author|comments)\b[^>]*>(.*?)<\/\1>/is', 
@@ -728,6 +887,9 @@ class _rss {
 			
 			$this->add($loaditem);
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::load', $this, $file);
 	}
 	
 	function save($file = null) {
@@ -736,6 +898,9 @@ class _rss {
 		
 		if (!count($this->items))
 			return files::delete($file);
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::save', $this, $file);
 		
 		$rss =  
 			"<?xml version=\"1.0\" encoding=\"".PAGE_CHARSET."\" ?>\n" .
@@ -782,7 +947,12 @@ class _rss {
 			"	</channel>\n" .
   			"</rss>\n";
   		
-  		return files::save($file, $rss);
+  		$result = files::save($file, $rss);
+  		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::save', $this, $file, $result);
+		
+  		return $result;
 	}
 	
 	function clear() {
@@ -790,12 +960,19 @@ class _rss {
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::ajaxRequest', $this);
+		
 		if (!$GLOBALS['USER']->loginok || 
 			!$GLOBALS['USER']->data['Admin']) 
 		{
 			tooltip::display(
 				__("Request can only be accessed by administrators!"),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'rss::ajaxRequest', $this);
+			
 			return true;
 		}
 		
@@ -813,12 +990,24 @@ class _rss {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
+				
+				api::callHooks(API_HOOK_AFTER,
+					'rss::ajaxRequest', $this);
+				
 				return true;
 			}
 			
 			$this->displayAdminAvailableFeeds();
+			
+			$result = true;
+			api::callHooks(API_HOOK_AFTER,
+				'rss::ajaxRequest', $this, $result);
+			
 			return true;
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::ajaxRequest', $this);
 		
 		return false;
 	}
@@ -829,12 +1018,21 @@ class _rss {
 			" WHERE `Deactivated` = 0" .
 			" ORDER BY `OrderID`, `ID`");
 		
+		if (!sql::rows($rows))
+			return;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'rss::displayFeeds', $this);
+		
 		while ($row = sql::fetch($rows)) {
 			echo
 				"<link rel='alternate' type='application/rss+xml' " .
 					"title='".htmlspecialchars($row['Title'], ENT_QUOTES)."' " .
 					"href='".$row['FeedURL']."' />\n";
 		}
+		
+		api::callHooks(API_HOOK_AFTER,
+			'rss::displayFeeds', $this);
 	}
 }
 

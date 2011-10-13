@@ -16,26 +16,45 @@ class _ckEditorFileManager extends fileManager {
 	var $directLinks = true;
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'ckEditorFileManager::ckEditorFileManager', $this);
+		
 		parent::__construct();
 		
 		$this->rootPath = SITE_PATH.'sitefiles/';
 		$this->uriRequest = "ckeditor/".$this->uriRequest;
+		
+		api::callHooks(API_HOOK_AFTER,
+			'ckEditorFileManager::ckEditorFileManager', $this);
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'ckEditorFileManager::ajaxRequest', $this);
+		
 		if (!$GLOBALS['USER']->loginok || 
 			!$GLOBALS['USER']->data['Admin']) 
 		{
 			tooltip::display(
 				__("Request can only be accessed by administrators!"),
 				TOOLTIP_ERROR);
-			return false;
+			
+			$result = false;
+			
+		} else {
+			$result = parent::ajaxRequest();
 		}
 		
-		return parent::ajaxRequest();
+		api::callHooks(API_HOOK_AFTER,
+			'ckEditorFileManager::ajaxRequest', $this, $result);
+		
+		return $result;
 	}
 	
 	function displayTitle(&$row) {
+		api::callHooks(API_HOOK_BEFORE,
+			'ckEditorFileManager::displayTitle', $this, $row);
+		
 		$ckeditorfuncnum = 1;
 		
 		if (isset($_GET['CKEditorFuncNum']))
@@ -52,14 +71,19 @@ class _ckEditorFileManager extends fileManager {
 					$row['_File'] .
 				"</a>";
 			
-			return;
+		} else {
+			parent::displayTitle($row);
 		}
 		
-		parent::displayTitle($row);
+		api::callHooks(API_HOOK_AFTER,
+			'ckEditorFileManager::displayTitle', $this, $row);
 	}
 	
 	function display() {
 		include_once('lib/userpermissions.class.php');
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'ckEditorFileManager::display', $this);
 		
 		$permission = userPermissions::check(
 			(int)$GLOBALS['USER']->data['ID'],
@@ -80,6 +104,10 @@ class _ckEditorFileManager extends fileManager {
 		
 		if (AJAX_PAGING && isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
 			parent::display();
+			
+			api::callHooks(API_HOOK_AFTER,
+				'ckEditorFileManager::display', $this);
+			
 			return;
 		}
 		
@@ -107,6 +135,9 @@ class _ckEditorFileManager extends fileManager {
 		echo
 			"</body>" .
 			"</html>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'ckEditorFileManager::display', $this);
 	}
 }
 

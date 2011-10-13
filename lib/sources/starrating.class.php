@@ -20,14 +20,23 @@ class _starRating {
 	var $ajaxRequest = null;
 	
 	function __construct() {
+		api::callHooks(API_HOOK_BEFORE,
+			'starRating::starRating', $this);
+		
 		$this->uriRequest = strtolower(get_class($this));
 		
-		if (isset($_GET[strtolower($this->sqlRow)]))
-			$this->selectedOwnerID = (int)$_GET[strtolower($this->sqlRow)];
+		if (isset($_GET['r'.strtolower($this->sqlRow)]))
+			$this->selectedOwnerID = (int)$_GET['r'.strtolower($this->sqlRow)];
+		
+		api::callHooks(API_HOOK_AFTER,
+			'starRating::starRating', $this);
 	}
 	
 	// ************************************************   Client Part
 	function verify() {
+		api::callHooks(API_HOOK_BEFORE,
+			'starRating::verify', $this);
+		
 		$rate = null;
 		
 		if (isset($_POST['rate']))
@@ -40,6 +49,9 @@ class _starRating {
 			tooltip::display(
 					__("Only registered users can rate."),
 					TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'starRating::verify', $this);
 			
 			return false;
 		}
@@ -57,6 +69,9 @@ class _starRating {
 				sprintf(__("You already rated this %s."), $this->selectedOwner),
 				TOOLTIP_ERROR);
 			
+			api::callHooks(API_HOOK_AFTER,
+				'starRating::verify', $this);
+			
 			return false;
 		}
 		
@@ -72,11 +87,17 @@ class _starRating {
 				security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'," .
 			" `TimeStamp` = NOW()");
 		
-		if (!sql::affected()) {
+		$result = sql::affected();
+		
+		if (!$result) {
 			tooltip::display(
 				sprintf(__("Rating couldn't be stored! Error: %s"), 
 					sql::error()),
 				TOOLTIP_ERROR);
+			
+			api::callHooks(API_HOOK_AFTER,
+				'starRating::verify', $this);
+			
 			return false;
 		}
 		
@@ -99,10 +120,16 @@ class _starRating {
 			__("Thank you for your vote."),
 			TOOLTIP_SUCCESS);
 		
+		api::callHooks(API_HOOK_AFTER,
+			'starRating::verify', $this, $result);
+		
 		return true;
 	}
 	
 	function ajaxRequest() {
+		api::callHooks(API_HOOK_BEFORE,
+			'starRating::ajaxRequest', $this);
+		
 		$selectedowner = sql::fetch(sql::run(
 			" SELECT `EnableGuestRating` FROM `{" .$this->sqlOwnerTable . "}`" .
 			" WHERE `ID` = '".$this->selectedOwnerID."'"));
@@ -110,11 +137,18 @@ class _starRating {
 		if ($selectedowner['EnableGuestRating'])
 			$this->guestRating = true;
 		
-		$this->verify();
+		$result = $this->verify();
+		
+		api::callHooks(API_HOOK_AFTER,
+			'starRating::ajaxRequest', $this, $result);
+		
 		return true;
 	}
 	
 	function display() {
+		api::callHooks(API_HOOK_BEFORE,
+			'starRating::display', $this);
+		
 		$owner = sql::fetch(sql::run(
 			" SELECT * FROM `{" .$this->sqlOwnerTable. "}`" .
 			" WHERE `ID` = '".$this->selectedOwnerID."'" .
@@ -130,10 +164,13 @@ class _starRating {
 				htmlspecialchars(sprintf(__("Your vote: %s (votes: %s, average: %s out of %s)"),
 					'0', $ratings['Total'], $owner['Rating'], 10), ENT_QUOTES)."' " .
 				"data='".$owner['Rating']."' " .
-				"data-url='".url::uri(strtolower(get_class($this)).', rate, request, ajax').
+				"data-url='".url::uri(strtolower(get_class($this)).', '.strtolower('r'.$this->sqlRow).', rate, request, ajax').
 					"&amp;request=".$this->uriRequest .
-					"&amp;".strtolower($this->sqlRow)."=".$this->selectedOwnerID."" .
+					"&amp;".strtolower('r'.$this->sqlRow)."=".$this->selectedOwnerID."" .
 					"&amp;ajax=1'></div>";
+		
+		api::callHooks(API_HOOK_AFTER,
+			'starRating::display', $this);
 	}
 }
 
