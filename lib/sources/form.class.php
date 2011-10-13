@@ -1318,10 +1318,14 @@ class _form {
 				else
 					$value = $values[$element['Name']];
 		
-				if ($element['Type'] == FORM_INPUT_TYPE_EDITOR)
+				if ($element['ValueType'] != FORM_VALUE_TYPE_HTML)
+					$value = htmlspecialchars($value);
+				
+				if ($element['Type'] == FORM_INPUT_TYPE_EDITOR) {
 					echo 
 						$value;
-				else
+					
+				} else {
 					echo
 						"<div class='form-entry-title'>" .
 						$element['Title'].":" .
@@ -1329,20 +1333,22 @@ class _form {
 						"<div class='form-entry-content'>" .
 							"<b>";
 				
-				if (isset($element['AdditionalPreText']) && $element['AdditionalPreText'])
-					echo $element['AdditionalPreText']." ";
+					if (isset($element['AdditionalPreText']) && $element['AdditionalPreText'])
+						echo $element['AdditionalPreText']." ";
+						
+					if ($element['Type'] == FORM_INPUT_TYPE_TEXTAREA &&
+						$element['ValueType'] != FORM_VALUE_TYPE_HTML)
+						echo nl2br($value);
+					else
+						echo $value;
 					
-				if ($element['Type'] == FORM_INPUT_TYPE_TEXTAREA)
-					echo nl2br($value);
-				else
-					echo $value;
+					if (isset($element['AdditionalText']) && $element['AdditionalText'])
+						echo " ".$element['AdditionalText'];
 				
-				if (isset($element['AdditionalText']) && $element['AdditionalText'])
-					echo " ".$element['AdditionalText'];
-				
-				echo
+					echo
 							"</b>" .
 						"</div>";
+				}
 		
 			} elseif ($element['Type'] == FORM_STATIC_TEXT) {
 				echo 
