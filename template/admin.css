@@ -147,7 +147,7 @@
 }
 
 .admin-section-item {
-	width: 60px;
+	width: 65px;
 	float:left;
 	height: 85px;
 	margin: 5px;
@@ -171,7 +171,7 @@
 .as-content-pages,
 .as-content-menuitems
 {
-	width: 80px;
+	width: 75px;
 }
 
 .as-content-pages a,
@@ -182,6 +182,10 @@
 
 .as-content-postsatglance a {
 	background-image: url("http://icons.jcore.net/48/postsatglance.png");
+}
+
+.as-content-commentsatglance a {
+	background-image: url("http://icons.jcore.net/48/internet-group-chat.png");
 }
 
 .as-content-ads a {
@@ -256,16 +260,8 @@
 	background-image: url("http://icons.jcore.net/48/favorite-links.png");
 }
 
-.as-site-notificationemails {
-	width: 70px;
-}
-
 .as-site-notificationemails a {
 	background-image: url("http://icons.jcore.net/48/notification-emails.png");
-}
-
-.as-site-languages {
-	width: 70px;
 }
 
 .as-site-languages a {

@@ -71,7 +71,7 @@ class _comments {
 	var $sqlOwnerCountField = 'Comments';
 	var $selectedOwner;
 	var $guestComments = false;
-	var $defaultRating = 8;
+	var $defaultRating = 7;
 	var $uriRequest;
 	var $commentURL;
 	var $format = null;
@@ -93,8 +93,8 @@ class _comments {
 		if ($this->sqlRow && isset($_GET[strtolower($this->sqlRow)]))
 			$this->selectedOwnerID = (int)$_GET[strtolower($this->sqlRow)];
 		
-		if (JCORE_VERSION >= '0.6')
-			$this->defaultRating = 7;
+		if (JCORE_VERSION < '0.6')
+			$this->defaultRating = 8;
 		
 		if (PAGINATED_COMMENTS) {
 			$this->limit = COMMENTS_PER_PAGE;
@@ -161,6 +161,24 @@ class _comments {
 	}
 	
 	// ************************************************   Admin Part
+	function countAdminItems() {
+		if (!$this->sqlTable)
+			return 0;
+		
+		api::callHooks(API_HOOK_BEFORE,
+			'comments::countAdminItems', $this);
+		
+		$row = sql::fetch(sql::run(
+			" SELECT COUNT(*) AS `Rows`" .
+			" FROM `{".$this->sqlTable."}`" .
+			" LIMIT 1"));
+		
+		api::callHooks(API_HOOK_AFTER,
+			'comments::countAdminItems', $this, $row['Rows']);
+		
+		return $row['Rows'];
+	}
+	
 	function setupAdmin() {
 		api::callHooks(API_HOOK_BEFORE,
 			'comments::setupAdmin', $this);
@@ -521,10 +539,10 @@ class _comments {
 						"disabled='disabled' ":
 						null) .
 					" />" .
-				"#".$row['ID']."<br />" .
-				($row['SubCommentOfID']?
+				"#".(int)$row['ID']."<br />" .
+				((int)$row['SubCommentOfID']?
 					"<span class='comment'>&nbsp; &#8594; #" .
-						$row['SubCommentOfID'] .
+						(int)$row['SubCommentOfID'] .
 					"</span>":
 					null) .
 				"</span>" .
@@ -571,6 +589,11 @@ class _comments {
 		$this->displayIsPending($row);
 		
 		echo
+				" (<a href='".url::uri('edit')."#adminform' " .
+					"onclick=\"jQuery('#entrySubCommentOfID').val('".$row['ID']."');\" " .
+					"class='comment'>" .
+					__("Reply") .
+				"</a>)" .
 				"</div>" .
 				"</div>" .
 			"</td>";
@@ -639,16 +662,33 @@ class _comments {
 			'comments::displayAdminListSearch', $this);
 		
 		$search = null;
+		$searchtype = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags((string)$_GET['search']));
+		
+		if (isset($_GET['searchtype']))
+			$searchtype = (int)$_GET['searchtype'];
 		
 		echo
 			"<input type='hidden' name='path' value='".admin::path()."' />" .
 			"<input type='search' name='search' value='".
 				htmlspecialchars($search, ENT_QUOTES).
 				"' results='5' placeholder='" .
-					htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
+					htmlspecialchars(__("search..."), ENT_QUOTES)."' /> ";
+		
+		if (defined('MODERATED_COMMENTS') && MODERATED_COMMENTS)
+			echo
+				"<select name='searchtype' onchange='this.form.submit();'>" .
+					"<option value=''>" .
+						__("All")."</option>" .
+					"<option value='1'".($searchtype == 1?" selected='selected'":null).">" .
+						__("Pending")."</option>" .
+					"<option value='2'".($searchtype == 2?" selected='selected'":null).">" .
+						__("Approved")."</option>" .
+				"</select> ";
+		
+		echo
 			"<input type='submit' value='" .
 				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
 		
@@ -773,6 +813,9 @@ class _comments {
 	
 	function displayAdmin() {
 		if (!$this->sqlTable) {
+			echo
+				"<br />";
+			
 			tooltip::display(
 				__("Storage table not defined."),
 				TOOLTIP_NOTIFICATION);
@@ -784,12 +827,16 @@ class _comments {
 			'comments::displayAdmin', $this);
 		
 		$search = null;
+		$searchtype = null;
 		$delete = null;
 		$edit = null;
 		$id = null;
 		
 		if (isset($_GET['search']))
 			$search = trim(strip_tags((string)$_GET['search']));
+		
+		if (isset($_GET['searchtype']))
+			$searchtype = (int)$_GET['searchtype'];
 		
 		if (isset($_GET['delete']))
 			$delete = (int)$_GET['delete'];
@@ -863,6 +910,9 @@ class _comments {
 				($this->sqlRow?
 					" AND `".$this->sqlRow."` = '".$this->selectedOwnerID."'":
 					null) .
+				($searchtype?
+					" AND `Pending` = '".($searchtype == 1?1:0)."'":
+					null) .
 				($search?
 					sql::search(
 						$search,
@@ -928,6 +978,7 @@ class _comments {
 		if (!is_array($values))
 			return false;
 		
+		$values[$this->sqlRow] = $this->selectedOwnerID;
 		$values['Comment'] = url::parseLinks(
 			security::closeTags($values['Comment']));
 		
@@ -1001,7 +1052,7 @@ class _comments {
 				"CommentBy" => $values['UserName'],
 				"CommentBody" => $values['Comment'],
 				"CommentURL" => str_replace('&amp;', '&', 
-					$this->commentURL)."#comment".(int)$newid);
+					$this->getCommentURL($values))."#comment".(int)$newid);
 		
 		$selectedowner = null;
 		
@@ -1091,6 +1142,8 @@ class _comments {
 		api::callHooks(API_HOOK_BEFORE,
 			'comments::edit', $this, $id, $values);
 		
+		$comment = $this->get($id);
+		
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}` SET ".
 			" `TimeStamp` = `TimeStamp`, " .
@@ -1128,12 +1181,12 @@ class _comments {
 				"CommentBy" => $values['UserName'],
 				"CommentBody" => $values['Comment'],
 				"CommentURL" => str_replace('&amp;', '&', 
-					$this->commentURL)."#comment".(int)$id);
+					$this->getCommentURL($comment))."#comment".(int)$id);
 			
 			if ($this->sqlOwnerTable) {
 				$selectedowner = sql::fetch(sql::run(
 					" SELECT `".$this->sqlOwnerField."` FROM `{" .$this->sqlOwnerTable . "}`" .
-					" WHERE `ID` = '".$this->selectedOwnerID."'"));
+					" WHERE `ID` = '".$comment[$this->sqlRow]."'"));
 				
 				$email->variables["CommentSectionTitle"] = 
 						$selectedowner[$this->sqlOwnerField];
@@ -1156,6 +1209,8 @@ class _comments {
 		api::callHooks(API_HOOK_BEFORE,
 			'comments::delete', $this, $id);
 		
+		$comment = $this->get($id);
+		
 		foreach($this->getSubComments($id) as $subcomment)
 			sql::run(
 				" DELETE FROM `{".$this->sqlTable."}` " .
@@ -1168,42 +1223,19 @@ class _comments {
 		if ($this->sqlOwnerTable) {
 			$row = sql::fetch(sql::run(
 				" SELECT COUNT(`ID`) AS `Rows` FROM `{".$this->sqlTable . "}`" .
-				" WHERE `".$this->sqlRow."` = '".$this->selectedOwnerID."'"));
+				" WHERE `".$this->sqlRow."` = '".$comment[$this->sqlRow]."'"));
 			
 			sql::run(
 				" UPDATE `{".$this->sqlOwnerTable . "}`" .
 				" SET `".$this->sqlOwnerCountField."` = '".(int)$row['Rows']."'," .
 				" `TimeStamp` = `TimeStamp` " .
-				" WHERE `ID` = '".$this->selectedOwnerID."'");
+				" WHERE `ID` = '".$comment[$this->sqlRow]."'");
 		}
 					
 		api::callHooks(API_HOOK_AFTER,
 			'comments::delete', $this, $id);
 		
 		return true;
-	}
-	
-	function getSubComments($commentid = 0, $firstcall = true,
-		&$tree = array('Tree' => array(), 'PathDeepnes' => 0)) 
-	{
-		$rows = sql::run(
-			" SELECT * FROM `{".$this->sqlTable."}` " .
-			($commentid?
-				" WHERE `SubCommentOfID` = '".$commentid."'":
-				" WHERE `SubCommentOfID` = 0") .
-			" ORDER BY `ID`");
-		
-		while($row = sql::fetch($rows)) {
-			$row['PathDeepnes'] = $tree['PathDeepnes'];
-			$tree['Tree'][] = $row;
-			
-			$tree['PathDeepnes']++;
-			$this->getSubComments($row['ID'], false, $tree);
-			$tree['PathDeepnes']--;
-		}
-		
-		if ($firstcall)
-			return $tree['Tree'];
 	}
 	
 	function decline($id) {
@@ -1263,9 +1295,7 @@ class _comments {
 				return $result;
 			}
 			
-			$comment = sql::fetch(sql::run(
-				" SELECT * FROM `{".$this->sqlTable."}` " .
-				" WHERE `ID` = '".(int)$id."'"));
+			$comment = $this->get($id);
 			
 			$email = new email();
 			$email->variables = array(
@@ -1274,14 +1304,14 @@ class _comments {
 				"CommentBy" => $comment['UserName'],
 				"CommentBody" => $comment['Comment'],
 				"CommentURL" => str_replace('&amp;', '&', 
-					$this->commentURL)."#comment".(int)$id);
+					$this->getCommentURL($comment))."#comment".(int)$id);
 			
 			$selectedowner = null;
 			
 			if ($this->sqlOwnerTable) {
 				$selectedowner = sql::fetch(sql::run(
 					" SELECT * FROM `{" .$this->sqlOwnerTable . "}`" .
-					" WHERE `ID` = '".$this->selectedOwnerID."'"));
+					" WHERE `ID` = '".$comment[$this->sqlRow]."'"));
 				
 				$email->variables["CommentSectionTitle"] = 
 					$selectedowner[$this->sqlOwnerField];
@@ -1333,6 +1363,38 @@ class _comments {
 	}
 	
 	// ************************************************   Client Part
+	function get($id) {
+		if (!$id)
+			return false;
+		
+		return sql::fetch(sql::run(
+			" SELECT * FROM `{".$this->sqlTable."}` " .
+			" WHERE `ID` = '".(int)$id."'"));
+	}
+	
+	function getSubComments($commentid = 0, $firstcall = true,
+		&$tree = array('Tree' => array(), 'PathDeepnes' => 0)) 
+	{
+		$rows = sql::run(
+			" SELECT * FROM `{".$this->sqlTable."}` " .
+			($commentid?
+				" WHERE `SubCommentOfID` = '".$commentid."'":
+				" WHERE `SubCommentOfID` = 0") .
+			" ORDER BY `ID`");
+		
+		while($row = sql::fetch($rows)) {
+			$row['PathDeepnes'] = $tree['PathDeepnes'];
+			$tree['Tree'][] = $row;
+			
+			$tree['PathDeepnes']++;
+			$this->getSubComments($row['ID'], false, $tree);
+			$tree['PathDeepnes']--;
+		}
+		
+		if ($firstcall)
+			return $tree['Tree'];
+	}
+	
 	static function getCommentURL($comment = null) {
 		$url = url::get();
 		

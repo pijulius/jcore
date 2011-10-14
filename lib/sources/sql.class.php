@@ -35,22 +35,6 @@ class _sql {
 			"'");
 	}
 	
-	static function mtimetosec($current, $start) {
-		$exp_current = explode(" ", $current);
-		$exp_start = explode(" ", $start);
-		
-		if (!isset($exp_current[1]))
-			$exp_current[1] = 0;
-		
-		if (!isset($exp_start[1]))
-			$exp_start[1] = 0;
-		
-		$msec = $exp_current[0] - $exp_start[0];
-		$sec = $exp_current[1] - $exp_start[1];
-		
-		return number_format($sec+$msec, 5);
-	}
-
 	static function connect($host, $user, $pass) {
 		sql::$link = @mysql_connect($host, $user, $pass);
 		return sql::$link;
@@ -114,25 +98,29 @@ class _sql {
 	}
 	
 	static function run($query, $debug = false) {
-		if (!trim($query))
+		if (!$query = trim($query))
 			return false;
 		
+		$explains = null;
 		$optimization = false;
-		if (DEBUG &&
-			preg_match('/^ *?SELECT.*?WHERE/i', $query) && !preg_match('/`\{TMP[a-zA-Z0-9]+\}`/', $query) &&
-			$explains = @mysql_query('EXPLAIN '.sql::prefixTable($query), sql::$link))
+		sql::$lastQuery = $query;
+		
+		if (DEBUG && 
+			stripos($query, 'SELECT') === 0 &&
+			stripos($query, 'WHERE') !== false &&
+			stripos($query, '`{TMP') === false)
 		{
-			$explain = sql::fetch($explains);
-			if (!$explain['key'] && !$explain['possible_keys'] && 
-				!in_array($explain['Extra'], array(
+			$explains = sql::fetch(@mysql_query(
+				' EXPLAIN '.sql::prefixTable($query), sql::$link));
+			
+			if ($explains && !$explains['key'] && !$explains['possible_keys'] && 
+				!in_array($explains['Extra'], array(
 					'Impossible WHERE noticed after reading const tables',
 					'Select tables optimized away')))
 				$optimization = true;
 		}
 		
-		sql::$lastQuery = $query;
-		
-		if ($optimization || $debug || sql::$debug)
+		if ($debug || sql::$debug || $optimization)
 			$time_start = microtime(true);
 	
 		if (!sql::$link) 
@@ -141,30 +129,20 @@ class _sql {
 		$query = sql::prefixTable($query);
 	    $result = @mysql_query($query, sql::$link);
 	    
-		if ($optimization || $debug || sql::$debug) {
-			sql::$lastQueryTime = sql::mtimetosec(microtime(true), $time_start);
-			
-			if ($optimization) 
-				ob_start();
-			
-			sql::display();
-			
-			if ($optimization) {
-				$sqlexplain = ob_get_contents();
-				ob_end_clean();
-				
-				debug::log('SQL Optimization', $sqlexplain);
-			}
-			
-		} elseif (!$result && !sql::$quiet) {
+	    if (!$result && !sql::$quiet) {
 	    	if (mysql_errno(sql::$link) == 1146 && !headers_sent())
 	    		sql::fatalError(sql::error());
 	    	
 			sql::displayError();
 	    	return false;
 	    }
+	    
+		if ($debug || sql::$debug || $optimization) {
+			sql::$lastQueryTime = microtime(true)-$time_start;
+			sql::display(false, $explains, (DEBUG && !$debug && !sql::$debug));
+		}
 		
-		if (preg_match('/^ *?INSERT/i', $query)) 
+		if (stripos($query, 'INSERT') === 0) 
 			$result = mysql_insert_id(sql::$link);
 		
 		return $result;
@@ -447,26 +425,30 @@ class _sql {
 		return $error;
 	}
 	
-	static function display($quiet = false) {
+	static function display($quiet = false, $explains = null, $debuglogging = false) {
 		$error = sql::error();
 		if ($quiet)
 			return $error;
 		
+		if (!$error && !$explains && stripos(sql::$lastQuery, 'SELECT') === 0)
+			$explains = sql::fetch(@mysql_query(
+				' EXPLAIN '.sql::prefixTable(sql::$lastQuery), sql::$link));
+		
+		if ($debuglogging)
+			ob_start();
+		
 		api::callHooks(API_HOOK_BEFORE,
 			'sql::display', $_ENV);
 		
-		echo 
+		echo
 			"<p class='sql-query'>" .
 				"<code>".
 					htmlspecialchars(sql::$lastQuery).";<br />";
 		
-		if (!$error && preg_match('/^ *?SELECT/i', sql::$lastQuery) &&
-			$explains = @mysql_query('EXPLAIN '.sql::prefixTable(sql::$lastQuery), sql::$link))
-		{
+		if ($explains) {
 			echo
-						"<span class='comment'><b>EXPLAIN</b>: ";
+				"<span class='comment'><b>EXPLAIN</b>: ";
 			
-			$explains = sql::fetch($explains);
 			foreach($explains as $key => $explain) {
 				if ($key == 'id' || $key == 'table')
 					continue;
@@ -475,7 +457,7 @@ class _sql {
 			}
 			
 			echo
-					"</span>";
+				"</span>";
 		}
 		
 		echo
@@ -495,13 +477,18 @@ class _sql {
 					(sql::$lastQueryTime?
 						", " .
 						sprintf(__("query took: %s seconds"), 
-							sql::$lastQueryTime):
+							number_format(sql::$lastQueryTime, 5)):
 						null).
 					")";
 		
 		echo
 				"</br>" .
 			"</p>";
+		
+		if ($debuglogging) {
+			debug::log('SQL Optimization', ob_get_contents());
+			ob_end_clean();
+		}
 		
 		api::callHooks(API_HOOK_AFTER,
 			'sql::display', $_ENV, $error);

@@ -31,7 +31,7 @@ class _debug {
 	}
 	
 	static function end() {
-		debug::$runtime = sql::mtimetosec(microtime(true), debug::$runtime);
+		debug::$runtime = number_format(microtime(true)-debug::$runtime, 5);
 		debug::parse();
 	}
 	

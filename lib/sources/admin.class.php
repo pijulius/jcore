@@ -15,6 +15,7 @@ if (!defined('ADMIN_ITEMS_COUNTER_ENABLED'))
 include_once('lib/modules.class.php');
 include_once('lib/ads.class.php');
 include_once('lib/postsatglance.class.php');
+include_once('lib/commentsatglance.class.php');
 include_once('lib/postshandling.class.php');
 include_once('lib/contentfiles.class.php');
 include_once('lib/dynamicformdata.class.php');
@@ -140,15 +141,16 @@ class _admin {
 					"<span>".__("Posts at Glance")."</span>" .
 				"</a>");
 		
-		$this->add('Content', 'Ads', 
-			"<a href='".url::uri('ALL')."?path=admin/content/ads' " .
-				"title='".
-					htmlspecialchars(
-						__("Upload / Add advertisements"), 
-						ENT_QUOTES).
-				"'>" .
-				"<span>".htmlspecialchars(__("Ads & Banners"))."</span>" .
-			"</a>");
+		if (JCORE_VERSION >= '1.0')
+			$this->add('Content', 'CommentsAtGlance', 
+				"<a href='".url::uri('ALL')."?path=admin/content/commentsatglance' " .
+					"title='".
+						htmlspecialchars(
+							__("Quickly moderate / manage comments"), 
+							ENT_QUOTES).
+					"'>" .
+					"<span>".__("Comments at Glance")."</span>" .
+				"</a>");
 		
 		$this->add('Content', 'DynamicForms', 
 			"<a href='".url::uri('ALL')."?path=admin/content/dynamicforms' " .
@@ -181,6 +183,16 @@ class _admin {
 					"<span>".__("File Manager")."</span>" .
 				"</a>");
 		}
+		
+		$this->add('Content', 'Ads', 
+			"<a href='".url::uri('ALL')."?path=admin/content/ads' " .
+				"title='".
+					htmlspecialchars(
+						__("Upload / Add advertisements"), 
+						ENT_QUOTES).
+				"'>" .
+				"<span>".htmlspecialchars(__("Ads & Banners"))."</span>" .
+			"</a>");
 		
 		$this->add('Site', 'Settings', 
 			"<a href='".url::uri('ALL')."?path=admin/site/settings' " .

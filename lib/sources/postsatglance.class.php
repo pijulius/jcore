@@ -10,10 +10,12 @@
  ****************************************************************************/
 
 class _postsAtGlance extends posts {
+	var $adminPath = 'admin/content/postsatglance';
+	
 	// ************************************************   Admin Part
 	function countAdminItems() {
 		api::callHooks(API_HOOK_BEFORE,
-			'postsAtGlance::postsAtGlance', $this);
+			'postsAtGlance::countAdminItems', $this);
 		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
@@ -21,7 +23,7 @@ class _postsAtGlance extends posts {
 			" LIMIT 1"));
 		
 		api::callHooks(API_HOOK_AFTER,
-			'postsAtGlance::postsAtGlance', $this, $row['Rows']);
+			'postsAtGlance::countAdminItems', $this, $row['Rows']);
 		
 		return $row['Rows'];
 	}
