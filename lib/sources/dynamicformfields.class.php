@@ -356,8 +356,8 @@ class _dynamicFormFields {
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -402,6 +402,12 @@ class _dynamicFormFields {
 				api::callHooks(API_HOOK_AFTER,
 					'dynamicFormFields::verifyAdmin', $this, $form);
 				
+				return false;
+			}
+			
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'comments::verifyAdmin', $this, $form);
 				return false;
 			}
 			
@@ -844,6 +850,15 @@ class _dynamicFormFields {
 				'dynamicFormFields::displayAdmin', $this);
 			
 			return;
+		}
+		
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `Title` FROM `{dynamicformfields}`" .
+				" WHERE `ID` = '".$id."'"));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
 		
 		$form = new form(

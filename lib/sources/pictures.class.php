@@ -362,8 +362,8 @@ class _pictures {
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -397,6 +397,12 @@ class _pictures {
 		}
 		
 		if ($delete) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'pictures::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->delete($id);
 			
 			if ($result)
@@ -966,6 +972,15 @@ class _pictures {
 		echo
 			"<div class='admin-content'>";
 				
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `Title` FROM `{".$this->sqlTable."}`" .
+				" WHERE `ID` = '".$id."'"));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
+		}
+		
 		$form = new form(
 				($edit?
 					__("Edit Picture"):

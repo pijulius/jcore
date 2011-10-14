@@ -174,8 +174,8 @@ class shoppingCartDiscounts {
 		if (isset($_POST['priorities']))
 			$priorities = (array)$_POST['priorities'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -202,6 +202,9 @@ class shoppingCartDiscounts {
 		}
 		
 		if ($delete) {
+			if (!security::checkToken())
+				return false;
+			
 			if (!$this->delete($id))
 				return false;
 				
@@ -478,6 +481,15 @@ class shoppingCartDiscounts {
 		echo
 			"<div class='admin-content'>";
 				
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `DiscountPercent` FROM `{shoppingcartdiscounts}`" .
+				" WHERE `ID` = '".$id."'"));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.$selected['DiscountPercent'].'%"');
+		}
+		
 		$form = new form(
 				($edit?
 					_("Edit Discount"):
@@ -935,8 +947,8 @@ class shoppingCartFees {
 		if (isset($_POST['priorities']))
 			$priorities = (array)$_POST['priorities'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -963,6 +975,9 @@ class shoppingCartFees {
 		}
 		
 		if ($delete) {
+			if (!security::checkToken())
+				return false;
+			
 			if (!$this->delete($id))
 				return false;
 				
@@ -1376,6 +1391,15 @@ class shoppingCartFees {
 		echo
 			"<div class='admin-content'>";
 				
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `Fee` FROM `{shoppingcartfees}`" .
+				" WHERE `ID` = '".$id."'"));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.shoppingCart::constructPrice($selected['Fee']).'"');
+		}
+		
 		$form = new form(
 				($edit?
 					_("Edit Fee"):
@@ -1750,8 +1774,8 @@ class shoppingCartTaxes {
 		if (isset($_POST['priorities']))
 			$priorities = (array)$_POST['priorities'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -1778,6 +1802,9 @@ class shoppingCartTaxes {
 		}
 		
 		if ($delete) {
+			if (!security::checkToken())
+				return false;
+			
 			if (!$this->delete($id))
 				return false;
 				
@@ -2107,6 +2134,15 @@ class shoppingCartTaxes {
 		echo
 			"<div class='admin-content'>";
 				
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `Tax` FROM `{shoppingcarttaxes}`" .
+				" WHERE `ID` = '".$id."'"));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.$selected['Tax'].'%"');
+		}
+		
 		$form = new form(
 				($edit?
 					_("Edit Tax"):
@@ -2470,8 +2506,8 @@ class shoppingCartCoupons {
 		if (isset($_POST['priorities']))
 			$priorities = (array)$_POST['priorities'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -2498,6 +2534,9 @@ class shoppingCartCoupons {
 		}
 		
 		if ($delete) {
+			if (!security::checkToken())
+				return false;
+			
 			if (!$this->delete($id))
 				return false;
 				
@@ -2752,6 +2791,15 @@ class shoppingCartCoupons {
 		echo
 			"<div class='admin-content'>";
 				
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `Coupon` FROM `{shoppingcartcoupons}`" .
+				" WHERE `ID` = '".$id."'"));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.$selected['Coupon'].'"');
+		}
+		
 		$form = new form(
 				($edit?
 					_("Edit Coupon"):

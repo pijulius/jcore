@@ -151,8 +151,8 @@ class _userPermissions {
 		$edit = null;
 		$id = null;
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -161,6 +161,12 @@ class _userPermissions {
 			$id = (int)$_GET['id'];
 		
 		if ($delete) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'userPermissions::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->delete($id);
 			
 			if ($result)
@@ -612,6 +618,15 @@ class _userPermissions {
 		
 		echo
 			"<div class='admin-content'>";
+		
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `Path` FROM `{".$this->sqlTable."}`" .
+				" WHERE `ID` = '".$id."'"));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.$selected['Path'].'"');
+		}
 		
 		$form = new form(
 				($edit?

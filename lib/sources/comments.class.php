@@ -273,8 +273,8 @@ class _comments {
 		if (isset($_GET['approve']))
 			$approve = (int)$_GET['approve'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -423,6 +423,12 @@ class _comments {
 		}
 		
 		if ($delete) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'comments::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->delete($id);
 			
 			if ($result)
@@ -888,6 +894,15 @@ class _comments {
 		echo
 			"<div class='admin-content'>";
 				
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `Comment` FROM `{".$this->sqlTable."}`" .
+				" WHERE `ID` = '".$id."'"));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.comments::generateTeaser($selected['Comment']).'"');
+		}
+		
 		$form = new form(
 				($edit?
 					__("Edit Comment"):

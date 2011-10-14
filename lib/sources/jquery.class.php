@@ -227,9 +227,6 @@ class _jQuery {
 				@file_get_contents('lib/jquery/jquery.js', 
 					FILE_USE_INCLUDE_PATH)."\n";
 		
-		echo
-			"var JCORE_VERSION = '".JCORE_VERSION."';";
-		
 		if (JCORE_VERSION >= '0.5') {
 			$modules = sql::run(
 				" SELECT `Name`" .
@@ -417,6 +414,12 @@ class _jQuery {
 			if ($tfilemtime > $filemtime)
 				$filemtime = $tfilemtime;
 		}
+		
+		echo
+			"<script type='text/javascript'>\n" .
+			"var JCORE_VERSION = '".JCORE_VERSION."';\n" .
+			"var JCORE_SECURITY_TOKEN = '".security::genToken()."';\n" .
+			"</script>\n";
 		
 		if (JCORE_VERSION >= '0.6')
 			echo 

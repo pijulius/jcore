@@ -411,8 +411,8 @@ class _users {
 		if (isset($_POST['deletesubmit']))
 			$delete = (string)$_POST['deletesubmit'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -517,6 +517,12 @@ class _users {
 		}
 			
 		if ($delete) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'users::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->delete($id, $groupids);
 			
 			if ($result)
@@ -1090,9 +1096,9 @@ class _users {
 		$selected = null;
 		$verifyok = false;
 		
-		if ($id)
+		if ($id) {
 			$selected = sql::fetch(sql::run(
-				" SELECT `ID` FROM `{users}`" .
+				" SELECT `ID`, `UserName` FROM `{users}`" .
 				" WHERE `ID` = '".$id."'" .
 				($this->userPermissionIDs?
 					" AND `ID` IN (".$this->userPermissionIDs.")":
@@ -1103,6 +1109,11 @@ class _users {
 				($groupids?
 					" AND `GroupID` IN (".implode(',', (array)$groupids).")":
 					null)));
+			
+			if ($delete && $id && empty($_POST['delete']))
+				security::displayConfirmation(
+					'<b>'.__('Delete').'?!</b> "'.$selected['UserName'].'"');
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			((!$edit && !$delete) || $selected))

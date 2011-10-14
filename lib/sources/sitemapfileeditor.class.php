@@ -18,12 +18,16 @@ class _sitemapFileEditor extends fileEditor {
 		
 		$form->add(
 			__("Regenerate"),
-			'regenerate',
+			'regeneratesubmit',
 			FORM_INPUT_TYPE_BUTTON);
 		
 		$form->addAttributes(
-			"onclick=\"window.location='".url::uri('regenerate') .
-				"&amp;regenerate=1'\"");
+			"onclick=\"this.form.regenerate.value=1;this.form.submit();\"");
+		
+		$form->add(
+			__("Regenerate"),
+			'regenerate',
+			FORM_INPUT_TYPE_HIDDEN);
 		
 		parent::displayForm($form);
 		

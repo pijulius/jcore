@@ -151,8 +151,8 @@ class _rss {
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -185,6 +185,12 @@ class _rss {
 		}
 		
 		if ($delete && $id) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'rss::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->deleteFeed($id);
 			
 			if ($result)
@@ -567,6 +573,15 @@ class _rss {
 		echo
 			"<div class='admin-content'>";
 				
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `Title` FROM `{rssfeeds}`" .
+				" WHERE `ID` = '".$id."'"));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
+		}
+		
 		$form = new form(
 				($edit?
 					__("Edit RSS Feed"):

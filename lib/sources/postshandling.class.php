@@ -24,8 +24,8 @@ class _postsHandling {
 		$ids = null;
 		$topageid = null;
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_POST['copysubmit']))
 			$copy = (string)$_POST['copysubmit'];
@@ -43,6 +43,12 @@ class _postsHandling {
 			$topageid = (int)$_POST['topageid'];
 		
 		if ($delete) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'postsHandling::verifyAdmin', $this);
+				return false;
+			}
+			
 			$result = $this->delete($id);
 			
 			if ($result)
@@ -566,9 +572,17 @@ class _postsHandling {
 		api::callHooks(API_HOOK_BEFORE,
 			'postsHandling::displayAdmin', $this);
 		
+		$delete = null;
+		$id = null;
 		$pageid = null;
 		$search = null;
 		
+		if (isset($_GET['delete']))
+			$delete = (int)$_GET['delete'];
+		
+		if (isset($_GET['id']))
+			$id = (int)$_GET['id'];
+			
 		if (isset($_GET['search']))
 			$search = trim(strip_tags((string)$_GET['search']));
 		
@@ -590,6 +604,15 @@ class _postsHandling {
 		
 		echo
 			"<div class='admin-content'>";
+		
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `Title` FROM `{posts}`" .
+				" WHERE `ID` = '".$id."'"));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->verifyAdmin();

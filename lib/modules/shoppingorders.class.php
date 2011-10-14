@@ -3211,8 +3211,8 @@ class shoppingOrders extends modules {
 		$edit = null;
 		$id = null;
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -3221,6 +3221,9 @@ class shoppingOrders extends modules {
 			$id = (int)$_GET['id'];
 		
 		if ($delete) {
+			if (!security::checkToken())
+				return false;
+			
 			if (!$this->delete($id))
 				return false;
 				
@@ -3988,9 +3991,9 @@ class shoppingOrders extends modules {
 		$selected = null;
 		$verifyok = false;
 		
-		if ($id)
+		if ($id) {
 			$selected = sql::fetch(sql::run(
-				" SELECT `ID` FROM `{shoppingorders}`" .
+				" SELECT `ID`, `OrderID` FROM `{shoppingorders}`" .
 				" WHERE `ID` = '".$id."'" .
 				($this->userPermissionIDs?
 					" AND `ID` IN (".$this->userPermissionIDs.")":
@@ -3998,6 +4001,11 @@ class shoppingOrders extends modules {
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
 					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
+			
+			if ($delete && empty($_POST['delete']))
+				security::displayConfirmation(
+					'<b>'.__('Delete').'?!</b> "'.$selected['OrderID'].'"');
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			((!$edit && !$delete) || $selected))

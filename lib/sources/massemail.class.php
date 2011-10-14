@@ -179,13 +179,19 @@ class _massEmail {
 		if (isset($_POST['continue']))
 			$continue = (string)$_POST['continue'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
 		
 		if ($delete) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'massEmail::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->delete($id);
 			
 			if ($result)
@@ -825,13 +831,18 @@ class _massEmail {
 		$selected = null;
 		$emailssent = false;
 		
-		if ($id)
+		if ($id) {
 			$selected = sql::fetch(sql::run(
-				" SELECT `ID` FROM `{massemails}`" .
+				" SELECT `ID`, `Subject` FROM `{massemails}`" .
 				" WHERE `ID` = '".$id."'" .
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
 					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
+			
+			if ($delete && empty($_POST['delete']))
+				security::displayConfirmation(
+					'<b>'.__('Delete').'?!</b> "'.$selected['Subject'].'"');
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			((!$resend && !$delete) || $selected))

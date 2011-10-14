@@ -107,14 +107,20 @@ class _moduleManager {
 		if (isset($_GET['deactivate']))
 			$deactivate = (int)$_GET['deactivate'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['id']))
 			$id = strtolower(preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '',
 				strip_tags((string)$_GET['id'])));
 		
 		if ($delete) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'moduleManager::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->delete($id);
 			
 			if ($result)
@@ -515,11 +521,25 @@ class _moduleManager {
 		api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::displayAdmin', $this);
 		
+		$delete = null;
+		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = (int)$_GET['delete'];
+		
+		if (isset($_GET['id']))
+			$id = strtolower(preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '',
+				strip_tags((string)$_GET['id'])));
+		
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
 		
 		echo
 			"<div class='admin-content'>";
+		
+		if ($delete && $id && empty($_POST['delete']))
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.ucfirst($id).'"');
 		
 		$form = new form(
 			__("Upload New Module"),

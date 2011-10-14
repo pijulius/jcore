@@ -487,9 +487,11 @@ class _postsAtGlance extends posts {
 		$selected = null;
 		$verifyok = false;
 		
-		if ($id)
+		if ($id) {
 			$selected = sql::fetch(sql::run(
-				" SELECT `ID`, `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."` FROM `{posts}`" .
+				" SELECT `ID`, `Title`," .
+				" `".(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')."`" .
+				" FROM `{posts}`" .
 				" WHERE `ID` = '".$id."'" .
 				($this->userPermissionIDs?
 					" AND `ID` IN (".$this->userPermissionIDs.")":
@@ -497,6 +499,11 @@ class _postsAtGlance extends posts {
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
 					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
+			
+			if ($delete && empty($_POST['delete']))
+				security::displayConfirmation(
+					'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			((!$edit && !$delete) || $selected))

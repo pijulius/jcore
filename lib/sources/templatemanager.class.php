@@ -124,13 +124,19 @@ class _templateManager {
 		if (isset($_GET['unsetadmin']))
 			$unsetadmin = (int)$_GET['unsetadmin'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['id']))
 			$id = strip_tags((string)$_GET['id']);
 		
 		if ($delete) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'templateManager::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->delete($id);
 			
 			if ($result)
@@ -637,6 +643,15 @@ class _templateManager {
 		api::callHooks(API_HOOK_BEFORE,
 			'templateManager::displayAdmin', $this);
 		
+		$delete = null;
+		$id = null;
+		
+		if (isset($_GET['delete']))
+			$delete = (int)$_GET['delete'];
+		
+		if (isset($_GET['id']))
+			$id = strip_tags((string)$_GET['id']);
+		
 		if (JCORE_VERSION < '0.7')
 			$this->displayAdminDescription();
 		else
@@ -644,6 +659,10 @@ class _templateManager {
 		
 		echo
 			"<div class='admin-content'>";
+		
+		if ($delete && $id && empty($_POST['delete']))
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.ucfirst($id).'"');
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			echo 

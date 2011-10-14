@@ -150,8 +150,8 @@ class newsletterLists {
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -178,6 +178,9 @@ class newsletterLists {
 		}
 		
 		if ($delete) {
+			if (!security::checkToken())
+				return false;
+			
 			if (!$this->delete($id))
 				return false;
 				
@@ -433,6 +436,15 @@ class newsletterLists {
 		echo
 			"<div class='admin-content'>";
 				
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `Title` FROM `{newsletterlists}`" .
+				" WHERE `ID` = '".$id."'"));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
+		}
+		
 		$form = new form(
 				($edit?
 					_("Edit List"):
@@ -758,8 +770,8 @@ class newsletterSubscriptions {
 		if (isset($_GET['search']))
 			$search = strip_tags((string)$_GET['search']);
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -869,6 +881,9 @@ class newsletterSubscriptions {
 		}
 		
 		if ($delete) {
+			if (!security::checkToken())
+				return false;
+			
 			if (!$this->delete($id))
 				return false;
 				
@@ -1236,6 +1251,7 @@ class newsletterSubscriptions {
 	function displayAdmin() {
 		$search = null;
 		$listid = null;
+		$delete = null;
 		$edit = null;
 		$id = null;
 		
@@ -1244,6 +1260,9 @@ class newsletterSubscriptions {
 		
 		if (isset($_GET['searchlistid']))
 			$listid = (float)$_GET['searchlistid'];
+		
+		if (isset($_GET['delete']))
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -1267,6 +1286,15 @@ class newsletterSubscriptions {
 		echo
 			"<div class='admin-content'>";
 				
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `Email` FROM `{newslettersubscriptions}`" .
+				" WHERE `ID` = '".$id."'"));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.$selected['Email'].'"');
+		}
+		
 		$form = new form(
 				($edit?
 					_("Edit Subscription"):
@@ -1288,13 +1316,7 @@ class newsletterSubscriptions {
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
 		
-		$selected = null;
 		$verifyok = false;
-		
-		if ($id)
-			$selected = sql::fetch(sql::run(
-				" SELECT `ID` FROM `{newslettersubscriptions}`" .
-				" WHERE `ID` = '".$id."'"));
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
@@ -1334,7 +1356,7 @@ class newsletterSubscriptions {
 		$paging->display();
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
-			if ($edit && $selected && ($verifyok || !$form->submitted())) {
+			if ($edit && ($verifyok || !$form->submitted())) {
 				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{newslettersubscriptions}`" .
 					" WHERE `ID` = '".$id."'"));
@@ -1707,13 +1729,16 @@ class newsletterEmails {
 		$id = null;
 		$newemailid = null;
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
 		
 		if ($delete) {
+			if (!security::checkToken())
+				return false;
+			
 			if (!$this->delete($id))
 				return false;
 			
@@ -2204,11 +2229,18 @@ class newsletterEmails {
 		$selected = null;
 		$emailssent = false;
 		
-		if ($id && $this->userPermissionType & USER_PERMISSION_TYPE_OWN)
+		if ($id) {
 			$selected = sql::fetch(sql::run(
-				" SELECT `ID` FROM `{newsletters}`" .
+				" SELECT `ID`, `Subject` FROM `{newsletters}`" .
 				" WHERE `ID` = '".$id."'" .
-				" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'"));
+				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
+					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
+					null)));
+			
+			if ($delete && empty($_POST['delete']))
+				security::displayConfirmation(
+					'<b>'.__('Delete').'?!</b> "'.$selected['Subject'].'"');
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			((!$resend && !$delete) || $selected))

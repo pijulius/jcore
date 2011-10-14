@@ -43,10 +43,18 @@ class _sitemap {
 			'sitemap::verifyAdmin', $this);
 		
 		$regenerate = null;
-		if (isset($_GET['regenerate']) && (string)$_GET['regenerate'])
+		if (isset($_POST['regenerate']) && (string)$_POST['regenerate'])
 			$regenerate = true;
 		
 		if ($regenerate) {
+			if (!isset($_POST['_FormSecurityToken']) || 
+				!security::checkToken($_POST['_FormSecurityToken'])) 
+			{
+				api::callHooks(API_HOOK_AFTER,
+					'comments::verifyAdmin', $this);
+				return false;
+			}
+			
 			$pages = new pages();
 			
 			if (!$pages->updateSitemap()) {

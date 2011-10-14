@@ -1103,8 +1103,8 @@ class poll extends modules {
 		if (isset($_POST['answerorders']))
 			$answerorders = (array)$_POST['answerorders'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -1148,6 +1148,9 @@ class poll extends modules {
 		}
 		
 		if ($delete) {
+			if (!security::checkToken())
+				return false;
+			
 			if (!$this->delete($id))
 				return false;
 				
@@ -1591,9 +1594,9 @@ class poll extends modules {
 		$selected = null;
 		$verifyok = false;
 		
-		if ($id)
+		if ($id) {
 			$selected = sql::fetch(sql::run(
-				" SELECT `ID` FROM `{polls}`" .
+				" SELECT `ID`, `Title` FROM `{polls}`" .
 				" WHERE `ID` = '".$id."'" .
 				($this->userPermissionIDs?
 					" AND `ID` IN (".$this->userPermissionIDs.")":
@@ -1601,6 +1604,11 @@ class poll extends modules {
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
 					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
+			
+			if ($delete && empty($_POST['delete']))
+				security::displayConfirmation(
+					'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			((!$edit && !$delete) || $selected))

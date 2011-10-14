@@ -103,18 +103,24 @@ class _security {
 		$userid = null;
 		$delete = null;
 		
-		if (isset($_GET['bfon']))
-			$bfon = (bool)$_GET['bfon'];
-		if (isset($_GET['pton']))
-			$pton = (bool)$_GET['pton'];
+		if (isset($_POST['bfon']))
+			$bfon = (bool)$_POST['bfon'];
+		if (isset($_POST['pton']))
+			$pton = (bool)$_POST['pton'];
 		if (isset($_GET['ip']))
 			$ip = (float)$_GET['ip'];
 		if (isset($_GET['userid']))
 			$userid = (int)$_GET['userid'];
-		if (isset($_GET['delete']))
-			$delete = (bool)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (bool)$_POST['delete'];
 			
 		if (isset($bfon)) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'security::verifyAdmin', $this);
+				return false;
+			}
+			
 			if ($bfon) {
 				$result = $this->switchBF(true);
 				tooltip::display(
@@ -135,6 +141,12 @@ class _security {
 		}
 		
 		if (isset($pton)) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'security::verifyAdmin', $this);
+				return false;
+			}
+			
 			if ($pton) {
 				$result = $this->switchPT(true);
 				tooltip::display(
@@ -155,6 +167,12 @@ class _security {
 		}
 		
 		if ($delete && isset($ip)) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'security::verifyAdmin', $this);
+				return false;
+			}
+			
 			$result = $this->deleteBFBan($ip);
 			
 			if ($result)
@@ -170,6 +188,12 @@ class _security {
 		}
 		
 		if ($delete && $userid) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'security::verifyAdmin', $this);
+				return false;
+			}
+			
 			$result = $this->deletePTBan($userid);
 			
 			if ($result) {
@@ -338,19 +362,20 @@ class _security {
 			'security::displayAdminBFFunctions', $this, $bfenabled);
 		
 		echo
-			"<div class='button'>" .
-				"<a title='".htmlspecialchars(__("Turn Protection On/Off"), ENT_QUOTES)."' " .
-					"href='".url::uri('bfon, pton, ip, userid, delete') .
-					"&amp;bfon=" .
-						($bfenabled?
-							0:
-							1) .
-						"'>" .
+			"<form action='".url::uri('bfon, pton, ip, userid, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />" .
+				"<input type='hidden' name='bfon' value='" .
+					($bfenabled?
+						0:
+						1) .
+					"' />" .
+				"<input title='".htmlspecialchars(__("Turn Protection On/Off"), ENT_QUOTES)."'" .
+					" type='submit' class='button' name='bfonsubmit' value='" .
 					($bfenabled?
 						__("Turn OFF"):
 						__("Turn ON")) .
-				"</a>" .
-			"</div>";
+					"'>" .
+			"</form>";
 		
 		api::callHooks(API_HOOK_AFTER,
 			'security::displayAdminBFFunctions', $this, $bfenabled);
@@ -545,19 +570,20 @@ class _security {
 			'security::displayAdminPTFunctions', $this, $ptenabled);
 		
 		echo
-			"<div class='button'>" .
-				"<a title='".htmlspecialchars(__("Turn Protection On/Off"), ENT_QUOTES)."' " .
-					"href='".url::uri('bfon, pton, ip, userid, delete') .
-					"&amp;pton=" .
-						($ptenabled?
-							0:
-							1) .
-						"'>" .
+			"<form action='".url::uri('bfon, pton, ip, userid, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />" .
+				"<input type='hidden' name='pton' value='" .
+					($ptenabled?
+						0:
+						1) .
+					"' />" .
+				"<input title='".htmlspecialchars(__("Turn Protection On/Off"), ENT_QUOTES)."'" .
+					" type='submit' class='button' name='ptonsubmit' value='" .
 					($ptenabled?
 						__("Turn OFF"):
 						__("Turn ON")) .
-				"</a>" .
-			"</div>";
+					"'>" .
+			"</form>";
 		
 		api::callHooks(API_HOOK_AFTER,
 			'security::displayAdminPTFunctions', $this, $ptenabled);
@@ -620,6 +646,17 @@ class _security {
 		api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdmin', $this);
 		
+		$ip = null;
+		$userid = null;
+		$delete = null;
+		
+		if (isset($_GET['ip']))
+			$ip = (float)$_GET['ip'];
+		if (isset($_GET['userid']))
+			$userid = (int)$_GET['userid'];
+		if (isset($_GET['delete']))
+			$delete = (bool)$_GET['delete'];
+		
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
 		
@@ -636,6 +673,18 @@ class _security {
 		
 		echo
 			"<div class='admin-content'>";
+		
+		if ($delete && ($ip || $userid) && empty($_POST['delete'])) {
+			if ($userid) {
+				$selected = $GLOBALS['USER']->get($userid);
+				$selected = $selected['UserName'];
+			} else {
+				$selected = security::long2ip($ip);
+			}
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.$selected.'"');
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE && 
 			JCORE_VERSION >= '0.5') 
@@ -1109,8 +1158,10 @@ class _security {
 	
 	static function genToken($lifetime = 10800) {
 		$i = ceil(time() / $lifetime);
-		$u = implode((array)$GLOBALS['USER']->data);
-
+		
+		if (isset($GLOBALS['USER']))
+			$u = implode((array)$GLOBALS['USER']->data);
+		
 		return sha1(session_id().$i.$u);
 	}
 	
@@ -1319,6 +1370,25 @@ class _security {
 			return true;
 			
 		return false;
+	}
+	
+	static function displayConfirmation($message = null, $argument = 'delete') {
+		if (!$message)
+			$message = __("Are you sure you want to continue?");
+		
+		tooltip::display(
+			"<form action='".url::uri($argument)."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken'" .
+					" value='".security::genToken()."' />" .
+				"<input type='hidden' name='".$argument."'" .
+					" value='".(isset($_GET[$argument])?$_GET[$argument]:1)."' />" .
+					$message .
+				"<br />" .
+				"<br />" .
+				"<input type='submit' class='button submit' value='".__("Yes")."' /> " .
+				"<input type='button' class='button submit' value='".__("No")."'" .
+					" onclick=\"window.location='".url::uri($argument)."';\"/>" .
+			"</form>");
 	}
 }
 

@@ -429,8 +429,8 @@ class _blocks {
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -466,6 +466,12 @@ class _blocks {
 		}
 		
 		if ($delete) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'blocks::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->delete($id);
 			
 			if ($result)
@@ -1028,6 +1034,18 @@ class _blocks {
 		echo
 			"<div class='admin-content'>";
 				
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `Title` FROM `{blocks}`" .
+				" WHERE `ID` = '".$id."'" .
+				($this->userPermissionIDs?
+					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null)));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
+		}
+		
 		$form = new form(
 				($edit?
 					__("Edit Block"):
@@ -1049,19 +1067,11 @@ class _blocks {
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
 		
-		$selected = null;
 		$verifyok = false;
 		
-		if ($id)
-			$selected = sql::fetch(sql::run(
-				" SELECT `ID` FROM `{blocks}`" .
-				" WHERE `ID` = '".$id."'" .
-				($this->userPermissionIDs?
-					" AND `ID` IN (".$this->userPermissionIDs.")":
-					null)));
-		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
-			((!$edit && !$delete) || $selected))
+			((!$edit && !$delete) || !$this->userPermissionIDs ||
+			in_array($id, explode(',', $this->userPermissionIDs))))
 			$verifyok = $this->verifyAdmin($form);
 		
 		$layouts = null;
@@ -1072,9 +1082,10 @@ class _blocks {
 		$this->displayAdminList($layouts);
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && $selected)))
+			(!$this->userPermissionIDs || 
+			($edit && in_array($id, explode(',', $this->userPermissionIDs)))))
 		{
-			if ($edit && $selected && ($verifyok || !$form->submitted())) {
+			if ($edit && ($verifyok || !$form->submitted())) {
 				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{blocks}`" .
 					" WHERE `ID` = '".$id."'"));

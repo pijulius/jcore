@@ -274,8 +274,8 @@ class _dynamicForms extends form {
 		$edit = null;
 		$id = null;
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -296,6 +296,12 @@ class _dynamicForms extends form {
 				api::callHooks(API_HOOK_AFTER,
 					'dynamicForms::verifyAdmin', $this, $form);
 				
+				return false;
+			}
+			
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'dynamicForms::verifyAdmin', $this, $form);
 				return false;
 			}
 			
@@ -841,6 +847,18 @@ class _dynamicForms extends form {
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
 		
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `Title` FROM `{dynamicforms}`" .
+				" WHERE `ID` = '".$id."'" .
+				($this->userPermissionIDs?
+					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null)));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
+		}
+		
 		echo
 			"<div class='admin-content'>";
 				
@@ -865,19 +883,11 @@ class _dynamicForms extends form {
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
 		
-		$selected = null;
 		$verifyok = false;
 		
-		if ($id)
-			$selected = sql::fetch(sql::run(
-				" SELECT `ID` FROM `{dynamicforms}`" .
-				" WHERE `ID` = '".$id."'" .
-				($this->userPermissionIDs?
-					" AND `ID` IN (".$this->userPermissionIDs.")":
-					null)));
-		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
-			((!$edit && !$delete) || $selected))
+			((!$edit && !$delete) || !$this->userPermissionIDs ||
+			in_array($id, explode(',', $this->userPermissionIDs))))
 			$verifyok = $this->verifyAdmin($form);
 		
 		$rows = sql::run(
@@ -900,9 +910,10 @@ class _dynamicForms extends form {
 		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
-			(!$this->userPermissionIDs || ($edit && $selected)))
+			(!$this->userPermissionIDs || 
+			($edit && in_array($id, explode(',', $this->userPermissionIDs)))))
 		{
-			if ($edit && $selected && ($verifyok || !$form->submitted())) {
+			if ($edit && ($verifyok || !$form->submitted())) {
 				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{dynamicforms}`" .
 					" WHERE `ID` = '".$id."'"));

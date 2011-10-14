@@ -79,13 +79,19 @@ class _fileManager {
 		$delete = null;
 		$edit = null;
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
 		
 		if ($delete) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'fileManager::verify', $this, $form);
+				return false;
+			}
+			
 			$result = $this->delete($this->rootPath.$this->selectedPath.$this->selectedFile);
 			
 			if (!$result)
@@ -763,12 +769,20 @@ class _fileManager {
 		api::callHooks(API_HOOK_BEFORE,
 			'fileManager::display', $this);
 		
+		$delete = null;
 		$edit = null;
+		
+		if (isset($_GET['delete']))
+			$delete = (int)$_GET['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
 		
 		$this->rootPath = rtrim($this->rootPath, '/').'/';
+		
+		if ($delete && $this->selectedFile && empty($_POST['delete']))
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.$this->selectedFile.'"');
 		
 		$folderform = new form(
 					__("New Folder"),

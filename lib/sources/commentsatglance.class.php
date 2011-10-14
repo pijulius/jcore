@@ -73,8 +73,8 @@ class _commentsAtGlance extends comments {
 		if (isset($_GET['approve']))
 			$approve = (int)$_GET['approve'];
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
@@ -379,6 +379,15 @@ class _commentsAtGlance extends comments {
 			sql::run(
 				" INSERT INTO `{TMPcomments}`" .
 				$query);
+		}
+		
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `Comment` FROM `{TMPcomments}`" .
+				" WHERE `ID` = '".$id."'"));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> "'.comments::generateTeaser($selected['Comment']).'"');
 		}
 		
 		$rows = sql::run(

@@ -96,8 +96,8 @@ class _dynamicFormData {
 		if (isset($_GET['search']))
 			$search = trim(strip_tags((string)$_GET['search']));
 		
-		if (isset($_GET['delete']))
-			$delete = (int)$_GET['delete'];
+		if (isset($_POST['delete']))
+			$delete = (int)$_POST['delete'];
 		
 		if (isset($_POST['deleteallsubmit']))
 			$deleteall = (string)$_POST['deleteallsubmit'];
@@ -217,6 +217,12 @@ class _dynamicFormData {
 		}
 			
 		if ($delete) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'dynamicFormData::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->delete($id);
 			
 			if ($result)
@@ -834,6 +840,18 @@ class _dynamicFormData {
 				'dynamicFormData::displayAdmin', $this);
 			
 			return false;
+		}
+		
+		if ($delete && $id && empty($_POST['delete'])) {
+			$selected = sql::fetch(sql::run(
+				" SELECT `ID` FROM `{".$this->storageSQLTable."}`" .
+				" WHERE `ID` = '".$id."'" .
+				($this->userPermissionIDs?
+					" AND `ID` IN (".$this->userPermissionIDs.")":
+					null)));
+			
+			security::displayConfirmation(
+				'<b>'.__('Delete').'?!</b> #"'.$selected['ID'].'"');
 		}
 		
 		$form = new form(
