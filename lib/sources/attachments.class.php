@@ -239,6 +239,12 @@ class _attachments {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'attachments::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{".$this->sqlTable ."}`" .
@@ -592,7 +598,8 @@ class _attachments {
 		
 		echo
 			"<form action='".
-				url::uri('edit, delete')."' method='post'>";
+				url::uri('edit, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 			
 		echo 
 			"<table class='list' cellpadding='0' cellspacing='0'>" .

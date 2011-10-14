@@ -813,10 +813,10 @@ class fileSharing extends modules {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
-			if (!$orders)
+			if (!security::checkToken())
 				return false;
 			
-			foreach($orders as $oid => $ovalue) {
+			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{filesharings}` " .
 					" SET `OrderID` = '".(int)$ovalue."'," .
@@ -1151,7 +1151,8 @@ class fileSharing extends modules {
 					"<td colspan='7' class='auto-width nopadding'>";
 		} else {
 			echo
-				"<form action='".url::uri('edit, delete')."' method='post'>";
+				"<form action='".url::uri('edit, delete')."' method='post'>" .
+					"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 		}
 				
 		echo "<table cellpadding='0' cellspacing='0' class='list'>";

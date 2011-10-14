@@ -1114,7 +1114,13 @@ class _security {
 		return sha1(session_id().$i.$u);
 	}
 	
-	static function checkToken($token, $lifetime = 10800) {
+	static function checkToken($token = null, $lifetime = 10800) {
+		if (!$token && isset($_POST['_SecurityToken']))
+			$token = (string)$_POST['_SecurityToken'];
+		
+		if (!$token)
+			return false;
+		
 		$i = ceil(time() / $lifetime);
 		$u = implode((array)$GLOBALS['USER']->data);
 

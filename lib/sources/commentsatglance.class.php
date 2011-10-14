@@ -109,6 +109,12 @@ class _commentsAtGlance extends comments {
 					$result = $this->commentClasses[$class]->verifyAdmin($form);
 				
 			} else if ($ids) {
+				if (!security::checkToken()) {
+					api::callHooks(API_HOOK_AFTER,
+						'commentsAtGlance::verifyAdmin', $this, $form);
+					return false;
+				}
+				
 				$result = true;
 				$idsbyclass = null;
 				

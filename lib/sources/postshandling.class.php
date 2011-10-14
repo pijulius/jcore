@@ -63,6 +63,12 @@ class _postsHandling {
 			return false;
 		}
 			
+		if (!security::checkToken()) {
+			api::callHooks(API_HOOK_AFTER,
+				'postsHandling::verifyAdmin', $this);
+			return false;
+		}
+		
 		if (!$ids) {
 			tooltip::display(
 				__("No posts selected! Please select at least one post that you " .
@@ -431,7 +437,8 @@ class _postsHandling {
 			
 		echo
 			"<form action='".
-				url::uri('delete')."' method='post'>";
+				url::uri('delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 		
 		$i = 0;
 		$pageid = null;

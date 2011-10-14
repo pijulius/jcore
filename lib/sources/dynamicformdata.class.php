@@ -118,6 +118,12 @@ class _dynamicFormData {
 			$ids = (array)$_POST['ids'];
 		
 		if ($deleteall) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'dynamicFormData::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$owner = dynamicForms::getForm($this->formID);
 			
 			sql::run(
@@ -142,6 +148,12 @@ class _dynamicFormData {
 		}
 		
 		if ($exportall) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'dynamicFormData::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$owner = dynamicForms::getForm($this->formID);
 			
 			if (!$file = $this->export(
@@ -185,6 +197,12 @@ class _dynamicFormData {
 		}
 		
 		if ($ids && count($ids) && $delete) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'dynamicFormData::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			foreach($ids as $id)
 				$this->delete((int)$id);
 			
@@ -626,7 +644,8 @@ class _dynamicFormData {
 		
 		echo
 			"<form action='".
-				url::uri('edit, delete')."' method='post'>";
+				url::uri('edit, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .

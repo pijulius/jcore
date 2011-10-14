@@ -122,6 +122,12 @@ class _postsAtGlance extends posts {
 		}
 		
 		if ($ids && count($ids)) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'postsAtGlance::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$permissionids = null;
 			if ($this->userPermissionIDs)
 				$permissionids = explode(',', $this->userPermissionIDs);

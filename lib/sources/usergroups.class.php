@@ -102,6 +102,12 @@ class _userGroups {
 			$id = (int)$_GET['id'];
 		
 		if ($setprioroties) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'userGroups::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			foreach((array)$priorities as $pid => $pvalue) {
 				sql::run(
 					" UPDATE `{usergroups}` " .
@@ -338,6 +344,9 @@ class _userGroups {
 		
 		echo 
 			"<form action='".url::uri('edit, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
+		
+		echo
 			"<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>";

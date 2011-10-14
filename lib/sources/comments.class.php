@@ -286,6 +286,12 @@ class _comments {
 			$ids = (array)$_POST['ids'];
 		
 		if ($deleteall) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'comments::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			sql::run(
 				" DELETE FROM `{".$this->sqlTable . "}`" .
 				" WHERE 1" .
@@ -335,6 +341,12 @@ class _comments {
 		}
 		
 		if ($ids && count($ids)) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'comments::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			if ($decline) {
 				foreach($ids as $id)
 					$this->decline((int)$id);
@@ -727,7 +739,8 @@ class _comments {
 		
 		echo
 			"<form action='".
-				url::uri('edit, delete, approve, decline')."' method='post'>";
+				url::uri('edit, delete, approve, decline')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .

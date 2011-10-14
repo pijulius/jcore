@@ -157,6 +157,9 @@ class search extends modules {
 			$modulelimits = (array)$_POST['modulelimits'];
 		
 		if ($submit) {
+			if (!security::checkToken())
+				return false;
+			
 			sql::run(
 				" TRUNCATE TABLE `{searchmodules}`");
 			
@@ -263,6 +266,9 @@ class search extends modules {
 	function displayAdminList(&$rows) {
 		echo
 			"<form action='".url::uri()."' id='searchmodulesform' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
+		
+		echo
 			"<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>";

@@ -258,6 +258,12 @@ class _videos {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'videos::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{".$this->sqlTable ."}`" .
@@ -644,7 +650,8 @@ class _videos {
 		
 		echo
 			"<form action='".
-				url::uri('edit, delete')."' method='post'>";
+				url::uri('edit, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 			
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .

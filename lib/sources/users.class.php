@@ -438,6 +438,12 @@ class _users {
 		}
 		
 		if ($ids && count($ids)) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'users::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$permissionids = null;
 			if ($this->userPermissionIDs)
 				$permissionids = explode(',', $this->userPermissionIDs);
@@ -906,7 +912,8 @@ class _users {
 		
 		echo
 			"<form action='".
-				url::uri('edit, delete, approve, decline')."' method='post'>";
+				url::uri('edit, delete, approve, decline')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .

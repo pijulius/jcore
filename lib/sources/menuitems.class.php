@@ -315,6 +315,12 @@ class _menuItems {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'menuItems::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{menuitems}` " .
@@ -718,7 +724,8 @@ class _menuItems {
 			'menuItems::displayAdminList', $this, $rows);
 		
 		echo
-			"<form action='".url::uri('edit, delete')."' method='post'>";
+			"<form action='".url::uri('edit, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 		
 		$itemsfound = false;
 		

@@ -439,6 +439,12 @@ class _blocks {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'blocks::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{blocks}` " .
@@ -929,7 +935,8 @@ class _blocks {
 			'blocks::displayAdminList', $this, $rows);
 		
 		echo
-			"<form action='".url::uri('edit, delete')."' method='post'>";
+			"<form action='".url::uri('edit, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 				
 		$itemsfound = false;
 		

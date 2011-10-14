@@ -552,6 +552,12 @@ class _pages {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'pages::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			foreach((array)$orders as $oid => $ovalue) {
 				if (JCORE_VERSION >= '0.9') {
 					$page = sql::fetch(sql::run(
@@ -1176,7 +1182,8 @@ class _pages {
 			'pages::displayAdminList', $this, $rows, $languages);
 		
 		echo
-			"<form action='".url::uri('edit, delete')."' method='post'>";
+			"<form action='".url::uri('edit, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 		
 		$pagesfound = false;
 		

@@ -184,10 +184,10 @@ class shoppingCartDiscounts {
 			$id = (int)$_GET['id'];
 		
 		if ($setpriority) {
-			if (!$priorities)
+			if (!security::checkToken())
 				return false;
 			
-			foreach($priorities as $pid => $pvalue) {
+			foreach((array)$priorities as $pid => $pvalue) {
 				sql::run(
 					" UPDATE `{shoppingcartdiscounts}`" .
 					" SET `Priority` = '".(int)$pvalue."'" .
@@ -391,7 +391,8 @@ class shoppingCartDiscounts {
 	function displayAdminList(&$rows) {
 		echo
 			"<form action='".
-				url::uri('edit, delete')."' method='post'>";
+				url::uri('edit, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 			
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
@@ -944,10 +945,10 @@ class shoppingCartFees {
 			$id = (int)$_GET['id'];
 		
 		if ($setpriority) {
-			if (!$priorities)
+			if (!security::checkToken())
 				return false;
 			
-			foreach($priorities as $pid => $pvalue) {
+			foreach((array)$priorities as $pid => $pvalue) {
 				sql::run(
 					" UPDATE `{shoppingcartfees}`" .
 					" SET `Priority` = '".(int)$pvalue."'" .
@@ -1288,7 +1289,8 @@ class shoppingCartFees {
 	function displayAdminList(&$rows) {
 		echo
 			"<form action='".
-				url::uri('edit, delete')."' method='post'>";
+				url::uri('edit, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 			
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
@@ -1758,10 +1760,10 @@ class shoppingCartTaxes {
 			$id = (int)$_GET['id'];
 		
 		if ($setpriority) {
-			if (!$priorities)
+			if (!security::checkToken())
 				return false;
 			
-			foreach($priorities as $pid => $pvalue) {
+			foreach((array)$priorities as $pid => $pvalue) {
 				sql::run(
 					" UPDATE `{shoppingcarttaxes}`" .
 					" SET `Priority` = '".(int)$pvalue."'" .
@@ -2019,7 +2021,8 @@ class shoppingCartTaxes {
 	function displayAdminList($rows) {
 		echo
 			"<form action='".
-				url::uri('edit, delete')."' method='post'>";
+				url::uri('edit, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 			
 		echo 
 			"<table cellpadding='0' cellspacing='0' class='list'>" .
@@ -2477,10 +2480,10 @@ class shoppingCartCoupons {
 			$id = (int)$_GET['id'];
 		
 		if ($setpriority) {
-			if (!$priorities)
+			if (!security::checkToken())
 				return false;
 			
-			foreach($priorities as $pid => $pvalue) {
+			foreach((array)$priorities as $pid => $pvalue) {
 				sql::run(
 					" UPDATE `{shoppingcartcoupons}`" .
 					" SET `Priority` = '".(int)$pvalue."'" .
@@ -2662,7 +2665,8 @@ class shoppingCartCoupons {
 	function displayAdminList(&$rows) {
 		echo
 			"<form action='".
-				url::uri('edit, delete')."' method='post'>";
+				url::uri('edit, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 			
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .

@@ -90,6 +90,12 @@ class _notificationEmails {
 			$ids = (array)$_POST['ids'];
 		
 		if ($reset && $ids && count($ids)) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'notificationEmails::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			foreach($ids as $id)
 				$this->reset((int)$id);
 			
@@ -104,6 +110,12 @@ class _notificationEmails {
 		}
 		
 		if ($resetall) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'notificationEmails::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->reset();
 			
 			if ($result)
@@ -300,7 +312,8 @@ class _notificationEmails {
 		
 		echo
 			"<form action='".
-				url::uri('id, edit')."' method='post'>";
+				url::uri('id, edit')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 		
 		echo
 			"<table cellpadding='0' cellspacing='0' class='list'>" .

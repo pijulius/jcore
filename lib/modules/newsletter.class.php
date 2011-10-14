@@ -160,10 +160,10 @@ class newsletterLists {
 			$id = (int)$_GET['id'];
 		
 		if ($reorder) {
-			if (!$orders)
+			if (!security::checkToken())
 				return false;
 			
-			foreach($orders as $oid => $ovalue) {
+			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{newsletterlists}` " .
 					" SET `OrderID` = '".(int)$ovalue."'" .
@@ -334,7 +334,8 @@ class newsletterLists {
 			$id = (int)$_GET['id'];
 		
 		echo
-			"<form action='".url::uri('edit, delete')."' method='post'>";
+			"<form action='".url::uri('edit, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 				
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
@@ -770,6 +771,9 @@ class newsletterSubscriptions {
 			$ids = (array)$_POST['subscriptionids'];
 		
 		if ($confirmall) {
+			if (!security::checkToken())
+				return false;
+			
 			$rows = sql::run(
 				" UPDATE `{newslettersubscriptions}` SET" .
 				" `Confirmed` = 1," .
@@ -798,6 +802,9 @@ class newsletterSubscriptions {
 		}
 		
 		if ($deleteall) {
+			if (!security::checkToken())
+				return false;
+			
 			$rows = sql::run(
 				" DELETE FROM `{newslettersubscriptions}`" .
 				" WHERE 1" .
@@ -835,6 +842,9 @@ class newsletterSubscriptions {
 		}
 		
 		if ($ids && count($ids)) {
+			if (!security::checkToken())
+				return false;
+			
 			if ($confirm) {
 				foreach($ids as $id)
 					$this->confirm((int)$id);
@@ -1158,7 +1168,8 @@ class newsletterSubscriptions {
 	
 	function displayAdminList(&$rows) {
 		echo
-			"<form action='".url::uri('edit, delete')."' method='post'>";
+			"<form action='".url::uri('edit, delete')."' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 				
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .

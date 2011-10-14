@@ -260,6 +260,12 @@ class _menus {
 			$id = (int)$_GET['id'];
 		
 		if (JCORE_VERSION >= '0.7' && $reorder) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'menus::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{menus}` " .
@@ -534,7 +540,8 @@ class _menus {
 		
 		if (JCORE_VERSION >= '0.7') {
 			echo
-				"<form action='".url::uri('edit, delete')."' method='post'>";
+				"<form action='".url::uri('edit, delete')."' method='post'>" .
+					"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 		}
 		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
