@@ -139,7 +139,7 @@ class _debug {
 		if (!debug::$data || !isset(debug::$data[0]) || !debug::$data[0]) {
 			if (!debug::xdebug())
 				echo
-					"<h3>XDebug not available!</h3>" .
+					"<h2>XDebug not available!</h2>" .
 					"<p>Tu turn on debugging in jCore please complete the following steps.</p>" .
 					"<ul>" .
 						"<li>" .
@@ -171,7 +171,7 @@ class _debug {
 					"</ul>";
 			else 
 				echo
-					"<h3>Empty xDebug data!</h3>" .
+					"<h2>Empty xDebug data!</h2>" .
 					"<p>Please make sure that the followings are met.</p>" .
 					"<ul>" .
 						"<li>" .
