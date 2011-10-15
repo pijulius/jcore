@@ -370,7 +370,7 @@ class _commentsAtGlance extends comments {
 						$search,
 						array('Comment')):
 					null) .
-				" ORDER BY `ID` DESC" .
+				" ORDER BY `TimeStamp` DESC" .
 				" LIMIT ".$paging->getEnd();
 			
 			sql::$lastQuery = $query;
