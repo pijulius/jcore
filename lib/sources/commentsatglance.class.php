@@ -386,7 +386,7 @@ class _commentsAtGlance extends comments {
 				" SELECT `Comment` FROM `{TMPcomments}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.comments::generateTeaser($selected['Comment']).'"');
 		}
 		

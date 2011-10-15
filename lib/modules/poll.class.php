@@ -1606,7 +1606,7 @@ class poll extends modules {
 					null)));
 			
 			if ($delete && empty($_POST['delete']))
-				security::displayConfirmation(
+				url::displayConfirmation(
 					'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
 		

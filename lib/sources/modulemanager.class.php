@@ -538,7 +538,7 @@ class _moduleManager {
 			"<div class='admin-content'>";
 		
 		if ($delete && $id && empty($_POST['delete']))
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.ucfirst($id).'"');
 		
 		$form = new form(

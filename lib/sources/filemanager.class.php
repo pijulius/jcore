@@ -781,7 +781,7 @@ class _fileManager {
 		$this->rootPath = rtrim($this->rootPath, '/').'/';
 		
 		if ($delete && $this->selectedFile && empty($_POST['delete']))
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$this->selectedFile.'"');
 		
 		$folderform = new form(

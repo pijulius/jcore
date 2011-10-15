@@ -977,7 +977,7 @@ class _pictures {
 				" SELECT `Title` FROM `{".$this->sqlTable."}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
 		

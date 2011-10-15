@@ -855,7 +855,7 @@ class _menuItems {
 				" SELECT `Title` FROM `{menuitems}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
 		

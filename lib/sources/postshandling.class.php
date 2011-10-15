@@ -610,7 +610,7 @@ class _postsHandling {
 				" SELECT `Title` FROM `{posts}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
 		

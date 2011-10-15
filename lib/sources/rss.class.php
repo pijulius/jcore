@@ -578,7 +578,7 @@ class _rss {
 				" SELECT `Title` FROM `{rssfeeds}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
 		

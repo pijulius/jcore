@@ -899,7 +899,7 @@ class _comments {
 				" SELECT `Comment` FROM `{".$this->sqlTable."}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.comments::generateTeaser($selected['Comment']).'"');
 		}
 		

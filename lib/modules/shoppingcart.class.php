@@ -486,7 +486,7 @@ class shoppingCartDiscounts {
 				" SELECT `DiscountPercent` FROM `{shoppingcartdiscounts}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['DiscountPercent'].'%"');
 		}
 		
@@ -1396,7 +1396,7 @@ class shoppingCartFees {
 				" SELECT `Fee` FROM `{shoppingcartfees}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.shoppingCart::constructPrice($selected['Fee']).'"');
 		}
 		
@@ -2139,7 +2139,7 @@ class shoppingCartTaxes {
 				" SELECT `Tax` FROM `{shoppingcarttaxes}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Tax'].'%"');
 		}
 		
@@ -2796,7 +2796,7 @@ class shoppingCartCoupons {
 				" SELECT `Coupon` FROM `{shoppingcartcoupons}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Coupon'].'"');
 		}
 		

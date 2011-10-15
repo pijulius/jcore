@@ -441,7 +441,7 @@ class newsletterLists {
 				" SELECT `Title` FROM `{newsletterlists}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
 		
@@ -1291,7 +1291,7 @@ class newsletterSubscriptions {
 				" SELECT `Email` FROM `{newslettersubscriptions}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Email'].'"');
 		}
 		
@@ -2238,7 +2238,7 @@ class newsletterEmails {
 					null)));
 			
 			if ($delete && empty($_POST['delete']))
-				security::displayConfirmation(
+				url::displayConfirmation(
 					'<b>'.__('Delete').'?!</b> "'.$selected['Subject'].'"');
 		}
 		

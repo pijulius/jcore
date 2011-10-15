@@ -453,7 +453,7 @@ class _layouts {
 				" SELECT `Title` FROM `{layouts}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
 		

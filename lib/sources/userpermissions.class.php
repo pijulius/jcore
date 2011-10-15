@@ -624,7 +624,7 @@ class _userPermissions {
 				" SELECT `Path` FROM `{".$this->sqlTable."}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Path'].'"');
 		}
 		

@@ -463,7 +463,7 @@ class _userGroups {
 				" SELECT `GroupName` FROM `{usergroups}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['GroupName'].'"');
 		}
 		

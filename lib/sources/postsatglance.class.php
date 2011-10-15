@@ -501,7 +501,7 @@ class _postsAtGlance extends posts {
 					null)));
 			
 			if ($delete && empty($_POST['delete']))
-				security::displayConfirmation(
+				url::displayConfirmation(
 					'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
 		

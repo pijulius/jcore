@@ -2469,7 +2469,7 @@ class shoppingItems {
 					null)));
 			
 			if ($delete && empty($_POST['delete']))
-				security::displayConfirmation(
+				url::displayConfirmation(
 					'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
 		
@@ -5958,7 +5958,7 @@ class shopping extends modules {
 					null)));
 			
 			if ($delete && empty($_POST['delete']))
-				security::displayConfirmation(
+				url::displayConfirmation(
 					'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
 		

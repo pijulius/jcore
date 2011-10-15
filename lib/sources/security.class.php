@@ -682,7 +682,7 @@ class _security {
 				$selected = security::long2ip($ip);
 			}
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected.'"');
 		}
 		
@@ -1370,25 +1370,6 @@ class _security {
 			return true;
 			
 		return false;
-	}
-	
-	static function displayConfirmation($message = null, $argument = 'delete') {
-		if (!$message)
-			$message = __("Are you sure you want to continue?");
-		
-		tooltip::display(
-			"<form action='".url::uri()."' method='post'>" .
-				"<input type='hidden' name='_SecurityToken'" .
-					" value='".security::genToken()."' />" .
-				"<input type='hidden' name='".$argument."'" .
-					" value='".(isset($_GET[$argument])?$_GET[$argument]:1)."' />" .
-					$message .
-				"<br />" .
-				"<br />" .
-				"<input type='submit' class='button submit' value='".__("Yes")."' /> " .
-				"<input type='button' class='button submit' value='".__("No")."'" .
-					" onclick=\"window.location='".url::uri($argument)."';\"/>" .
-			"</form>");
 	}
 }
 

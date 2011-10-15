@@ -445,7 +445,7 @@ class _favoriteLinks {
 				" SELECT `Title` FROM `{favoritelinks}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
 		

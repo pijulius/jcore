@@ -1111,7 +1111,7 @@ class _users {
 					null)));
 			
 			if ($delete && $id && empty($_POST['delete']))
-				security::displayConfirmation(
+				url::displayConfirmation(
 					'<b>'.__('Delete').'?!</b> "'.$selected['UserName'].'"');
 		}
 		

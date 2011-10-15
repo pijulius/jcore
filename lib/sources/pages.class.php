@@ -1352,7 +1352,7 @@ class _pages {
 					" AND `ID` IN (".$this->userPermissionIDs.")":
 					null)));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
 		

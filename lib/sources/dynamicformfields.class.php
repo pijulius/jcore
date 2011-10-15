@@ -857,7 +857,7 @@ class _dynamicFormFields {
 				" SELECT `Title` FROM `{dynamicformfields}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			security::displayConfirmation(
+			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
 		
