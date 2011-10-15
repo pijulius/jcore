@@ -1377,7 +1377,7 @@ class _security {
 			$message = __("Are you sure you want to continue?");
 		
 		tooltip::display(
-			"<form action='".url::uri($argument)."' method='post'>" .
+			"<form action='".url::uri()."' method='post'>" .
 				"<input type='hidden' name='_SecurityToken'" .
 					" value='".security::genToken()."' />" .
 				"<input type='hidden' name='".$argument."'" .
