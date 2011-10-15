@@ -6,7 +6,7 @@
  *  URI: http://jcore.net
  *  Description: Hande new/processed orders and display order status to the clients. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
- *  Version: 0.9
+ *  Version: 1.0
  *  Tags: shopping orders module, gpl, lgpl, mpl
  * 
  ****************************************************************************/

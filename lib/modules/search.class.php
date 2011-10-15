@@ -6,7 +6,7 @@
  *  URI: http://jcore.net
  *  Description: Implement your own search engine for posts and searchable modules. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
- *  Version: 0.9
+ *  Version: 1.0
  *  Tags: search module, gpl, lgpl, mpl
  * 
  ****************************************************************************/

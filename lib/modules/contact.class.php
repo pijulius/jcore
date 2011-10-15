@@ -6,7 +6,7 @@
  *  URI: http://jcore.net
  *  Description: A simple contact form using the Dynamic Forms feature. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
- *  Version: 0.9
+ *  Version: 1.0
  *  Tags: contact module, gpl, lgpl, mpl
  * 
  ****************************************************************************/

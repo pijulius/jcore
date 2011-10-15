@@ -6,7 +6,7 @@
  *  URI: http://jcore.net
  *  Description: Sell items in a folder/category like structure. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
- *  Version: 0.9
+ *  Version: 1.0
  *  Tags: shopping module, gpl, lgpl, mpl
  * 
  ****************************************************************************/

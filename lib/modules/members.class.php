@@ -6,7 +6,7 @@
  *  URI: http://jcore.net
  *  Description: Allows members to register/update their accounts. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
- *  Version: 0.9
+ *  Version: 1.0
  *  Tags: members module, gpl, lgpl, mpl
  * 
  ****************************************************************************/

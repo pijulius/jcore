@@ -6,7 +6,7 @@
  *  URI: http://jcore.net
  *  Description: Display videos in a folder/gallery like structure. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
- *  Version: 0.4
+ *  Version: 1.0
  *  Tags: video gallery module, gpl, lgpl, mpl
  * 
  ****************************************************************************/

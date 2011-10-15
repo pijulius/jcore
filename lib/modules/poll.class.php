@@ -6,7 +6,7 @@
  *  URI: http://jcore.net
  *  Description: Allow people to vote on subjects. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
- *  Version: 0.4
+ *  Version: 1.0
  *  Tags: poll module, gpl, lgpl, mpl
  * 
  ****************************************************************************/
