@@ -98,6 +98,10 @@
 	background-image: url("http://icons.jcore.net/32/emblem-important.png");
 }
 
+.admin-link.lock {
+	background-image: url("http://icons.jcore.net/32/emblem-readonly.png");
+}
+
 .admin-link.db {
 	background-image: url("http://icons.jcore.net/32/Database.png");
 }

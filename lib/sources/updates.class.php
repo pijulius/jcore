@@ -791,7 +791,7 @@ class _updates {
 		if (!$update && !$update = $this->get($this->selectedUpdate))
 			return false;
 		
-		if (isset($_POST['install']) && $_POST['install'])
+		if (isset($_POST['install']) && $_POST['install'] && security::checkToken())
 			$this->testing = false;
 		
 		$handled = api::callHooks(API_HOOK_BEFORE,
@@ -805,7 +805,8 @@ class _updates {
 		}
 		
 		echo
-			"<form action='".url::uri()."' id='updateinstallform' method='post'>";
+			"<form action='".url::uri()."' id='updateinstallform' method='post'>" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 		
 		$success = $this->install($update);
 		

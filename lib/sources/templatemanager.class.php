@@ -147,23 +147,26 @@ class _templateManager {
 		$delete = null;
 		$id = null;
 		
-		if (isset($_GET['activate']))
-			$activate = (int)$_GET['activate'];
+		if (isset($_POST['activate']))
+			$activate = (string)$_POST['activate'];
 		
-		if (isset($_GET['deactivate']))
-			$deactivate = (int)$_GET['deactivate'];
+		if (isset($_POST['deactivate']))
+			$deactivate = (string)$_POST['deactivate'];
 		
-		if (isset($_GET['setadmin']))
-			$setadmin = (int)$_GET['setadmin'];
+		if (isset($_POST['setadmin']))
+			$setadmin = (string)$_POST['setadmin'];
 		
-		if (isset($_GET['unsetadmin']))
-			$unsetadmin = (int)$_GET['unsetadmin'];
+		if (isset($_POST['unsetadmin']))
+			$unsetadmin = (string)$_POST['unsetadmin'];
 		
 		if (isset($_POST['delete']))
 			$delete = (int)$_POST['delete'];
 		
 		if (isset($_GET['id']))
 			$id = strip_tags((string)$_GET['id']);
+		
+		if (isset($_POST['id']))
+			$id = strip_tags((string)$_POST['id']);
 		
 		if ($delete) {
 			if (!security::checkToken()) {
@@ -186,6 +189,12 @@ class _templateManager {
 		}
 		
 		if ($activate) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'templateManager::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->activate($id);
 			
 			if ($result)
@@ -203,6 +212,12 @@ class _templateManager {
 		}
 		
 		if ($deactivate) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'templateManager::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->deactivate($id);
 			
 			if ($result)
@@ -220,6 +235,12 @@ class _templateManager {
 		}
 		
 		if ($setadmin) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'templateManager::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->setAdmin($id);
 			
 			if ($result)
@@ -237,6 +258,12 @@ class _templateManager {
 		}
 		
 		if ($unsetadmin) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'templateManager::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->unsetAdmin($id);
 			
 			if ($result)
@@ -463,49 +490,47 @@ class _templateManager {
 			return $handled;
 		}
 		
-		$url = url::uri('id, delete, activate, deactivate, setadmin, unsetadmin').
-			"&amp;id=".urlencode($row['ID']);
+		echo
+			"<form action='".
+				url::uri('id, delete, activate, deactivate, setadmin, unsetadmin')."' method='post'>" .
+				"<input type='hidden' name='id' value='".htmlspecialchars($row['ID'], ENT_QUOTES)."' />" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 		
 		if ($row['_Activated']) {
 			echo
-				"<div class='button' style='float: none; margin: 10px 0 0 0;'>" .
-					"<a href='".$url."&amp;deactivate=1' " .
-						"title='".htmlspecialchars(__("Restore default template for your " .
-							"website"), ENT_QUOTES)."'>" .
-						__("Deactivate") .
-					"</a>" .
-				"</div>";
+				"<input type='submit' class='button'" .
+					" style='float: none; width: 100%; margin: 10px 0 0 0;'" .
+					" title='".htmlspecialchars(__("Restore default template for your " .
+						"website"), ENT_QUOTES)."'" .
+					" name='deactivate' value='".__("Deactivate")."' />";
 			
 			if (settings::get('Website_Template_SetForAdmin')) {
 				echo
-					"<div class='button' style='float: none; margin: 10px 0 0 0;'>" .
-						"<a href='".$url."&amp;unsetadmin=1' " .
-							"title='".htmlspecialchars(__("Restore default template for Admin " .
-								"section"), ENT_QUOTES)."'>" .
-							__("Unset Admin") .
-						"</a>" .
-					"</div>";
+					"<input type='submit' class='button'" .
+						" style='float: none; width: 100%; margin: 10px 0 0 0;'" .
+						" title='".htmlspecialchars(__("Restore default template for Admin " .
+							"section"), ENT_QUOTES)."'" .
+						" name='unsetadmin' value='".__("Unset Admin")."' />";
 			} else {
 				echo
-					"<div class='button' style='float: none; margin: 10px 0 0 0;'>" .
-						"<a href='".$url."&amp;setadmin=1' " .
-							"title='".htmlspecialchars(__("Set template as default for Admin " .
-								"section"), ENT_QUOTES)."'>" .
-							__("Set Admin") .
-						"</a>" .
-					"</div>";
+					"<input type='submit' class='button'" .
+						" style='float: none; width: 100%; margin: 10px 0 0 0;'" .
+						" title='".htmlspecialchars(__("Set template as default for Admin " .
+							"section"), ENT_QUOTES)."'" .
+						" name='setadmin' value='".__("Set Admin")."' />";
 			}
 			
 		} else {
 			echo
-				"<div class='button' style='float: none; margin: 10px 0 0 0;'>" .
-					"<a href='".$url."&amp;activate=1' " .
-						"title='".htmlspecialchars(__("Activate and set it as the current " .
-							"template for your website"), ENT_QUOTES)."'>" .
-						__("Activate") .
-					"</a>" .
-				"</div>";
+				"<input type='submit' class='button'" .
+					" style='float: none; width: 100%; margin: 10px 0 0 0;'" .
+					" title='".htmlspecialchars(__("Activate and set it as the current " .
+						"template for your website"), ENT_QUOTES)."'" .
+					" name='activate' value='".__("Activate")."' />";
 		}
+		
+		echo
+			"</form>";
 		
 		api::callHooks(API_HOOK_AFTER,
 			'templateManager::displayAdminListItemActivation', $this, $row);

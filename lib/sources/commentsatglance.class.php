@@ -88,11 +88,11 @@ class _commentsAtGlance extends comments {
 		if (isset($_POST['deletesubmit']))
 			$delete = (string)$_POST['deletesubmit'];
 		
-		if (isset($_GET['decline']))
-			$decline = (int)$_GET['decline'];
+		if (isset($_POST['decline']))
+			$decline = (int)$_POST['decline'];
 		
-		if (isset($_GET['approve']))
-			$approve = (int)$_GET['approve'];
+		if (isset($_POST['approve']))
+			$approve = (int)$_POST['approve'];
 		
 		if (isset($_POST['delete']))
 			$delete = (int)$_POST['delete'];
@@ -303,6 +303,8 @@ class _commentsAtGlance extends comments {
 		
 		$search = null;
 		$searchtype = null;
+		$decline = null;
+		$approve = null;
 		$delete = null;
 		$edit = null;
 		$id = null;
@@ -312,6 +314,12 @@ class _commentsAtGlance extends comments {
 		
 		if (isset($_GET['searchtype']))
 			$searchtype = (int)$_GET['searchtype'];
+		
+		if (isset($_GET['decline']))
+			$decline = (int)$_GET['decline'];
+		
+		if (isset($_GET['approve']))
+			$approve = (int)$_GET['approve'];
 		
 		if (isset($_GET['delete']))
 			$delete = (int)$_GET['delete'];
@@ -430,13 +438,25 @@ class _commentsAtGlance extends comments {
 				$query);
 		}
 		
-		if ($delete && $id && empty($_POST['delete'])) {
+		if ($id && (($delete && empty($_POST['delete'])) || 
+			($decline && empty($_POST['decline'])) ||
+			($approve && empty($_POST['approve']))))
+		{
 			$selected = sql::fetch(sql::run(
 				" SELECT `Comment` FROM `{TMPcomments}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			url::displayConfirmation(
-				'<b>'.__('Delete').'?!</b> "'.comments::generateTeaser($selected['Comment']).'"');
+			if ($delete)
+				url::displayConfirmation(
+					'<b>'.__('Delete').'?!</b> "'.comments::generateTeaser($selected['Comment']).'"');
+			if ($decline)
+				url::displayConfirmation(
+					'<b>'.__('Decline').'?!</b> "'.comments::generateTeaser($selected['Comment']).'"',
+					'decline');
+			if ($approve)
+				url::displayConfirmation(
+					'<b>'.__('Approve').'?!</b> "'.comments::generateTeaser($selected['Comment']).'"',
+					'approve');
 		}
 		
 		$rows = sql::run(

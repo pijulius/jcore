@@ -136,11 +136,11 @@ class _moduleManager {
 		$delete = null;
 		$id = null;
 		
-		if (isset($_GET['activate']))
-			$activate = (int)$_GET['activate'];
+		if (isset($_POST['activate']))
+			$activate = (string)$_POST['activate'];
 		
-		if (isset($_GET['deactivate']))
-			$deactivate = (int)$_GET['deactivate'];
+		if (isset($_POST['deactivate']))
+			$deactivate = (string)$_POST['deactivate'];
 		
 		if (isset($_POST['delete']))
 			$delete = (int)$_POST['delete'];
@@ -148,6 +148,10 @@ class _moduleManager {
 		if (isset($_GET['id']))
 			$id = strtolower(preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '',
 				strip_tags((string)$_GET['id'])));
+		
+		if (isset($_POST['id']))
+			$id = strtolower(preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '',
+				strip_tags((string)$_POST['id'])));
 		
 		if ($delete) {
 			if (!security::checkToken()) {
@@ -170,6 +174,12 @@ class _moduleManager {
 		}
 		
 		if ($activate) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'moduleManager::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->activate($id);
 			
 			if ($result) {
@@ -198,6 +208,12 @@ class _moduleManager {
 		}
 		
 		if ($deactivate) {
+			if (!security::checkToken()) {
+				api::callHooks(API_HOOK_AFTER,
+					'moduleManager::verifyAdmin', $this, $form);
+				return false;
+			}
+			
 			$result = $this->deactivate($id);
 			
 			if ($result)
@@ -340,7 +356,7 @@ class _moduleManager {
 		}
 		
 		echo
-			"<td align='center' style='width: 100px;'>" .
+			"<td align='center' style='width: 140px;'>" .
 				"<div class='admin-content-preview'>" .
 					"<div class='admin-section-item as-modules-".$row['ID'] .
 						(!$row['_Activated']?
@@ -422,25 +438,27 @@ class _moduleManager {
 			return $handled;
 		}
 		
-		$url = url::uri('id, delete, activate, deactivate').
-			"&amp;id=".urlencode($row['ID']);
+		echo
+			"<form action='".
+				url::uri('id, delete, activate, deactivate')."' method='post'>" .
+				"<input type='hidden' name='id' value='".htmlspecialchars($row['ID'], ENT_QUOTES)."' />" .
+				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 		
 		if ($row['_Activated']) {
 			echo
-				"<div class='button' style='float: none; margin: 10px 0 0 0;'>" .
-					"<a href='".$url."&amp;deactivate=1'>" .
-						__("Deactivate") .
-					"</a>" .
-				"</div>";
+				"<input type='submit' class='button'" .
+					" style='float: none; width: 100%; margin: 10px 0 0 0;'" .
+					" name='deactivate' value='".__("Deactivate")."' />";
 			
 		} else {
 			echo
-				"<div class='button' style='float: none; margin: 10px 0 0 0;'>" .
-					"<a href='".$url."&amp;activate=1'>" .
-						__("Activate") .
-					"</a>" .
-				"</div>";
+				"<input type='submit' class='button'" .
+					" style='float: none; width: 100%; margin: 10px 0 0 0;'" .
+					" name='activate' value='".__("Activate")."' />";
 		}
+		
+		echo
+			"</form>";
 		
 		api::callHooks(API_HOOK_AFTER,
 			'moduleManager::displayAdminListItemActivation', $this, $row);

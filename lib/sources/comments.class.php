@@ -309,11 +309,11 @@ class _comments {
 		if (isset($_POST['deletesubmit']))
 			$delete = (string)$_POST['deletesubmit'];
 		
-		if (isset($_GET['decline']))
-			$decline = (int)$_GET['decline'];
+		if (isset($_POST['decline']))
+			$decline = (int)$_POST['decline'];
 		
-		if (isset($_GET['approve']))
-			$approve = (int)$_GET['approve'];
+		if (isset($_POST['approve']))
+			$approve = (int)$_POST['approve'];
 		
 		if (isset($_POST['delete']))
 			$delete = (int)$_POST['delete'];
@@ -722,7 +722,7 @@ class _comments {
 			if ($row['Pending'])
 				echo
 					"<td align='center'>" .
-						"<a class='admin-link important' " .
+						"<a class='admin-link lock confirm-link' " .
 							"title='".htmlspecialchars(__("Approve"), ENT_QUOTES)."' " .
 							"href='".url::uri('id, edit, delete, approve, decline') .
 							"&amp;id=".$row['ID']."&amp;approve=1'>" .
@@ -731,7 +731,7 @@ class _comments {
 			else
 				echo
 					"<td align='center'>" .
-						"<a class='admin-link apply' " .
+						"<a class='admin-link apply confirm-link' " .
 							"title='".htmlspecialchars(__("Decline"), ENT_QUOTES)."' " .
 							"href='".url::uri('id, edit, delete, approve, decline') .
 							"&amp;id=".$row['ID']."&amp;decline=1'>" .
@@ -980,6 +980,8 @@ class _comments {
 		
 		$search = null;
 		$searchtype = null;
+		$decline = null;
+		$approve = null;
 		$delete = null;
 		$edit = null;
 		$id = null;
@@ -989,6 +991,12 @@ class _comments {
 		
 		if (isset($_GET['searchtype']))
 			$searchtype = (int)$_GET['searchtype'];
+		
+		if (isset($_GET['decline']))
+			$decline = (int)$_GET['decline'];
+		
+		if (isset($_GET['approve']))
+			$approve = (int)$_GET['approve'];
 		
 		if (isset($_GET['delete']))
 			$delete = (int)$_GET['delete'];
@@ -1026,14 +1034,26 @@ class _comments {
 			
 		echo
 			"<div class='admin-content'>";
-				
-		if ($delete && $id && empty($_POST['delete'])) {
+		
+		if ($id && (($delete && empty($_POST['delete'])) || 
+			($decline && empty($_POST['decline'])) ||
+			($approve && empty($_POST['approve']))))
+		{
 			$selected = sql::fetch(sql::run(
 				" SELECT `Comment` FROM `{".$this->sqlTable."}`" .
 				" WHERE `ID` = '".$id."'"));
 			
-			url::displayConfirmation(
-				'<b>'.__('Delete').'?!</b> "'.comments::generateTeaser($selected['Comment']).'"');
+			if ($delete)
+				url::displayConfirmation(
+					'<b>'.__('Delete').'?!</b> "'.comments::generateTeaser($selected['Comment']).'"');
+			if ($decline)
+				url::displayConfirmation(
+					'<b>'.__('Decline').'?!</b> "'.comments::generateTeaser($selected['Comment']).'"',
+					'decline');
+			if ($approve)
+				url::displayConfirmation(
+					'<b>'.__('Approve').'?!</b> "'.comments::generateTeaser($selected['Comment']).'"',
+					'approve');
 		}
 		
 		$form = new form(
