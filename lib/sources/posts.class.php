@@ -3938,13 +3938,18 @@ class _posts {
 			'posts::displayFormated', $this, $row);
 	}
 	
-	function displayOne(&$row) {
+	// This is kept only for compatibility reasons, don't use it!
+	function displaySelected(&$row) {
+		return $this->displayOne($row);
+	}
+	
+	function displayPartial(&$row) {
 		$handled = api::callHooks(API_HOOK_BEFORE,
-			'posts::displayOne', $this, $row);
+			'posts::displayPartial', $this, $row);
 		
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
-				'posts::displayOne', $this, $row, $handled);
+				'posts::displayPartial', $this, $row, $handled);
 			
 			return $handled;
 		}
@@ -4033,16 +4038,16 @@ class _posts {
 			">";
 		
 		api::callHooks(API_HOOK_AFTER,
-			'posts::displayOne', $this, $row);
+			'posts::displayPartial', $this, $row);
 	}
 	
-	function displaySelected(&$row) {
+	function displayOne(&$row) {
 		$handled = api::callHooks(API_HOOK_BEFORE,
-			'posts::displaySelected', $this, $row);
+			'posts::displayOne', $this, $row);
 		
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
-				'posts::displaySelected', $this, $row, $handled);
+				'posts::displayOne', $this, $row, $handled);
 			
 			return $handled;
 		}
@@ -4157,7 +4162,7 @@ class _posts {
 			$this->displayComments($row);
 		
 		api::callHooks(API_HOOK_AFTER,
-			'posts::displaySelected', $this, $row);
+			'posts::displayOne', $this, $row);
 	}
 	
 	function displayBlockPosts($blockid) {
@@ -4668,9 +4673,9 @@ class _posts {
 				$this->displayFormated($row);
 			elseif ($this->search || ($row['PartialContent'] && 
 				$row['ID'] != $this->selectedID))
-				$this->displayOne($row);
+				$this->displayPartial($row);
 			else
-				$this->displaySelected($row);
+				$this->displayOne($row);
 			
 			$i++;
 		}
