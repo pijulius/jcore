@@ -140,8 +140,15 @@ class _css {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'css::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'css::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		session_write_close();
 		$cachetime = 60*60*24*365;
@@ -232,8 +239,15 @@ class _css {
 			return true;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'css::displayCSS', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'css::displayCSS', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		ob_start(array('css', 'compress'));
 		css::$parseURLs = true;
@@ -297,8 +311,15 @@ class _css {
 	}
 	
 	static function display() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'css::display', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'css::display', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		$filemtime = @filemtime(SITE_PATH.'template/template.css');
 		

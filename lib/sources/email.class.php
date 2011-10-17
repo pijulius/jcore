@@ -37,8 +37,15 @@ class _email {
 	var $html = false;
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'email::email', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'email::email', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->from = email::genWebmasterEmail();
 		
@@ -57,8 +64,15 @@ class _email {
 			exit($id." email template couldn't be added as it's " .
 				"id is already used by another template!");
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'email::add', $_ENV, $id, $subject, $body, $save);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'email::add', $_ENV, $id, $subject, $body, $save, $handled);
+			
+			return $handled;
+		}
 		
 		_email::$templates[$id]['Subject'] = $subject;
 		_email::$templates[$id]['Body'] = $body;
@@ -74,8 +88,15 @@ class _email {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'email::edit', $_ENV, $id, $subject, $body);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'email::edit', $_ENV, $id, $subject, $body, $handled);
+			
+			return $handled;
+		}
 		
 		email::$templates[$id]['Subject'] = $subject;
 		email::$templates[$id]['Body'] = $body;
@@ -90,8 +111,15 @@ class _email {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'email::get', $_ENV, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'email::get', $_ENV, $id, $handled);
+			
+			return $handled;
+		}
 		
 		$result = email::$templates[$id];
 		
@@ -102,8 +130,15 @@ class _email {
 	}
 	
 	static function genWebmasterEmail() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'email::genWebmasterEmail', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'email::genWebmasterEmail', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		$result = preg_replace('/(-|,|;).*/i', '', strip_tags(PAGE_TITLE)).
 			" <".WEBMASTER_EMAIL.">";
@@ -118,8 +153,15 @@ class _email {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'email::load', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'email::load', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		$email = null;
 		
@@ -144,8 +186,15 @@ class _email {
 		if (!$this->toUserID && !$this->toUser)
 			return false;
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'email::getToUser', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'email::getToUser', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->toUser) {
 			if (!$this->toUser['Email']) {
@@ -194,8 +243,15 @@ class _email {
 	}
 	
 	static function verify($email, $withname = false) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'email::verify', $_ENV, $email, $withname);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'email::verify', $_ENV, $email, $withname, $handled);
+			
+			return $handled;
+		}
 		
 		if ($withname && strpos($email, '<') !== false) {
 			preg_match('/(.*)<(.*)>/', $email, $matches);
@@ -226,8 +282,15 @@ class _email {
 	}
 	
 	function reset() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'email::reset', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'email::reset', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->from = email::genWebmasterEmail();
 		$this->to = null;
@@ -244,8 +307,15 @@ class _email {
 		if (isset($GLOBALS['IGNORE_EMAILS']) && (bool)$GLOBALS['IGNORE_EMAILS'])
 			return true;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'email::send', $this, $debug);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'email::send', $this, $debug, $handled);
+			
+			return $handled;
+		}
 		
 		$subject = $this->subject;
 		$message = $this->message;
@@ -329,8 +399,15 @@ class _email {
 	}
 	
 	function phpMail($subject, $message) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'email::phpMail', $this, $subject, $message);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'email::phpMail', $this, $subject, $message, $handled);
+			
+			return $handled;
+		}
 		
 		$result =
 			@mail(
@@ -357,8 +434,15 @@ class _email {
 	}
 	
 	function smtpMail($subject, $message) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'email::smtpMail', $this, $subject, $message);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'email::smtpMail', $this, $subject, $message, $handled);
+			
+			return $handled;
+		}
 		
 		if (!defined('EMAIL_SMTP_HOST') || !defined('EMAIL_SMTP_PORT') ||
 			!EMAIL_SMTP_HOST || !EMAIL_SMTP_PORT) 
@@ -491,8 +575,15 @@ class _email {
 	}
 	
 	function pgpMail($subject, $message) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'email::pgpMail', $this, $subject, $message);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'email::pgpMail', $this, $subject, $message, $handled);
+			
+			return $handled;
+		}
 		
 		if (!defined('EMAIL_PGP_PUBLIC_KEYS_DIRECTORY') || !defined('EMAIL_PGP_BINARY') ||
 			!EMAIL_PGP_PUBLIC_KEYS_DIRECTORY || !EMAIL_PGP_BINARY) 

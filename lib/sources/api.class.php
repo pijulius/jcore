@@ -84,7 +84,7 @@ class _api {
 	
 	static function callHooks($type, $hook, &$argument1 = null, &$argument2 = null, &$argument3 = null, &$argument4 = null, &$argument5 = null, &$argument6 = null, &$argument7 = null, &$argument8 = null, &$argument9 = null, &$argument10 = null) {
 		if (!api::$hooks || !$type || !$hook)
-			return false;
+			return null;
 		
 		if ($type == API_HOOK_BEFORE && isset(api::$hooks[API_HOOK_RETURN][$hook])) {
 			foreach(api::$hooks[API_HOOK_RETURN][$hook] as $function => $object) {
@@ -94,6 +94,8 @@ class _api {
 				ob_start();
 			}
 		}
+		
+		$result = null;
 		
 		if (isset(api::$hooks[$type][$hook])) {
 			foreach(api::$hooks[$type][$hook] as $function => $object) {
@@ -115,12 +117,15 @@ class _api {
 					else
 						$class = new $class();
 					
-					$class->$method(
+					$hookresult = $class->$method(
 						$argument1, $argument2, $argument3,
 						$argument4, $argument5, $argument6,
 						$argument7, $argument8, $argument9,
 						$argument10);
 					unset($class);
+					
+					if (isset($hookresult))
+						$result = $hookresult;
 					
 					continue;
 				}
@@ -128,11 +133,14 @@ class _api {
 				if (!function_exists($function))
 					continue;
 				
-				$function(
+				$hookresult = $function(
 					$argument1, $argument2, $argument3,
 					$argument4, $argument5, $argument6,
 					$argument7, $argument8, $argument9,
 					$argument10);
+				
+				if (isset($hookresult))
+					$result = $hookresult;
 			}
 		}
 		
@@ -182,7 +190,7 @@ class _api {
 			}
 		}
 		
-		return true;
+		return $result;
 	}
 	
 	static function addContentCode() {

@@ -82,8 +82,15 @@ class _url {
 	}
 	
 	static function displayPageTitle($level = 0) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'url::displayPageTitle', $_ENV, $level);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'url::displayPageTitle', $_ENV, $level, $handled);
+			
+			return $handled;
+		}
 		
 		$title = url::getPageTitle();
 		
@@ -104,8 +111,15 @@ class _url {
 	}
 	
 	static function displayPageDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'url::displayPageDescription', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'url::displayPageDescription', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		echo htmlspecialchars(url::getPageDescription(), ENT_QUOTES);
 		
@@ -114,8 +128,15 @@ class _url {
 	}
 	
 	static function displayPageKeywords() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'url::displayPageKeywords', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'url::displayPageKeywords', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		echo htmlspecialchars(url::getPageKeywords(), ENT_QUOTES);
 		
@@ -427,8 +448,15 @@ class _url {
 		if (!$displaypath)
 			return;
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'url::displayPath', $_ENV, $level, $displaypath);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'url::displayPath', $_ENV, $level, $displaypath, $handled);
+			
+			return $handled;
+		}
 		
 		$path = null;
 		$exppaths = explode('/', $displaypath);
@@ -472,8 +500,15 @@ class _url {
 	}
 	
 	static function displayRootPath() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'url::displayRootPath', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'url::displayRootPath', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		echo url::site();
 		
@@ -482,8 +517,15 @@ class _url {
 	}
 	
 	static function displayError() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'url::displayError', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'url::displayError', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		$codes = new contentCodes();
 		$codes->display(PAGE_404_ERROR_TEXT);
@@ -521,8 +563,15 @@ class _url {
 		if (!$search)
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'url::displaySearch', $_ENV, $search, $results);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'url::displaySearch', $_ENV, $search, $results, $handled);
+			
+			return $handled;
+		}
 		
 		$searchstr = $search;
 		$searches = array();
@@ -617,8 +666,15 @@ class _url {
 		if (!isset($this->arguments))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'url::displayArguments', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'url::displayArguments', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$encode = false;
 		$decode = false;
@@ -733,8 +789,15 @@ class _url {
 		if ($this->displayArguments())
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'url::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'url::display', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'url::display', $this);
 	}

@@ -57,8 +57,15 @@ class _security {
 	var $adminPath = 'admin/site/security';
 	
 	function countAdminItems() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::countAdminItems', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::countAdminItems', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$bfrow = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
@@ -79,8 +86,15 @@ class _security {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		favoriteLinks::add(
 			__('More Settings'), 
@@ -94,8 +108,15 @@ class _security {
 	}
 	
 	function verifyAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::verifyAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::verifyAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$bfon = null;
 		$pton = null;
@@ -213,8 +234,15 @@ class _security {
 	}
 	
 	function displayAdminBFListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminBFListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminBFListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -229,15 +257,29 @@ class _security {
 	}
 	
 	function displayAdminBFListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminBFListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminBFListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'security::displayAdminBFListHeaderOptions', $this);
 	}
 	
 	function displayAdminBFListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminBFListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminBFListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -248,8 +290,15 @@ class _security {
 	}
 	
 	function displayAdminBFListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminBFListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminBFListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td>" .
@@ -271,15 +320,29 @@ class _security {
 	}
 	
 	function displayAdminBFListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminBFListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminBFListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'security::displayAdminBFListItemOptions', $this, $row);
 	}
 	
 	function displayAdminBFListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminBFListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminBFListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -295,8 +358,15 @@ class _security {
 	}
 	
 	function displayAdminBFListFooter() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminBFListFooter', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminBFListFooter', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo 
 			"<p class='comment'>" .
@@ -312,8 +382,15 @@ class _security {
 	}
 	
 	function displayAdminBFList(&$rows) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminBFList', $this, $rows);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminBFList', $this, $rows, $handled);
+			
+			return $handled;
+		}
 		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
@@ -358,8 +435,15 @@ class _security {
 	}
 	
 	function displayAdminBFFunctions($bfenabled = true) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminBFFunctions', $this, $bfenabled);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminBFFunctions', $this, $bfenabled, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<form action='".url::uri('bfon, pton, ip, userid, delete')."' method='post'>" .
@@ -382,8 +466,15 @@ class _security {
 	}
 	
 	function displayAdminBFTitle($bfenabled = true) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminBFTitle', $this, $bfenabled);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminBFTitle', $this, $bfenabled, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<b>" .
@@ -400,8 +491,15 @@ class _security {
 	}
 	
 	function displayAdminBFDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminBFDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminBFDescription', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<p class='comment'>" .
@@ -416,8 +514,15 @@ class _security {
 	}
 	
 	function displayAdminPTListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminPTListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminPTListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -432,15 +537,29 @@ class _security {
 	}
 	
 	function displayAdminPTListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminPTListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminPTListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'security::displayAdminPTListHeaderOptions', $this);
 	}
 	
 	function displayAdminPTListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminPTListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminPTListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -451,8 +570,15 @@ class _security {
 	}
 	
 	function displayAdminPTListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminPTListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminPTListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$user = $GLOBALS['USER']->get($row['UserID']);
 			
@@ -479,15 +605,29 @@ class _security {
 	}
 	
 	function displayAdminPTListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminPTListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminPTListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'security::displayAdminPTListItemOptions', $this, $row);
 	}
 	
 	function displayAdminPTListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminPTListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminPTListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -503,8 +643,15 @@ class _security {
 	}
 	
 	function displayAdminPTListFooter() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminPTListFooter', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminPTListFooter', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo 
 			"<p class='comment'>" .
@@ -520,8 +667,15 @@ class _security {
 	}
 	
 	function displayAdminPTList(&$rows) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminPTList', $this, $rows);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminPTList', $this, $rows, $handled);
+			
+			return $handled;
+		}
 		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
@@ -566,8 +720,15 @@ class _security {
 	}
 	
 	function displayAdminPTFunctions($ptenabled = true) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminPTFunctions', $this, $ptenabled);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminPTFunctions', $this, $ptenabled, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<form action='".url::uri('bfon, pton, ip, userid, delete')."' method='post'>" .
@@ -590,8 +751,15 @@ class _security {
 	}
 	
 	function displayAdminPTTitle($ptenabled = true) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminPTTitle', $this, $ptenabled);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminPTTitle', $this, $ptenabled, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<b>" .
@@ -608,8 +776,15 @@ class _security {
 	}
 	
 	function displayAdminPTDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminPTDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminPTDescription', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<p class='comment'>" .
@@ -624,8 +799,15 @@ class _security {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__("Security Alerts Administration"),
@@ -636,15 +818,29 @@ class _security {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'security::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$ip = null;
 		$userid = null;
@@ -767,8 +963,15 @@ class _security {
 		if (!isset($ip))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::deleteBFBan', $this, $ip);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::deleteBFBan', $this, $ip, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" DELETE FROM `{bfprotectionbans}`" .
@@ -788,8 +991,15 @@ class _security {
 		if (!$userid)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::deletePTBan', $this, $userid);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::deletePTBan', $this, $userid, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" DELETE FROM `{ptprotectionbans}`" .
@@ -802,8 +1012,15 @@ class _security {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$scimage = null;
 		$newsession = null;
@@ -1083,8 +1300,15 @@ class _security {
 		if (fseek($fp, $length*$line) == -1)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::randomWord', $_ENV, $extended);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::randomWord', $_ENV, $extended, $handled);
+			
+			return $handled;
+		}
 		
 		$word = trim(fgets($fp));
 		fclose($fp);
@@ -1109,8 +1333,15 @@ class _security {
 	}
 	 
 	static function randomChars($length = 5, $numbers = true) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::randomChars', $_ENV, $length, $numbers);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::randomChars', $_ENV, $length, $numbers, $handled);
+			
+			return $handled;
+		}
 		
 		$chars = null;
 		
@@ -1136,8 +1367,15 @@ class _security {
 	}
 	
 	static function genPassword($salt = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'security::genPassword', $_ENV, $salt);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'security::genPassword', $_ENV, $salt, $handled);
+			
+			return $handled;
+		}
 		
     	if ($salt === null) {
 			$salt = security::salt();

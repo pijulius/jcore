@@ -222,8 +222,15 @@ class _files {
 	}
 	
  	static function upload($file, $to, $filetype = FILE_TYPE_UPLOAD) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'files::upload', $_ENV, $file, $to, $filetype);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'files::upload', $_ENV, $file, $to, $filetype, $handled);
+			
+			return $handled;
+		}
 		
 		$topath = preg_replace('/(.*(\/|\\\)).*/', '\1', $to);
 		$tofilename = preg_replace('/.*(\/|\\\)/', '', $to);
@@ -364,8 +371,15 @@ class _files {
  		if (!@is_file($file))
  			return false;
  		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'files::display', $_ENV, $file, $forcedownload, $resumable);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'files::display', $_ENV, $file, $forcedownload, $resumable, $handled);
+			
+			return $handled;
+		}
 		
 		$size = @filesize($file);
 		$fileinfo = @pathinfo($file);
@@ -491,8 +505,15 @@ class _files {
  	}
  	
  	static function ext2MimeClass($file) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'files::ext2MimeClass', $_ENV, $file);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'files::ext2MimeClass', $_ENV, $file, $handled);
+			
+			return $handled;
+		}
 		
 		if (preg_match('/\.(7z|rar|gz|gzip|tar|tgz|zip)$/i', $file))
 			$result = "mime-type-package";

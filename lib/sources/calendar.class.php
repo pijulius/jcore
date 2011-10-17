@@ -32,8 +32,15 @@ class _calendar {
 	}
 	
 	static function date($timestamp = null, $format = PAGE_DATE_FORMAT) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'calendar::date', $_ENV, $timestamp, $format);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'calendar::date', $_ENV, $timestamp, $format, $handled);
+			
+			return $handled;
+		}
 		
 		$result = strftime ($format,
 			calendar::time2unix($timestamp));
@@ -45,8 +52,15 @@ class _calendar {
 	}
 	
 	static function time($timestamp = null, $format = PAGE_TIME_FORMAT) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'calendar::time', $_ENV, $timestamp, $format);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'calendar::time', $_ENV, $timestamp, $format, $handled);
+			
+			return $handled;
+		}
 		
 		$result = strftime ($format,
 			calendar::time2unix($timestamp));
@@ -58,8 +72,15 @@ class _calendar {
 	}
 	
 	static function datetime($timestamp = null, $format = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'calendar::datetime', $_ENV, $timestamp, $format);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'calendar::datetime', $_ENV, $timestamp, $format, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($format))
 			$format = PAGE_DATE_FORMAT." ".PAGE_TIME_FORMAT;
@@ -92,8 +113,15 @@ class _calendar {
 		if (!$this->arguments)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'calendar::displayArguments', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'calendar::displayArguments', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$args = explode('/', $this->arguments);
 		
@@ -124,8 +152,15 @@ class _calendar {
 		if ($this->displayArguments())
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'calendar::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'calendar::display', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'calendar::display', $this);
 	}

@@ -35,8 +35,15 @@ class _attachments {
 	var $ajaxRequest = null;
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::attachments', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::attachments', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->uriRequest = strtolower(get_class($this));
 		$this->subFolder = date('Ym');
@@ -51,8 +58,15 @@ class _attachments {
 	}
 	
 	function SQL() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::SQL', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::SQL', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$sql = 
 			" SELECT * FROM `{" .$this->sqlTable . "}`" .
@@ -74,8 +88,15 @@ class _attachments {
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -91,8 +112,15 @@ class _attachments {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$edit = null;
 		
@@ -214,8 +242,15 @@ class _attachments {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$reorder = null;
 		$orders = null;
@@ -471,8 +506,15 @@ class _attachments {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -491,15 +533,29 @@ class _attachments {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'attachments::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th>".__("Edit")."</th>" .
@@ -510,8 +566,15 @@ class _attachments {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td>" .
@@ -554,15 +617,29 @@ class _attachments {
 	}
 	
 	function displayAdminListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'attachments::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -585,8 +662,15 @@ class _attachments {
 	}
 	
 	function displayAdminListFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayAdminListFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayAdminListFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo 
 			"<input type='submit' name='reordersubmit' value='" .
@@ -599,8 +683,15 @@ class _attachments {
 	}
 	
 	function displayAdminList(&$rows) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayAdminList', $this, $rows);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayAdminList', $this, $rows, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<form action='".
@@ -665,8 +756,15 @@ class _attachments {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 				
@@ -675,8 +773,15 @@ class _attachments {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__(trim(ucfirst(preg_replace('/([A-Z])/', ' \1', 
@@ -688,8 +793,15 @@ class _attachments {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'attachments::displayAdminDescription', $this);
 	}
@@ -703,8 +815,15 @@ class _attachments {
 			return;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$edit = null;
@@ -841,8 +960,15 @@ class _attachments {
 		if (!is_array($values))
 			return false;
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::add', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::add', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		if ($values['OrderID'] == '') {
 			sql::run(
@@ -922,8 +1048,15 @@ class _attachments {
 		if (!is_array($values))
 			return false;
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::edit', $this, $id, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::edit', $this, $id, $values, $handled);
+			
+			return $handled;
+		}
 		
 		if ($values['File'])
 			sql::run(
@@ -983,8 +1116,15 @@ class _attachments {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::delete', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::delete', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT `Location` FROM `{".$this->sqlTable . "}`" .
@@ -1020,8 +1160,15 @@ class _attachments {
 	}
 	
 	function upload($file, $to) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::upload', $this, $file, $to);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::upload', $this, $file, $to, $handled);
+			
+			return $handled;
+		}
 		
 		$result = files::upload($file, $to.$this->subFolder.'/');
 		
@@ -1065,8 +1212,15 @@ class _attachments {
 			return false;
 		}
 
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::download', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::download', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		session_write_close();
 		files::display($file, true);
@@ -1104,8 +1258,15 @@ class _attachments {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$result = true;
 		$download = null;
@@ -1128,8 +1289,15 @@ class _attachments {
 	}
 	
 	function displayIcon(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayIcon', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayIcon', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<a href='".$row['_Link']."' " .
@@ -1146,8 +1314,15 @@ class _attachments {
 	}
 	
 	function displayTitle(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayTitle', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayTitle', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<a href='".$row['_Link']."' " .
@@ -1162,8 +1337,15 @@ class _attachments {
 	}
 	
 	function displaySize(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displaySize', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displaySize', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo 
 			"(".files::humanSize($row['FileSize']).")";
@@ -1173,8 +1355,15 @@ class _attachments {
 	}
 	
 	function displayDetails(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayDetails', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayDetails', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<span class='attachment-type'>" .
@@ -1205,8 +1394,15 @@ class _attachments {
 	}
 	
 	function displayFormated(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayFormated', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayFormated', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($row['_Link']) || !$row['_Link'])
 			$row['_Link'] = $this->generateLink($row);
@@ -1268,8 +1464,15 @@ class _attachments {
 	}
 	
 	function displayOne(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::displayOne', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::displayOne', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($row['_Link']) || !$row['_Link'])
 			$row['_Link'] = $this->generateLink($row);
@@ -1344,8 +1547,15 @@ class _attachments {
 		if (!sql::rows($rows))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'attachments::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'attachments::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$this->ajaxRequest)
 			echo

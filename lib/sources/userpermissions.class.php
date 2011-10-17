@@ -23,8 +23,15 @@ class _userPermissions {
 	
 	// ************************************************   Admin Part
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$edit = null;
 		
@@ -127,8 +134,15 @@ class _userPermissions {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -144,8 +158,15 @@ class _userPermissions {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$edit = null;
@@ -264,8 +285,15 @@ class _userPermissions {
 	}
 	
 	function displayAdminSections() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::displayAdminSections', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::displayAdminSections', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<div class='user-permissions-admin-sections'>" .
@@ -379,8 +407,15 @@ class _userPermissions {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -393,15 +428,29 @@ class _userPermissions {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'userPermissions::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -414,8 +463,15 @@ class _userPermissions {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$pathtitle = null;
 		
@@ -471,15 +527,29 @@ class _userPermissions {
 	}
 	
 	function displayAdminListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'userPermissions::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -502,8 +572,15 @@ class _userPermissions {
 	}
 	
 	function displayAdminList(&$rows) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::displayAdminList', $this, $rows);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::displayAdminList', $this, $rows, $handled);
+			
+			return $handled;
+		}
 		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
@@ -547,8 +624,15 @@ class _userPermissions {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -557,8 +641,15 @@ class _userPermissions {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('User Permissions'),
@@ -569,8 +660,15 @@ class _userPermissions {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo "<p>".
 			__("User will have full access to all paths (if marked as Admin) " .
@@ -593,8 +691,15 @@ class _userPermissions {
 			return;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$edit = null;
@@ -710,8 +815,15 @@ class _userPermissions {
 			return false;
 		}
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::add', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::add', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		$newid = sql::run(
 			" INSERT INTO `{".$this->sqlTable."}` SET " .
@@ -758,8 +870,15 @@ class _userPermissions {
 			return false;
 		}
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::edit', $this, $id, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::edit', $this, $id, $values, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}` SET ".
@@ -787,8 +906,15 @@ class _userPermissions {
 		if (!$id)
 			return false;
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::delete', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::delete', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" DELETE FROM `{".$this->sqlTable."}` " .
@@ -931,8 +1057,15 @@ class _userPermissions {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userPermissions::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userPermissions::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$GLOBALS['USER']->loginok || 
 			!$GLOBALS['USER']->data['Admin']) 

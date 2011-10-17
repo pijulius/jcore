@@ -23,8 +23,15 @@ class _dayCalendar {
 	var $ajaxRequest = null;
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dayCalendar::dayCalendar', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dayCalendar::dayCalendar', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->time = time();
 		$this->uriRequest = strtolower(get_class($this));
@@ -43,8 +50,15 @@ class _dayCalendar {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dayCalendar::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dayCalendar::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->display();
 		
@@ -55,8 +69,15 @@ class _dayCalendar {
 	}
 	
 	function displayNavigation($time) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dayCalendar::displayNavigation', $this, $time);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dayCalendar::displayNavigation', $this, $time, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<div class='calendar-navigation'>";
@@ -83,8 +104,15 @@ class _dayCalendar {
 	}
 	
 	function displayTime($time) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dayCalendar::displayTime', $this, $time);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dayCalendar::displayTime', $this, $time, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			date($this->timeFormat, $time);
@@ -94,8 +122,15 @@ class _dayCalendar {
 	}
 	
 	function displayPrevWeekButton($time) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dayCalendar::displayPrevWeekButton', $this, $time);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dayCalendar::displayPrevWeekButton', $this, $time, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<a class='calendar-prev more ajax-content-link' href='" .
@@ -111,8 +146,15 @@ class _dayCalendar {
 	}
 	
 	function displayPrevButton($time) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dayCalendar::displayPrevButton', $this, $time);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dayCalendar::displayPrevButton', $this, $time, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<a class='calendar-prev ajax-content-link' href='" .
@@ -128,8 +170,15 @@ class _dayCalendar {
 	}
 	
 	function displayNextWeekButton($time) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dayCalendar::displayNextWeekButton', $this, $time);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dayCalendar::displayNextWeekButton', $this, $time, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<a class='calendar-next more ajax-content-link' href='" .
@@ -145,8 +194,15 @@ class _dayCalendar {
 	}
 	
 	function displayNextButton($time) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dayCalendar::displayNextButton', $this, $time);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dayCalendar::displayNextButton', $this, $time, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<a class='calendar-next ajax-content-link' href='" .
@@ -162,8 +218,15 @@ class _dayCalendar {
 	}
 	
 	function displayDayTitle($time) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dayCalendar::displayDayTitle', $this, $time);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dayCalendar::displayDayTitle', $this, $time, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			__(date($this->dayFormat, $time));
@@ -173,15 +236,29 @@ class _dayCalendar {
 	}
 	
 	function displayHalfHour($time) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dayCalendar::displayHalfHour', $this, $time);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dayCalendar::displayHalfHour', $this, $time, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'dayCalendar::displayHalfHour', $this, $time);
 	}
 	
 	function displayHour($time) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dayCalendar::displayHour', $this, $time);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dayCalendar::displayHour', $this, $time, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			date($this->hourFormat, $time);
@@ -191,8 +268,15 @@ class _dayCalendar {
 	}
 	
 	function display() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dayCalendar::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dayCalendar::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$offsettime = strtotime('+'.$this->offset.' day', $this->time);
 		

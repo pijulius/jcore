@@ -21,8 +21,15 @@ class _paging {
 	var $ajax = false;
 		
 	function __construct($limit = 10, $otherargs = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'paging::paging', $this, $limit, $otherargs);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'paging::paging', $this, $limit, $otherargs, $handled);
+			
+			return $handled;
+		}
 		
 		$this->limit = "0,".$limit;
 		$this->defaultLimit = $limit;
@@ -86,8 +93,15 @@ class _paging {
 	}
 	
 	function displayLastPage($link) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'paging::displayLastPage', $this, $link);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'paging::displayLastPage', $this, $link, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<a title='".htmlspecialchars(__("Last page"), ENT_QUOTES)."' " .
@@ -100,8 +114,15 @@ class _paging {
 	}
 	
 	function displayNextPage($link) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'paging::displayNextPage', $this, $link);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'paging::displayNextPage', $this, $link, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<a title='".htmlspecialchars(__("Next page"), ENT_QUOTES)."' " .
@@ -114,8 +135,15 @@ class _paging {
 	}
 	
 	function displayMorePages($link) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'paging::displayMorePages', $this, $link);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'paging::displayMorePages', $this, $link, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<span class='comment'" .
@@ -129,8 +157,15 @@ class _paging {
 	}
 	
 	function displayPage($link, $page) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'paging::displayPage', $this, $link, $page);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'paging::displayPage', $this, $link, $page, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<a title='".htmlspecialchars(sprintf(__("Page (%s)"), $page), ENT_QUOTES)."' " .
@@ -143,8 +178,15 @@ class _paging {
 	}
 	
 	function displayLessPages($link) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'paging::displayLessPages', $this, $link);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'paging::displayLessPages', $this, $link, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<span class='comment'" .
@@ -158,8 +200,15 @@ class _paging {
 	}
 	
 	function displayPrevPage($link) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'paging::displayPrevPage', $this, $link);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'paging::displayPrevPage', $this, $link, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<a title='".htmlspecialchars(__("Previous page"), ENT_QUOTES)."' " .
@@ -172,8 +221,15 @@ class _paging {
 	}
 	
 	function displayFirstPage($link) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'paging::displayFirstPage', $this, $link);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'paging::displayFirstPage', $this, $link, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<a title='".htmlspecialchars(__("First page"), ENT_QUOTES)."' " .
@@ -186,8 +242,15 @@ class _paging {
 	}
 	
 	function displayTitle($selectedpage = 0, $totalpages = 0) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'paging::displayTitle', $this, $selectedpage, $totalpages);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'paging::displayTitle', $this, $selectedpage, $totalpages, $handled);
+			
+			return $handled;
+		}
 		
 		if (JCORE_VERSION >= '1.0')
 			echo 
@@ -222,8 +285,15 @@ class _paging {
 		if ($totalpagenum < 2)
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'paging::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'paging::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$startpagenum = 1;
 		if ($currentpagenum > round($this->pageNumbers/2))

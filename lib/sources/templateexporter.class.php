@@ -17,8 +17,15 @@ class _templateExporter {
 	var $adminPath = 'admin/site/template/templateexporter';
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateExporter::templateExporter', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateExporter::templateExporter', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->rootPath = SITE_PATH.'template/';
 		
@@ -27,8 +34,15 @@ class _templateExporter {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateExporter::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateExporter::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		favoriteLinks::add(
 			__('Upload Template'), 
@@ -45,8 +59,15 @@ class _templateExporter {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateExporter::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateExporter::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$row = array(
 			'_Name' => preg_replace('/(-|,|;).*/i', '', strip_tags(PAGE_TITLE)),
@@ -124,8 +145,15 @@ class _templateExporter {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateExporter::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateExporter::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$template = null;
 		
@@ -170,8 +198,15 @@ class _templateExporter {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateExporter::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateExporter::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -180,8 +215,15 @@ class _templateExporter {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateExporter::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateExporter::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Export Template'),
@@ -192,8 +234,15 @@ class _templateExporter {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateExporter::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateExporter::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$template = __("Default");
 		
@@ -214,8 +263,15 @@ class _templateExporter {
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateExporter::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateExporter::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
@@ -677,8 +733,15 @@ class templateInstaller extends template {
 			return false;
 		}
 
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateExporter::download', $this, $filename);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateExporter::download', $this, $filename, $handled);
+			
+			return $handled;
+		}
 		
 		session_write_close();
 		$result = files::display($file, true);
@@ -690,8 +753,15 @@ class templateInstaller extends template {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateExporter::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateExporter::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$download = null;
 		

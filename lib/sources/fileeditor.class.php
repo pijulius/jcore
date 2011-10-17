@@ -15,8 +15,15 @@ class _fileEditor {
 	var $ajaxRequest = null;
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileEditor::fileEditor', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileEditor::fileEditor', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->uriRequest = strtolower(get_class($this));
 		
@@ -25,8 +32,15 @@ class _fileEditor {
 	}
 	
 	function verify(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileEditor::verify', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileEditor::verify', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$form->verify()) {
 			api::callHooks(API_HOOK_AFTER,
@@ -67,8 +81,15 @@ class _fileEditor {
 	}
 	
 	function save($file, $content) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileEditor::save', $this, $file, $content);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileEditor::save', $this, $file, $content, $handled);
+			
+			return $handled;
+		}
 		
 		$result = files::save($file, $content);
 		 
@@ -79,8 +100,15 @@ class _fileEditor {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileEditor::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileEditor::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->display();
 		
@@ -91,8 +119,15 @@ class _fileEditor {
 	}
 	
 	function setupForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileEditor::setupForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileEditor::setupForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__('File Editor'),
@@ -105,8 +140,15 @@ class _fileEditor {
 	}
 	
 	function displayForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileEditor::displayForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileEditor::displayForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -115,8 +157,15 @@ class _fileEditor {
 	}
 	
 	function display() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileEditor::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileEditor::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		preg_match('/([^(\/|\\\)]*)$/', $this->file, $matches);
 		

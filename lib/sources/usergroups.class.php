@@ -14,8 +14,15 @@ class _userGroups {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::countAdminItems', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::countAdminItems', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
@@ -29,8 +36,15 @@ class _userGroups {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -49,8 +63,15 @@ class _userGroups {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$edit = null;
 		
@@ -77,8 +98,15 @@ class _userGroups {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$setprioroties = null;
 		$priorities = null;
@@ -190,8 +218,15 @@ class _userGroups {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (JCORE_VERSION >= '1.0')
 			echo
@@ -207,8 +242,15 @@ class _userGroups {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -221,8 +263,15 @@ class _userGroups {
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -235,8 +284,15 @@ class _userGroups {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if (JCORE_VERSION >= '1.0')
 			echo
@@ -258,8 +314,15 @@ class _userGroups {
 	}
 	
 	function displayAdminListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$users = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
@@ -307,8 +370,15 @@ class _userGroups {
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -331,8 +401,15 @@ class _userGroups {
 	}
 	
 	function displayAdminListFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::displayAdminListFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::displayAdminListFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<input type='submit' name='prioritysubmit' value='".
@@ -345,8 +422,15 @@ class _userGroups {
 	}
 	
 	function displayAdminList(&$rows) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::displayAdminList', $this, $rows);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::displayAdminList', $this, $rows, $handled);
+			
+			return $handled;
+		}
 		
 		echo 
 			"<form action='".url::uri('edit, delete')."' method='post'>" .
@@ -407,8 +491,15 @@ class _userGroups {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -417,8 +508,15 @@ class _userGroups {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('User Groups Administration'),
@@ -429,15 +527,29 @@ class _userGroups {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'userGroups::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$edit = null;
@@ -550,8 +662,15 @@ class _userGroups {
 			return false;
 		}
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::add', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::add', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		$newid = sql::run(
 			" INSERT INTO `{usergroups}` SET " .
@@ -595,8 +714,15 @@ class _userGroups {
 			return false;
 		}
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::edit', $this, $id, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::edit', $this, $id, $values, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" UPDATE `{usergroups}` SET ".
@@ -625,8 +751,15 @@ class _userGroups {
 		if (!$id)
 			return false;
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'userGroups::delete', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'userGroups::delete', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" DELETE FROM `{usergroups}`" .

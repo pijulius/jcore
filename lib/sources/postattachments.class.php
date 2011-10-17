@@ -21,8 +21,15 @@ class _postAttachments extends attachments {
 		'admin/content/postsatglance/postattachments');
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postAttachments::postAttachments', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postAttachments::postAttachments', $this, $handled);
+			
+			return $handled;
+		}
 		
 		parent::__construct();
 		
@@ -34,8 +41,15 @@ class _postAttachments extends attachments {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postAttachments::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postAttachments::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!posts::checkAccess($this->selectedOwnerID)) {
 			$page = new pages();

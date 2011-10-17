@@ -17,8 +17,15 @@ class _massEmail {
 	
 	// ************************************************   Admin Part
 	static function countAdminItems() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::countAdminItems', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::countAdminItems', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
@@ -32,8 +39,15 @@ class _massEmail {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -49,8 +63,15 @@ class _massEmail {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__('Preview'),
@@ -168,8 +189,15 @@ class _massEmail {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$continue = null;
 		$delete = null;
@@ -451,8 +479,15 @@ class _massEmail {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -465,15 +500,29 @@ class _massEmail {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'massEmail::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -486,8 +535,15 @@ class _massEmail {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td class='auto-width'>" .
@@ -509,15 +565,29 @@ class _massEmail {
 	}
 	
 	function displayAdminListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'massEmail::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -540,8 +610,15 @@ class _massEmail {
 	}
 	
 	function displayAdminListItemSelected(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::displayAdminListItemSelected', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::displayAdminListItemSelected', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$user = $GLOBALS['USER']->get($row['UserID']);
 		
@@ -580,8 +657,15 @@ class _massEmail {
 	}
 	
 	function displayAdminList(&$rows) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::displayAdminList', $this, $rows);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::displayAdminList', $this, $rows, $handled);
+			
+			return $handled;
+		}
 		
 		$id = null;
 		
@@ -644,8 +728,15 @@ class _massEmail {
 	}
 	
 	function displayAdminPreview(&$form, &$emailssent) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::displayAdminPreview', $this, $form, $emailssent);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::displayAdminPreview', $this, $form, $emailssent, $handled);
+			
+			return $handled;
+		}
 		
 		if (JCORE_VERSION >= '0.6')
 			echo
@@ -745,8 +836,15 @@ class _massEmail {
 	}
 
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -755,8 +853,15 @@ class _massEmail {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Mass Email Administration'),
@@ -767,15 +872,29 @@ class _massEmail {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'massEmail::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$resend = null;
@@ -967,8 +1086,15 @@ class _massEmail {
 		if (!is_array($values))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::add', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::add', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		$exists = sql::fetch(sql::run(
 			" SELECT `ID` FROM `{massemails}`" .
@@ -1027,8 +1153,15 @@ class _massEmail {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::incEmailsSentOut', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::incEmailsSentOut', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" UPDATE `{massemails}` SET" .
@@ -1053,8 +1186,15 @@ class _massEmail {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::delete', $this, $id, $ifnoemailssent);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::delete', $this, $id, $ifnoemailssent, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" DELETE FROM `{massemails}`" .
@@ -1071,8 +1211,15 @@ class _massEmail {
 	
 	// ************************************************   Client Part
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'massEmail::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'massEmail::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$GLOBALS['USER']->loginok || 
 			!$GLOBALS['USER']->data['Admin']) 

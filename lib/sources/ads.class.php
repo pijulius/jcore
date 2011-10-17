@@ -21,8 +21,15 @@ class _ads {
 	var $ajaxRequest = null;
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::ads', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::ads', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->subFolder = date('Ym');
 		$this->rootPath = SITE_PATH.'sitefiles/banner/';
@@ -33,8 +40,15 @@ class _ads {
 	}
 	
 	function SQL() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::SQL', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::SQL', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$sql = 
 			" SELECT * FROM `{ads}`" .
@@ -59,8 +73,15 @@ class _ads {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::countAdminItems', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::countAdminItems', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
@@ -74,8 +95,15 @@ class _ads {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -94,8 +122,15 @@ class _ads {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__('Promo text'),
@@ -298,8 +333,15 @@ class _ads {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$reorder = null;
 		$orders = null;
@@ -438,8 +480,15 @@ class _ads {
 	}
 	
 	function displayAdminListHeader(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayAdminListHeader', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayAdminListHeader', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$blockroute = null;
 		
@@ -527,15 +576,29 @@ class _ads {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'ads::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -548,8 +611,15 @@ class _ads {
 	}
 	
 	function displayAdminListItemSelected(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayAdminListItemSelected', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayAdminListItemSelected', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayItemData(
 			__("Created on"),
@@ -619,8 +689,15 @@ class _ads {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td>" .
@@ -655,15 +732,29 @@ class _ads {
 	}
 	
 	function displayAdminListItemOptions(&$row){
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'ads::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -686,8 +777,15 @@ class _ads {
 	}
 	
 	function displayAdminListFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayAdminListFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayAdminListFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo 
 			"<input type='submit' name='reordersubmit' value='" .
@@ -700,8 +798,15 @@ class _ads {
 	}
 	
 	function displayAdminList(&$rows) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayAdminList', $this, $rows);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayAdminList', $this, $rows, $handled);
+			
+			return $handled;
+		}
 		
 		$id = null;
 		
@@ -795,8 +900,15 @@ class _ads {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -805,8 +917,15 @@ class _ads {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Ads Administration'), 
@@ -817,15 +936,29 @@ class _ads {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'ads::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$edit = null;
@@ -939,8 +1072,15 @@ class _ads {
 		if (!is_array($values))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::add', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::add', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		if ($values['OrderID'] == '') {
 			$row = sql::fetch(sql::run(
@@ -1027,8 +1167,15 @@ class _ads {
 		if (!is_array($values))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::edit', $this, $id, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::edit', $this, $id, $values, $handled);
+			
+			return $handled;
+		}
 		
 		$ad = sql::fetch(sql::run(
 			" SELECT * FROM `{ads}`" .
@@ -1109,8 +1256,15 @@ class _ads {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::delete', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::delete', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT `Location` FROM `{ads}`" .
@@ -1134,8 +1288,15 @@ class _ads {
 	}
 	
 	function upload($file, $to) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::upload', $this, $file, $to);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::upload', $this, $file, $to, $handled);
+			
+			return $handled;
+		}
 		
 		$result = files::upload($file, $to, FILE_TYPE_BANNER);
 		
@@ -1159,8 +1320,15 @@ class _ads {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::redirect', $this, $adid);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::redirect', $this, $adid, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" UPDATE `{ads}` SET" .
@@ -1195,8 +1363,15 @@ class _ads {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$result = false;
 		if (isset($_GET['redirect']) && (int)$_GET['redirect'])
@@ -1209,8 +1384,15 @@ class _ads {
 	}
 	
 	function displayImage(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayImage', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayImage', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<img src='".$this->rootURL.$row['Location'] .
@@ -1223,8 +1405,15 @@ class _ads {
 	}
 	
 	function displayCode(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ads::displayCode', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ads::displayCode', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo $row['AdCode'];
 		
@@ -1233,8 +1422,15 @@ class _ads {
 	}
 	
 	function displayOne(&$row) {
-		api::callHooks(API_HOOK_BEFORE, 
+		$handled = api::callHooks(API_HOOK_BEFORE, 
 			'ads::displayOne', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER, 
+				'ads::displayOne', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" UPDATE `{ads}` SET" .
@@ -1296,8 +1492,15 @@ class _ads {
 		if (!$total)
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE, 
+		$handled = api::callHooks(API_HOOK_BEFORE, 
 			'ads::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER, 
+				'ads::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo "<div class='ads'>";
 		

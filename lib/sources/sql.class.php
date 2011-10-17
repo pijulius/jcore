@@ -331,8 +331,15 @@ class _sql {
 			exit();
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sql::fatalError', $_ENV, $message);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sql::fatalError', $_ENV, $message, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<html>" .
@@ -376,8 +383,15 @@ class _sql {
 		if (!$error)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sql::displayError', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sql::displayError', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		if (isset($GLOBALS['USER']) && 
 			$GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin']) 
@@ -437,8 +451,15 @@ class _sql {
 		if ($debuglogging)
 			ob_start();
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sql::display', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sql::display', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<p class='sql-query'>" .

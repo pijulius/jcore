@@ -14,8 +14,15 @@ class _favoriteLinks {
 	static $links = array();
 	
 	function SQL() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::SQL', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::SQL', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$sql = 
 			" SELECT * FROM `{favoritelinks}` " .
@@ -30,8 +37,15 @@ class _favoriteLinks {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::countAdminItems', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::countAdminItems', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
@@ -45,8 +59,15 @@ class _favoriteLinks {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -58,8 +79,15 @@ class _favoriteLinks {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__('Title'),
@@ -110,8 +138,15 @@ class _favoriteLinks {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$reorder = null;
 		$orders = null;
@@ -223,8 +258,15 @@ class _favoriteLinks {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -237,15 +279,29 @@ class _favoriteLinks {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'favoriteLinks::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -258,8 +314,15 @@ class _favoriteLinks {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td>" .
@@ -283,15 +346,29 @@ class _favoriteLinks {
 	}
 	
 	function displayAdminListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'favoriteLinks::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -314,8 +391,15 @@ class _favoriteLinks {
 	}
 	
 	function displayAdminListFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::displayAdminListFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::displayAdminListFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<input type='submit' name='reordersubmit' value='".
@@ -328,8 +412,15 @@ class _favoriteLinks {
 	}
 	
 	function displayAdminList(&$rows) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::displayAdminList', $this, $rows);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::displayAdminList', $this, $rows, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<form action='".url::uri('edit, delete')."' method='post'>" .
@@ -389,8 +480,15 @@ class _favoriteLinks {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -399,8 +497,15 @@ class _favoriteLinks {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Favorite Links Administration'),
@@ -411,15 +516,29 @@ class _favoriteLinks {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'favoriteLinks::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$edit = null;
@@ -514,8 +633,15 @@ class _favoriteLinks {
 		if (!is_array($values))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::dbAdd', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::dbAdd', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		if ($values['OrderID'] == '') {
 			$row = sql::fetch(sql::run(
@@ -565,8 +691,15 @@ class _favoriteLinks {
 		if (!is_array($values))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::dbEdit', $this, $id, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::dbEdit', $this, $id, $values, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" UPDATE `{favoritelinks}` SET ".
@@ -601,8 +734,15 @@ class _favoriteLinks {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::dbDelete', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::dbDelete', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" DELETE FROM `{favoritelinks}` " .
@@ -616,8 +756,15 @@ class _favoriteLinks {
 	
 	// ************************************************   Client Part
 	static function add($title, $link) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::add', $_ENV, $title, $link);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::add', $_ENV, $title, $link, $handled);
+			
+			return $handled;
+		}
 		
 		if (isset(favoriteLinks::$links[$link])) {
 			$result = false;
@@ -643,8 +790,15 @@ class _favoriteLinks {
 	}
 	
 	static function remove($link) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::remove', $_ENV, $link);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::remove', $_ENV, $link, $handled);
+			
+			return $handled;
+		}
 		
 		unset(favoriteLinks::$links[$link]);
 		
@@ -653,8 +807,15 @@ class _favoriteLinks {
 	}
 
 	static function clear() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::clear', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::clear', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		favoriteLinks::$links = array();
 		
@@ -679,8 +840,15 @@ class _favoriteLinks {
 			return;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'favoriteLinks::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'favoriteLinks::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (count(favoriteLinks::$links) == 1) {
 			echo

@@ -103,8 +103,15 @@ class _users {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::countAdminItems', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::countAdminItems', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
@@ -118,8 +125,15 @@ class _users {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -144,8 +158,15 @@ class _users {
 	}
 	
 	function setupAdminForm(&$form, $membersModuleAvailable = false, $groupids = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::setupAdminForm', $this, $form, $membersModuleAvailable);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::setupAdminForm', $this, $form, $membersModuleAvailable, $handled);
+			
+			return $handled;
+		}
 		
 		$groupid = null;
 		$edit = null;
@@ -392,8 +413,15 @@ class _users {
 	}
 	
 	function verifyAdmin(&$form, $groupids = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$activate = null;
 		$suspend = null;
@@ -592,8 +620,15 @@ class _users {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th>" .
@@ -622,8 +657,15 @@ class _users {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -634,8 +676,15 @@ class _users {
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -648,8 +697,15 @@ class _users {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$ids = null;
 		$group = null;
@@ -710,8 +766,15 @@ class _users {
 	}
 	
 	function displayAdminListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$permissions = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
@@ -739,8 +802,15 @@ class _users {
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -763,8 +833,15 @@ class _users {
 	}
 	
 	function displayAdminListItemSelected(&$row, $membersModuleAvailable = false) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAdminListItemSelected', $this, $row, $membersModuleAvailable);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAdminListItemSelected', $this, $row, $membersModuleAvailable, $handled);
+			
+			return $handled;
+		}
 		
 		if (JCORE_VERSION >= '0.7') {
 			echo
@@ -834,8 +911,15 @@ class _users {
 	}
 	
 	function displayAdminListSearch($groupids = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAdminListSearch', $this, $groupids);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAdminListSearch', $this, $groupids, $handled);
+			
+			return $handled;
+		}
 		
 		$search = null;
 		$groupid = null;
@@ -889,8 +973,15 @@ class _users {
 	}
 	
 	function displayAdminListFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAdminListFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAdminListFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<input type='submit' name='activatesubmit' value='" .
@@ -908,8 +999,15 @@ class _users {
 	}
 	
 	function displayAdminList(&$rows, $membersModuleAvailable = false) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAdminList', $this, $rows, $membersModuleAvailable);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAdminList', $this, $rows, $membersModuleAvailable, $handled);
+			
+			return $handled;
+		}
 		
 		$id = null;
 		
@@ -988,8 +1086,15 @@ class _users {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -998,8 +1103,15 @@ class _users {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Users Administration'),
@@ -1010,15 +1122,29 @@ class _users {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'users::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$search = null;
 		$groupid = null;
@@ -1233,8 +1359,15 @@ class _users {
 			!$this->checkEmail($values['Email']))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::add', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::add', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		if (isset($values['Password']) && $values['Password'])
 			$password = $values['Password'];
@@ -1372,8 +1505,15 @@ class _users {
 			!$this->checkEmail($values['Email'], $id))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::edit', $this, $id, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::edit', $this, $id, $values, $handled);
+			
+			return $handled;
+		}
 		
 		$query = 
 			" `UserName` = '".
@@ -1440,8 +1580,15 @@ class _users {
 			$groupids && !in_array($user['GroupID'], (array)$groupids))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::delete', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::delete', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" DELETE FROM `{users}`" .
@@ -1474,8 +1621,15 @@ class _users {
 	}
 	
 	function refresh() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::get', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::get', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$result = false;
 		
@@ -1494,8 +1648,15 @@ class _users {
 	}
 	
 	function kickOut($id) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::kickOut', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::kickOut', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" DELETE FROM `{userlogins}` " .
@@ -1506,8 +1667,15 @@ class _users {
 	}
 	
 	function reset() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::reset', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::reset', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (isset($_COOKIE['memberloginid']))
 			sql::run(
@@ -1533,8 +1701,15 @@ class _users {
 	}
 	
 	function check() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::check', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::check', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$logout = null;
 		$rememberme = null;
@@ -1896,8 +2071,15 @@ class _users {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::addRequest', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::addRequest', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		$newrequestid = security::randomChars(21);
 		
@@ -1961,8 +2143,15 @@ class _users {
 			$groupids && !in_array($user['GroupID'], (array)$groupids))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::activate', $_ENV, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::activate', $_ENV, $id, $handled);
+			
+			return $handled;
+		}
 		
 		$latestrequest = sql::fetch(sql::run(
 			" SELECT `Data` FROM `{userrequests}`" .
@@ -2020,8 +2209,15 @@ class _users {
 			$groupids && !in_array($user['GroupID'], (array)$groupids))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::suspend', $_ENV, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::suspend', $_ENV, $id, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" UPDATE `{users}` SET" .
@@ -2112,8 +2308,15 @@ class _users {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::requestPassword', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::requestPassword', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		$email = new email();
 		$email->force = true;
@@ -2229,8 +2432,15 @@ class _users {
 			return true;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::request', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::request', $this, $handled);
+			
+			return $handled;
+		}
 		
 		switch($request['RequestTypeID']) {
 			case REQUEST_TYPE_NEW_ACCOUNT:
@@ -2345,8 +2555,15 @@ class _users {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$login = null;
 		
@@ -2366,8 +2583,15 @@ class _users {
 	}
 	
 	function constructUserName($row, $format = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::constructUserName', $this, $row, $format);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::constructUserName', $this, $row, $format, $handled);
+			
+			return $handled;
+		}
 		
 		$username = $row['UserName'];
 		
@@ -2415,8 +2639,15 @@ class _users {
 	}
 	
 	function setupQuickAccountForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::setupQuickAccountForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::setupQuickAccountForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$referer = url::referer(true);
 		
@@ -2441,8 +2672,15 @@ class _users {
 	}
 	
 	function setupQuickLoginForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::setupQuickLoginForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::setupQuickLoginForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__('Username'),
@@ -2460,8 +2698,15 @@ class _users {
 	
 	
 	function setupLoginForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::setupLoginForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::setupLoginForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__('Username'),
@@ -2489,8 +2734,15 @@ class _users {
 	}
 	
 	function setupRequestPasswordForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::setupRequestPasswordForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::setupRequestPasswordForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__("Please enter the email address you have provided at registration / join."),
@@ -2511,8 +2763,15 @@ class _users {
 		if (defined('AVATARS_DISABLED') && AVATARS_DISABLED)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayAvatar', $this, $useridoremail, $size, $default);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayAvatar', $this, $useridoremail, $size, $default, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($useridoremail) && $this->loginok)
 			$useridoremail = $this->data['Email'];
@@ -2561,8 +2820,15 @@ class _users {
 	}
 	
 	function displayQuickList($target = null, $multiple = false, $format = '%UserName%', $separator = ',') {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayQuickList', $this, $target, $multiple, $format, $separator);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayQuickList', $this, $target, $multiple, $format, $separator, $handled);
+			
+			return $handled;
+		}
 		
 		$search = null;
 		
@@ -2729,8 +2995,15 @@ class _users {
 	}
 	
 	function displayQuickAccountForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayQuickAccountForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayQuickAccountForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -2739,8 +3012,15 @@ class _users {
 	}
 	
 	function displayQuickAccount() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayQuickAccount', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayQuickAccount', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$form = new form(
 			__('Quick Account'),
@@ -2758,8 +3038,15 @@ class _users {
 	}
 	
 	function displayQuickLoginForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayQuickLoginForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayQuickLoginForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -2773,8 +3060,15 @@ class _users {
 			return true;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayQuickLogin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayQuickLogin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$referer = url::referer(true);
 		
@@ -2816,8 +3110,15 @@ class _users {
 	}
 	
 	function displayLoginForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayLoginForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayLoginForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -2829,8 +3130,15 @@ class _users {
 		if (requests::$ajax)
 			return $this->displayQuickLogin();
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayLogin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayLogin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$form = new form(
 			__('Member Login'),
@@ -2869,8 +3177,15 @@ class _users {
 	}
 	
 	function displayRequestPasswordForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayRequestPasswordForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayRequestPasswordForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -2879,8 +3194,15 @@ class _users {
 	}
 	
 	function displayRequestPassword() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayRequestPassword', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayRequestPassword', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$form = new form(
 			__('Request a New Password'),
@@ -2923,8 +3245,15 @@ class _users {
 		if (!$this->verifyError && !$this->result)
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayResult', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayResult', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->result) {
 			echo $this->result;
@@ -3014,8 +3343,15 @@ class _users {
 	}
 	
 	function displayUserName($row, $format = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::displayUserName', $this, $row, $format);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::displayUserName', $this, $row, $format, $handled);
+			
+			return $handled;
+		}
 		
 		echo $this->constructUserName($row, $format);
 		
@@ -3024,8 +3360,15 @@ class _users {
 	}
 	
 	function display($login = false) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'users::display', $this, $login);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'users::display', $this, $login, $handled);
+			
+			return $handled;
+		}
 		
 		$this->displayResult();
 		

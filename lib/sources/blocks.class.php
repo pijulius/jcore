@@ -34,8 +34,15 @@ class _blocks {
 	var $adminPath = 'admin/site/blocks';
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::blocks', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::blocks', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (isset($_GET['languageid']))
 			$this->selectedLanguageID = (int)$_GET['languageid'];
@@ -48,8 +55,15 @@ class _blocks {
 	}
 	
 	function SQL() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::SQL', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::SQL', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$sql = 
 			(JCORE_VERSION >= '0.4'?
@@ -94,8 +108,15 @@ class _blocks {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::countAdminItems', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::countAdminItems', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
@@ -115,8 +136,15 @@ class _blocks {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -140,8 +168,15 @@ class _blocks {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__('Title'),
@@ -414,8 +449,15 @@ class _blocks {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$reorder = null;
 		$orders = null;
@@ -567,8 +609,15 @@ class _blocks {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -583,15 +632,29 @@ class _blocks {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'blocks::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -604,8 +667,15 @@ class _blocks {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td>" .
@@ -650,15 +720,29 @@ class _blocks {
 	}
 	
 	function displayAdminListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'blocks::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -681,8 +765,15 @@ class _blocks {
 	}
 	
 	function displayAdminListItemSelected(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdminListItemSelected', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdminListItemSelected', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$pageroute = null;
 		if ($row[(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs')]) {
@@ -785,8 +876,15 @@ class _blocks {
 	}
 	
 	function displayAdminListFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdminListFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdminListFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo 
 			"<input type='submit' name='reordersubmit' value='" .
@@ -799,8 +897,15 @@ class _blocks {
 	}
 	
 	function displayAdminListLayouts($layout) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdminListLayouts', $this, $layout);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdminListLayouts', $this, $layout, $handled);
+			
+			return $handled;
+		}
 		
 		ob_start();
 		$this->displayAdminListItems(0, false, $layout);
@@ -857,8 +962,15 @@ class _blocks {
 		if (!sql::rows($rows))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdminListItems', $this, $blockid, $rowpair, $layout);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdminListItems', $this, $blockid, $rowpair, $layout, $handled);
+			
+			return $handled;
+		}
 		
 		if ($blockid) {
 			echo 
@@ -937,8 +1049,15 @@ class _blocks {
 	}
 	
 	function displayAdminList(&$rows) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdminList', $this, $rows);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdminList', $this, $rows, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<form action='".url::uri('edit, delete')."' method='post'>" .
@@ -985,8 +1104,15 @@ class _blocks {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -995,8 +1121,15 @@ class _blocks {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(__('Blocks Administration'));
 		
@@ -1005,15 +1138,29 @@ class _blocks {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'blocks::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$edit = null;
@@ -1173,8 +1320,15 @@ class _blocks {
 		if (!is_array($values))
 			return false;
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::add', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::add', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($values['LanguageIDs']))
 			$values['LanguageIDs'] = null;
@@ -1304,8 +1458,15 @@ class _blocks {
 		if (!is_array($values))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::edit', $this, $id, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::edit', $this, $id, $values, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($values['LanguageIDs']))
 			$values['LanguageIDs'] = null;
@@ -1484,8 +1645,15 @@ class _blocks {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::delete', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::delete', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		$subblocks = blocks::getTree($id);
 		$maincontentblocks = null;
@@ -1683,8 +1851,15 @@ class _blocks {
 	}
 	
 	function displayContent($block) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayContent', $this, $block);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayContent', $this, $block, $handled);
+			
+			return $handled;
+		}
 		
 		if ($block['Content']) {
 			$codes = new contentCodes();
@@ -1815,8 +1990,15 @@ class _blocks {
 			}
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayOne', $this, $block);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayOne', $this, $block, $handled);
+			
+			return $handled;
+		}
 		
 		$cssclass = null;
 		
@@ -1925,8 +2107,15 @@ class _blocks {
 		if (!$this->arguments)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::displayArguments', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::displayArguments', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			(JCORE_VERSION >= '0.4'?
@@ -1968,8 +2157,15 @@ class _blocks {
 		if ($this->displayArguments())
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'blocks::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'blocks::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		// In admin caching is turned off for Main Content
 		if (JCORE_VERSION >= '0.4' && isset($GLOBALS['ADMIN']) && 

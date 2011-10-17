@@ -18,8 +18,15 @@ class _noteComments extends comments {
 	var $adminPath = 'admin/site/notes/notecomments';
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'noteComments::noteComments', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'noteComments::noteComments', $this, $handled);
+			
+			return $handled;
+		}
 		
 		parent::__construct();
 		

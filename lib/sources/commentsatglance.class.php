@@ -14,8 +14,15 @@ class _commentsAtGlance extends comments {
 	var $adminPath = 'admin/content/commentsatglance';
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'commentsAtGlance::comments', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'commentsAtGlance::comments', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$classes = get_declared_classes();
 		foreach($classes as $class) {
@@ -34,8 +41,15 @@ class _commentsAtGlance extends comments {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'commentsAtGlance::countAdminItems', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'commentsAtGlance::countAdminItems', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$items = 0;
 		foreach((array)$this->commentClasses as $class)
@@ -48,8 +62,15 @@ class _commentsAtGlance extends comments {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'commentsAtGlance::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'commentsAtGlance::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$decline = null;
 		$approve = null;
@@ -187,8 +208,15 @@ class _commentsAtGlance extends comments {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'commentsAtGlance::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'commentsAtGlance::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		list($id, $class) = explode('_', $row['ID']);
 		
@@ -215,8 +243,15 @@ class _commentsAtGlance extends comments {
 	}
 	
 	function displayAdminListFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'commentsAtGlance::displayAdminListFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'commentsAtGlance::displayAdminListFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (defined('MODERATED_COMMENTS') && MODERATED_COMMENTS &&
 			defined('MODERATED_COMMENTS_BY_APPROVAL') && 
@@ -237,8 +272,15 @@ class _commentsAtGlance extends comments {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'commentsAtGlance::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'commentsAtGlance::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Comments at Glance'), 
@@ -249,8 +291,15 @@ class _commentsAtGlance extends comments {
 	}
 	
 	function displayAdmin() {			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'commentsAtGlance::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'commentsAtGlance::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$search = null;
 		$searchtype = null;

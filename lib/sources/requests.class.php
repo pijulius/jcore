@@ -54,8 +54,15 @@ class _requests {
 	}
 	
 	static function displayResult() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'requests::displayResult', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'requests::displayResult', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		echo requests::$result;
 		url::flushDisplay();
@@ -176,8 +183,15 @@ class _requests {
 			return;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'requests::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'requests::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$class = new $classname;
 		

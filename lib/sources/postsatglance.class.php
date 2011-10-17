@@ -14,8 +14,15 @@ class _postsAtGlance extends posts {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postsAtGlance::countAdminItems', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postsAtGlance::countAdminItems', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
@@ -29,8 +36,15 @@ class _postsAtGlance extends posts {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postsAtGlance::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postsAtGlance::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$pageid = null;
 		
@@ -89,8 +103,15 @@ class _postsAtGlance extends posts {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postsAtGlance::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postsAtGlance::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$deactivate = null;
@@ -219,8 +240,15 @@ class _postsAtGlance extends posts {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postsAtGlance::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postsAtGlance::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th>" .
@@ -238,8 +266,15 @@ class _postsAtGlance extends posts {
 	}
 	
 	function displayAdminListItemSelected(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postsAtGlance::displayAdminListItemSelected', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postsAtGlance::displayAdminListItemSelected', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if ($row[(JCORE_VERSION >= '0.8'?'PageID':'MenuItemID')]) {
 			$pageroute = null;
@@ -279,8 +314,15 @@ class _postsAtGlance extends posts {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postsAtGlance::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postsAtGlance::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$ids = null;
 		
@@ -323,8 +365,15 @@ class _postsAtGlance extends posts {
 	}
 	
 	function displayAdminListFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postsAtGlance::displayAdminListFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postsAtGlance::displayAdminListFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<input type='submit' name='deletesubmit' value='" .
@@ -340,8 +389,15 @@ class _postsAtGlance extends posts {
 	}
 	
 	function displayAdminListSearch() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postsAtGlance::displayAdminListSearch', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postsAtGlance::displayAdminListSearch', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$pageid = null;
 		$search = null;
@@ -402,8 +458,15 @@ class _postsAtGlance extends posts {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postsAtGlance::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postsAtGlance::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Posts at Glance'), 
@@ -414,8 +477,15 @@ class _postsAtGlance extends posts {
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postsAtGlance::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postsAtGlance::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$pageid = null;
 		$search = null;

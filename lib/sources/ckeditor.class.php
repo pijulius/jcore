@@ -48,8 +48,15 @@ class _ckEditor {
 	function upload() {
 		include_once('lib/attachments.class.php');
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ckeditor::upload', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ckeditor::upload', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$url = null;
 		$message = null;
@@ -74,8 +81,15 @@ class _ckEditor {
 	function uploadFlash() {
 		include_once('lib/flash.class.php');
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ckeditor::uploadFlash', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ckeditor::uploadFlash', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$url = null;
 		$message = null;
@@ -100,8 +114,15 @@ class _ckEditor {
 	function uploadImage() {
 		include_once('lib/pictures.class.php');
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ckeditor::uploadImage', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ckeditor::uploadImage', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$url = null;
 		$message = null;
@@ -127,8 +148,15 @@ class _ckEditor {
 		if (!$this->ckFuncNum)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ckeditor::setUploadResult', $this, $url, $message);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ckeditor::setUploadResult', $this, $url, $message, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<script type='text/javascript'>" .
@@ -146,8 +174,15 @@ class _ckEditor {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ckeditor::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ckeditor::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$upload = null;
 		$file = null;
@@ -268,8 +303,15 @@ class _ckEditor {
 			return true;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ckeditor::displayJS', $_ENV, $compress);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ckeditor::displayJS', $_ENV, $compress, $handled);
+			
+			return $handled;
+		}
 		
 		echo 
 			@file_get_contents('lib/ckeditor/ckeditor.js', 
@@ -285,8 +327,15 @@ class _ckEditor {
 	}
 	
 	static function display($inputelement = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ckeditor::display', $_ENV, $inputelement);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ckeditor::display', $_ENV, $inputelement, $handled);
+			
+			return $handled;
+		}
 		
 		if (!ckEditor::$loaded) {
 			if (defined('JCORE_PATH'))

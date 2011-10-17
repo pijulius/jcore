@@ -33,8 +33,15 @@ class _jQuery {
 		'ui.datepicker', 'tipsy');
 		
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'jQuery::jQuery', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'jQuery::jQuery', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->path = url::jCore();
 		
@@ -136,8 +143,15 @@ class _jQuery {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'jQuery::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'jQuery::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$admin = null;
 		$request = null;
@@ -210,8 +224,15 @@ class _jQuery {
 			return true;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'jQuery::displayPluginsJS', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'jQuery::displayPluginsJS', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		ob_start(array('jQuery', 'compress'));
 		
@@ -314,8 +335,15 @@ class _jQuery {
 			(!isset($GLOBALS['ADMIN']) || !(bool)$GLOBALS['ADMIN']))
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'jQuery::displayPlugins', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'jQuery::displayPlugins', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		$filemtime = @filemtime(SITE_PATH.'template/template.js');
 		
@@ -377,8 +405,15 @@ class _jQuery {
 			return true;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'jQuery::displayJS', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'jQuery::displayJS', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		ob_start(array('jQuery', 'compress'));
 		
@@ -399,8 +434,15 @@ class _jQuery {
 			(!isset($GLOBALS['ADMIN']) || !(bool)$GLOBALS['ADMIN']))
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'jQuery::display', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'jQuery::display', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		$filemtime = @filemtime(SITE_PATH.'template/template.js');
 		

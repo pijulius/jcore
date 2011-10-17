@@ -21,8 +21,15 @@ class _postComments extends comments {
 		'admin/content/postsatglance/postcomments');
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postComments::postComments', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postComments::postComments', $this, $handled);
+			
+			return $handled;
+		}
 		
 		parent::__construct();
 		
@@ -44,8 +51,15 @@ class _postComments extends comments {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postComments::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postComments::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!posts::checkAccess($this->selectedOwnerID)) {
 			$page = new pages();

@@ -59,8 +59,15 @@ class _admin {
 	static $sections = null;
 	
 	static function add($section, $itemid, $item) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'admin::add', $_ENV, $section, $itemid, $item);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'admin::add', $_ENV, $section, $itemid, $item, $handled);
+			
+			return $handled;
+		}
 		
 		preg_match('/(\?|&)path=(.*?)(&|\'|")/i', $item, $matches);
 		
@@ -83,8 +90,15 @@ class _admin {
 	}
 	
 	static function remove($section, $itemid) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'admin::remove', $_ENV, $section, $itemid);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'admin::remove', $_ENV, $section, $itemid, $handled);
+			
+			return $handled;
+		}
 		
 		unset(admin::$sections[$section]['Items'][$itemid]);
 		
@@ -115,8 +129,15 @@ class _admin {
 	}
 	
 	function setup() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'admin::setup', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'admin::setup', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->add('Content', 
 			(JCORE_VERSION >= '0.8'?'Pages':'MenuItems'), 
@@ -403,8 +424,15 @@ class _admin {
 	}
 	
 	static function displayPath() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'admin::displayPath');
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'admin::displayPath', $handled);
+			
+			return $handled;
+		}
 		
 		url::displayPath();
 		
@@ -413,8 +441,15 @@ class _admin {
 	}
 	
 	static function displayTitle($title, $ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'admin::displayTitle', $_ENV, $title, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'admin::displayTitle', $_ENV, $title, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<h3 class='admin-title'>" .
@@ -431,8 +466,15 @@ class _admin {
 	}
 	
 	static function displayHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'admin::displayHeader');
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'admin::displayHeader', $handled);
+			
+			return $handled;
+		}
 		
 		if (JCORE_VERSION <= '0.2')
 			admin::displayCSSLinks();
@@ -472,8 +514,15 @@ class _admin {
 	}
 	
 	static function displayItemData($title, $value = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'admin::displayItemData', $_ENV, $title, $value);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'admin::displayItemData', $_ENV, $title, $value, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($value)) {
 			echo
@@ -497,8 +546,15 @@ class _admin {
 	}
 	
 	static function displayFooter() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'admin::displayFooter');
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'admin::displayFooter', $handled);
+			
+			return $handled;
+		}
 		
 		echo
 				"</div>" .
@@ -513,8 +569,15 @@ class _admin {
 		if (!count(admin::$sections[$sectionid]['Items']))
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'admin::displaySection', $_ENV, $sectionid);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'admin::displaySection', $_ENV, $sectionid, $handled);
+			
+			return $handled;
+		}
 		
 		echo 
 		"<div tabindex='0' class='fc" .
@@ -567,8 +630,15 @@ class _admin {
 	}
 	
 	function display() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'admin::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'admin::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->setup();
 		

@@ -19,8 +19,15 @@ class _updates {
 	var $adminPath = 'admin/site/updates';
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::updates', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::updates', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->rootPath = SITE_PATH.'sitefiles/var/updates/';
 		
@@ -35,8 +42,15 @@ class _updates {
 		if (!$update)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::install', $this, $update);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::install', $this, $update, $handled);
+			
+			return $handled;
+		}
 		
 		if ($update['SQL'] || (defined('JCORE_PATH') && JCORE_PATH && $update['Client']) ||
 			((!defined('JCORE_PATH') || !JCORE_PATH) && $update['Server']))
@@ -651,8 +665,15 @@ class _updates {
 	}
 	
 	function displayInstallResults($title, $results, $success = false) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::displayInstallResults', $this, $title, $results, $success);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::displayInstallResults', $this, $title, $results, $success, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<div tabindex='0' class='fc" .
@@ -676,8 +697,15 @@ class _updates {
 	}
 	
 	function displayInstallFTPForm() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::displayInstallFTPForm', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::displayInstallFTPForm', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$form = new form(
 			__("Update using FTP"),
@@ -731,8 +759,15 @@ class _updates {
 	}
 	
 	function displayInstallFunctions($installbutton = false) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::displayInstallFunctions', $this, $installbutton);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::displayInstallFunctions', $this, $installbutton, $handled);
+			
+			return $handled;
+		}
 		
 		if ($installbutton)
 			echo
@@ -759,8 +794,15 @@ class _updates {
 		if (isset($_POST['install']) && $_POST['install'])
 			$this->testing = false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::displayInstall', $this, $update);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::displayInstall', $this, $update, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<form action='".url::uri()."' id='updateinstallform' method='post'>";
@@ -824,8 +866,15 @@ class _updates {
 			return 0;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::countAdminItems', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::countAdminItems', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$result = 0;
 		if ($updates = $this->get())
@@ -840,8 +889,15 @@ class _updates {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -857,8 +913,15 @@ class _updates {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -869,8 +932,15 @@ class _updates {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td class='auto-width'>" .
@@ -919,8 +989,15 @@ class _updates {
 		if (!$rows || !is_array($rows) || !count($rows))
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::displayAdminList', $this, $rows);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::displayAdminList', $this, $rows, $handled);
+			
+			return $handled;
+		}
 		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
@@ -967,8 +1044,15 @@ class _updates {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Updates Administration'), 
@@ -979,8 +1063,15 @@ class _updates {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<p>" .
@@ -1003,8 +1094,15 @@ class _updates {
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$check = false;
 		
@@ -1366,8 +1464,15 @@ class _updates {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'updates::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'updates::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$counter = null;
 		

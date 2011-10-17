@@ -23,8 +23,15 @@ class _tooltip {
 	}
 	
 	static function construct($message, $type = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'tooltip::construct', $_ENV, $message, $type);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'tooltip::construct', $_ENV, $message, $type, $handled);
+			
+			return $handled;
+		}
 		
 		if (defined($type))
 			$type = constant($type);
@@ -43,8 +50,15 @@ class _tooltip {
 	}
 	
 	static function display($message = null, $type = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'tooltip::display', $_ENV, $message, $type);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'tooltip::display', $_ENV, $message, $type, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$message) {
 			echo tooltip::$cache;

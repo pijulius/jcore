@@ -109,8 +109,15 @@ class _settings {
 	var $textsDomain = 'messages';
 	
 	function __construct($table = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::settings', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'settings::settings', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($table)
 			$this->sqlTable = $table;
@@ -123,8 +130,15 @@ class _settings {
 	
 	// ************************************************   Admin Part
 	function verifyAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::verifyAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'settings::verifyAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$update = null;
 		$settings = null;
@@ -193,8 +207,15 @@ class _settings {
 		if (!$settingstitle)
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::displayAdminItemTitle', $this, $settingstitle, $sectiontitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'settings::displayAdminItemTitle', $this, $settingstitle, $sectiontitle, $handled);
+			
+			return $handled;
+		}
 		
 		$exptitles = explode('_', $sectiontitle);
 		
@@ -214,8 +235,15 @@ class _settings {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'settings::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Settings Administration'),
@@ -226,15 +254,29 @@ class _settings {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'settings::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'settings::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'settings::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
@@ -425,8 +467,15 @@ class _settings {
 	}
 	
 	function add($id, $value, $type = SETTINGS_TYPE_TEXT) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::add', $this, $id, $value, $type);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'settings::add', $this, $id, $value, $type, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" INSERT INTO `{".$this->sqlTable."}`" .
@@ -443,8 +492,15 @@ class _settings {
 	}
 	
 	function edit($id, $value, $type = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::edit', $this, $id, $value, $type);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'settings::edit', $this, $id, $value, $type, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}`" .
@@ -463,8 +519,15 @@ class _settings {
 	}
 	
 	function delete($id) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::delete', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'settings::delete', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" DELETE FROM `{".$this->sqlTable."}`" .
@@ -563,8 +626,15 @@ class _settings {
 		if (!$table)
 			$table = (isset($this)?$this->sqlTable:'settings');
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::defineSettings', $env, $table);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'settings::defineSettings', $env, $table, $handled);
+			
+			return $handled;
+		}
 		
 		$rows = sql::run(
 			" SELECT * FROM `{".$table."}`" .
@@ -592,8 +662,15 @@ class _settings {
 		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::displayMaintenanceNotification', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'settings::displayMaintenanceNotification', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		if (((defined('MAINTENANCE_SUSPEND_WEBSITE') && MAINTENANCE_SUSPEND_WEBSITE) ||
 			(defined('MAINTENANCE_WEBSITE_SUSPENDED') && MAINTENANCE_WEBSITE_SUSPENDED)))

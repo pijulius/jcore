@@ -14,8 +14,15 @@ class _moduleManager {
 	var $adminPath = 'admin/site/modules';
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::moduleManager', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::moduleManager', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->rootPath = SITE_PATH.'lib/modules/';
 		
@@ -25,8 +32,15 @@ class _moduleManager {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::countAdminItems', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::countAdminItems', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$result = modules::count();
 		
@@ -37,8 +51,15 @@ class _moduleManager {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -58,8 +79,15 @@ class _moduleManager {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__('Module File'),
@@ -93,8 +121,15 @@ class _moduleManager {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$activate = null;
 		$deactivate = null;
@@ -241,8 +276,15 @@ class _moduleManager {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -254,15 +296,29 @@ class _moduleManager {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'moduleManager::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -273,8 +329,15 @@ class _moduleManager {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center' style='width: 100px;'>" .
@@ -349,8 +412,15 @@ class _moduleManager {
 	}
 	
 	function displayAdminListItemActivation(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::displayAdminListItemActivation', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::displayAdminListItemActivation', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$url = url::uri('id, delete, activate, deactivate').
 			"&amp;id=".urlencode($row['ID']);
@@ -377,15 +447,29 @@ class _moduleManager {
 	}
 	
 	function displayAdminListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'moduleManager::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if ($row['_Global'] && !$row['_Activated'] && !$row['_Installed']) {
 			echo
@@ -406,8 +490,15 @@ class _moduleManager {
 	}
 	
 	function displayAdminList(&$modules) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::displayAdminList', $this, $modules);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::displayAdminList', $this, $modules, $handled);
+			
+			return $handled;
+		}
 		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
@@ -480,8 +571,15 @@ class _moduleManager {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -490,8 +588,15 @@ class _moduleManager {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Modules Administration'), 
@@ -502,8 +607,15 @@ class _moduleManager {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<p>" .
@@ -518,8 +630,15 @@ class _moduleManager {
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$id = null;
@@ -651,8 +770,15 @@ class _moduleManager {
 		if (!is_array($values))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::add', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::add', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		$newid = sql::run(
 			" INSERT INTO `{modules}` SET" .
@@ -675,8 +801,15 @@ class _moduleManager {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::delete', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::delete', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		if (modules::load($id, true, true)) {
 			$exists = modules::get($id);
@@ -744,8 +877,15 @@ class _moduleManager {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::activate', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::activate', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		$exists = modules::get($id);
 		
@@ -818,8 +958,15 @@ class _moduleManager {
 		if (!$exists)
 			return true;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::deactivate', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::deactivate', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		if (JCORE_VERSION >= '0.9') {
 			sql::run(
@@ -872,8 +1019,15 @@ class _moduleManager {
 	}
 	
 	function upload($file) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'moduleManager::upload', $this, $file);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'moduleManager::upload', $this, $file, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$filename = files::upload($file, $this->rootPath, FILE_TYPE_UPLOAD)) {
 			api::callHooks(API_HOOK_AFTER,

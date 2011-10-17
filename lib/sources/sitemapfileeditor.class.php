@@ -13,8 +13,15 @@ include_once('lib/fileeditor.class.php');
 
 class _sitemapFileEditor extends fileEditor {
 	function displayForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sitemapFileEditor::displayForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sitemapFileEditor::displayForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__("Regenerate"),

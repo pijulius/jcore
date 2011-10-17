@@ -16,8 +16,15 @@ class _templateJSEditor extends fileEditor {
 	var $adminPath = 'admin/site/template/templatejseditor';
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateJSEditor::templateJSEditor', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateJSEditor::templateJSEditor', $this, $handled);
+			
+			return $handled;
+		}
 		
 		parent::__construct();
 		
@@ -33,8 +40,15 @@ class _templateJSEditor extends fileEditor {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateJSEditor::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateJSEditor::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		favoriteLinks::add(
 			__('CSS Editor'), 
@@ -52,8 +66,15 @@ class _templateJSEditor extends fileEditor {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateJSEditor::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateJSEditor::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Template'),
@@ -64,15 +85,29 @@ class _templateJSEditor extends fileEditor {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateJSEditor::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateJSEditor::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'templateJSEditor::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateJSEditor::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateJSEditor::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->displayAdminTitle(__("JS Editor"));
 		$this->displayAdminDescription();
@@ -95,8 +130,15 @@ class _templateJSEditor extends fileEditor {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateJSEditor::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateJSEditor::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$GLOBALS['USER']->loginok || 
 			!$GLOBALS['USER']->data['Admin']) 

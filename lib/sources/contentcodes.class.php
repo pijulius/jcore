@@ -25,8 +25,15 @@ class _contentCodes {
 	var $ignoreCodes = null;
 	
 	function run($code, $arguments) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'contentCodes::run', $this, $code, $arguments);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'contentCodes::run', $this, $code, $arguments, $handled);
+			
+			return $handled;
+		}
 		
 		switch($code) {
 			case 'translate':
@@ -217,8 +224,15 @@ class _contentCodes {
 		if (!$constant)
 			return null;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'contentCodes::displayDefinitions', $_ENV, $constant);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'contentCodes::displayDefinitions', $_ENV, $constant, $handled);
+			
+			return $handled;
+		}
 		
 		if (is_array($constant))
 			$constant = $constant[1];
@@ -254,8 +268,15 @@ class _contentCodes {
 	}
 	
 	function display($content) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'contentCodes::display', $this, $content);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'contentCodes::display', $this, $content, $handled);
+			
+			return $handled;
+		}
 		
 		contentCodes::replaceDefinitions($content);
 		

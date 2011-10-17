@@ -15,8 +15,15 @@ define('COUNTER_NOTIFICATION', 'notification');
 
 class _counter {
 	static function construct($items, $type = COUNTER_NORMAL) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'counter::construct', $_ENV, $items, $type);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'counter::construct', $_ENV, $items, $type, $handled);
+			
+			return $handled;
+		}
 		
 		if (is_array($items)) {
 			if (!$type && isset($items['Type']))
@@ -48,8 +55,15 @@ class _counter {
 	}
 	
 	static function display($items, $type = COUNTER_NORMAL) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'counter::display', $_ENV, $items, $type);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'counter::display', $_ENV, $items, $type, $handled);
+			
+			return $handled;
+		}
 		
 		echo counter::construct($items, $type);
 		

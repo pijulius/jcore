@@ -28,8 +28,15 @@ class _template {
 		if (!$row)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'template::populate', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'template::populate', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		template::$selected = $row;
 		
@@ -46,8 +53,15 @@ class _template {
 		if (!isset($this->templateID) || !$this->templateID)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'template::install', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'template::install', $this, $handled);
+			
+			return $handled;
+		}
 		
 		files::$debug = true;
 		sql::$debug = true;
@@ -118,8 +132,15 @@ class _template {
 		if (!isset($this->templateID) || !$this->templateID)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'template::uninstall', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'template::uninstall', $this, $handled);
+			
+			return $handled;
+		}
 		
 		files::$debug = true;
 		sql::$debug = true;
@@ -224,8 +245,15 @@ class _template {
 	
 	// ************************************************   Admin Part
 	function displayInstallResults($title, $results, $success = false) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'template::displayInstallResults', $this, $title, $results, $success);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'template::displayInstallResults', $this, $title, $results, $success, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<div tabindex='0' class='fc" .

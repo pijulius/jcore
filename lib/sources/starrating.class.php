@@ -20,8 +20,15 @@ class _starRating {
 	var $ajaxRequest = null;
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'starRating::starRating', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'starRating::starRating', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->uriRequest = strtolower(get_class($this));
 		
@@ -34,8 +41,15 @@ class _starRating {
 	
 	// ************************************************   Client Part
 	function verify() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'starRating::verify', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'starRating::verify', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$rate = null;
 		
@@ -127,8 +141,15 @@ class _starRating {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'starRating::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'starRating::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$selectedowner = sql::fetch(sql::run(
 			" SELECT `EnableGuestRating` FROM `{" .$this->sqlOwnerTable . "}`" .
@@ -146,8 +167,15 @@ class _starRating {
 	}
 	
 	function display() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'starRating::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'starRating::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$owner = sql::fetch(sql::run(
 			" SELECT * FROM `{" .$this->sqlOwnerTable. "}`" .

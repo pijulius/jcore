@@ -23,8 +23,15 @@ class _fileManager {
 	var $ajaxRequest = null;
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::fileManager', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::fileManager', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (isset($_GET['file'])) {
 			preg_match('/([^(\/|\\\)]*)$/', strip_tags((string)$_GET['file']), $matches);
@@ -43,8 +50,15 @@ class _fileManager {
 	}
 	
 	function verifyFolder(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::verifyFolder', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::verifyFolder', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$form->verify()) {
 			api::callHooks(API_HOOK_AFTER,
@@ -73,8 +87,15 @@ class _fileManager {
 	}
 	
 	function verify(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::verify', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::verify', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$edit = null;
@@ -220,8 +241,15 @@ class _fileManager {
 		if (!$folder)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::createFolder', $this, $folder);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::createFolder', $this, $folder, $handled);
+			
+			return $handled;
+		}
 		
 		$result = dirs::create($folder);
 				
@@ -235,8 +263,15 @@ class _fileManager {
 		if (!$file || !$to)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::upload', $this, $file, $to);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::upload', $this, $file, $to, $handled);
+			
+			return $handled;
+		}
 		
 		$result = files::upload($file, $to, FILE_TYPE_UPLOAD);
 		
@@ -250,8 +285,15 @@ class _fileManager {
 		if (!$from || !$to)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::edit', $this, $from, $to);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::edit', $this, $from, $to, $handled);
+			
+			return $handled;
+		}
 		
 		if (!@is_dir($from) && !preg_match("/".files::$allowedFileTypes[FILE_TYPE_UPLOAD]."/i", $to)) {
 			tooltip::display(
@@ -277,8 +319,15 @@ class _fileManager {
 		if (!$file)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::delete', $this, $file);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::delete', $this, $file, $handled);
+			
+			return $handled;
+		}
 		
 		$result = files::delete($file);
 				
@@ -297,8 +346,15 @@ class _fileManager {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::download', $this, $file, $resumable);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::download', $this, $file, $resumable, $handled);
+			
+			return $handled;
+		}
 		
 		session_write_close();
 		$result = files::display($file, true);
@@ -310,8 +366,15 @@ class _fileManager {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$view = null;
 		$download = null;
@@ -352,8 +415,15 @@ class _fileManager {
 	}
 	
 	function setupFolderForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::setupFolderForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::setupFolderForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__('Folder name'),
@@ -367,8 +437,15 @@ class _fileManager {
 	}
 	
 	function setupForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::setupForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::setupForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$edit = null;
 		
@@ -416,8 +493,15 @@ class _fileManager {
 	}
 	
 	function displayFolderForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::displayFolderForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::displayFolderForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -426,8 +510,15 @@ class _fileManager {
 	}
 	
 	function displayForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::displayForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::displayForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -442,8 +533,15 @@ class _fileManager {
 		if (!$displaypath)
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::displayPath', $this, $displaypath);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::displayPath', $this, $displaypath, $handled);
+			
+			return $handled;
+		}
 		
 		$path = null;
 		$exppaths = explode('/', $displaypath);
@@ -473,8 +571,15 @@ class _fileManager {
 	}
 	
 	function displayHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::displayHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::displayHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th colspan='2'><span class='nowrap'>/".
@@ -487,15 +592,29 @@ class _fileManager {
 	}
 	
 	function displayHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::displayHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::displayHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'fileManager::displayHeaderOptions', $this);
 	}
 	
 	function displayHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::displayHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::displayHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -508,8 +627,15 @@ class _fileManager {
 	}
 	
 	function displayIcon(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::displayIcon', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::displayIcon', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if ($row['_IsDir']) {
 			echo
@@ -556,8 +682,15 @@ class _fileManager {
 	}
 	
 	function displayTitle(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::displayTitle', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::displayTitle', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if ($row['_IsDir']) {
 			echo
@@ -598,8 +731,15 @@ class _fileManager {
 	}
 	
 	function displayDetails(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::displayDetails', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::displayDetails', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			calendar::datetime(
@@ -610,8 +750,15 @@ class _fileManager {
 	}
 	
 	function displaySize(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::displaySize', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::displaySize', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			files::humanSize(
@@ -622,8 +769,15 @@ class _fileManager {
 	}
 	
 	function displayItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::displayItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::displayItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo 
 			"<td>";
@@ -662,15 +816,29 @@ class _fileManager {
 	}
 	
 	function displayItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::displayItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::displayItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'fileManager::displayItemOptions', $this, $row);
 	}
 	
 	function displayItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::displayItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::displayItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -693,8 +861,15 @@ class _fileManager {
 	}
 	
 	function displayOne(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::displayOne', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::displayOne', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$row['_IsDir'] = @is_dir($this->rootPath.$this->selectedPath.$row['_File']);
 		
@@ -766,8 +941,15 @@ class _fileManager {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'fileManager::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'fileManager::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$edit = null;

@@ -16,8 +16,15 @@ class _ckEditorFileManager extends fileManager {
 	var $directLinks = true;
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ckEditorFileManager::ckEditorFileManager', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ckEditorFileManager::ckEditorFileManager', $this, $handled);
+			
+			return $handled;
+		}
 		
 		parent::__construct();
 		
@@ -29,8 +36,15 @@ class _ckEditorFileManager extends fileManager {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ckEditorFileManager::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ckEditorFileManager::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$GLOBALS['USER']->loginok || 
 			!$GLOBALS['USER']->data['Admin']) 
@@ -52,8 +66,15 @@ class _ckEditorFileManager extends fileManager {
 	}
 	
 	function displayTitle(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ckEditorFileManager::displayTitle', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ckEditorFileManager::displayTitle', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$ckeditorfuncnum = 1;
 		
@@ -82,8 +103,15 @@ class _ckEditorFileManager extends fileManager {
 	function display() {
 		include_once('lib/userpermissions.class.php');
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'ckEditorFileManager::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'ckEditorFileManager::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$permission = userPermissions::check(
 			(int)$GLOBALS['USER']->data['ID'],

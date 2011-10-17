@@ -15,8 +15,15 @@ class _templateManager {
 	var $adminPath = 'admin/site/template';
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::templateManager', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::templateManager', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->rootPath = SITE_PATH.'template/';
 		$this->rootURL = SITE_URL.'template/';
@@ -27,8 +34,15 @@ class _templateManager {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::countAdminItems', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::countAdminItems', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$result = 0;
 		if (template::$selected)
@@ -41,8 +55,15 @@ class _templateManager {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -67,8 +88,15 @@ class _templateManager {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__('Template File'),
@@ -102,8 +130,15 @@ class _templateManager {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$activate = null;
 		$deactivate = null;
@@ -280,8 +315,15 @@ class _templateManager {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -293,15 +335,29 @@ class _templateManager {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'templateManager::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -312,8 +368,15 @@ class _templateManager {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center' style='width: " .
@@ -390,8 +453,15 @@ class _templateManager {
 	}
 	
 	function displayAdminListItemActivation(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::displayAdminListItemActivation', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::displayAdminListItemActivation', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$url = url::uri('id, delete, activate, deactivate, setadmin, unsetadmin').
 			"&amp;id=".urlencode($row['ID']);
@@ -442,15 +512,29 @@ class _templateManager {
 	}
 	
 	function displayAdminListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'templateManager::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -466,8 +550,15 @@ class _templateManager {
 	}
 	
 	function displayAdminList(&$templates, $selectedtemplate = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::displayAdminList', $this, $templates, $selectedtemplate);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::displayAdminList', $this, $templates, $selectedtemplate, $handled);
+			
+			return $handled;
+		}
 		
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
@@ -534,8 +625,15 @@ class _templateManager {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -544,8 +642,15 @@ class _templateManager {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		if (JCORE_VERSION >= '0.7') {
 			admin::displayTitle(
@@ -562,8 +667,15 @@ class _templateManager {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<p>" .
@@ -578,8 +690,15 @@ class _templateManager {
 	}
 	
 	function displayAdminSections() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::displayAdminSections', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::displayAdminSections', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<div class='admin-section-item as-site-template-css-editor'>" .
@@ -640,8 +759,15 @@ class _templateManager {
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$id = null;
@@ -764,8 +890,15 @@ class _templateManager {
 		if (!is_array($values))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::add', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::add', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		$newid = sql::run(
 			" INSERT INTO `{templates}` SET" .
@@ -788,8 +921,15 @@ class _templateManager {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::delete', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::delete', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{templates}`" .
@@ -858,8 +998,15 @@ class _templateManager {
 		if (!$templateid)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::cleanUp', $this, $templateid);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::cleanUp', $this, $templateid, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" DELETE FROM `{blocks}`" .
@@ -885,8 +1032,15 @@ class _templateManager {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::activate', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::activate', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{templates}`" .
@@ -986,8 +1140,15 @@ class _templateManager {
 		if ($exists['Name'] != WEBSITE_TEMPLATE)
 			return true;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::deactivate', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::deactivate', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		settings::set('Website_Template', '');
 		settings::set('Website_Template_SetForAdmin', '0');
@@ -1017,8 +1178,15 @@ class _templateManager {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::setAdmin', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::setAdmin', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		settings::set('Website_Template_SetForAdmin', '1');
 		
@@ -1043,8 +1211,15 @@ class _templateManager {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::unsetAdmin', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::unsetAdmin', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		settings::set('Website_Template_SetForAdmin', '0');
 		
@@ -1104,8 +1279,15 @@ class _templateManager {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::upload', $this, $file);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::upload', $this, $file, $handled);
+			
+			return $handled;
+		}
 		
 		foreach($tar->directories as $directory) {
 			if (@is_dir($this->rootPath.$directory['name']) && 
@@ -1184,8 +1366,15 @@ class _templateManager {
 	}
 	
 	function autoSetup($templateid = 0) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateManager::autoSetup', $this, $templateid);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateManager::autoSetup', $this, $templateid, $handled);
+			
+			return $handled;
+		}
 		
 		// Set menu blocks to their new places
 		

@@ -34,8 +34,15 @@ class _modules {
 	var $searchable = false;
 	
 	function SQL() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'modules::SQL', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'modules::SQL', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$sql =
 			" SELECT * FROM `{".$this->sqlTable."}`, `{modules}` " .
@@ -54,8 +61,15 @@ class _modules {
 	}
 	
 	function install() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'modules::install', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'modules::install', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($this->moduleID) || !$this->moduleID) {
 			$module = ucfirst(get_class($this));
@@ -169,8 +183,15 @@ class _modules {
 	}
 	
 	function uninstall() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'modules::uninstall', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'modules::uninstall', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($this->moduleID) || !$this->moduleID) {
 			$module = ucfirst(get_class($this));
@@ -284,8 +305,15 @@ class _modules {
 	
 	// ************************************************   Admin Part
 	function displayInstallResults($title, $results, $success = false) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'modules::displayInstallResults', $this, $title, $results, $success);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'modules::displayInstallResults', $this, $title, $results, $success, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<div tabindex='0' class='fc" .
@@ -311,8 +339,15 @@ class _modules {
 	}
 	
 	function displayInstallNotification() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'modules::displayInstallNotification', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'modules::displayInstallNotification', $this, $handled);
+			
+			return $handled;
+		}
 		
 		tooltip::display(
 			__("This module needs to be installed before it can be used."),
@@ -323,8 +358,15 @@ class _modules {
 	}
 	
 	function displayInstallFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'modules::displayInstallFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'modules::displayInstallFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<input type='submit' name='submit' value='" .
@@ -336,8 +378,15 @@ class _modules {
 	}
 	
 	function displayInstallTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'modules::displayInstallTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'modules::displayInstallTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Module Installation'), 
@@ -348,8 +397,15 @@ class _modules {
 	}
 	
 	function displayInstallDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'modules::displayInstallDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'modules::displayInstallDescription', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo 
 			"<p>" .
@@ -361,8 +417,15 @@ class _modules {
 	}
 	
 	function displayInstall() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'modules::displayInstall', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'modules::displayInstall', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$install = null;
 		
@@ -415,8 +478,15 @@ class _modules {
 		if ($this->installed(get_class($this)))
 			return false;
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'modules::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'modules::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->displayInstall();
 		
@@ -427,8 +497,15 @@ class _modules {
 	}
 	
 	static function loadAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'modules::loadAdmin', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'modules::loadAdmin', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		foreach(modules::$loaded as $id => $details) {
 			admin::add('Modules', $id, 
@@ -448,8 +525,15 @@ class _modules {
 	
 	// ************************************************   Client Part
 	static function loadModules() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'modules::loadModules', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'modules::loadModules', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		$rows = sql::run(
 			" SELECT `Name` FROM `{modules}`" .
@@ -711,8 +795,15 @@ class _modules {
 		if (!sql::rows($rows))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'modules::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'modules::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$display = false;
 		$owner = sql::fetch(sql::run(

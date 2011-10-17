@@ -47,8 +47,15 @@ class _pictures {
 	var $ajaxRequest = null;
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::pictures', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::pictures', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->uriRequest = strtolower(get_class($this));
 		$this->subFolder = date('Ym');
@@ -63,8 +70,15 @@ class _pictures {
 	}
 	
 	function SQL() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::SQL', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::SQL', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$sql =
 			" SELECT * FROM `{" .$this->sqlTable."}`" .
@@ -88,8 +102,15 @@ class _pictures {
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -108,8 +129,15 @@ class _pictures {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$edit = null;
 		
@@ -347,8 +375,15 @@ class _pictures {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$reorder = null;
 		$orders = null;
@@ -661,8 +696,15 @@ class _pictures {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -677,15 +719,29 @@ class _pictures {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'pictures::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -698,8 +754,15 @@ class _pictures {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$href = url::uri().
 			"&amp;request=".$this->uriRequest .
@@ -793,15 +856,29 @@ class _pictures {
 	}
 	
 	function displayAdminListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'pictures::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -824,8 +901,15 @@ class _pictures {
 	}
 	
 	function displayAdminListFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayAdminListFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayAdminListFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo 
 			"<input type='submit' name='reordersubmit' value='" .
@@ -838,8 +922,15 @@ class _pictures {
 	}
 	
 	function displayAdminList(&$rows) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayAdminList', $this, $rows);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayAdminList', $this, $rows, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<form action='".
@@ -899,8 +990,15 @@ class _pictures {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -909,8 +1007,15 @@ class _pictures {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle( 
 			__(trim(ucfirst(preg_replace('/([A-Z])/', ' \1', 
@@ -922,8 +1027,15 @@ class _pictures {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'pictures::displayAdminDescription', $this);
 	}
@@ -937,8 +1049,15 @@ class _pictures {
 			return;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$edit = null;
@@ -1092,8 +1211,15 @@ class _pictures {
 		if (!is_array($values))
 			return false;
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::add', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::add', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		if ($values['OrderID'] == '') {
 			sql::run(
@@ -1178,8 +1304,15 @@ class _pictures {
 		if (!is_array($values))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::edit', $this, $id, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::edit', $this, $id, $values, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}` SET ".
@@ -1229,8 +1362,15 @@ class _pictures {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::delete', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::delete', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT `Location` FROM `{".$this->sqlTable."}`" .
@@ -1404,8 +1544,15 @@ class _pictures {
 	}
 	
 	function uploadThumbnail($file, $to, $filename = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::uploadThumbnail', $this, $file, $to, $filename);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::uploadThumbnail', $this, $file, $to, $filename, $handled);
+			
+			return $handled;
+		}
 		
 		$result = files::upload(
 			$file,
@@ -1473,8 +1620,15 @@ class _pictures {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::createThumbnail', $this, $image, $thumb_width, $thumb_height, $save_image, $sharpen, $timeout);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::createThumbnail', $this, $image, $thumb_width, $thumb_height, $save_image, $sharpen, $timeout, $handled);
+			
+			return $handled;
+		}
 		
 		$src_img = null;
 		
@@ -1572,8 +1726,15 @@ class _pictures {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::regenerateThumbnail', $this, $picid, $sharpen);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::regenerateThumbnail', $this, $picid, $sharpen, $handled);
+			
+			return $handled;
+		}
 		
 		$picpath = $this->rootPath.'/';
 		$thumbpath = $this->rootPath.$this->thumbnailsFolder.'/';
@@ -1645,8 +1806,15 @@ class _pictures {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::addWatermark', $this, $file, $watermark, $watermarkx, $watermarky, $watermarktype, $timeout);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::addWatermark', $this, $file, $watermark, $watermarkx, $watermarky, $watermarktype, $timeout, $handled);
+			
+			return $handled;
+		}
 		
 		if (!ini_get('safe_mode') && $timeout)
 			@set_time_limit($timeout);
@@ -1781,8 +1949,15 @@ class _pictures {
 	}
 	
 	function upload($file, $to, $thumbnail = true, $watermark = true, $sharpen = true) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::upload', $this, $file, $to, $thumbnail, $watermark, $sharpen);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::upload', $this, $file, $to, $thumbnail, $watermark, $sharpen, $handled);
+			
+			return $handled;
+		}
 		
 		$picpath = $to.$this->subFolder.'/';
 		$thumbpath = $to.$this->thumbnailsFolder.$this->subFolder.'/';
@@ -1872,8 +2047,15 @@ class _pictures {
 			return false;
 		}
 
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::download', $this, $id, $force);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::download', $this, $id, $force, $handled);
+			
+			return $handled;
+		}
 		
 		session_write_close();
 		files::display($file, $force);
@@ -1915,8 +2097,15 @@ class _pictures {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$view = null;
 		$download = null;
@@ -1946,8 +2135,15 @@ class _pictures {
 	}
 	
 	function displayPicture(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayPicture', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayPicture', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($row['_ThumbnailLocation']) || !$row['_ThumbnailLocation'])
 			$row['_ThumbnailLocation'] = $this->rootURL.
@@ -1973,8 +2169,15 @@ class _pictures {
 	}
 	
 	function displayTitle(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayTitle', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayTitle', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo $row['Title'];
 		
@@ -1983,8 +2186,15 @@ class _pictures {
 	}
 	
 	function displayDetails(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayDetails', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayDetails', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<span class='details-date'>" .
@@ -2005,8 +2215,15 @@ class _pictures {
 	}
 	
 	function displayFormated(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayFormated', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayFormated', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($row['_Link']) || !$row['_Link'])
 			$row['_Link'] = $this->generateLink($row);
@@ -2085,8 +2302,15 @@ class _pictures {
 		if (!$row['Location'])
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::displayOne', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::displayOne', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($row['_Link']) || !$row['_Link'])
 			$row['_Link'] = $this->generateLink($row);
@@ -2173,8 +2397,15 @@ class _pictures {
 		if (!sql::rows($rows))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pictures::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pictures::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$this->ajaxRequest)
 			echo

@@ -27,8 +27,15 @@ class _pages {
 	static $selected = null;
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::pages', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::pages', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (isset($_GET['pageid']))
 			$this->selectedID = (int)$_GET['pageid'];
@@ -47,8 +54,15 @@ class _pages {
 		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::populate', $_ENV);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::populate', $_ENV, $handled);
+			
+			return $handled;
+		}
 		
 		$path = null;
 		$selected = null;
@@ -143,8 +157,15 @@ class _pages {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::countAdminItems', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::countAdminItems', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
@@ -162,8 +183,15 @@ class _pages {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -182,8 +210,15 @@ class _pages {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__('Title'),
@@ -527,8 +562,15 @@ class _pages {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$reorder = null;
 		$orders = null;
@@ -755,8 +797,15 @@ class _pages {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -784,8 +833,15 @@ class _pages {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -796,8 +852,15 @@ class _pages {
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -810,8 +873,15 @@ class _pages {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$tooltiptxt = null;
 			
@@ -988,8 +1058,15 @@ class _pages {
 	}
 	
 	function displayAdminListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -1014,8 +1091,15 @@ class _pages {
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -1038,8 +1122,15 @@ class _pages {
 	}
 	
 	function displayAdminListFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayAdminListFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayAdminListFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<input type='submit' name='reordersubmit' value='".
@@ -1060,8 +1151,15 @@ class _pages {
 		if (!$pages)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayAdminListLanguages', $this, $pageid, $language);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayAdminListLanguages', $this, $pageid, $language, $handled);
+			
+			return $handled;
+		}
 		
 		echo 
 		"<div tabindex='0' class='fc" . 
@@ -1089,8 +1187,15 @@ class _pages {
 			return false;
 		
 		if (!$subpageof)
-			api::callHooks(API_HOOK_BEFORE,
+			$handled = api::callHooks(API_HOOK_BEFORE,
 				'pages::displayAdminListItems', $this, $pageid);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+					'pages::displayAdminListItems', $this, $pageid, $handled);
+			
+			return $handled;
+		}
 		
 		$rows = sql::run(
 			" SELECT * FROM `{" .
@@ -1184,8 +1289,15 @@ class _pages {
 	}
 	
 	function displayAdminList(&$rows, &$languages = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayAdminList', $this, $rows, $languages);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayAdminList', $this, $rows, $languages, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<form action='".url::uri('edit, delete')."' method='post'>" .
@@ -1289,8 +1401,15 @@ class _pages {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -1299,8 +1418,15 @@ class _pages {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Pages Administration'),
@@ -1311,15 +1437,29 @@ class _pages {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'pages::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$edit = null;
@@ -1489,8 +1629,15 @@ class _pages {
 		if (!is_array($values))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::add', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::add', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($values['LanguageID']))
 			$values['LanguageID'] = null;
@@ -1739,8 +1886,15 @@ class _pages {
 		if (!is_array($values))
 			return false;
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::edit', $this, $id, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::edit', $this, $id, $values, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($values['LanguageID']))
 			$values['LanguageID'] = null;
@@ -2097,8 +2251,15 @@ class _pages {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::delete', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::delete', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		$posts = new posts();
 		$pageids = array($id);
@@ -2190,8 +2351,15 @@ class _pages {
 	}
 	
 	function updateSitemap() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::updateSitemap', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::updateSitemap', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$sitemap = new sitemap();
 		
@@ -2556,8 +2724,15 @@ class _pages {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$keywords = null;
 		
@@ -2585,8 +2760,15 @@ class _pages {
 		if (!$pageid)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayModules', $_ENV, $pageid);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayModules', $_ENV, $pageid, $handled);
+			
+			return $handled;
+		}
 		
 		$modules = new modules();
 		$modules->sqlTable = (JCORE_VERSION >= '0.8'?'pagemodules':'menuitemmodules');
@@ -2607,8 +2789,15 @@ class _pages {
 		if (!$pageid)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayForms', $_ENV, $pageid);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayForms', $_ENV, $pageid, $handled);
+			
+			return $handled;
+		}
 		
 		$dformids = sql::fetch(sql::run(
 			" SELECT GROUP_CONCAT(`FormID` SEPARATOR ',') AS `FormIDs`" .
@@ -2639,8 +2828,15 @@ class _pages {
 	}
 	
 	function displayLogin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayLogin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayLogin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		tooltip::display(
 			__("This area is limited to members only. " .
@@ -2654,8 +2850,15 @@ class _pages {
 	}
 	
 	function displayTitle(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayTitle', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayTitle', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo $row['Title'];
 		
@@ -2664,8 +2867,15 @@ class _pages {
 	}
 	
 	function displayContent(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayContent', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayContent', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo "<p></p>";
 		
@@ -2674,8 +2884,15 @@ class _pages {
 	}
 	
 	function displaySelected(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displaySelected', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displaySelected', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<div class='post page'>" .
@@ -2704,8 +2921,15 @@ class _pages {
 		if (!$page)
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayPath', $this, $level, $page);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayPath', $this, $level, $page, $handled);
+			
+			return $handled;
+		}
 		
 		$i = 0;
 		$backtrace = $this->getBackTraceTree($page['ID']);
@@ -2735,8 +2959,15 @@ class _pages {
 		if (!$this->arguments)
 			return true;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::displayArguments', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::displayArguments', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$page = null;
 		$argtype = null;
@@ -2840,8 +3071,15 @@ class _pages {
 			return true;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'pages::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'pages::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$posts = new posts();
 		$posts->selectedPageID = $this->selectedID;

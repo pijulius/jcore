@@ -84,8 +84,15 @@ class _comments {
 	var $userPermissionType = 0;
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::comments', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::comments', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->commentURL = $this->getCommentURL();
 		$this->uriRequest = strtolower(get_class($this));
@@ -120,8 +127,15 @@ class _comments {
 	}
 	
 	function SQL($commentid = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::SQL', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::SQL', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$sql =
 			" SELECT * FROM `{" . $this->sqlTable . "}`" .
@@ -165,8 +179,15 @@ class _comments {
 		if (!$this->sqlTable)
 			return 0;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::countAdminItems', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::countAdminItems', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
@@ -180,8 +201,15 @@ class _comments {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -197,8 +225,15 @@ class _comments {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__('Nickname'),
@@ -240,8 +275,15 @@ class _comments {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$search = null;
 		$decline = null;
@@ -487,8 +529,15 @@ class _comments {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th>" .
@@ -508,15 +557,29 @@ class _comments {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'comments::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (defined('MODERATED_COMMENTS') && MODERATED_COMMENTS &&
 			defined('MODERATED_COMMENTS_BY_APPROVAL') && 
@@ -536,8 +599,15 @@ class _comments {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$ids = null;
 		
@@ -621,15 +691,29 @@ class _comments {
 	}
 	
 	function displayAdminListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'comments::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if (defined('MODERATED_COMMENTS') && MODERATED_COMMENTS &&
 			defined('MODERATED_COMMENTS_BY_APPROVAL') && 
@@ -676,8 +760,15 @@ class _comments {
 	}
 	
 	function displayAdminListSearch() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayAdminListSearch', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayAdminListSearch', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$search = null;
 		$searchtype = null;
@@ -715,8 +806,15 @@ class _comments {
 	}
 	
 	function displayAdminListFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayAdminListFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayAdminListFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (defined('MODERATED_COMMENTS') && MODERATED_COMMENTS &&
 			defined('MODERATED_COMMENTS_BY_APPROVAL') && 
@@ -740,8 +838,15 @@ class _comments {
 	}
 	
 	function displayAdminList(&$rows) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayAdminList', $this, $rows);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayAdminList', $this, $rows, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<form action='".
@@ -801,8 +906,15 @@ class _comments {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -811,8 +923,15 @@ class _comments {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__(trim(ucfirst(preg_replace('/([A-Z])/', ' \1', 
@@ -824,8 +943,15 @@ class _comments {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'comments::displayAdminDescription', $this);
 	}
@@ -842,8 +968,15 @@ class _comments {
 			return;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$search = null;
 		$searchtype = null;
@@ -1027,8 +1160,15 @@ class _comments {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::add', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::add', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		$newid = sql::run(
 			" INSERT INTO `{".$this->sqlTable."}` SET" .
@@ -1167,8 +1307,15 @@ class _comments {
 		if (!is_array($values))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::edit', $this, $id, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::edit', $this, $id, $values, $handled);
+			
+			return $handled;
+		}
 		
 		$comment = $this->get($id);
 		
@@ -1234,8 +1381,15 @@ class _comments {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::delete', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::delete', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		$comment = $this->get($id);
 		
@@ -1270,8 +1424,15 @@ class _comments {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::decline', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::decline', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}` SET ".
@@ -1296,8 +1457,15 @@ class _comments {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::approve', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::approve', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}` SET ".
@@ -1433,8 +1601,15 @@ class _comments {
 	}
 	
 	static function generateTeaser($description, $length = 130) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::generateTeaser', $_ENV, $description, $length);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::generateTeaser', $_ENV, $description, $length, $handled);
+			
+			return $handled;
+		}
 		
 		$teaser = strip_tags($description);
 		
@@ -1496,8 +1671,15 @@ class _comments {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::rate', $this, $id, $rating);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::rate', $this, $id, $rating, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" INSERT INTO `{".$this->sqlTable."ratings}`" .
@@ -1555,8 +1737,15 @@ class _comments {
 	}
 	
 	function verify(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::verify', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::verify', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$commentid = null;
 		$delete = null;
@@ -1726,8 +1915,15 @@ class _comments {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$commentid = null;
 		
@@ -1826,8 +2022,15 @@ class _comments {
 	}
 	
 	function setupForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::setupForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::setupForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->action .= '#comments';
 		
@@ -1885,8 +2088,15 @@ class _comments {
 			__("Quick Reply"),
 			'quickreply');
 					
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayReplyForm', $this, $tocommentid, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayReplyForm', $this, $tocommentid, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->action = url::referer(true);
 		$form->footer = '';
@@ -1952,8 +2162,15 @@ class _comments {
 			__("Edit Comment"),
 			'editcomment');
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayEditForm', $this, $commentid, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayEditForm', $this, $commentid, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->action = url::referer(true);
 		$form->footer = '';
@@ -1997,8 +2214,15 @@ class _comments {
 	}
 	
 	function displayFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin'] &&
 			$this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
@@ -2073,8 +2297,15 @@ class _comments {
 	}
 	
 	function displayRating(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayRating', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayRating', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$visiblerating = 0;
 		
@@ -2122,8 +2353,15 @@ class _comments {
 		if (!$pending = $this->isPending($row))
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayIsPending', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayIsPending', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if (defined('MODERATED_COMMENTS_BY_APPROVAL') &&
 			MODERATED_COMMENTS_BY_APPROVAL && $pending)
@@ -2152,8 +2390,15 @@ class _comments {
 	}
 	
 	function displayIP(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayIP', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayIP', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			" (".security::long2ip($row['IP']).")";
@@ -2163,8 +2408,15 @@ class _comments {
 	}
 	
 	function displayDetails(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayDetails', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayDetails', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<span class='details-date'>" .
@@ -2191,8 +2443,15 @@ class _comments {
 	}
 	
 	function displayComment(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayComment', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayComment', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			preg_replace('/\<a /i', "<a target='_blank' rel='nofollow' ",
@@ -2209,8 +2468,15 @@ class _comments {
 		if (!sql::rows($subrows))
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displaySubComments', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displaySubComments', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		while($subrow = sql::fetch($subrows)) {
 			if ($subrow['SubCommentOfID'])
@@ -2232,8 +2498,15 @@ class _comments {
 	}
 	
 	function displayAvatar(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayAvatar', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayAvatar', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if ($row['UserID'])
 			$result = $GLOBALS['USER']->displayAvatar($row['UserID']);
@@ -2247,8 +2520,15 @@ class _comments {
 	}
 	
 	function displayFormated(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayFormated', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayFormated', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if ($row['UserID']) {
 			$row['_User'] = $GLOBALS['USER']->get($row['UserID']);
@@ -2384,8 +2664,15 @@ class _comments {
 	}
 	
 	function displayOne(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayOne', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayOne', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if ($row['UserID']) {
 			$row['_User'] = $GLOBALS['USER']->get($row['UserID']);
@@ -2476,8 +2763,15 @@ class _comments {
 	}
 	
 	function displayTitle() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayTitle', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayTitle', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			__("Comments") .
@@ -2488,8 +2782,15 @@ class _comments {
 	}
 	
 	function displayForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::displayForm', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::displayForm', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -2506,8 +2807,15 @@ class _comments {
 			return;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'comments::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'comments::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$replyto = null;
 		$edit = null;

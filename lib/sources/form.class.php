@@ -103,8 +103,15 @@ class _form {
 		'Value' => null);
 	
 	function __construct($title = null, $id = null, $method = 'post') {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::form', $this, $title, $id, $method);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::form', $this, $title, $id, $method, $handled);
+			
+			return $handled;
+		}
 		
 		$this->title = $title;
 		$this->id = ($id?$id:preg_replace('/ /', '', strtolower($title)));
@@ -119,8 +126,15 @@ class _form {
 	}
 	
 	function submitted() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::submitted', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::submitted', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$result = false;
 		
@@ -145,8 +159,15 @@ class _form {
 	}
 	
 	function reset($elementname = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::reset', $this, $elementname);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::reset', $this, $elementname, $handled);
+			
+			return $handled;
+		}
 		
 		foreach($this->elements as $elementnum => $element) {
 			if (!$elementname || $elementname == $element['Name'])
@@ -179,8 +200,15 @@ class _form {
 	}
 	
 	function clear() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::clear', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::clear', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->elements = array();
 		
@@ -189,8 +217,15 @@ class _form {
 	}
 	
 	function getPostArray() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::getPostArray', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::getPostArray', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$post = array();
 		
@@ -600,8 +635,15 @@ class _form {
 		if (!isset($insertto))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::insert', $this, $insertto, $title, $name, $type, $required, $value, $inserttype);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::insert', $this, $insertto, $title, $name, $type, $required, $value, $inserttype, $handled);
+			
+			return $handled;
+		}
 		
 		if ($inserttype == FORM_INSERT_AFTER)
 			$inserttoid++;
@@ -621,14 +663,28 @@ class _form {
 	function add($title, $name, $type = FORM_INPUT_TYPE_TEXT, 
 				$required = false, $value = null) 
 	{
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::add', $this, $title, $name, $type, $required, $value);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::add', $this, $title, $name, $type, $required, $value, $handled);
+			
+			return $handled;
+		}
 		
 		$result = $this->updateElement(
 			$title, $name, $type, $required, $value);
 		 
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::add', $this, $title, $name, $type, $required, $value, $result);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::add', $this, $title, $name, $type, $required, $value, $result, $handled);
+			
+			return $handled;
+		}
 		
 		return $result;
 	}
@@ -641,8 +697,15 @@ class _form {
 		if (!isset($elementid))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::edit', $this, $elementname, $title, $name, $type, $required, $value);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::edit', $this, $elementname, $title, $name, $type, $required, $value, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($title))
 			$title = $this->elements[$elementid]['Title'];
@@ -676,8 +739,15 @@ class _form {
 		if (!isset($elementid))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::editByTitle', $this, $elementtitle, $title, $name, $type, $required, $value);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::editByTitle', $this, $elementtitle, $title, $name, $type, $required, $value, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($title))
 			$title = $this->elements[$elementid]['Title'];
@@ -710,8 +780,15 @@ class _form {
 		if (!isset($elementid)) 
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::delete', $this, $elementname);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::delete', $this, $elementname, $handled);
+			
+			return $handled;
+		}
 		
 		$result = array_splice($this->elements, $elementid, 1);
 		
@@ -892,8 +969,15 @@ class _form {
 	}
 	
 	function addSubmitButtons() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::addSubmitButtons', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::addSubmitButtons', $this, $handled);
+			
+			return $handled;
+		}
 		
 		form::add(
 			__('Submit'),
@@ -1116,8 +1200,15 @@ class _form {
 		if (!$this->submitted())
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::verify', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::verify', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$currentpage = 1;
 		$errors = array();
@@ -1252,8 +1343,15 @@ class _form {
 	}
 	
 	function displayData($values, $ignoreelements = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::displayData', $this, $values, $ignoreelements);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::displayData', $this, $values, $ignoreelements, $handled);
+			
+			return $handled;
+		}
 		
 		$prevelement = null;
 		
@@ -1381,8 +1479,15 @@ class _form {
 		if (!is_array($elements))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::displayElements', $this, $elements);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::displayElements', $this, $elements, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$this->ignorePageBreaks && $this->selectedPage)
 			echo
@@ -2146,8 +2251,15 @@ class _form {
 	}
 	
 	function displayToken() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::displayToken', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::displayToken', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<input type='hidden' name='_FormSecurityToken' value='".security::genToken()."' />";
@@ -2157,8 +2269,15 @@ class _form {
 	}
 	
 	function displayTitle() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::displayTitle', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::displayTitle', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo $this->title;
 		
@@ -2171,8 +2290,15 @@ class _form {
 	}
 	
 	function displayContent() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::displayContent', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::displayContent', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->displayFormElement)		
 			echo
@@ -2191,8 +2317,15 @@ class _form {
 	}
 	
 	function displayFooter() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::displayFooter', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::displayFooter', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			$this->footer;
@@ -2205,8 +2338,15 @@ class _form {
 		if (!$requiredelements)
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::displayDefaultFooter', $this, $requiredelements);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::displayDefaultFooter', $this, $requiredelements, $handled);
+			
+			return $handled;
+		}
 		
 		if (JCORE_VERSION >= '0.6') {
 			echo
@@ -2236,8 +2376,15 @@ class _form {
 		if (!is_array($this->elements))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::display', $this, $formdesign);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'form::display', $this, $formdesign, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$formdesign)
 			$this->displayDesign = false;

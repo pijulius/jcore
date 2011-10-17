@@ -21,8 +21,15 @@ class _postPictures extends pictures {
 		'admin/content/postsatglance/postpictures');
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postPictures::postPictures', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postPictures::postPictures', $this, $handled);
+			
+			return $handled;
+		}
 		
 		parent::__construct();
 		
@@ -34,8 +41,15 @@ class _postPictures extends pictures {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postPictures::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'postPictures::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!posts::checkAccess($this->selectedOwnerID)) {
 			$page = new pages();

@@ -16,8 +16,15 @@ class _templateCSSEditor extends fileEditor {
 	var $adminPath = 'admin/site/template/templatecsseditor';
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateCSSEditor::templateCSSEditor', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateCSSEditor::templateCSSEditor', $this, $handled);
+			
+			return $handled;
+		}
 		
 		parent::__construct();
 		
@@ -33,8 +40,15 @@ class _templateCSSEditor extends fileEditor {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateCSSEditor::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateCSSEditor::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		favoriteLinks::add(
 			__('Template Files'), 
@@ -52,8 +66,15 @@ class _templateCSSEditor extends fileEditor {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateCSSEditor::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateCSSEditor::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Template'),
@@ -64,15 +85,29 @@ class _templateCSSEditor extends fileEditor {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateCSSEditor::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateCSSEditor::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'templateCSSEditor::displayAdminDescription', $this);
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateCSSEditor::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateCSSEditor::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->displayAdminTitle(__("CSS Editor"));
 		$this->displayAdminDescription();
@@ -95,8 +130,15 @@ class _templateCSSEditor extends fileEditor {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'templateCSSEditor::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'templateCSSEditor::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$GLOBALS['USER']->loginok || 
 			!$GLOBALS['USER']->data['Admin']) 

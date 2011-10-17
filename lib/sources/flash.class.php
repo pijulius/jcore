@@ -19,8 +19,15 @@ class _flash {
 	var $rootURL;
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'flash::flash', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'flash::flash', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->uriRequest = strtolower(get_class($this));
 		$this->subFolder = date('Ym');
@@ -32,8 +39,15 @@ class _flash {
 	}
 	
 	function upload($file, $to) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'flash::upload', $this, $file, $to);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'flash::upload', $this, $file, $to, $handled);
+			
+			return $handled;
+		}
 		
 		$result = files::upload($file, $to.$this->subFolder.'/');
 		

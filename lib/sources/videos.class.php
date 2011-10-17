@@ -39,8 +39,15 @@ class _videos {
 	var $ajaxRequest = null;
 	
 	function __construct() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::videos', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::videos', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$this->uriRequest = strtolower(get_class($this));
 		$this->subFolder = date('Ym');
@@ -58,8 +65,15 @@ class _videos {
 	}
 	
 	function SQL() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::SQL', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::SQL', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$sql =
 			" SELECT * FROM `{" .$this->sqlTable."}`" .
@@ -85,8 +99,15 @@ class _videos {
 	
 	// ************************************************   Admin Part
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -102,8 +123,15 @@ class _videos {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$edit = null;
 		
@@ -233,8 +261,15 @@ class _videos {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$reorder = null;
 		$orders = null;
@@ -518,8 +553,15 @@ class _videos {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -534,15 +576,29 @@ class _videos {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'videos::displayAdminListHeaderOptions', $this);
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -555,8 +611,15 @@ class _videos {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$href = url::uri().
 			"&amp;request=".$this->uriRequest .
@@ -606,15 +669,29 @@ class _videos {
 	}
 	
 	function displayAdminListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'videos::displayAdminListItemOptions', $this, $row);
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -637,8 +714,15 @@ class _videos {
 	}
 	
 	function displayAdminListFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayAdminListFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayAdminListFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo 
 			"<input type='submit' name='reordersubmit' value='" .
@@ -651,8 +735,15 @@ class _videos {
 	}
 	
 	function displayAdminList(&$rows) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayAdminList', $this, $rows);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayAdminList', $this, $rows, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<form action='".
@@ -712,8 +803,15 @@ class _videos {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -722,8 +820,15 @@ class _videos {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle( 
 			__(trim(ucfirst(preg_replace('/([A-Z])/', ' \1', 
@@ -735,8 +840,15 @@ class _videos {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		api::callHooks(API_HOOK_AFTER,
 			'videos::displayAdminDescription', $this);
 	}
@@ -750,8 +862,15 @@ class _videos {
 			return;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$edit = null;
@@ -890,8 +1009,15 @@ class _videos {
 		if (!is_array($values))
 			return false;
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::add', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::add', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		if ($values['OrderID'] == '') {
 			sql::run(
@@ -975,8 +1101,15 @@ class _videos {
 		if (!is_array($values))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::edit', $this, $id, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::edit', $this, $id, $values, $handled);
+			
+			return $handled;
+		}
 		
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}` SET ".
@@ -1025,8 +1158,15 @@ class _videos {
 		if (!$id)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::delete', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::delete', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT `Location`, `CapLocation` FROM `{".$this->sqlTable."}`" .
@@ -1066,8 +1206,15 @@ class _videos {
 		if (strpos($file, '://') !== false)
 			return $file;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::upload', $this, $file, $to);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::upload', $this, $file, $to, $handled);
+			
+			return $handled;
+		}
 		
 		$videopath = $to.$this->subFolder.'/';
 		$filename = files::upload($file, $videopath, FILE_TYPE_VIDEO);
@@ -1082,8 +1229,15 @@ class _videos {
 		if (strpos($file, '://') !== false)
 			return $file;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::uploadCap', $this, $file, $to);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::uploadCap', $this, $file, $to, $handled);
+			
+			return $handled;
+		}
 		
 		$pictures = new pictures();
 		$pictures->subFolder = $this->subFolder;
@@ -1215,8 +1369,15 @@ class _videos {
 		if (!$url)
 			return false;
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::getOnlineVideo', $_ENV, $url);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::getOnlineVideo', $_ENV, $url, $handled);
+			
+			return $handled;
+		}
 		
 		$result = false;
 		
@@ -1270,8 +1431,15 @@ class _videos {
 			return false;
 		}
 
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::download', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::download', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		session_write_close();
 		files::display($file);
@@ -1304,8 +1472,15 @@ class _videos {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$get = null;
 		
@@ -1328,8 +1503,15 @@ class _videos {
 	}
 	
 	function displayPlayButton(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayPlayButton', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayPlayButton', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<span class='video-play-button rounded-corners'></span>";
@@ -1339,8 +1521,15 @@ class _videos {
 	}
 	
 	function displayCap(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayCap', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayCap', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<img src='".
@@ -1357,8 +1546,15 @@ class _videos {
 	}
 	
 	function displayPreview(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayPreview', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayPreview', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($row['_Link']) || !$row['_Link'])
 			$row['_Link'] = $this->generateLink($row);
@@ -1383,8 +1579,15 @@ class _videos {
 	}
 	
 	function displayTitle(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayTitle', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayTitle', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo $row['Title'];
 		
@@ -1393,8 +1596,15 @@ class _videos {
 	}
 	
 	function displayDetails(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayDetails', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayDetails', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<span class='details-date'>" .
@@ -1415,8 +1625,15 @@ class _videos {
 	}
 	
 	function displayVideoPlayer(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayVideoPlayer', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayVideoPlayer', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$html5video = 
 			"<video controls='controls' " .
@@ -1452,8 +1669,15 @@ class _videos {
 	}
 	
 	function displayFlashVideo(&$row, $parameters = array(), $fallbackcontent = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayFlashVideo', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayFlashVideo', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$params = null;
 		
@@ -1485,8 +1709,15 @@ class _videos {
 	}
 	
 	function displayIframeVideo(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayIframeVideo', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayIframeVideo', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<iframe " .
@@ -1499,8 +1730,15 @@ class _videos {
 	}
 	
 	function displayDailyMotionVideo(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayDailyMotionVideo', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayDailyMotionVideo', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$row['Location'] .= '&amp;autoplay=1';
 		$this->displayFlashVideo($row);
@@ -1510,8 +1748,15 @@ class _videos {
 	}
 	
 	function displayYouTubeVideo(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayYouTubeVideo', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayYouTubeVideo', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$row['Location'] = str_replace('/v/', '/embed/', $row['Location']) .
 			'&amp;fs=1&amp;autoplay=1';
@@ -1523,8 +1768,15 @@ class _videos {
 	}
 	
 	function displayVimeoVideo(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayVimeoVideo', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayVimeoVideo', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		preg_match('/([0-9]*)$/', $row['Location'], $matches);
 		$row['Location'] = 'http://player.vimeo.com/video/' .
@@ -1537,8 +1789,15 @@ class _videos {
 	}
 	
 	function displayMetacafeVideo(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayMetacafeVideo', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayMetacafeVideo', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$row['Location'] .= '?playerVars=autoPlay=yes';
 		$this->displayFlashVideo($row);
@@ -1548,8 +1807,15 @@ class _videos {
 	}
 	
 	function displayLocalVideo(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayLocalVideo', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayLocalVideo', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		$file = $row['Location'];
 		
@@ -1566,8 +1832,15 @@ class _videos {
 	}
 	
 	function displayRemoteVideo(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayRemoteVideo', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayRemoteVideo', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if (preg_match('/dailymotion\.com\//i', $row['Location']))
 			$this->displayYouTubeVideo($row);
@@ -1594,8 +1867,15 @@ class _videos {
 	}
 	
 	function displayVideo(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayVideo', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayVideo', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if (strpos($row['Location'], '://') !== false)
 			$this->displayRemoteVideo($row);
@@ -1607,8 +1887,15 @@ class _videos {
 	}
 	
 	function displayFormated(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayFormated', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayFormated', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($row['_Link']) || !$row['_Link'])
 			$row['_Link'] = $this->generateLink($row);
@@ -1666,8 +1953,15 @@ class _videos {
 		if (!$row['Location'])
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displaySelected', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displaySelected', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<div class='video" .
@@ -1694,8 +1988,15 @@ class _videos {
 		if (!$row['Location'])
 			return;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::displayOne', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::displayOne', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<div class='video".$row['ID']." video-preview video-preview-num" .
@@ -1776,8 +2077,15 @@ class _videos {
 		if (!sql::rows($rows))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'videos::display', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'videos::display', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$this->ajaxRequest)
 			echo

@@ -37,8 +37,15 @@ class _dynamicForms extends form {
 	var $adminPath = 'admin/content/dynamicforms';
 	
 	function __construct($title = null, $formid = null, $method = 'post') {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::dynamicForms', $this, $title, $formid, $method);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::dynamicForms', $this, $title, $formid, $method, $handled);
+			
+			return $handled;
+		}
 		
 		parent::__construct($title, $formid, $method);
 		$this->formID = $this->id;
@@ -51,8 +58,15 @@ class _dynamicForms extends form {
 	
 	// ************************************************   Admin Part
 	function countAdminItems() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::countAdminItems', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::countAdminItems', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
@@ -66,8 +80,15 @@ class _dynamicForms extends form {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
@@ -87,8 +108,15 @@ class _dynamicForms extends form {
 	}
 	
 	function setupAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::setupAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::setupAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->add(
 			__('Title'),
@@ -267,8 +295,15 @@ class _dynamicForms extends form {
 	}
 	
 	function verifyAdmin(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::verifyAdmin', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::verifyAdmin', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$edit = null;
@@ -387,8 +422,15 @@ class _dynamicForms extends form {
 	}
 	
 	function displayAdminAvailableLocaleFiles() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::displayAdminAvailableLocaleFiles', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::displayAdminAvailableLocaleFiles', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($_GET['ajaxlimit']))
 			echo
@@ -491,8 +533,15 @@ class _dynamicForms extends form {
 	}
 	
 	function displayAdminListHeader() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::displayAdminListHeader', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::displayAdminListHeader', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -505,8 +554,15 @@ class _dynamicForms extends form {
 	}
 	
 	function displayAdminListHeaderOptions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::displayAdminListHeaderOptions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::displayAdminListHeaderOptions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -519,8 +575,15 @@ class _dynamicForms extends form {
 	}
 	
 	function displayAdminListHeaderFunctions() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::displayAdminListHeaderFunctions', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::displayAdminListHeaderFunctions', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<th><span class='nowrap'>".
@@ -533,8 +596,15 @@ class _dynamicForms extends form {
 	}
 	
 	function displayAdminListItem(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::displayAdminListItem', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::displayAdminListItem', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td class='auto-width'>" .
@@ -558,8 +628,15 @@ class _dynamicForms extends form {
 	}
 	
 	function displayAdminListItemOptions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::displayAdminListItemOptions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::displayAdminListItemOptions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if (JCORE_VERSION >= '0.5') {
 			if ($row['SQLTable'])
@@ -623,8 +700,15 @@ class _dynamicForms extends form {
 	}
 	
 	function displayAdminListItemFunctions(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::displayAdminListItemFunctions', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::displayAdminListItemFunctions', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<td align='center'>" .
@@ -658,8 +742,15 @@ class _dynamicForms extends form {
 	}
 	
 	function displayAdminListItemSelected(&$row) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::displayAdminListItemSelected', $this, $row);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::displayAdminListItemSelected', $this, $row, $handled);
+			
+			return $handled;
+		}
 		
 		if (JCORE_VERSION >= '0.7' &&
 			$row['SendNotificationEmail'] && $row['SendNotificationEmailTo'])
@@ -727,8 +818,15 @@ class _dynamicForms extends form {
 	}
 	
 	function displayAdminList(&$rows) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::displayAdminList', $this, $rows);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::displayAdminList', $this, $rows, $handled);
+			
+			return $handled;
+		}
 		
 		$id = null;
 		
@@ -791,8 +889,15 @@ class _dynamicForms extends form {
 	}
 	
 	function displayAdminForm(&$form) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::displayAdminForm', $this, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::displayAdminForm', $this, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -801,8 +906,15 @@ class _dynamicForms extends form {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__('Dynamic Forms Administration'),
@@ -813,8 +925,15 @@ class _dynamicForms extends form {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo "<p>".
 			str_replace('<code>', '<code style="padding: 0; margin: 0; overflow: visible;">',
@@ -828,8 +947,15 @@ class _dynamicForms extends form {
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$delete = null;
 		$edit = null;
@@ -957,8 +1083,15 @@ class _dynamicForms extends form {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::addForm', $this, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::addForm', $this, $values, $handled);
+			
+			return $handled;
+		}
 		
 		if ($values['SQLTable']) {
 			$exists = sql::fetch(sql::run(
@@ -1075,8 +1208,15 @@ class _dynamicForms extends form {
 			return false;
 		}
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::editForm', $this, $id, $values);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::editForm', $this, $id, $values, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicforms}`" .
@@ -1288,8 +1428,15 @@ class _dynamicForms extends form {
 		if (!$id)
 			return false;
 			
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::deleteForm', $this, $id);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::deleteForm', $this, $id, $handled);
+			
+			return $handled;
+		}
 		
 		$row = sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicforms}` " .
@@ -1350,8 +1497,15 @@ class _dynamicForms extends form {
 		if (!$this->storageSQLTable)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::addData', $this, $data);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::addData', $this, $data, $handled);
+			
+			return $handled;
+		}
 		
 		$formdata = new dynamicFormData();
 		$formdata->storageSQLTable = $this->storageSQLTable;
@@ -1374,8 +1528,15 @@ class _dynamicForms extends form {
 		if (!$this->storageSQLTable)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::editData', $this, $id, $data);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::editData', $this, $id, $data, $handled);
+			
+			return $handled;
+		}
 		
 		$formdata = new dynamicFormData();
 		$formdata->storageSQLTable = $this->storageSQLTable;
@@ -1389,8 +1550,15 @@ class _dynamicForms extends form {
 	}
 	
 	function uploadFile($file) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::uploadFile', $this, $file);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::uploadFile', $this, $file, $handled);
+			
+			return $handled;
+		}
 		
 		$formdata = new dynamicFormData();
 		
@@ -1411,8 +1579,15 @@ class _dynamicForms extends form {
 	}
 	
 	function sendEmail($to = null, $from = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::sendEmail', $this, $to, $from);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::sendEmail', $this, $to, $from, $handled);
+			
+			return $handled;
+		}
 		
 		$email = new email();
 		
@@ -1475,8 +1650,15 @@ class _dynamicForms extends form {
 	}
 	
 	function sendAutoResponseEmail() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::sendAutoResponseEmail', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::sendAutoResponseEmail', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$email = new email();
 		$email->from = $this->autoResponseFrom;
@@ -1530,8 +1712,15 @@ class _dynamicForms extends form {
 	}
 	
 	function verify($customdatahandling = false) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::verify', $this, $customdatahandling);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::verify', $this, $customdatahandling, $handled);
+			
+			return $handled;
+		}
 		
 		if (!parent::verify()) {
 			api::callHooks(API_HOOK_AFTER,
@@ -1647,8 +1836,15 @@ class _dynamicForms extends form {
 		if (!$form)
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::load', $this, $addformbuttons);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::load', $this, $addformbuttons, $handled);
+			
+			return $handled;
+		}
 		
 		if (JCORE_VERSION >= '0.8' && $form['LocaleFile']) {
 			languages::bind($form['LocaleFile']);
@@ -1871,8 +2067,15 @@ class _dynamicForms extends form {
 		$form->ignorePageBreaks = true;
 		$form->load();
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::displayPreview', $_ENV, $formid, $form);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::displayPreview', $_ENV, $formid, $form, $handled);
+			
+			return $handled;
+		}
 		
 		$form->display();
 		
@@ -1907,8 +2110,15 @@ class _dynamicForms extends form {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'dynamicForms::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'dynamicForms::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$GLOBALS['USER']->loginok || 
 			!$GLOBALS['USER']->data['Admin']) 

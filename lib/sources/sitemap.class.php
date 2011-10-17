@@ -20,8 +20,15 @@ class _sitemap {
 	}
 	
 	function setupAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sitemap::setupAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sitemap::setupAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		favoriteLinks::add(
 			__('Pages / Posts'), 
@@ -39,8 +46,15 @@ class _sitemap {
 	}
 	
 	function verifyAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sitemap::verifyAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sitemap::verifyAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$regenerate = null;
 		if (isset($_POST['regenerate']) && (string)$_POST['regenerate'])
@@ -91,8 +105,15 @@ class _sitemap {
 	}
 	
 	function displayAdminTitle($ownertitle = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sitemap::displayAdminTitle', $this, $ownertitle);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sitemap::displayAdminTitle', $this, $ownertitle, $handled);
+			
+			return $handled;
+		}
 		
 		admin::displayTitle(
 			__("Sitemap XML File Administration"),
@@ -103,8 +124,15 @@ class _sitemap {
 	}
 	
 	function displayAdminDescription() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sitemap::displayAdminDescription', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sitemap::displayAdminDescription', $this, $handled);
+			
+			return $handled;
+		}
 		
 		echo
 			"<p>" .
@@ -120,8 +148,15 @@ class _sitemap {
 	}
 	
 	function displayAdmin() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sitemap::displayAdmin', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sitemap::displayAdmin', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$editor = new sitemapFileEditor();
 		
@@ -147,8 +182,15 @@ class _sitemap {
 	}
 	
 	function getUrlID($link = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sitemap::getUrlID', $this, $link);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sitemap::getUrlID', $this, $link, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$link) {
 			$result = count($this->urls)-1;
@@ -179,8 +221,15 @@ class _sitemap {
 		if (!isset($url) || !is_array($url))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sitemap::add', $this, $url);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sitemap::add', $this, $url, $handled);
+			
+			return $handled;
+		}
 		
 		if (!isset($url['Link']))
 			$url['Link'] = SITE_URL;
@@ -213,8 +262,15 @@ class _sitemap {
 		if (!isset($urlid))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sitemap::edit', $this, $link ,$url);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sitemap::edit', $this, $link ,$url, $handled);
+			
+			return $handled;
+		}
 		
 		if (isset($url['Link']))
 			$this->urls[$urlid]['Link'] = $url['Link'];
@@ -242,8 +298,15 @@ class _sitemap {
 		if (!isset($urlid))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sitemap::delete', $this, $link);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sitemap::delete', $this, $link, $handled);
+			
+			return $handled;
+		}
 		
 		array_splice($this->urls, $urlid, 1);
 		
@@ -265,8 +328,15 @@ class _sitemap {
 		if (!isset($urls[1]))
 			return false;
 		
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sitemap::load', $this, $file);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sitemap::load', $this, $file, $handled);
+			
+			return $handled;
+		}
 		
 		foreach($urls[1] as $url) {
 			preg_match_all('/<(loc|lastmod|changefreq|priority)\b[^>]*>(.*?)<\/\1>/is', 
@@ -303,8 +373,15 @@ class _sitemap {
 	}
 	
 	function save($file = null) {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sitemap::save', $this, $file);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sitemap::save', $this, $file, $handled);
+			
+			return $handled;
+		}
 		
 		if (!$file)
 			$file = $this->file;
@@ -347,8 +424,15 @@ class _sitemap {
 	}
 	
 	function ajaxRequest() {
-		api::callHooks(API_HOOK_BEFORE,
+		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sitemap::ajaxRequest', $this);
+		
+		if (isset($handled)) {
+			api::callHooks(API_HOOK_AFTER,
+				'sitemap::ajaxRequest', $this, $handled);
+			
+			return $handled;
+		}
 		
 		$editor = new fileEditor();
 		$editor->file = $this->file;
