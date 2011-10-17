@@ -444,6 +444,32 @@ class _jQuery {
 					"type='text/javascript'>" .
 				"</script>\n";
 		
+		if (JCORE_VERSION <= '0.4') {
+			$modules = sql::run(
+				" SELECT `Name` FROM `{modules}`" .
+				" WHERE `Installed` = 1" .
+				" ORDER BY `Name`");
+			
+			foreach($modules as $module) {
+				$module = strtolower($module['Name']);
+				
+				if (JCORE_VERSION <= '0.2')
+					if (@is_file(SITE_PATH.'template/modules/css/'.$module.'.css'))
+						echo 
+							"<link rel='stylesheet' href='".
+							url::site()."template/modules/css/".$module.".css?revision=".
+							JCORE_VERSION .
+							"' type='text/css' />\n";
+		
+				if (@is_file(SITE_PATH.'template/modules/js/'.$module.'.js'))
+					echo 
+						"<script src='".
+							url::site()."template/modules/js/".$module.".js?revision=".
+							JCORE_VERSION .
+							"' type='text/javascript' language='Javascript'></script>\n";
+			}
+		}
+		
 		api::callHooks(API_HOOK_AFTER,
 			'jQuery::display', $_ENV);
 	}

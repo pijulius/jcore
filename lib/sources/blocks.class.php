@@ -1133,7 +1133,9 @@ class _blocks {
 				(JCORE_VERSION >= '0.8'?'PageIDs':'MenuItemIDs'),
 				" <label>" .
 					"<input type='radio' name='PageExceptRadio' value='0' " .
-						"onclick=\"this.form.PageExcept.value = 0;\" " .
+						"onclick=\"this.form." .
+							(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept') .
+							".value = 0;\" " .
 						(!$form->get((JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept'))?
 							"checked='checked'":
 							null) .
@@ -1142,7 +1144,9 @@ class _blocks {
 				"</label> " .
 				" <label>" .
 					"<input type='radio' name='PageExceptRadio' value='1' " .
-						"onclick=\"this.form.PageExcept.value = 1;\" " .
+						"onclick=\"this.form." .
+							(JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept') .
+							".value = 1;\" " .
 						($form->get((JCORE_VERSION >= '0.8'?'PageExcept':'MenuItemExcept'))?
 							"checked='checked'":
 							null) .
