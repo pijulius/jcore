@@ -39,7 +39,7 @@ class _api {
 				$function[1] = 'display';
 			
 			if (is_object($function[0])) {
-				$object = $function[0];
+				$object = clone($function[0]);
 				$function[0] = get_class($object);
 			}
 			

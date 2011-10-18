@@ -606,7 +606,7 @@ class _modules {
 			if (stripos($icon, '/') === false)
 				$icon = url::jCore().'lib/icons/48/'.$icon;
 			else
-				$icon = url::jCore().$icon;
+				$icon = url::site().$icon;
 		}
 		
 		modules::$available[$modulename] = array(
