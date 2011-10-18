@@ -492,7 +492,7 @@ class _jQuery {
 				" WHERE `Installed` = 1" .
 				" ORDER BY `Name`");
 			
-			foreach($modules as $module) {
+			while($module = sql::fetch($modules)) {
 				$module = strtolower($module['Name']);
 				
 				if (JCORE_VERSION <= '0.2')
