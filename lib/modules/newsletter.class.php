@@ -1536,7 +1536,7 @@ class newsletterSubscriptions {
 	static function cleanUp() {
 		return sql::run(
 			" DELETE FROM `{newslettersubscriptions}`" .
-			" WHERE `Confirmed` = 0 AND `TimeStamp` < DATE_SUB(NOW(), INTERVAL 1 WEEK)");
+			" WHERE `Confirmed` = 0 AND `TimeStamp` < DATE_SUB(NOW(), INTERVAL 1 MONTH)");
 	}
 	
 	static function sendConfirmationEmail($subscriptionid, $emailid = 'NewsletterSubscribe') {
