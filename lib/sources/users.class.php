@@ -728,7 +728,11 @@ class _users {
 						null) .
 					" />" .
 			"</td>" .
-			"<td class='auto-width'>" .
+			"<td class='auto-width' " .
+				($row['Suspended']?
+					"style='text-decoration: line-through;' ":
+					null).
+				">" .
 				"<a href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."' " .
 					"class='bold'>".
@@ -2134,10 +2138,7 @@ class _users {
 		if (!$id)
 			return false;
 		
-		$user = users::get((int)$id);
-		
-		if ($user['Password'])
-			return true;
+		$user = $GLOBALS['USER']->get((int)$id);
 		
 		if (JCORE_VERSION >= '0.8' && 
 			$groupids && !in_array($user['GroupID'], (array)$groupids))
@@ -2153,27 +2154,33 @@ class _users {
 			return $handled;
 		}
 		
-		$latestrequest = sql::fetch(sql::run(
-			" SELECT `Data` FROM `{userrequests}`" .
-			" WHERE `UserID` = '".$id."'" .
-			" AND `RequestTypeID` IN (" .
-				REQUEST_TYPE_NEW_ACCOUNT.", ".REQUEST_TYPE_NEW_PASSWORD.")" .
-			" ORDER BY `TimeStamp` DESC" .
-			" LIMIT 1"));
+		$password = '';
+		$newpassword = '';
 		
-		$newpassword = null;
-		
-		if ($latestrequest['Data']) {
-			$password = $latestrequest['Data'];
+		if (!$user['Password']) {
+			$latestrequest = sql::fetch(sql::run(
+				" SELECT `Data` FROM `{userrequests}`" .
+				" WHERE `UserID` = '".$id."'" .
+				" AND `RequestTypeID` IN (" .
+					REQUEST_TYPE_NEW_ACCOUNT.", ".REQUEST_TYPE_NEW_PASSWORD.")" .
+				" ORDER BY `TimeStamp` DESC" .
+				" LIMIT 1"));
 			
-		} else {
-			$newpassword = security::genPassword($user['Email']);
-			$password = security::genHash($newpassword);
+			if ($latestrequest['Data']) {
+				$password = $latestrequest['Data'];
+				
+			} else {
+				$newpassword = security::genPassword($user['Email']);
+				$password = security::genHash($newpassword);
+			}
 		}
 		
 		sql::run(
 			" UPDATE `{users}` SET" .
-			" `Password` = '".sql::escape($password)."'," .
+			($password?
+				" `Password` = '".sql::escape($password)."',":
+				null) .
+			" `Suspended` = 0," .
 			" `TimeStamp` = `TimeStamp`" .
 			" WHERE `ID` = '".(int)$id."'");
 		
@@ -2204,7 +2211,8 @@ class _users {
 		if (!$id)
 			return false;
 			
-		$user = users::get((int)$id);
+		$user = $GLOBALS['USER']->get((int)$id);
+		
 		if (JCORE_VERSION >= '0.8' && 
 			$groupids && !in_array($user['GroupID'], (array)$groupids))
 			return false;

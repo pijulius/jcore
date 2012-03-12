@@ -18,7 +18,7 @@ define('FILE_TYPE_AUDIO', 5);
 class _files {
 	static $debug = false;
 	static $allowedFileTypes = array(
-		FILE_TYPE_UPLOAD => '\.(7z|aiff|asf|avi|bmp|csv|doc|fla|flv|gif|gz|gzip|jpeg|jpg|mid|mov|mp3|mp4|mpc|mpeg|mpg|ods|odt|pdf|png|ppt|eps|pxd|qt|ram|rar|rm|rmi|rmvb|rtf|sdc|sitd|swf|sxc|sxw|tar|tgz|tif|tiff|txt|vsd|wav|wma|wmv|xls|xml|zip|patch|sql|mo|po)$',
+		FILE_TYPE_UPLOAD => '\.(7z|aiff|asf|avi|bmp|csv|doc|fla|flv|gif|gz|gzip|jpeg|jpg|mid|mov|mp3|mp4|mpc|mpeg|mpg|ods|odt|pdf|png|ppt|eps|pxd|qt|ram|rar|rm|rmi|rmvb|rtf|sdc|sitd|swf|sxc|sxw|tar|tgz|tif|tiff|txt|vsd|wav|wma|wmv|xls|xml|zip|patch|sql|mo|po|docx|docm|dotx|dotm|xlsx|xlsm|xltx|xltm|xlsb|xlam|xll|pptx|pptm|potx|potm|ppam|ppsx|ppsm|sldx|sldm|thmx)$',
 		FILE_TYPE_IMAGE => '\.(jpg|gif|jpeg|png|bmp)$',
 		FILE_TYPE_VIDEO => '\.(avi|wmv|swf|flv|mov|mp4|webm|ogv|mpeg|mpg|qt|rm)$', 
 		FILE_TYPE_BANNER => '\.(jpg|gif|jpeg|png|bmp|swf)$',

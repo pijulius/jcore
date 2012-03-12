@@ -2870,6 +2870,8 @@ class _comments {
 						__("New Comment"))),
 				'newcomment');
 			
+			$form->action = url::uri('delete');
+			
 			if ($replyto) {	
 				$form->add(
 					__('Reply To'),

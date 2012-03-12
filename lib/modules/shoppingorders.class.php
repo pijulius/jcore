@@ -605,8 +605,8 @@ class shoppingOrderMethodCCBill extends form {
 		}
 		
 		$diggest = md5(
-			$ordertotal.'10'.
-			SHOPPING_CART_ORDER_METHOD_CCBILL_CURRENCY_CODE.
+			$ordertransactionid .
+			'1' .
 			SHOPPING_CART_ORDER_METHOD_CCBILL_ENCRYPTION_KEY);
 		
 		if ($diggest != strip_tags((string)$_POST['responseDigest'])) {
@@ -3419,7 +3419,7 @@ class shoppingOrders extends modules {
 				"</a>",
 				TOOLTIP_SUCCESS);
 				
-		shoppingOrders::sendNotificationEmail($orderid);
+		shoppingOrders::sendNotificationEmails($orderid);
 		
 		unset($_POST['ShoppingItemID']);
 		unset($_POST['ShoppingItemQuantity']);

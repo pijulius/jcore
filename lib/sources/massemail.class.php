@@ -1040,7 +1040,7 @@ class _massEmail {
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
 					" WHERE `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null) .
-				" ORDER BY `ID` DESC" .
+				" ORDER BY `TimeStamp` DESC, `ID` DESC" .
 				" LIMIT ".$paging->limit);
 				
 		$paging->setTotalItems(sql::count());

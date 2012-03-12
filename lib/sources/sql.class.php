@@ -61,6 +61,8 @@ class _sql {
 		
 		if ($character_set)
 	  		sql::run("SET CHARACTER SET '".$character_set['Value']."'");
+	  	
+		sql::run("SET sql_mode = ''");
 	}
 	
 	static function prefixTable($query) {

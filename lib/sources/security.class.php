@@ -1394,7 +1394,7 @@ class _security {
 		return $result;
 	}
 	
-	static function genToken($lifetime = 10800) {
+	static function genToken($lifetime = 18000) {
 		$i = ceil(time() / $lifetime);
 		
 		if (isset($GLOBALS['USER']))
@@ -1403,7 +1403,7 @@ class _security {
 		return sha1(session_id().$i.$u);
 	}
 	
-	static function checkToken($token = null, $lifetime = 10800) {
+	static function checkToken($token = null, $lifetime = 18000) {
 		if (!$token && isset($_POST['_SecurityToken']))
 			$token = (string)$_POST['_SecurityToken'];
 		

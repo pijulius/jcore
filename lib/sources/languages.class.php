@@ -11,6 +11,9 @@
 
 define('PHP_GETTEXT', extension_loaded('gettext'));
 
+if (!defined('LC_MESSAGES'))
+	define('LC_MESSAGES', LC_ALL);
+
 if (!PHP_GETTEXT || (defined('MANUAL_GETTEXT') && MANUAL_GETTEXT))
 	include_once('lib/gettext/gettext.inc');
 

@@ -509,7 +509,7 @@ class _pages {
 				'; height: 100px;');
 			
 			$form->add(
-				__('Tags'),
+				__('Keywords'),
 				'SEOKeywords',
 				FORM_INPUT_TYPE_TEXT);
 			$form->setStyle('width: 350px;');
