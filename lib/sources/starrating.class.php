@@ -56,6 +56,12 @@ class _starRating {
 		if (isset($_POST['rate']))
 			$rate = (int)$_POST['rate'];
 		
+		if ($rate > 10)
+			$rate = 10;
+		
+		if ($rate < 1)
+			$rate = 1;
+		
 		if (!$this->selectedOwnerID || !$rate)
 			return;
 		

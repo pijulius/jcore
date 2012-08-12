@@ -1853,7 +1853,7 @@ class shoppingItems {
 					"style='margin-right: 20px;'>" .
 					"<form action='".url::uri('ajaxsearch, ajaxlimit, ajax')."' method='post' " .
 						"class='ajax-form' " .
-						"target='.shopping-item-add-keywords-list'>" .
+						"data-target='.shopping-item-add-keywords-list'>" .
 					__("Search").": " .
 					"<input type='search' " .
 						"name='ajaxsearch' " .

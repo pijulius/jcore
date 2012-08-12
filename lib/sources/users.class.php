@@ -1684,7 +1684,7 @@ class _users {
 		if (isset($_COOKIE['memberloginid']))
 			sql::run(
 				" DELETE FROM `{userlogins}`" .
-				" WHERE `SessionID` = BINARY '".$_COOKIE['memberloginid']."'");
+				" WHERE `SessionID` = BINARY '".sql::escape($_COOKIE['memberloginid'])."'");
 		
 		$this->loginok = null;
 		$this->data = null;
@@ -2855,7 +2855,7 @@ class _users {
 					"style='margin-right: 20px;'>" .
 					"<form action='".url::uri('ajaxsearch, ajaxlimit, ajax')."' method='post' " .
 						"class='ajax-form' " .
-						"target='.select-users-list'>" .
+						"data-target='.select-users-list'>" .
 					__("Search").": " .
 					"<input type='search' " .
 						"name='ajaxsearch' " .

@@ -24,6 +24,9 @@ define('SETTINGS_TYPE_COLOR', 10);
 if (!defined('DEBUG'))
 	define('DEBUG', null);
 
+if (!defined('COMPRESSION_DISABLED') && function_exists('ob_gzhandler') && @ini_get('zlib.output_compression'))
+	define('COMPRESSION_DISABLED', true);
+
 if (!defined('MOBILE_BROWSER')) {
 	if (preg_match('/android|avantgo|blackberry|blazer|compal|elaine|fennec|' .
 		'hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|' .

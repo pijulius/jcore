@@ -137,7 +137,7 @@ class _dayCalendar {
 				url::uri($this->variable.', request') .
 				"&amp;".$this->variable."=".strtotime('-1 week', $time) .
 				"&amp;request=".$this->uriRequest."' " .
-				"target='.day-calendar.".$this->cssClass."'>" .
+				"data-target='.day-calendar.".$this->cssClass."'>" .
 				"<span>&lt;&lt;</span>" .
 			"</a>";
 		
@@ -161,7 +161,7 @@ class _dayCalendar {
 				url::uri($this->variable.', request') .
 				"&amp;".$this->variable."=".strtotime('-1 day', $time) .
 				"&amp;request=".$this->uriRequest."' " .
-				"target='.day-calendar.".$this->cssClass."'>" .
+				"data-target='.day-calendar.".$this->cssClass."'>" .
 				"<span>&lt;</span>" .
 			"</a>";
 		
@@ -185,7 +185,7 @@ class _dayCalendar {
 				url::uri($this->variable.', request') .
 				"&amp;".$this->variable."=".strtotime('+1 week', $time) .
 				"&amp;request=".$this->uriRequest."' " .
-				"target='.day-calendar.".$this->cssClass."'>" .
+				"data-target='.day-calendar.".$this->cssClass."'>" .
 				"<span>&gt;&gt;</span>" .
 			"</a>";
 		
@@ -209,7 +209,7 @@ class _dayCalendar {
 				url::uri($this->variable.', request') .
 				"&amp;".$this->variable."=".strtotime('+1 day', $time) .
 				"&amp;request=".$this->uriRequest."' " .
-				"target='.day-calendar.".$this->cssClass."'>" .
+				"data-target='.day-calendar.".$this->cssClass."'>" .
 				"<span>&gt;</span>" .
 			"</a>";
 		

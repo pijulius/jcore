@@ -11,6 +11,7 @@
 
 define('NOW', date('Y-m-d H:i:s'));
 define('NOW_DATE', date('Y-m-d'));
+define('NOW_TIME', date('H:i:s'));
 define('NOW_YEAR', date('Y'));
 define('NOW_MONTH', date('m'));
 define('NOW_DAY', date('d'));

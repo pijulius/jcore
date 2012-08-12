@@ -189,7 +189,7 @@ class _monthCalendar {
 				url::uri($this->variable.', request') .
 				"&amp;".$this->variable."=".strtotime('-1 year', $time) .
 				"&amp;request=".$this->uriRequest."' " .
-				"target='.month-calendar.".$this->cssClass."'>" .
+				"data-target='.month-calendar.".$this->cssClass."'>" .
 				"<span>&lt;&lt;</span>" .
 			"</a>";
 		
@@ -213,7 +213,7 @@ class _monthCalendar {
 				url::uri($this->variable.', request') .
 				"&amp;".$this->variable."=".strtotime('-1 month', $time) .
 				"&amp;request=".$this->uriRequest."' " .
-				"target='.month-calendar.".$this->cssClass."'>" .
+				"data-target='.month-calendar.".$this->cssClass."'>" .
 				"<span>&lt;</span>" .
 			"</a>";
 		
@@ -237,7 +237,7 @@ class _monthCalendar {
 				url::uri($this->variable.', request') .
 				"&amp;".$this->variable."=".strtotime('+1 year', $time) .
 				"&amp;request=".$this->uriRequest."' " .
-				"target='.month-calendar.".$this->cssClass."'>" .
+				"data-target='.month-calendar.".$this->cssClass."'>" .
 				"<span>&gt;&gt;</span>" .
 			"</a>";
 		
@@ -261,7 +261,7 @@ class _monthCalendar {
 				url::uri($this->variable.', request') .
 				"&amp;".$this->variable."=".strtotime('+1 month', $time) .
 				"&amp;request=".$this->uriRequest."' " .
-				"target='.month-calendar.".$this->cssClass."'>" .
+				"data-target='.month-calendar.".$this->cssClass."'>" .
 				"<span>&gt;</span>" .
 			"</a>";
 		

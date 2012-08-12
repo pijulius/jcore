@@ -1395,7 +1395,7 @@ class _security {
 	}
 	
 	static function genToken($lifetime = 18000) {
-		$i = ceil(time() / $lifetime);
+		$i = ceil(time() / round($lifetime/2));
 		
 		if (isset($GLOBALS['USER']))
 			$u = implode((array)$GLOBALS['USER']->data);
@@ -1410,10 +1410,10 @@ class _security {
 		if (!$token)
 			return false;
 		
-		$i = ceil(time() / $lifetime);
+		$i = ceil(time() / round($lifetime/2));
 		$u = implode((array)$GLOBALS['USER']->data);
-
-		if (sha1(session_id().$i.$u) == $token)
+		
+		if (sha1(session_id().$i.$u) == $token || sha1(session_id().($i-1).$u) == $token)
 			return true;
 		
 		return false;
@@ -1438,7 +1438,7 @@ class _security {
 				($iteration<10?'0':null).$iteration.'$' .
 				substr($bfsalt, 0, 22));
 			
-			if ($hash)
+			if ($hash && $hash != '*0' && $hash != '*1')
 				return $hash;
 		}
 		
@@ -1454,7 +1454,7 @@ class _security {
 			
 			$hash = crypt($text, '$1$'.substr($md5salt, 0, 9));
 			
-			if ($hash)
+			if ($hash && $hash != '*0' && $hash != '*1')
 				return $hash;
 		}
 		

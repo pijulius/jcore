@@ -76,6 +76,9 @@ class _requests {
 		if (isset($GLOBALS['_'.strtoupper($this->method)][$this->variable]))
 			requests::$path = strip_tags((string)$GLOBALS['_'.strtoupper($this->method)][$this->variable]);
 		
+		if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']))
+			requests::$ajax = true;
+		
 		if (isset($GLOBALS['_'.strtoupper($this->method)]['ajax']))
 			requests::$ajax = (bool)$GLOBALS['_'.strtoupper($this->method)]['ajax'];
 		

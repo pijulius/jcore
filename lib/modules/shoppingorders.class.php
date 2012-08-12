@@ -3458,7 +3458,7 @@ class shoppingOrders extends modules {
 					"style='margin-right: 20px;'>" .
 					"<form action='".url::uri('ajaxshoppingid, ajaxsearch, ajaxlimit, ajax')."' method='post' " .
 						"class='ajax-form' " .
-						"target='.shopping-order-new-order-items'>" .
+						"data-target='.shopping-order-new-order-items'>" .
 					__("Search").": " .
 					"<select name='ajaxshoppingid' " .
 						"onchange=\"$('.shopping-order-new-order-items form').ajaxSubmit();\">" .

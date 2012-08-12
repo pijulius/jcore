@@ -1323,7 +1323,7 @@ class _videos {
 		if (!isset($matches[1]))
 			return false;
 
-		$data = files::get('http://vimeo.com/api/clip/'.$matches[1].'/php');
+		$data = files::get('http://vimeo.com/api/v2/video/'.$matches[1].'/php');
 		$array = @unserialize(trim($data));
 		
 		if (!isset($array[0]['url']))
@@ -1384,7 +1384,7 @@ class _videos {
 		if (preg_match('/dailymotion\.com\//i', $url))
 			$result = videos::getDailyMotionVideo($url);
 		
-		else if (preg_match('/youtube\.com\//i', $url))
+		else if (preg_match('/(youtube\.com|youtu\.be)\//i', $url))
 			$result = videos::getYouTubeVideo($url);
 		
 		else if (preg_match('/vimeo\.com\//i', $url))

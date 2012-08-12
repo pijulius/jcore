@@ -1889,6 +1889,8 @@ class _dynamicForms extends form {
 				null) .
 			" ORDER BY `OrderID`, `ID`");
 		
+		$codes = new contentCodes();
+		
 		$presetvalues = array();
 		$formhassubmitbutton = false;
 		
@@ -1914,6 +1916,8 @@ class _dynamicForms extends form {
 			$values = array();
 			$presetvalue = false;
 			$defaultvalue = null;
+			
+			$codes->replaceDefinitions($row['Values']);
 			
 			if (in_array($row['TypeID'], array(
 				FORM_INPUT_TYPE_SELECT, FORM_INPUT_TYPE_MULTISELECT,
@@ -2025,6 +2029,8 @@ class _dynamicForms extends form {
 				}
 			}
 		}
+		
+		unset($codes);
 		
 		if (!$formhassubmitbutton && $addformbuttons)
 			$this->addSubmitButtons();

@@ -2192,7 +2192,7 @@ class _comments {
 			return $handled;
 		}
 		
-		$form->action = url::referer(true);
+		$form->action = url::referer(true, strtolower(get_class($this)).',delete');
 		$form->footer = '';
 		
 		$form->add(
@@ -2846,13 +2846,13 @@ class _comments {
 		if (isset($_POST['CommentID']))
 			$edit = (int)$_POST['CommentID'];
 		
-		if (!$replyto && isset($_GET['postcomments']) && $_GET['postcomments'] &&
+		if (!$replyto && isset($_GET[strtolower(get_class($this))]) && $_GET[strtolower(get_class($this))] &&
 			isset($_GET['reply']) && $_GET['reply'])
-			$replyto = (int)$_GET['postcomments'];
+			$replyto = (int)$_GET[strtolower(get_class($this))];
 		
-		if (!$edit && isset($_GET['postcomments']) && $_GET['postcomments'] &&
+		if (!$edit && isset($_GET[strtolower(get_class($this))]) && $_GET[strtolower(get_class($this))] &&
 			isset($_GET['edit']) && $_GET['edit'])
-			$edit = (int)$_GET['postcomments'];
+			$edit = (int)$_GET[strtolower(get_class($this))];
 		
 		if (!$this->ajaxRequest)
 			echo 
@@ -2914,7 +2914,7 @@ class _comments {
 					'cancel',
 					 FORM_INPUT_TYPE_BUTTON);
 				$form->addAttributes("onclick=\"window.location='".
-					str_replace('&amp;', '&', url::uri())."'\"");
+					str_replace('&amp;', '&', url::uri(strtolower(get_class($this)).',edit'))."'\"");
 			}
 			
 			if (!$GLOBALS['USER']->loginok)

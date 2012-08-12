@@ -396,7 +396,7 @@ class _sitemap {
 		foreach($this->urls as $url) {
 			$sitemap .=
 				"	<url>\n" .
-				"		<loc>".$url['Link']."</loc>\n" .
+				"		<loc>".htmlspecialchars($url['Link'])."</loc>\n" .
 				"		<lastmod>".
 							calendar::datetime($url['LastModified'], "%Y-%m-%dT%H:%M:%S") .
 							preg_replace('/^(.[0-9]{2})([0-9]{2})/', '\1:\2', calendar::datetime($url['LastModified'], "%z")) .

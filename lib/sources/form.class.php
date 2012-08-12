@@ -565,6 +565,9 @@ class _form {
 			$value && isset($this->elements[$elementid]['Values'][(int)($value-1)]))
 			$value = $this->elements[$elementid]['Values'][(int)($value-1)]['Value'];
 		
+		if (!isset($value) && !empty($this->elements[$elementid]['OriginalValue']))
+			$value = $this->elements[$elementid]['OriginalValue'];
+		
 		if (!isset($value))
 			return null;
 		

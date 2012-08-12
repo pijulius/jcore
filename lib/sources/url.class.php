@@ -204,16 +204,45 @@ class _url {
 		url::setURI(url::uri($args));
 	}
 	
-	static function referer($striprequests = false) {
+	static function referer($striprequests = false, $notincludeargs = null, $inverse = false) {
 		if (!isset($_SERVER['HTTP_REFERER']))
 			return null;
 		
-		if ($striprequests) 
-			return 
-				preg_replace('/((\?)|&)request=.*/i', '\\1', 
-					strip_tags((string)$_SERVER['HTTP_REFERER']));
+		$referer = strip_tags((string)$_SERVER['HTTP_REFERER']);
 		
-		return strip_tags((string)$_SERVER['HTTP_REFERER']);
+		if ($striprequests) 
+			$referer = preg_replace('/((\?)|&)request=.*/i', '\\1', $referer);
+		
+		if (!$notincludeargs)
+			return $referer;
+		
+		$uri = @parse_url($referer);
+		
+		if ($notincludeargs == 'ALL')
+			return (isset($uri['path'])?$uri['path']:'');
+		
+		if (!isset($uri['query']))
+			return (isset($uri['path'])?$uri['path']:'').'?';
+			
+		$args = explode('&', $uri['query']);
+		$notincludeargs = explode(",", str_replace(" ", "", trim($notincludeargs, ' ,')));
+		
+		$rargs = null;
+		foreach($args as $arg) {
+			$expargs = explode('=', $arg);
+			
+			if ((!$inverse && 
+				!in_array($arg, $notincludeargs) &&
+				!in_array($expargs[0], $notincludeargs)) ||
+				($inverse && 
+				in_array($expargs[0], $notincludeargs))) 
+			{
+				$rargs .= $arg."&";
+			}
+		}
+		
+		return (isset($uri['path'])?$uri['path']:'').'?' .
+			substr($rargs, 0, strlen($rargs)-5);
 	}
 	
 	static function setURI($uri) {
@@ -482,13 +511,15 @@ class _url {
 					(!isset($GLOBALS['ADMIN']) || !$GLOBALS['ADMIN'])) 
 				{
 					echo
-						"<a class='url-path' href='". url::site() .
-							$path."'>".__($exppath)."</a>";
+						"<a class='url-path".(!$i?' first':null).($i == count($exppaths)?' last':null)."' " .
+							"href='". url::site() .
+							htmlspecialchars($path, ENT_QUOTES)."'>".__($exppath)."</a>";
 					
 				} else {
 					echo
-						"<a class='url-path' href='". url::uri('ALL') .
-							"?path=".$path."'>".__($exppath)."</a>";
+						"<a class='url-path".(!$i?' first':null).($i == count($exppaths)-1?' last':null)."' " .
+							"href='". url::uri('ALL') .
+							"?path=".htmlspecialchars($path, ENT_QUOTES)."'>".__($exppath)."</a>";
 				}
 				
 				$i++;
