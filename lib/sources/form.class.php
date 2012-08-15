@@ -565,7 +565,9 @@ class _form {
 			$value && isset($this->elements[$elementid]['Values'][(int)($value-1)]))
 			$value = $this->elements[$elementid]['Values'][(int)($value-1)]['Value'];
 		
-		if (!isset($value) && !empty($this->elements[$elementid]['OriginalValue']))
+		if ($this->elements[$elementid]['Type'] != FORM_INPUT_TYPE_CHECKBOX && 
+			$this->elements[$elementid]['Type'] != FORM_INPUT_TYPE_RADIO && 
+			!isset($value) && !empty($this->elements[$elementid]['OriginalValue']))
 			$value = $this->elements[$elementid]['OriginalValue'];
 		
 		if (!isset($value))
