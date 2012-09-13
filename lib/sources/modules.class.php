@@ -644,7 +644,10 @@ class _modules {
 		return sql::fetch(sql::run(
 			" SELECT `ID` FROM `{modules}`" .
 			" WHERE `Name` LIKE '".sql::escape($id)."'" .
-			" AND `Installed` = 1"));
+			" AND `Installed` = 1" .
+			(JCORE_VERSION >= '0.9'?
+				" AND `Deactivated` = 0":
+				null)));
 	}
 	
 	static function getTitle($id = null) {
