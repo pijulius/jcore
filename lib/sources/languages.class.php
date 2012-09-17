@@ -1157,7 +1157,7 @@ class _languages {
 			return false;
 		
 		languages::$selectedLocale = $locale;
-		putenv('LC_ALL='.$locale);
+		@putenv('LC_ALL='.$locale);
 		
 		if ((defined('MANUAL_GETTEXT') && MANUAL_GETTEXT) || !PHP_GETTEXT) {
 			T_setlocale(LC_ALL, $locale.'.'.PAGE_CHARSET, $locale);
