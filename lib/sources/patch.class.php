@@ -22,12 +22,12 @@ class _patch {
 	var $destinations = array();
 	var $removals = array();
 	var $newline = "\n";
-	
+
 	function __construct($root_path) {
 		// if you specify a root path all paths will be intended as relative to it (and not written, too)
 		$this->root = $root_path;
 	}
-	
+
 	function &_get_source($src) {
 		if (isset($this->sources[$src]))
 			return $this->sources[$src];
@@ -38,7 +38,7 @@ class _patch {
 		$this->sources[$src] = $this->_linesplit(file_get_contents($src));
 		return $this->sources[$src];
 	}
-	
+
 	function &_get_destin($dst, $src) {
 		if (isset($this->destinations[$dst]))
 			return $this->destinations[$dst];
@@ -51,7 +51,7 @@ class _patch {
 		$lines = preg_split('/(\r\n)|(\r)|(\n)/', $data);
 		return $lines;
 	}
-	
+
 	function merge($udiff) {
 		// (1) Separate the input into lines
 		$lines = $this->_linesplit($udiff);
@@ -60,7 +60,7 @@ class _patch {
 			return false;
 		}
 		unset($udiff);
-	
+
 		$line = current($lines);
 		do {
 			if (strlen($line)<5)
@@ -83,16 +83,16 @@ class _patch {
 			$p = strpos($line, "\t", 4);
 			if ($p===false)	$p = strlen($line);
 			$dst = $this->root.substr($line, 4, $p-4);
-			
+
 			$line = next($lines);
 			if (!isset($line)) {
 				$this->msg = _PHPP_UNEXPECTED_EOF;
 				return false;
 			}
-			
+
 			$done=0;
 			while (preg_match('/@@ -(\\d+)(,(\\d+))?\\s+\\+(\\d+)(,(\\d+))?\\s+@@($)/A', $line, $m)) {
-			
+
 				if ($m[3]==='')
 					$src_size = 1;
 				else $src_size = (int)$m[3];
@@ -112,19 +112,19 @@ class _patch {
 				$this->msg = _PHPP_INVALID_DIFF;
 				return false;
 			}
-			
+
 		} while (FALSE !== ($line = next($lines)));
-		
+
 		//NOTE: previously opened files are still cached
 		return true;
 	}
-	
+
 	function clearCache() {
 		$this->sources = array();
 		$this->destinations = array();
 		$this->removals = array();
 	}
-	
+
 	function applyPatch() {
 		if (empty($this->destinations))
 			return 0;
@@ -148,7 +148,7 @@ class _patch {
 		$this->removals = array();
 		return $done;
 	}
-	
+
 	function _apply_diff(&$lines, $src, $dst, $src_line, $src_size, $dst_line, $dst_size) {
 		$src_line--;
 		$dst_line--;
@@ -196,7 +196,7 @@ class _patch {
 				$src_left--;
 				$dst_left--;
 			}
-			
+
 			if (($src_left==0) && ($dst_left==0)) {
 				// now apply the patch, finally!
 				if ($src_size>0) {
@@ -211,7 +211,7 @@ class _patch {
 							return false;
 						$src_bottom=$src_line+count($source);
 						$dst_bottom=$dst_line+count($destin);
-						
+
 						for ($l=$src_line;$l<$src_bottom;$l++) {
 							if ($src_lines[$l]!=$source[$l-$src_line]) {
 								$this->msg = sprintf(_PHPP_FAILED_VERIFY, $src, $l);
@@ -223,7 +223,7 @@ class _patch {
 						$this->destinations[$dst] = $destin;
 				} else
 					$this->removals[] = $src;
-				
+
 				return true;
 			}
 		} while (FALSE !== ($line = next($lines)));
@@ -231,7 +231,7 @@ class _patch {
 		$this->msg = _PHPP_UNEXPECTED_EOF;
 		return false;
 	}
-	
+
 	function diff(&$latest, &$udiff) {
 		$this->msg = 'Not available';
 		return false;

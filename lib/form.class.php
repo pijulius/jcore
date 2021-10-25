@@ -8,7 +8,7 @@
  *  me@pijulius.com
  *  For licensing, see LICENSE or http://jcore.net/license
  ****************************************************************************/
- 
+
 include_once('lib/sources/form.class.php');
 
 class form extends _form {

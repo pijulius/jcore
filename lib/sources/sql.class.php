@@ -20,13 +20,132 @@ if (DEBUG) {
 	debug::start();
 }
 
+if (!function_exists('mysql_connect')) {
+	function mysql_connect($host, $user, $pass) {
+		return new mysqli($host, $user, $pass);
+	}
+
+	function mysql_select_db($db, $link = null) {
+		if (!$link)
+			$link = sql::$link;
+
+		if (!$link)
+			return;
+
+		return $link->select_db($db);
+	}
+
+	function mysql_query($query, $link = null) {
+		if (!$link)
+			$link = sql::$link;
+
+		if (!$link)
+			return;
+
+		return $link->query($query);
+	}
+
+	function mysql_insert_id($link = null) {
+		if (!$link)
+			$link = sql::$link;
+
+		if (!$link)
+			return;
+
+		return $link->insert_id;
+	}
+
+	function mysql_fetch_array($query) {
+		if (!$query)
+			return null;
+
+		return $query->fetch_assoc();
+	}
+
+	function mysql_num_rows($link = null) {
+		if (!$link)
+			$link = sql::$link;
+
+		if (!$link)
+			return;
+
+		return $link->num_rows;
+	}
+
+	function mysql_data_seek($link = null, $row) {
+		if (!$link)
+			$link = sql::$link;
+
+		if (!$link)
+			return;
+
+		$link->data_seek($row);
+	}
+
+	function mysql_close($link = null) {
+		if (!$link)
+			$link = sql::$link;
+
+		if (!$link)
+			return;
+
+		return $link->close();
+	}
+
+	function mysql_real_escape_string($string, $link = null) {
+		if (!$link)
+			$link = sql::$link;
+
+		if (!$link)
+			return;
+
+		return $link->real_escape_string($string);
+	}
+
+	function mysql_affected_rows($link = null) {
+		if (!$link)
+			$link = sql::$link;
+
+		if (!$link)
+			return;
+
+		return $link->affected_rows;
+	}
+
+	function mysql_errno($link = null) {
+		if (!$link)
+			$link = sql::$link;
+
+		if (!$link)
+			return mysqli_connect_errno();
+
+		if (!empty($link->errno))
+			return $link->errno;
+	}
+
+	function mysql_error($link = null) {
+		if (!$link)
+			$link = sql::$link;
+
+		if (!empty($link->connect_error))
+			return $link->connect_error;
+
+		if (!empty($link->error))
+			return $link->error;
+	}
+
+	function mysql_get_client_info() {
+		return mysqli_get_client_info();
+	}
+}
+
 class _sql {
 	static $link = null;
 	static $debug = false;
 	static $quiet = false;
 	static $lastQuery = null;
 	static $lastQueryTime = 0;
-	
+
 	static function setTimeZone() {
 		sql::run("SET `time_zone` = '".
 			(phpversion() < '5.1.3'?
@@ -34,7 +153,7 @@ class _sql {
 				date('P')).
 			"'");
 	}
-	
+
 	static function connect($host, $user, $pass) {
 		sql::$link = @mysql_connect($host, $user, $pass);
 		return sql::$link;
@@ -43,134 +162,134 @@ class _sql {
 	static function selectDB($db) {
 		if (!sql::$link)
 			return false;
-		
+
 		return @mysql_select_db($db, sql::$link);
 	}
 
 	static function login() {
 		sql::$link = sql::connect(SQL_HOST, SQL_USER, SQL_PASS);
-		
+
 		if (!sql::$link || !sql::selectDB(SQL_DATABASE))
 			sql::fatalError();
-	
+
     	// I have no idea why this is needed but unless I set the character set
     	// manually all my Hungarian/Romanian characters are messed up.
-    	
+
 		$character_set = sql::fetch(sql::run(
 			" SHOW VARIABLES LIKE 'character_set_database'"));
-		
+
 		if ($character_set)
 	  		sql::run("SET CHARACTER SET '".$character_set['Value']."'");
-	  	
+
 		sql::run("SET sql_mode = ''");
 	}
-	
+
 	static function prefixTable($query) {
 		if (!defined('SQL_PREFIX') || !SQL_PREFIX)
 			return preg_replace(
-				'/`{([a-zA-Z0-9\_\-]*?)}`/', 
-				'`\1`', 
+				'/`{([a-zA-Z0-9\_\-]*?)}`/',
+				'`\1`',
 				$query);
-		
+
 		return preg_replace(
-			'/`{([a-zA-Z0-9\_\-]*?)}`/', 
+			'/`{([a-zA-Z0-9\_\-]*?)}`/',
 			'`'.preg_replace('/[^a-zA-Z0-9\_\-]/',
-				'', SQL_PREFIX).'_\1`', 
+				'', SQL_PREFIX).'_\1`',
 			$query);
 	}
-	
+
 	static function regexp2txt($string) {
 		$string = preg_replace('/^\^|\$$/', '', $string);
 		$string = str_replace('.*', '*', $string);
 		$string = str_replace('$|^', ', ', $string);
-		
+
 		return $string;
 	}
-	
+
 	static function txt2regexp($string) {
 		if (!trim($string))
 			return '';
-		
+
 		$string = '^'.$string.'$';
 		$string = preg_replace('/, ?/', ', ', $string);
 		$string = str_replace('*', '.*', $string);
 		$string = str_replace(', ', '$|^', $string);
-		
+
 		return $string;
 	}
-	
+
 	static function run($query, $debug = false) {
 		if (!$query = trim($query))
 			return false;
-		
+
 		$explains = null;
 		$optimization = false;
 		sql::$lastQuery = $query;
-		
-		if (DEBUG && 
+
+		if (DEBUG &&
 			stripos($query, 'SELECT') === 0 &&
 			stripos($query, 'WHERE') !== false &&
 			stripos($query, '`{TMP') === false)
 		{
 			$explains = sql::fetch(@mysql_query(
 				' EXPLAIN '.sql::prefixTable($query), sql::$link));
-			
-			if ($explains && !$explains['key'] && !$explains['possible_keys'] && 
+
+			if ($explains && !$explains['key'] && !$explains['possible_keys'] &&
 				!in_array($explains['Extra'], array(
 					'Impossible WHERE noticed after reading const tables',
 					'Select tables optimized away')))
 				$optimization = true;
 		}
-		
+
 		if ($debug || sql::$debug || $optimization)
 			$time_start = microtime(true);
-	
-		if (!sql::$link) 
+
+		if (!sql::$link)
 			sql::login();
-			
+
 		$query = sql::prefixTable($query);
 	    $result = @mysql_query($query, sql::$link);
-	    
+
 	    if (!$result && !sql::$quiet) {
 	    	if (mysql_errno(sql::$link) == 1146 && !headers_sent())
 	    		sql::fatalError(sql::error());
-	    	
+
 			sql::displayError();
 	    	return false;
 	    }
-	    
+
 		if ($debug || sql::$debug || $optimization) {
 			sql::$lastQueryTime = microtime(true)-$time_start;
 			sql::display(false, $explains, (DEBUG && !$debug && !sql::$debug));
 		}
-		
-		if (stripos($query, 'INSERT') === 0) 
+
+		if (stripos($query, 'INSERT') === 0)
 			$result = mysql_insert_id(sql::$link);
-		
+
 		return $result;
 	}
-	
+
 	static function fetch($rows) {
 	    if (!$rows)
 	    	return false;
-		
-		return mysql_fetch_array($rows, MYSQL_ASSOC);
+
+		return mysql_fetch_array($rows, MYSQLI_ASSOC);
 	}
-	
+
 	static function seek(&$rows, $to = 0) {
 	    if (!$rows)
 	    	return false;
-		
+
 		return mysql_data_seek($rows, $to);
 	}
-	
+
 	static function rows($rows) {
 	    if (!$rows)
 	    	return false;
-		
+
 		return mysql_num_rows($rows);
 	}
-	
+
 	static function affected() {
 		return mysql_affected_rows(sql::$link);
 	}
@@ -178,44 +297,44 @@ class _sql {
 	static function escape($string) {
 		return mysql_real_escape_string($string, sql::$link);
 	}
-	
+
 	static function count($tblkey = '*', $debug = false) {
 		if (sql::$lastQuery) {
 			$query = sql::$lastQuery;
 			preg_match("/FROM (.*?) (GROUP|ORDER|LIMIT)/is", $query, $found);
-			
+
 			if (stristr($tblkey, 'SELECT')) {
-				$query = 
+				$query =
 					$tblkey .
 					" LIMIT 1";
 			} else {
-				$query = 
+				$query =
 					" SELECT COUNT(".$tblkey.") AS `Rows` FROM " .
 					$found[1] .
 					" LIMIT 1";
 			}
-			
+
 			$query = sql::prefixTable($query);
 			$row = sql::fetch(sql::run($query, $debug));
-			
+
 		} else {
 			$query = "SELECT FOUND_ROWS() AS `Rows`";
-			
+
 			$row = sql::fetch(sql::run($query, $debug));
 		}
-		
+
 		if (isset($row['Rows']))
 			return $row['Rows'];
-		
-		return 0;	
+
+		return 0;
 	}
-	
-	static function search($search, $fields = array('Title'), $type = 'AND', 
-		$commandfields = array()) 
+
+	static function search($search, $fields = array('Title'), $type = 'AND',
+		$commandfields = array())
 	{
 		if (!trim($search))
 			return null;
-			
+
 		if (strpos($search, ',') !== false) {
 			$separator = ',';
 			$search = trim($search, ', ');
@@ -223,66 +342,66 @@ class _sql {
 			$separator = ' ';
 			$search = trim($search);
 		}
-		
+
 		$searchquery = null;
 		$commandquery = null;
-		
+
 		$keywords = array();
 		$commands = array();
-		
+
 		if (preg_match_all('/([^ :]+:(".+?"|[^ ]+)( |$))/', $search, $matches))
 			$commands = $matches[1];
-		
+
 		foreach($commands as $command) {
 			$search = str_replace($command, '', $search);
 			@list($commandid, $commanddata) = explode(":", $command);
-			
+
 			if (!isset($commandfields[$commandid]) || !$commandfields[$commandid])
 				continue;
-			
+
 			if ($commandquery)
 				$commandquery .= " ".$type;
-		
+
 			$commandquery .= " `".$commandfields[$commandid]."` LIKE '%".
 				sql::escape(trim($commanddata, ' "'))."%'";
 		}
-		
+
 		if ($commandquery)
 			$commandquery = " (".$commandquery.") ";
-		
+
 		if (preg_match_all('/(".+?"|[^'.$separator.']+)('.$separator.'|$)/', $search, $matches))
 			$keywords = $matches[1];
-		
+
 		if (count($keywords) > 21)
 			$keywords = array_slice($keywords, 0, 21);
-		
+
 		if (is_array($fields) && count($fields) && count($keywords)) {
 			foreach($fields as $field) {
 				if (!$field)
 					continue;
-				
+
 				if ($searchquery)
 					$searchquery .= " OR";
-				
+
 				$keywordsquery = null;
-				
+
 				foreach($keywords as $keyword) {
 					if ($keywordsquery)
 						$keywordsquery .= " ".$type;
-				
+
 					$keywordsquery .= " `".$field."` LIKE '%".
 						sql::escape(trim($keyword, ' "'))."%'";
 				}
-				
+
 				if ($keywordsquery)
 					$searchquery .= " (".$keywordsquery.") ";
 			}
 		}
-		
+
 		if (!$commandquery && !$searchquery)
 			return " AND (NOT 1)";
-			
-		
+
+
 		return " AND (" .
 			($commandquery?
 				" (".$commandquery.")":
@@ -295,35 +414,35 @@ class _sql {
 				null) .
 			")";
 	}
-	
+
 	static function lastQuery() {
 		return sql::$lastQuery;
 	}
-	
+
 	static function error() {
 		return mysql_error(sql::$link);
 	}
 
 	static function logout() {
     	$result = mysql_close(sql::$link);
-		
+
     	if (DEBUG && !requests::$ajax) {
     		debug::end();
     		debug::display();
     	}
-    	
+
 		return $result;
 	}
 
 	static function link() {
 		return sql::$link;
 	}
-	
+
 	static function fatalError($message = null) {
 		if (!isset($message))
 			$message = __("Could not establish a connection to the database.");
-		
-		if (((SQL_DATABASE == 'yourclient_DB' && SQL_USER == 'yourclient_mysqlusername' && 
+
+		if (((SQL_DATABASE == 'yourclient_DB' && SQL_USER == 'yourclient_mysqlusername' &&
 			SQL_PASS == 'mysqlpassword') ||
 			(SQL_DATABASE == 'yourdomain_DB' && SQL_USER == 'yourdomain_mysqluser' &&
 			SQL_PASS == 'mysqlpass')) && @file_exists('install.php') &&
@@ -332,17 +451,17 @@ class _sql {
 			header('Location: install.php');
 			exit();
 		}
-		
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sql::fatalError', $_ENV, $message);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'sql::fatalError', $_ENV, $message, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		echo
 			"<html>" .
 			"<head>" .
@@ -366,40 +485,40 @@ class _sql {
 						__("We are sorry for the inconvenience and " .
 						"appreciate your patience during this time. " .
 						"Please wait for a few minutes and <a href='%s'>" .
-						"try again</a>."), 
+						"try again</a>."),
 						strip_tags((string)$_SERVER['REQUEST_URI'])) .
 				"</p>" .
 			"</div>" .
 			"</body>" .
 			"</html>";
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'sql::fatalError', $_ENV, $message);
-		
+
 		exit;
 	}
-	
+
 	static function displayError() {
 		$error = sql::error();
-		
+
 		if (!$error)
 			return false;
-		
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sql::displayError', $_ENV);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'sql::displayError', $_ENV, $handled);
-			
+
 			return $handled;
 		}
-		
-		if (isset($GLOBALS['USER']) && 
-			$GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin']) 
+
+		if (isset($GLOBALS['USER']) &&
+			$GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin'])
 		{
 			$backtrace = null;
-			
+
 			foreach(debug_backtrace() as $key => $trace) {
 				$backtrace .=
 					"<li>".$trace['file'] .
@@ -413,19 +532,19 @@ class _sql {
 						$trace['function']."()" .
 					"</li>";
 			}
-			
+
 			tooltip::display(
 				__("SQL Error:"). " " .
 				$error .
 				"<br /><br />" .
-				htmlspecialchars(sql::$lastQuery),
+				htmlchars(sql::$lastQuery),
 				TOOLTIP_ERROR);
-			
+
 			tooltip::display(
 				"<b>".__("Backtrace"). "</b><ul>" .
 					$backtrace."</ul>",
 				TOOLTIP_NOTIFICATION);
-			
+
 		} else {
 			tooltip::display(
 				(!isset($GLOBALS['USER']) || !$GLOBALS['USER']->loginok?
@@ -434,58 +553,58 @@ class _sql {
 					__("SQL Error! Please contact site administrator.")),
 				TOOLTIP_ERROR);
 		}
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'sql::displayError', $_ENV, $error);
-		
+
 		return $error;
 	}
-	
+
 	static function display($quiet = false, $explains = null, $debuglogging = false) {
 		$error = sql::error();
 		if ($quiet)
 			return $error;
-		
+
 		if (!$error && !$explains && stripos(sql::$lastQuery, 'SELECT') === 0)
 			$explains = sql::fetch(@mysql_query(
 				' EXPLAIN '.sql::prefixTable(sql::$lastQuery), sql::$link));
-		
+
 		if ($debuglogging)
 			ob_start();
-		
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'sql::display', $_ENV);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'sql::display', $_ENV, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		echo
 			"<p class='sql-query'>" .
 				"<code>".
-					htmlspecialchars(sql::$lastQuery).";<br />";
-		
+					htmlchars(sql::$lastQuery).";<br />";
+
 		if ($explains) {
 			echo
 				"<span class='comment'><b>EXPLAIN</b>: ";
-			
+
 			foreach($explains as $key => $explain) {
 				if ($key == 'id' || $key == 'table')
 					continue;
-				
+
 				echo $key.'='.($explain?$explain:'NULL').'; ';
 			}
-			
+
 			echo
 				"</span>";
 		}
-		
+
 		echo
 				"</code><br />";
-		
+
 		if ($error)
 			echo "<b class='red'>" .
 					strtoupper(__("Error")) .
@@ -499,25 +618,25 @@ class _sql {
 					sql::affected()) .
 					(sql::$lastQueryTime?
 						", " .
-						sprintf(__("query took: %s seconds"), 
+						sprintf(__("query took: %s seconds"),
 							number_format(sql::$lastQueryTime, 5)):
 						null).
 					")";
-		
+
 		echo
 				"</br>" .
 			"</p>";
-		
+
 		if ($debuglogging) {
 			debug::log('SQL Optimization', ob_get_contents());
 			ob_end_clean();
 		}
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'sql::display', $_ENV, $error);
-		
+
 		return $error;
 	}
-} 
+}
 
 ?>

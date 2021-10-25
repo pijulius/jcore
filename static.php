@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 /***************************************************************************
  *            static.php
@@ -8,9 +8,9 @@
  *  me@pijulius.com
  *  For licensing, see LICENSE or http://jcore.net/license
  ****************************************************************************/
- 
+
 include_once('config.inc.php');
-include_once('lib/api.class.php'); 
+include_once('lib/api.class.php');
 
 date_default_timezone_set(PAGE_TIMEZONE);
 sql::setTimeZone();
@@ -33,27 +33,27 @@ switch(strtolower($request)) {
 		include_once('lib/jquery.class.php');
 		jQuery::displayJS();
 		break;
-		
+
 	case 'js':
 		include_once('lib/jquery.class.php');
 		jQuery::displayPluginsJS();
 		break;
-		
+
 	case 'css':
 		include_once('lib/css.class.php');
 		css::displayCSS();
 		break;
-		
+
 	case 'css3pie':
 		include_once('lib/css.class.php');
 		css::display3PIE();
 		break;
-		
+
 	case 'ckeditor':
 		include_once('lib/ckeditor.class.php');
 		ckEditor::displayJS();
 		break;
-		
+
 	default:
 		break;
 }

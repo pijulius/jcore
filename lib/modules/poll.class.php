@@ -1,14 +1,14 @@
 <?php
 
 /***************************************************************************
- * 
+ *
  *  Name: Poll Module
  *  URI: http://jcore.net
  *  Description: Allow people to vote on subjects. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
  *  Version: 1.0
  *  Tags: poll module, gpl, lgpl, mpl
- * 
+ *
  ****************************************************************************/
 
 define('POLL_TYPE_SELECT', 1);
@@ -19,23 +19,23 @@ class pollPictures extends pictures {
 	var $sqlRow = 'PollID';
 	var $sqlOwnerTable = 'polls';
 	var $adminPath = 'admin/modules/poll/pollpictures';
-	
+
 	function __construct() {
 		languages::load('poll');
-		
+
 		parent::__construct();
-		
+
 		$this->rootPath = $this->rootPath.'poll/';
 		$this->rootURL = $this->rootURL.'poll/';
-		
+
 		$this->selectedOwner = _('Poll');
 		$this->uriRequest = "modules/poll/".$this->uriRequest;
 	}
-	
+
 	function __destruct() {
 		languages::unload('poll');
 	}
-	
+
 	function download($id, $force = false) {
 		if (!(int)$id) {
 			tooltip::display(
@@ -43,19 +43,19 @@ class pollPictures extends pictures {
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT `".$this->sqlRow."` FROM `{" .$this->sqlTable . "}`" .
 			" WHERE `ID` = '".(int)$id."'" .
 			" LIMIT 1"));
-		
+
 		if (!$row) {
 			tooltip::display(
 				_("The selected picture cannot be found!"),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		if (!poll::checkAccess((int)$row[$this->sqlRow], true)) {
 			tooltip::display(
 				_("You need to be logged in to view this picture. " .
@@ -63,10 +63,10 @@ class pollPictures extends pictures {
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return parent::download($id, $force);
 	}
-	
+
 	function ajaxRequest() {
 		if (!$row = poll::checkAccess($this->selectedOwnerID)) {
 			$poll = new poll();
@@ -74,15 +74,15 @@ class pollPictures extends pictures {
 			unset($poll);
 			return true;
 		}
-		
-		if (isset($row['MembersOnly']) && $row['MembersOnly'] && 
+
+		if (isset($row['MembersOnly']) && $row['MembersOnly'] &&
 			!$GLOBALS['USER']->loginok)
-			$this->customLink = 
+			$this->customLink =
 				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
-				htmlspecialchars(_("You need to be logged in to view this picture. " .
+				htmlchars(_("You need to be logged in to view this picture. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
-		
+
 		return parent::ajaxRequest();
 	}
 }
@@ -92,23 +92,23 @@ class pollAttachments extends attachments {
 	var $sqlRow = 'PollID';
 	var $sqlOwnerTable = 'polls';
 	var $adminPath = 'admin/modules/poll/pollattachments';
-	
+
 	function __construct() {
 		languages::load('poll');
-		
+
 		parent::__construct();
-		
+
 		$this->rootPath = $this->rootPath.'poll/';
 		$this->rootURL = $this->rootURL.'poll/';
-		
+
 		$this->selectedOwner = _('Poll');
 		$this->uriRequest = "modules/poll/".$this->uriRequest;
 	}
-	
+
 	function __destruct() {
 		languages::unload('poll');
 	}
-	
+
 	function download($id) {
 		if (!(int)$id) {
 			tooltip::display(
@@ -116,19 +116,19 @@ class pollAttachments extends attachments {
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT `".$this->sqlRow."` FROM `{" .$this->sqlTable . "}`" .
 			" WHERE `ID` = '".(int)$id."'" .
 			" LIMIT 1"));
-		
+
 		if (!$row) {
 			tooltip::display(
 				_("The selected file cannot be found!"),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		if (!poll::checkAccess((int)$row[$this->sqlRow], true)) {
 			tooltip::display(
 				_("You need to be logged in to download this file. " .
@@ -136,10 +136,10 @@ class pollAttachments extends attachments {
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return attachments::download($id);
 	}
-	
+
 	function ajaxRequest() {
 		if (!$row = poll::checkAccess($this->selectedOwnerID)) {
 			$poll = new poll();
@@ -147,14 +147,14 @@ class pollAttachments extends attachments {
 			unset($poll);
 			return true;
 		}
-		
+
 		if (isset($row['MembersOnly']) && $row['MembersOnly'] && !$GLOBALS['USER']->loginok)
-			$attachments->customLink = 
+			$attachments->customLink =
 				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
-				htmlspecialchars(_("You need to be logged in to download this file. " .
+				htmlchars(_("You need to be logged in to download this file. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
-		
+
 		return parent::ajaxRequest();
 	}
 }
@@ -164,33 +164,33 @@ class pollComments extends comments {
 	var $sqlRow = 'PollID';
 	var $sqlOwnerTable = 'polls';
 	var $adminPath = 'admin/modules/poll/pollcomments';
-	
+
 	function __construct() {
 		languages::load('poll');
-		
+
 		parent::__construct();
-		
+
 		$this->selectedOwner = _('Poll');
 		$this->uriRequest = "modules/poll/".$this->uriRequest;
 	}
-	
+
 	function __destruct() {
 		languages::unload('poll');
 	}
-	
+
 	static function getCommentURL($comment = null) {
 		if ($comment)
 			return poll::getURL($comment['PollID']).
 				"&pollid=".$comment['PollID'];
-		
+
 		if ((bool)$GLOBALS['ADMIN'])
 			return poll::getURL(admin::getPathID()).
 				"&pollid=".admin::getPathID();
-		
-		return 
+
+		return
 			parent::getCommentURL();
 	}
-	
+
 	function ajaxRequest() {
 		if (!poll::checkAccess($this->selectedOwnerID)) {
 			$poll = new poll();
@@ -198,7 +198,7 @@ class pollComments extends comments {
 			unset($poll);
 			return true;
 		}
-		
+
 		return parent::ajaxRequest();
 	}
 }
@@ -208,28 +208,28 @@ class pollAnswers {
 	var $hideResults = false;
 	var $showGuestAnswers = false;
 	var $adminPath = 'admin/modules/poll/pollanswers';
-	
+
 	function __construct() {
 		languages::load('poll');
-		
+
 		if (isset($_GET['pollid']))
 			$this->selectedPollID = (int)$_GET['pollid'];
 	}
-	
+
 	function __destruct() {
 		languages::unload('poll');
 	}
-	
+
 	function SQL() {
 		return
 			" SELECT * FROM `{pollanswers}`" .
 			" WHERE `PollID` = '".(int)$this->selectedPollID."'" .
 			" ORDER BY `OrderID`, `ID`";
 	}
-	
+
 	// ************************************************   Admin Part
 	function displayAdminOne(&$row) {
-		echo 
+		echo
 			"<div class='poll-answer" .
 				($row['_CSSClass']?
 					" ".$row['_CSSClass']:
@@ -243,79 +243,79 @@ class pollAnswers {
 				"</div>" .
 				"<div class='poll-answer-details'>" .
 					"<div class='poll-answer-title'>";
-		
+
 		$this->displayTitle($row);
-		
+
 		echo
 					"</div>";
-		
+
 		if (!$this->hideResults)
 			$this->displayProgressBar($row);
-		
+
 		if ($row['GuestAnswers']) {
 			echo
 					"<div class='poll-answer-guest'>";
-		
+
 			$this->displayGuestAnswer($row);
-			
+
 			echo
 					"</div>";
 		}
-		
+
 		echo
 				"</div>" .
 			"</div>";
 	}
-			
+
 	function displayAdmin() {
 		$rows = sql::run(
 			$this->SQL());
-		
+
 		$i = 1;
 		$total = sql::rows($rows);
-		
+
 		if (!$total)
 			return;
-		
+
 		echo "<div class='poll-answers'>";
-		
+
 		while($row = sql::fetch($rows)) {
 			$poll = sql::fetch(sql::run(
 				" SELECT * FROM `{polls}`" .
 				" WHERE `ID` = '".$row['PollID']."'"));
-			
+
 			$row['_CSSClass'] = null;
 			$row['_PollVotes'] = $poll['Votes'];
 			$row['_PollTypeID'] = $poll['TypeID'];
-			
+
 			if ($i == 1)
 				$row['_CSSClass'] .= ' first';
 			if ($i == $total)
 				$row['_CSSClass'] .= ' last';
-			
+
 			$this->displayAdminOne($row);
-			
+
 			$i++;
 		}
-		
-		echo 
+
+		echo
 				"<div class='clear-both'></div>" .
 			"</div>";
 	}
-	
+
 	function add($values) {
 		if (!is_array($values))
 			return false;
-		
+
 		if ($values['OrderID'] == '') {
 			$row = sql::fetch(sql::run(
 				" SELECT `OrderID` FROM `{pollanswers}` " .
 				" WHERE `PollID` = '".$values['PollID']."'" .
 				" ORDER BY `OrderID` DESC"));
-			
+
 			$values['OrderID'] = (int)$row['OrderID']+1;
 		}
-		
+
 		$newid = sql::run(
 			" INSERT INTO `{pollanswers}` SET" .
 			" `PollID` = '".
@@ -326,25 +326,25 @@ class pollAnswers {
 				(int)$values['GuestAnswers']."', " .
 			" `OrderID` = '".
 				(int)$values['OrderID']."'");
-				
+
 		if (!$newid) {
 			tooltip::display(
-				sprintf(_("Poll answer couldn't be created! Error: %s"), 
+				sprintf(_("Poll answer couldn't be created! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return $newid;
 	}
-	
+
 	function edit($id, $values) {
 		if (!$id)
 			return false;
-		
+
 		if (!is_array($values))
 			return false;
-		
+
 		sql::run(
 			" UPDATE `{pollanswers}` SET" .
 			" `Answer` = '".
@@ -354,29 +354,29 @@ class pollAnswers {
 			" `OrderID` = '".
 				(int)$values['OrderID']."'" .
 			" WHERE `ID` = '".(int)$id."'");
-			
+
 		if (sql::affected() == -1) {
 			tooltip::display(
-				sprintf(_("Poll answer couldn't be updated! Error: %s"), 
+				sprintf(_("Poll answer couldn't be updated! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	function delete($id) {
 		if (!$id)
 			return false;
-		
+
 		sql::run(
 			" DELETE FROM `{pollanswers}`" .
 			" WHERE `ID` = '".(int)$id."'");
-		
+
 		return true;
 	}
-	
+
 	// ************************************************   Client Part
 	function displaySelect(&$row) {
 		if ($row['_PollTypeID'] == POLL_TYPE_CHECK) {
@@ -391,24 +391,24 @@ class pollAnswers {
 					"value='".$row['ID']."' />";
 		}
 	}
-	
+
 	function displayTitle(&$row) {
 		echo $row['Answer'];
-		
+
 		if (!$this->hideResults)
 			echo
 				" <span class='comment'>" .
 					"(".sprintf(_("%s votes"), $row['Votes']).")" .
 				"</span>";
 	}
-	
+
 	function displayProgressBar(&$row) {
 		$percentage = 0;
-		
+
 		if ($row['_PollVotes'])
 			$percentage = round($row['Votes']*100/$row['_PollVotes']);
-		
-		echo 
+
+		echo
 			"<div class='progressbar poll-answer-progressbar rounded-corners'>" .
 				"<div class='progressbar-value poll-answer-progressbar-value rounded-corners' " .
 					"style='width: ".$percentage."%'>" .
@@ -416,126 +416,126 @@ class pollAnswers {
 				"</div>" .
 			"</div>";
 	}
-	
+
 	function displayGuestAnswers(&$row) {
 		$answers = sql::run(
 			" SELECT `GuestAnswer` FROM `{pollvotes}`" .
 			" WHERE `AnswerID` = '".$row['ID']."'" .
 			" AND `GuestAnswer` != ''" .
 			" ORDER BY `ID`");
-			
+
 		if (!sql::rows($answers))
 			return;
-		
-		echo 
+
+		echo
 			"<ul class='poll-guest-answers'>";
-				
+
 		while ($answer = mysql_fetch_array($answers))
-			echo 
+			echo
 				"<li>".
 					trim($answer['GuestAnswer']) .
 				"</li>";
-					
-		echo 
+
+		echo
 			"</ul>";
 	}
-	
+
 	function displayGuestAnswer(&$row) {
 		if ($this->showGuestAnswers) {
 			$this->displayGuestAnswers($row);
 			return;
 		}
-		
+
 		if ($row['_PollClosed'])
-			return; 
-		
+			return;
+
 		echo
 			"<input type='text' " .
 				"name='pollguestanswers[".$row['PollID']."][".$row['ID']."]' " .
 				"value='' />";
 	}
-	
+
 	function displayOne(&$row) {
-		echo 
+		echo
 			"<div class='poll-answer poll-answer".$row['ID'] .
 				($row['_CSSClass']?
 					" ".$row['_CSSClass']:
 					null) .
 				"'>";
-		
+
 		if (!$row['_PollClosed']) {
 			echo
 				"<div class='poll-answer-select rounded-corners'>";
-			
+
 			$this->displaySelect($row);
-			
+
 			echo
 				"</div>";
 		}
-		
+
 		echo
 				"<div class='poll-answer-details'>" .
 					"<div class='poll-answer-title'>";
-		
+
 		$this->displayTitle($row);
-		
+
 		echo
 					"</div>";
-		
+
 		if (!$this->hideResults)
 			$this->displayProgressBar($row);
-		
+
 		if ($row['GuestAnswers']) {
 			echo
 					"<div class='poll-answer-guest'>";
-		
+
 			$this->displayGuestAnswer($row);
-			
+
 			echo
 					"</div>";
 		}
-		
+
 		echo
 				"</div>" .
 			"</div>";
 	}
-			
+
 	function display() {
 		$rows = sql::run(
 			$this->SQL());
-		
+
 		$i = 1;
 		$total = sql::rows($rows);
-		
+
 		if (!$total)
 			return;
-		
+
 		echo "<div class='poll-answers'>";
-		
+
 		while($row = sql::fetch($rows)) {
 			$poll = sql::fetch(sql::run(
 				" SELECT * FROM `{polls}`" .
 				" WHERE `ID` = '".$row['PollID']."'"));
-			
+
 			$row['_CSSClass'] = null;
 			$row['_PollVotes'] = $poll['Votes'];
 			$row['_PollTypeID'] = $poll['TypeID'];
 			$row['_PollClosed'] = false;
-			
+
 			if (isset($poll['VotingsClosed']))
 				$row['_PollClosed'] = $poll['VotingsClosed'];
-			
+
 			if ($i == 1)
 				$row['_CSSClass'] .= ' first';
 			if ($i == $total)
 				$row['_CSSClass'] .= ' last';
-			
+
 			$this->displayOne($row);
-			
+
 			$i++;
 		}
-		
-		echo 
+
+		echo
 				"<div class='clear-both'></div>" .
 			"</div>";
 	}
@@ -553,21 +553,21 @@ class poll extends modules {
 	var $ajaxPaging = AJAX_PAGING;
 	var $ajaxRequest = null;
 	var $adminPath = 'admin/modules/poll';
-	
+
 	function __construct() {
 		languages::load('poll');
-		
+
 		if (isset($_GET['pollid']))
 			$this->selectedID = (int)$_GET['pollid'];
-		
+
 		if (isset($_POST['pollanswers']))
 			$this->votedOnID = (int)key((array)$_POST['pollanswers']);
 	}
-	
+
 	function __destruct() {
 		languages::unload('poll');
 	}
-	
+
 	function SQL() {
 		return
 			" SELECT * FROM `{polls}`" .
@@ -584,7 +584,7 @@ class poll extends modules {
 				" RAND()":
 				" `OrderID`, `TimeStamp` DESC, `Title`");
 	}
-	
+
 	function installSQL() {
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{polls}` (" .
@@ -618,10 +618,10 @@ class poll extends modules {
 			" KEY `MembersOnly` (`MembersOnly`)," .
 			" KEY `ShowToGuests` (`ShowToGuests`)" .
 			" ) ENGINE=MyISAM;");
-		
+
 		if (sql::error())
 			return false;
-			
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{pollanswers}` (" .
 			" `ID` mediumint(8) unsigned NOT NULL auto_increment," .
@@ -634,10 +634,10 @@ class poll extends modules {
 			" KEY `PollID` (`PollID`)," .
 			" KEY `OrderID` (`OrderID`)" .
 			" ) ENGINE=MyISAM;");
-		
+
 		if (sql::error())
 			return false;
-			
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{pollvotes}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -654,10 +654,10 @@ class poll extends modules {
 			" KEY `IP` (`IP`)," .
 			" KEY `TimeStamp` (`TimeStamp`)" .
 			" ) ENGINE=MyISAM;");
-		
+
 		if (sql::error())
 			return false;
-			
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{pollcomments}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -679,10 +679,10 @@ class poll extends modules {
 			" KEY `UserID` (`UserID`)," .
 			" KEY `Pending` (`Pending`)" .
 			" ) ENGINE=MyISAM;");
-		
+
 		if (sql::error())
 			return false;
-			
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{pollcommentsratings}` (" .
 			" `CommentID` int(10) unsigned NOT NULL default '0'," .
@@ -696,10 +696,10 @@ class poll extends modules {
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `Rating` (`Rating`)" .
 			" ) ENGINE=MyISAM;");
-		
+
 		if (sql::error())
 			return false;
-			
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{pollpictures}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -716,10 +716,10 @@ class poll extends modules {
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `PollID` (`PollID`)" .
 			" ) ENGINE=MyISAM;");
-		
+
 		if (sql::error())
 			return false;
-			
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{pollattachments}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -736,15 +736,15 @@ class poll extends modules {
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `PollID` (`PollID`)" .
 			" ) ENGINE=MyISAM;");
-		
+
 		if (sql::error())
 			return false;
-			
+
 		return true;
 	}
-	
+
 	function installFiles() {
-		$css = 
+		$css =
 			".poll {\n" .
 			"	margin-bottom: 20px;\n" .
 			"}\n" .
@@ -818,11 +818,11 @@ class poll extends modules {
 			".as-modules-poll a {\n" .
 			"	background-image: url(\"http://icons.jcore.net/48/poll.png\");\n" .
 			"}\n";
-		
+
 		return
 			files::save(SITE_PATH.'template/modules/css/poll.css', $css);
 	}
-	
+
 	function uninstallSQL() {
 		sql::run(
 			" DROP TABLE IF EXISTS `{polls}`;");
@@ -838,41 +838,41 @@ class poll extends modules {
 			" DROP TABLE IF EXISTS `{pollpictures}`;");
 		sql::run(
 			" DROP TABLE IF EXISTS `{pollattachments}`;");
-		
+
 		return true;
 	}
-	
+
 	function uninstallFiles() {
 		return
 			files::delete(SITE_PATH.'template/modules/css/poll.css');
 	}
-	
+
 	// ************************************************   Admin Part
 	function countAdminItems() {
 		if (!parent::installed($this))
 			return 0;
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{polls}`" .
 			" LIMIT 1"));
 		return $row['Rows'];
 	}
-	
+
 	function setupAdmin() {
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
-				_('New Poll'), 
+				_('New Poll'),
 				'?path='.admin::path().'#adminform');
-		
+
 		favoriteLinks::add(
-			__('Layout Blocks'), 
+			__('Layout Blocks'),
 			'?path=admin/site/blocks');
 		favoriteLinks::add(
-			__('Settings'), 
+			__('Settings'),
 			'?path=admin/site/settings');
 	}
-	
+
 	function setupAdminForm(&$form) {
 		$form->add(
 			_('Question'),
@@ -880,22 +880,22 @@ class poll extends modules {
 			FORM_INPUT_TYPE_TEXT,
 			true);
 		$form->setStyle('width: 350px;');
-		
+
 		$form->add(
 			__('Type'),
 			'TypeID',
 			FORM_INPUT_TYPE_SELECT,
 			true);
 		$form->setValueType(FORM_VALUE_TYPE_INT);
-			
+
 		$form->addValue(
 			POLL_TYPE_SELECT,
 			poll::type2Text(POLL_TYPE_SELECT));
-		
+
 		$form->addValue(
 			POLL_TYPE_CHECK,
 			poll::type2Text(POLL_TYPE_CHECK));
-		
+
 		$form->add(
 			"<div class='form-entry-title'>" .
 				_("Answers").":</div>" .
@@ -905,7 +905,7 @@ class poll extends modules {
 			'Answers',
 			FORM_STATIC_TEXT);
 		$form->setValueType(FORM_VALUE_TYPE_ARRAY);
-		
+
 		$form->add(
 			"<div class='form-entry-additional-answers-container'></div>" .
 			"<div class='form-entry-title'></div>" .
@@ -924,12 +924,12 @@ class poll extends modules {
 			"</div>",
 			null,
 			FORM_STATIC_TEXT);
-			
+
 		$form->add(
 			_('Voting Options'),
 			null,
 			FORM_OPEN_FRAME_CONTAINER);
-		
+
 		$form->add(
 			_('Hide Results'),
 			'HideResults',
@@ -937,7 +937,7 @@ class poll extends modules {
 			false,
 			'1');
 		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-		
+
 		if (JCORE_VERSION >= '0.7') {
 			$form->add(
 				_('Voting Closed'),
@@ -947,7 +947,7 @@ class poll extends modules {
 				'1');
 			$form->setValueType(FORM_VALUE_TYPE_BOOL);
 		}
-		
+
 		$form->add(
 			_('Voting Interval'),
 			'VotingInterval',
@@ -956,20 +956,20 @@ class poll extends modules {
 			1440);
 		$form->setStyle('width: 50px;');
 		$form->setValueType(FORM_VALUE_TYPE_INT);
-		
+
 		$form->addAdditionalText(
 			" "._("minutes (if set to 0 only one vote will be allowed per ip or user)"));
-		
+
 		$form->add(
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
-		
+
 		$form->add(
 			__('Content Options'),
 			null,
 			FORM_OPEN_FRAME_CONTAINER);
-		
+
 		$form->add(
 			__('Description'),
 			'Description',
@@ -980,17 +980,17 @@ class poll extends modules {
 				'350px') .
 			'; height: 200px;');
 		$form->setValueType(FORM_VALUE_TYPE_HTML);
-		
+
 		$form->add(
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
-		
+
 		$form->add(
 			__('Comments Options'),
 			null,
 			FORM_OPEN_FRAME_CONTAINER);
-		
+
 		$form->add(
 			__('Enable Comments'),
 			'EnableComments',
@@ -998,7 +998,7 @@ class poll extends modules {
 			false,
 			'1');
 		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-			
+
 		$form->add(
 			__('Enable Guest Comments'),
 			'EnableGuestComments',
@@ -1006,30 +1006,30 @@ class poll extends modules {
 			false,
 			'1');
 		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-			
+
 		$form->add(
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
-		
+
 		$form->add(
 			__('Additional Options'),
 			null,
 			FORM_OPEN_FRAME_CONTAINER);
-		
+
 		$form->add(
 			__('Path'),
 			'Path',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 300px;');
-		
+
 		$form->add(
 			__('Created on'),
 			'TimeStamp',
 			FORM_INPUT_TYPE_TIMESTAMP);
 		$form->setStyle('width: 170px;');
 		$form->setValueType(FORM_VALUE_TYPE_TIMESTAMP);
-		
+
 		$form->add(
 			_('Members Only'),
 			'MembersOnly',
@@ -1037,7 +1037,7 @@ class poll extends modules {
 			false,
 			'1');
 		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-		
+
 		$form->add(
 			_('Show to Guests'),
 			'ShowToGuests',
@@ -1045,7 +1045,7 @@ class poll extends modules {
 			false,
 			'1');
 		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-		
+
 		$form->add(
 			__('Deactivated'),
 			'Deactivated',
@@ -1053,25 +1053,25 @@ class poll extends modules {
 			false,
 			'1');
 		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-		
+
 		$form->addAdditionalText(
 			"<span class='comment' style='text-decoration: line-through;'>" .
 			__("(marked with strike through)").
-			"</span>");	
-			
+			"</span>");
+
 		$form->add(
 			__('Order'),
 			'OrderID',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 50px;');
 		$form->setValueType(FORM_VALUE_TYPE_INT);
-		
+
 		$form->add(
 			__('Owner'),
 			'Owner',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 110px;');
-		
+
 		$form->addAdditionalText(
 			"<a style='zoom: 1;' href='".url::uri('request, users') .
 				"&amp;request=".url::path() .
@@ -1079,13 +1079,13 @@ class poll extends modules {
 				"class='select-owner-link ajax-content-link'>" .
 				_("Select User") .
 			"</a>");
-		
+
 		$form->add(
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
 	}
-	
+
 	function verifyAdmin(&$form = null) {
 		$reorder = null;
 		$orders = null;
@@ -1093,29 +1093,29 @@ class poll extends modules {
 		$delete = null;
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_POST['reordersubmit']))
 			$reorder = (string)$_POST['reordersubmit'];
-		
+
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
-		
+
 		if (isset($_POST['answerorders']))
 			$answerorders = (array)$_POST['answerorders'];
-		
+
 		if (isset($_POST['delete']))
 			$delete = (int)$_POST['delete'];
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		if ($reorder) {
 			if (!security::checkToken())
 				return false;
-			
+
 			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{polls}` " .
@@ -1128,7 +1128,7 @@ class poll extends modules {
 					($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
 						" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 						null));
-				
+
 				if (isset($answerorders[$oid]) && is_array($answerorders[$oid]))
 					foreach($answerorders[$oid] as $aid => $avalue)
 						sql::run(
@@ -1139,68 +1139,68 @@ class poll extends modules {
 								" AND `PollID` IN (".$this->userPermissionIDs.")":
 								null));
 			}
-			
+
 			tooltip::display(
 				_("Polls and answers have been successfully re-ordered."),
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if ($delete) {
 			if (!security::checkToken())
 				return false;
-			
+
 			if (!$this->delete($id))
 				return false;
-				
+
 			tooltip::display(
 				_("Poll has been successfully deleted."),
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if (!$form->verify())
 			return false;
-		
+
 		if ($form->get('Owner')) {
 			$user = sql::fetch(sql::run(
 				" SELECT * FROM `{users}` " .
 				" WHERE `UserName` = '".sql::escape($form->get('Owner'))."'"));
-			
+
 			if (!$user) {
 				tooltip::display(
-					sprintf(__("User \"%s\" couldn't be found!"), 
+					sprintf(__("User \"%s\" couldn't be found!"),
 						$form->get('Owner'))." " .
 					__("Please make sure you have entered / selected the right " .
 						"username or if it's a new user please first create " .
 						"the user at Member Management -> Users."),
 					TOOLTIP_ERROR);
-				
+
 				$form->setError('Owner', FORM_ERROR_REQUIRED);
 				return false;
 			}
-			
+
 			$form->add(
 				'UserID',
 				'UserID',
 				FORM_INPUT_TYPE_HIDDEN);
 			$form->setValue('UserID', $user['ID']);
 		}
-		
+
 		if (!$form->get('Path'))
 			$form->set('Path', url::genPathFromString($form->get('Title')));
-			
+
 		$postarray = $form->getPostArray();
 		$postarray['GuestAnswers'] = (isset($_POST['GuestAnswers'])?
 											form::parseArray((array)$_POST['GuestAnswers']):
 											array());
-				
+
 		if ($edit) {
 			if (!$this->edit($id, $postarray))
 				return false;
-				
+
 			tooltip::display(
 				_("Poll has been successfully updated.")." " .
 				(modules::getOwnerURL('poll')?
@@ -1214,16 +1214,16 @@ class poll extends modules {
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if ($this->userPermissionIDs)
 			return false;
-		
+
 		if (!$newid = $this->add($postarray))
 			return false;
-				
+
 		tooltip::display(
 			_("Poll has been successfully created.")." " .
 			(modules::getOwnerURL('poll')?
@@ -1238,11 +1238,11 @@ class poll extends modules {
 				__("Edit") .
 			"</a>",
 			TOOLTIP_SUCCESS);
-			
+
 		$form->reset();
 		return true;
 	}
-	
+
 	function displayAdminListHeader() {
 		echo
 			"<th><span class='nowrap'>".
@@ -1252,7 +1252,7 @@ class poll extends modules {
 			"<th style='text-align: right;'><span class='nowrap'>".
 				_("Votes")."</span></th>";
 	}
-	
+
 	function displayAdminListHeaderOptions() {
 		echo
 			"<th><span class='nowrap'>".
@@ -1262,7 +1262,7 @@ class poll extends modules {
 			"<th><span class='nowrap'>".
 				__("Attachments")."</span></th>";
 	}
-	
+
 	function displayAdminListHeaderFunctions() {
 		echo
 			"<th><span class='nowrap'>".
@@ -1270,10 +1270,10 @@ class poll extends modules {
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
 	}
-	
+
 	function displayAdminListItem(&$row) {
 		$user = $GLOBALS['USER']->get($row['UserID']);
-		
+
 		echo
 			"<td>" .
 				"<input type='text' name='orders[".$row['ID']."]' " .
@@ -1293,9 +1293,9 @@ class poll extends modules {
 				"</a> " .
 				"<div class='comment' style='padding-left: 10px;'>" .
 					calendar::dateTime($row['TimeStamp'])." ";
-		
+
 		$GLOBALS['USER']->displayUserName($user, __('by %s'));
-		
+
 		echo
 				"</div>" .
 			"</td>" .
@@ -1305,77 +1305,77 @@ class poll extends modules {
 					null) .
 			"</td>";
 	}
-	
+
 	function displayAdminListItemOptions(&$row) {
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link comments' " .
-					"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
+					"title='".htmlchars(__("Comments"), ENT_QUOTES).
 						" (".$row['Comments'].")' " .
 					"href='".url::uri('ALL') .
 					"?path=".admin::path()."/".$row['ID']."/pollcomments'>";
-		
+
 		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments'])
 			counter::display($row['Comments']);
-		
+
 		echo
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
 				"<a class='admin-link pictures' " .
-					"title='".htmlspecialchars(__("Pictures"), ENT_QUOTES) .
+					"title='".htmlchars(__("Pictures"), ENT_QUOTES) .
 						" (".$row['Pictures'].")' " .
 					"href='".url::uri('ALL') .
 					"?path=".admin::path()."/".$row['ID']."/pollpictures'>";
-		
+
 		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Pictures'])
 			counter::display($row['Pictures']);
-		
+
 		echo
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
 				"<a class='admin-link attachments' " .
-					"title='".htmlspecialchars(__("Attachments"), ENT_QUOTES) .
+					"title='".htmlchars(__("Attachments"), ENT_QUOTES) .
 						" (".$row['Attachments'].")' " .
 					"href='".url::uri('ALL') .
 					"?path=".admin::path()."/".$row['ID']."/pollattachments'>";
-		
+
 		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Attachments'])
 			counter::display($row['Attachments']);
-		
+
 		echo
 				"</a>" .
 			"</td>";
 	}
-	
+
 	function displayAdminListItemFunctions(&$row) {
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
-					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
+					"title='".htmlchars(__("Edit"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."&amp;edit=1#adminform'>" .
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
-					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
+					"title='".htmlchars(__("Delete"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
 	}
-	
+
 	function displayAdminListItemSelected(&$row) {
 		admin::displayItemData(
 			__("Type"),
 			poll::type2Text($row['TypeID']));
-		
+
 		admin::displayItemData(
 			_("Voting Interval"),
 			sprintf(__("%s minutes"), $row['VotingInterval']));
-		
+
 		if ($row['EnableComments'])
 			admin::displayItemData(
 				__("Enable Comments"),
@@ -1383,138 +1383,138 @@ class poll extends modules {
 				($row['EnableGuestComments']?
 					" ".__("(Guests can comment too!)"):
 					null));
-		
+
 		if ($row['HideResults'])
 			admin::displayItemData(
 				_("Hide Results"),
 				__("Yes"));
-		
+
 		if (JCORE_VERSION >= '0.7' && $row['VotingsClosed'])
 			admin::displayItemData(
 				_("Voting Closed"),
 				__("Yes")." " .
 				sprintf(_("(on %s)"), calendar::date($row['VotingsClosedDate'])));
-		
+
 		if ($row['MembersOnly'])
 			admin::displayItemData(
 				_("Members Only"),
 				__("Yes"));
-		
+
 		if ($row['ShowToGuests'])
 			admin::displayItemData(
 				_("Show to Guests"),
 				__("Yes"));
-		
+
 		admin::displayItemData(
 			__("Path"),
 			$row['Path']);
-		
+
 		admin::displayItemData(
 			"<hr />");
 		admin::displayItemData(
 			nl2br($row['Description']));
-		
+
 		$this->displayAdminAnswers($row);
 	}
-	
+
 	function displayAdminListSearch() {
 		$search = null;
-		
+
 		if (isset($_GET['search']))
 			$search = trim(strip_tags((string)$_GET['search']));
-		
+
 		echo
 			"<input type='hidden' name='path' value='".admin::path()."' />" .
 			"<input type='search' name='search' value='".
-				htmlspecialchars($search, ENT_QUOTES).
-				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
+				htmlchars($search, ENT_QUOTES).
+				"' results='5' placeholder='".htmlchars(__("search..."), ENT_QUOTES)."' /> " .
 			"<input type='submit' value='" .
-				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
+				htmlchars(__("Search"), ENT_QUOTES)."' class='button' />";
 	}
-	
+
 	function displayAdminListFunctions() {
 		echo
 			"<input type='submit' name='reordersubmit' value='".
-				htmlspecialchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
+				htmlchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
-				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+				htmlchars(__("Reset"), ENT_QUOTES)."' class='button' />";
 	}
-	
+
 	function displayAdminList($rows) {
 		$id = null;
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		echo
 			"<form action='".url::uri('edit, delete')."' method='post'>" .
 				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
-		
+
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr class='lheader'>";
-			
+
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
-				
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
-				
+
 		echo
 				"</tr>" .
 				"</thead>" .
 				"<tbody>";
-		
-		$i = 0;		
+
+		$i = 0;
 		while($row = sql::fetch($rows)) {
-			echo 
+			echo
 				"<tr".($i%2?" class='pair'":NULL).">";
-				
+
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
-					
+
 			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
-			
+
 			echo
 				"</tr>";
-			
+
 			if ($row['ID'] == $id) {
 				echo
 					"<tr".($i%2?" class='pair'":NULL).">" .
 						"<td class='auto-width' colspan='10'>" .
 							"<div class='admin-content-preview'>";
-				
+
 				$this->displayAdminListItemSelected($row);
-				
+
 				echo
 							"</div>" .
 						"</td>" .
 					"</tr>";
 			}
-			
+
 			$i++;
 		}
-		
-		echo 
+
+		echo
 				"</tbody>" .
 			"</table>" .
 			"<br />";
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
-			
+
 			echo
 				"<div class='clear-both'></div>" .
 				"<br />";
 		}
-					
+
 		echo
 			"</form>";
-			
+
 		return true;
 	}
-	
+
 	function displayAdminAnswers(&$row) {
 		$answers = new pollAnswers();
 		$answers->selectedPollID = $row['ID'];
@@ -1522,7 +1522,7 @@ class poll extends modules {
 		$answers->displayAdmin();
 		unset($answers);
 	}
-	
+
 	function displayAdminForm(&$form) {
 		$form->display();
 	}
@@ -1532,56 +1532,56 @@ class poll extends modules {
 			_('Poll Administration'),
 			$ownertitle);
 	}
-	
+
 	function displayAdminDescription() {
 	}
-	
+
 	function displayAdmin() {
 		$search = null;
 		$delete = null;
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_GET['search']))
 			$search = trim(strip_tags((string)$_GET['search']));
-		
+
 		if (isset($_GET['delete']))
 			$delete = (int)$_GET['delete'];
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-			
+
 		echo
 			"<div style='float: right;'>" .
 				"<form action='".url::uri('ALL')."' method='get'>";
-		
+
 		$this->displayAdminListSearch();
-		
+
 		echo
 				"</form>" .
 			"</div>";
-		
+
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
-		
+
 		echo
 			"<div class='admin-content'>";
-				
+
 		$form = new form(
 				($edit?
 					_("Edit Poll"):
 					_("New Poll")),
 				'neweditpoll');
-		
+
 		if (!$edit)
 			$form->action = url::uri('id, delete, limit');
-					
+
 		$this->setupAdminForm($form);
 		$form->addSubmitButtons();
-		
+
 		if ($edit) {
 			$form->add(
 				__('Cancel'),
@@ -1590,10 +1590,10 @@ class poll extends modules {
 			$form->addAttributes("onclick=\"window.location='".
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
-		
+
 		$selected = null;
 		$verifyok = false;
-		
+
 		if ($id) {
 			$selected = sql::fetch(sql::run(
 				" SELECT `ID`, `Title` FROM `{polls}`" .
@@ -1604,16 +1604,16 @@ class poll extends modules {
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
 					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
-			
+
 			if ($delete && empty($_POST['delete']))
 				url::displayConfirmation(
 					'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			((!$edit && !$delete) || $selected))
 			$verifyok = $this->verifyAdmin($form);
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{polls}`" .
 			" WHERE 1" .
@@ -1629,14 +1629,14 @@ class poll extends modules {
 					array('Title', 'Description')):
 				null) .
 			" ORDER BY `OrderID`, `ID` DESC");
-		
+
 		if (sql::rows($rows))
 			$this->displayAdminList($rows);
 		else
 			tooltip::display(
 					_("No polls found."),
 					TOOLTIP_NOTIFICATION);
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			(!$this->userPermissionIDs || ($edit && $selected)))
 		{
@@ -1644,21 +1644,21 @@ class poll extends modules {
 				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{polls}`" .
 					" WHERE `ID` = '".$id."'"));
-				
+
 				$form->setValues($selected);
-				
+
 				$user = $GLOBALS['USER']->get($selected['UserID']);
 				$form->setValue('Owner', $user['UserName']);
-				
+
 				$answers = sql::run(
 					" SELECT * FROM `{pollanswers}` " .
 					" WHERE `PollID` = '".$selected['ID']."'" .
 					" ORDER BY `OrderID` DESC, `ID` DESC");
-				
+
 				$i = 0;
 				while($answer = sql::fetch($answers)) {
 					$iname = 'Answers['.$answer['ID'].'_existing]';
-					
+
 					$form->insert(
 						'Answers',
 						'',
@@ -1668,9 +1668,9 @@ class poll extends modules {
 						$answer['Answer']);
 					$form->setValueType($iname, FORM_VALUE_TYPE_ARRAY);
 					$form->setStyle($iname, 'width: 250px;');
-					
+
 					$form->addAdditionalText(
-						$iname, 
+						$iname,
 						"<input type='checkbox' name='GuestAnswers[".$answer['ID']."_existing]' value='1'" .
 							($answer['GuestAnswers']?
 								" checked='checked'":
@@ -1680,19 +1680,19 @@ class poll extends modules {
 							"onclick=\"$.jCore.form.removeEntry(this);\">" .
 							__("Remove") .
 						"</a>");
-		
+
 					$i++;
 				}
-				
+
 			} else {
 				if (isset($_POST['Answers']) && count((array)$_POST['Answers'])) {
 					$piname = 'Answers';
-					
+
 					foreach($_POST['Answers'] as $key => $answer) {
 						$key = strip_tags((string)$key);
 						$answer = strip_tags((string)$answer);
 						$iname = 'Answers['.$key.']';
-					
+
 						$form->insert(
 							$piname,
 							'',
@@ -1701,11 +1701,11 @@ class poll extends modules {
 							false,
 							$answer);
 						$form->setStyle($iname, 'width: 250px;');
-						
+
 						$form->addAdditionalText(
 							$iname,
 							"<input type='checkbox' name='GuestAnswers[".$key."]' value='1'" .
-								(isset($_POST['GuestAnswers'][$key]) && 
+								(isset($_POST['GuestAnswers'][$key]) &&
 								 $_POST['GuestAnswers'][$key]?
 								 	" checked='checked'":
 								 	null) .
@@ -1714,14 +1714,14 @@ class poll extends modules {
 								"onclick=\"$.jCore.form.removeEntry(this);\">" .
 								__("Remove") .
 							"</a>");
-						
+
 						$piname = $iname;
 					}
-					
+
 				} else {
 					for ($i = 7; $i > 0; $i--) {
 						$iname = 'Answers['.$i.']';
-						
+
 						$form->insert(
 							'Answers',
 							'',
@@ -1729,7 +1729,7 @@ class poll extends modules {
 							FORM_INPUT_TYPE_TEXT,
 							false);
 						$form->setStyle($iname, 'width: 250px;');
-						
+
 						$form->addAdditionalText(
 							$iname,
 							"<input type='checkbox' name='GuestAnswers[".$i."]' value='1' />" .
@@ -1740,31 +1740,31 @@ class poll extends modules {
 					}
 				}
 			}
-			
+
 			echo
 				"<a name='adminform'></a>";
-			
+
 			$this->displayAdminForm($form);
 		}
-		
+
 		unset($form);
-		
-		echo 
+
+		echo
 			"</div>";	//admin-content
 	}
-	
+
 	function add($values) {
 		if (!is_array($values))
 			return false;
-		
+
 		if ($values['OrderID'] == '') {
 			sql::run(
 				" UPDATE `{polls}` SET " .
 				" `OrderID` = `OrderID` + 1," .
 				" `TimeStamp` = `TimeStamp`");
-			
+
 			$values['OrderID'] = 1;
-			
+
 		} else {
 			sql::run(
 				" UPDATE `{polls}` SET " .
@@ -1772,7 +1772,7 @@ class poll extends modules {
 				" `TimeStamp` = `TimeStamp`" .
 				" WHERE `OrderID` >= '".(int)$values['OrderID']."'");
 		}
-		
+
 		$newid = sql::run(
 			" INSERT INTO `{polls}` SET ".
 			" `Title` = '".
@@ -1819,46 +1819,46 @@ class poll extends modules {
 				"'," .
 			" `OrderID` = '".
 				(int)$values['OrderID']."'");
-		
+
 		if (!$newid) {
 			tooltip::display(
-				sprintf(_("Poll couldn't be created! Error: %s"), 
+				sprintf(_("Poll couldn't be created! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		$answers = new pollAnswers();
-		
+
 		foreach ($values['Answers'] as $key => $answer) {
 			if (!trim($answer))
 				continue;
-			
+
 			$answers->add(array(
 				'Answer' => $answer,
 				'PollID' => $newid,
 				'OrderID' => '',
-				'GuestAnswers' => 
-					(isset($values['GuestAnswers'][$key]) && 
+				'GuestAnswers' =>
+					(isset($values['GuestAnswers'][$key]) &&
 					 $values['GuestAnswers'][$key]?
 					 	true:
 					 	false)));
 		}
-		
+
 		unset($answers);
-		
+
 		$this->protectFiles();
-		
+
 		return $newid;
 	}
-	
+
 	function edit($id, $values) {
 		if (!$id)
 			return false;
-		
+
 		if (!is_array($values))
 			return false;
-		
+
 		sql::run(
 			" UPDATE `{polls}` SET ".
 			" `Title` = '".
@@ -1904,184 +1904,184 @@ class poll extends modules {
 			" `OrderID` = '".
 				(int)$values['OrderID']."'" .
 			" WHERE `ID` = '".(int)$id."'");
-		
+
 		if (sql::affected() == -1) {
 			tooltip::display(
-				sprintf(_("Poll couldn't be updated! Error: %s"), 
+				sprintf(_("Poll couldn't be updated! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		$answers = new pollAnswers();
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{pollanswers}` " .
 			" WHERE `PollID` = '".(int)$id."'" .
 			" ORDER BY `OrderID`, `ID`");
-		
+
 		$i = 0;
 		while($row = sql::fetch($rows)) {
-			if (!isset($values['Answers'][$row['ID'].'_existing']) || 
+			if (!isset($values['Answers'][$row['ID'].'_existing']) ||
 				!$values['Answers'][$row['ID'].'_existing'])
 			{
 				$answers->delete($row['ID']);
 				continue;
 			}
-			
+
 			$answers->edit($row['ID'], array(
 				'Answer' => $values['Answers'][$row['ID'].'_existing'],
 				'PollID' => (int)$id,
 				'OrderID' => $row['OrderID'],
-				'GuestAnswers' => 
-					(isset($values['GuestAnswers'][$row['ID'].'_existing']) && 
+				'GuestAnswers' =>
+					(isset($values['GuestAnswers'][$row['ID'].'_existing']) &&
 					 $values['GuestAnswers'][$row['ID'].'_existing']?
 					 	true:
 					 	false)));
-			
+
 			unset($values['Answers'][$row['ID'].'_existing']);
 		}
-		
+
 		if (isset($values['Answers']) && is_array($values['Answers']) &&
 			count($values['Answers']))
 		{
 			foreach ($values['Answers'] as $key => $answer) {
 				if (!trim($answer))
 					continue;
-				
+
 				$answers->add(array(
 					'Answer' => $answer,
 					'PollID' => (int)$id,
 					'OrderID' => '',
-					'GuestAnswers' => 
-						(isset($values['GuestAnswers'][$key]) && 
+					'GuestAnswers' =>
+						(isset($values['GuestAnswers'][$key]) &&
 						 $values['GuestAnswers'][$key]?
 						 	true:
 						 	false)));
 			}
 		}
-		
+
 		unset($answers);
-		
+
 		$this->protectFiles();
-		
+
 		return true;
 	}
-	
+
 	function delete($id) {
 		if (!$id)
 			return false;
-		
+
 		$comments = new pollComments();
 		$pictures = new pollPictures();
 		$attachments = new pollAttachments();
 		$answers = new pollAnswers();
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{pollcomments}` " .
 			" WHERE `PollID` = '".(int)$id."'");
-		
+
 		while($row = sql::fetch($rows))
 			$comments->delete($row['ID']);
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{pollpictures}` " .
 			" WHERE `PollID` = '".(int)$id."'");
-		
+
 		while($row = sql::fetch($rows))
 			$pictures->delete($row['ID']);
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{pollattachments}` " .
 			" WHERE `PollID` = '".(int)$id."'");
-		
+
 		while($row = sql::fetch($rows))
 			$attachments->delete($row['ID']);
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{pollanswers}` " .
 			" WHERE `PollID` = '".(int)$id."'");
-		
+
 		while($row = sql::fetch($rows))
 			$answers->delete($row['ID']);
-		
+
 		sql::run(
 			" DELETE FROM `{polls}` " .
 			" WHERE `ID` = '".(int)$id."'");
-		
+
 		unset($answers);
 		unset($attachments);
 		unset($pictures);
 		unset($comments);
-		
+
 		$this->protectFiles();
-		
+
 		return true;
 	}
-	
+
 	function protectFiles() {
 		$attachments = new pollAttachments();
 		$attachmentspath = $attachments->rootPath;
 		unset($attachments);
-		
+
 		$pictures = new pollPictures();
 		$picturespath = $pictures->rootPath;
 		unset($pictures);
-		
+
 		if (!$attachmentspath && !$picturespath)
 			return false;
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows` FROM `{polls}` " .
 			" WHERE `MembersOnly` = 1" .
 			" LIMIT 1"));
-			
+
 		if ($row['Rows'])
-			return 
+			return
 				(dirs::protect($attachmentspath) &&
 				 dirs::protect($picturespath) &&
 				 dirs::protect($picturespath.'thumbnail/', 'allow from all'));
-		
-		return 
+
+		return
 			(dirs::unprotect($attachmentspath) &&
 			 dirs::unprotect($picturespath) &&
 			 dirs::unprotect($picturespath.'thumbnail/'));
 	}
-	
+
 	// ************************************************   Client Part
 	static function getURL($id = 0) {
 		$url = modules::getOwnerURL('poll', $id);
-		
+
 		if (!$url)
 			return url::site() .
 				url::uri(poll::$uriVariables);
-		
-		return $url;	
+
+		return $url;
 	}
-	
+
 	static function checkAccess($row, $full = false) {
 		if ($GLOBALS['USER']->loginok)
 			return true;
-		
+
 		if ($row && !is_array($row))
 			$row = sql::fetch(sql::run(
 				" SELECT `MembersOnly`, `ShowToGuests`" .
 				" FROM `{polls}`" .
 				" WHERE `ID` = '".(int)$row."'"));
-		
+
 		if (!$row)
 			return true;
-			
+
 		if ($row['MembersOnly'] && ($full || !$row['ShowToGuests']))
 			return false;
-		
+
 		return $row;
 	}
-	
+
 	static function type2Text($type) {
 		if (!$type)
 			return;
-		
+
 		switch($type) {
 			case POLL_TYPE_SELECT:
 				return _('Select (one answer can be chosen)');
@@ -2091,61 +2091,61 @@ class poll extends modules {
 				return _('Undefined!');
 		}
 	}
-	
+
 	function verify() {
 		$vote = null;
 		$answers = null;
 		$guestanswers = null;
-		
+
 		if (isset($_POST['pollvote']))
 			$vote = (string)$_POST['pollvote'];
-		
+
 		if (isset($_POST['pollanswers']))
 			$answers = (array)$_POST['pollanswers'];
-		
+
 		if (isset($_POST['pollguestanswers']))
 			$guestanswers = (array)$_POST['pollguestanswers'];
-		
+
 		if (!$vote)
 			return false;
-		
+
 		if (!$answers || !is_array($answers) || !count($answers)) {
 			tooltip::display(
 				_("No answer selected!"),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
-		if (!isset($_POST['_FormSecurityToken']) || 
-			!security::checkToken((string)$_POST['_FormSecurityToken'], 86400)) 
+
+		if (!isset($_POST['_FormSecurityToken']) ||
+			!security::checkToken((string)$_POST['_FormSecurityToken'], 86400))
 		{
 			tooltip::display(
 				_("Poll cannot be found or it has been deactivated!"),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		$pollid = (int)key($answers);
-		
+
 		$poll = sql::fetch(sql::run(
 			" SELECT * FROM `{polls}`" .
 			" WHERE `ID` = '".(int)$pollid."'" .
 			" AND `Deactivated` = 0"));
-		
+
 		if (!$poll) {
 			tooltip::display(
 				_("Poll cannot be found or it has been deactivated!"),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		if (!$GLOBALS['USER']->loginok && $poll['MembersOnly']) {
 			tooltip::display(
 				_("Only registered users can vote."),
 				TOOLTIP_ERROR);
 			return false;
 		}
-			
+
 		$row = sql::fetch(sql::run(
 			" SELECT `TimeStamp` FROM `{pollvotes}`" .
 			" WHERE `PollID` = '".$poll['ID']."'" .
@@ -2155,27 +2155,27 @@ class poll extends modules {
 			($GLOBALS['USER']->loginok?
 				" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 				" AND `IP` = '".security::ip2long((string)$_SERVER['REMOTE_ADDR'])."'")));
-			
+
 		if ($row) {
 			tooltip::display(
 				_("You already voted on this poll!"),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		$answers = $answers[$poll['ID']];
 		if (!is_array($answers))
 			$answers = array((int)$answers => (int)$answers);
-		
+
 		$votes = 0;
 		foreach($answers as $answerid => $answer) {
 			if (!$answerid)
 				continue;
-			
+
 			$guestanswer = null;
 			if (isset($guestanswers[$poll['ID']][(int)$answerid]))
 				$guestanswer = form::parseString($guestanswers[$poll['ID']][(int)$answerid]);
-			
+
 			$newid = sql::run(
 				" INSERT INTO `{pollvotes}` SET " .
 				" `PollID` = '".$poll['ID']."'," .
@@ -2190,49 +2190,49 @@ class poll extends modules {
 					" `GuestAnswer` = '".sql::escape($guestanswer)."',":
 					null) .
 				" `TimeStamp` = NOW()");
-			
+
 			if (!$newid) {
 				tooltip::display(
-					sprintf(_("Vote couldn't be stored! Error: %s"), 
+					sprintf(_("Vote couldn't be stored! Error: %s"),
 						sql::error()),
 					TOOLTIP_ERROR);
 				return false;
 			}
-		
+
 			sql::run(
 				" UPDATE `{pollanswers}` SET" .
 				" `Votes` = `Votes` + 1" .
 				" WHERE `ID` = '".(int)$answerid."'");
-			
+
 			$votes++;
 		}
-	
+
 		sql::run(
 			" UPDATE `{polls}` SET" .
 			" `Votes` = `Votes` + ".(int)$votes."," .
 			" `TimeStamp` = `TimeStamp`" .
 			" WHERE `ID` = '".$poll['ID']."'");
-		
+
 		tooltip::display(
 			_("Thank you for your vote."),
 			TOOLTIP_SUCCESS);
-		
+
 		if (!$poll['HideResults'] && $this->ajaxRequest) {
 			$poll['Votes'] += $votes;
-			
+
 			echo
 				"<script type='text/javascript'>";
-			
+
 			$answers = sql::run(
 				" SELECT `ID`, `Votes` FROM `{pollanswers}`" .
 				" WHERE `PollID` = '".$poll['ID']."'");
-			
+
 			while($answer = sql::fetch($answers)) {
 				$percentage = 0;
-				
+
 				if ($poll['Votes'])
 					$percentage = round($answer['Votes']*100/$poll['Votes']);
-				
+
 				echo
 					"$('.poll-answer".$answer['ID']."').each(function() {" .
 						"var jthis = $(this);" .
@@ -2244,84 +2244,84 @@ class poll extends modules {
 							"(".sprintf(_("%s votes"), $answer['Votes']).")');" .
 					"});";
 			}
-			
+
 			echo
 				"</script>";
 		}
-		
+
 		return true;
 	}
-	
+
 	function ajaxRequest() {
 		$users = null;
 		$vote = null;
-		
+
 		if (isset($_GET['users']))
 			$users = (int)$_GET['users'];
-		
+
 		if (isset($_POST['pollvote']))
 			$vote = (string)$_POST['pollvote'];
-		
+
 		if ($users) {
-			if (!$GLOBALS['USER']->loginok || 
-				!$GLOBALS['USER']->data['Admin']) 
+			if (!$GLOBALS['USER']->loginok ||
+				!$GLOBALS['USER']->data['Admin'])
 			{
 				tooltip::display(
 					__("Request can only be accessed by administrators!"),
 					TOOLTIP_ERROR);
 				return true;
 			}
-			
+
 			include_once('lib/userpermissions.class.php');
-			
+
 			$permission = userPermissions::check(
 				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
-			
+
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
 				return true;
 			}
-			
+
 			$GLOBALS['USER']->displayQuickList('#neweditpollform #entryOwner');
 			return true;
 		}
-		
+
 		if ($vote) {
 			$this->verify();
 			return true;
 		}
-		
+
 		$this->ajaxPaging = true;
 		$this->display();
 		return true;
 	}
-	
+
 	function displayLogin() {
 		tooltip::display(
 			_("This area is limited to members only. " .
 				"Please login below."),
 			TOOLTIP_NOTIFICATION);
-		
+
 		$GLOBALS['USER']->displayLogin();
 	}
-	
+
 	function displayTitle(&$row) {
 		echo $row['Title'];
 	}
-	
+
 	function displayDetails(&$row) {
 		$user = $GLOBALS['USER']->get($row['UserID']);
-		
+
 		echo
 			"<span class='details-date'>" .
 			calendar::datetime($row['TimeStamp']) .
 			" </span>";
-					
+
 		$GLOBALS['USER']->displayUserName($user, __('by %s'));
-		
+
 		if (isset($row['VotingsClosed']) && $row['VotingsClosed']) {
 			echo
 				"<span class='details-separator separator-1'>" .
@@ -2333,34 +2333,34 @@ class poll extends modules {
 				"</span>";
 		}
 	}
-	
+
 	function displayDescription(&$row) {
 		echo
 			"<p>";
-		
+
 		$codes = new contentCodes();
 		$codes->display(nl2br($row['Description']));
 		unset($codes);
-		
+
 		echo
 			"</p>";
 	}
-	
+
 	function displayPictures(&$row) {
 		$pictures = new pollPictures();
-		
+
 		if ($row['MembersOnly'] && !$GLOBALS['USER']->loginok)
-			$pictures->customLink = 
+			$pictures->customLink =
 				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
-				htmlspecialchars(_("You need to be logged in to view this picture. " .
+				htmlchars(_("You need to be logged in to view this picture. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
-		
+
 		$pictures->selectedOwnerID = $row['ID'];
 		$pictures->display();
 		unset($pictures);
 	}
-	
+
 	function displayLatestPicture(&$row) {
 		$pictures = new pollPictures();
 		$pictures->selectedOwnerID = $row['ID'];
@@ -2370,7 +2370,7 @@ class poll extends modules {
 		$pictures->display();
 		unset($pictures);
 	}
-	
+
 	function displayAnswers(&$row) {
 		$answers = new pollAnswers();
 		$answers->selectedPollID = $row['ID'];
@@ -2378,25 +2378,25 @@ class poll extends modules {
 		$answers->display();
 		unset($answers);
 	}
-	
+
 	function displayAttachments(&$row) {
 		$attachments = new pollAttachments();
-		
+
 		if (isset($row['MembersOnly']) && $row['MembersOnly'] && !$GLOBALS['USER']->loginok)
-			$attachments->customLink = 
+			$attachments->customLink =
 				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
-				htmlspecialchars(_("You need to be logged in to download this file. " .
+				htmlchars(_("You need to be logged in to download this file. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
-		
+
 		$attachments->selectedOwnerID = $row['ID'];
 		$attachments->display();
 		unset($attachments);
 	}
-	
+
 	function displayComments(&$row = null) {
 		$comments = new pollComments();
-		
+
 		if ($row) {
 			$comments->guestComments = $row['EnableGuestComments'];
 			$comments->selectedOwnerID = $row['ID'];
@@ -2405,11 +2405,11 @@ class poll extends modules {
 			$comments->limit = $this->limit;
 			$comments->format = $this->format;
 		}
-		
+
 		$comments->display();
 		unset($comments);
 	}
-	
+
 	function displayFunctions(&$row) {
 		if ($this->selectedID == $row['ID']) {
 			echo
@@ -2418,7 +2418,7 @@ class poll extends modules {
 					__("Back").
 					"</span>" .
 				"</a>";
-		
+
 		} else {
 			if ($row['Description'] || $row['Attachments'] || $row['Pictures'])
 				echo
@@ -2427,7 +2427,7 @@ class poll extends modules {
 						_("More Details") .
 						"</span> " .
 					"</a>";
-			
+
 			if ($row['EnableComments'])
 				echo
 					"<a href='".$row['_Link']."#comments' class='comments comment'>" .
@@ -2440,15 +2440,15 @@ class poll extends modules {
 					"</a>";
 		}
 	}
-	
+
 	function displayVoteButton(&$row) {
 		echo
 			"<input type='submit' class='button submit' " .
-				"name='pollvote' value='".htmlspecialchars(_("Vote"), ENT_QUOTES)."' />";
+				"name='pollvote' value='".htmlchars(_("Vote"), ENT_QUOTES)."' />";
 	}
-	
+
 	function displayFormated(&$row) {
-		echo 
+		echo
 			"<div class='poll one" .
 				" poll".$row['ID']."" .
 				" poll-num".$row['_PollNumber'] .
@@ -2465,113 +2465,113 @@ class poll extends modules {
 			"<form action='".url::uri("request") .
 				"&amp;request=modules/poll' class='ajax-form' method='post'>" .
 				"<input type='hidden' name='_FormSecurityToken' value='".security::genToken(86400)."' />";
-		
+
 		$parts = preg_split('/%([a-z0-9-_]+?)%/', $this->format, null, PREG_SPLIT_DELIM_CAPTURE);
-		
+
 		foreach($parts as $part) {
 			switch($part) {
 				case 'title':
 					echo
 						"<h2 class='poll-title'>";
-					
+
 					$this->displayTitle($row);
-					
+
 					echo
 						"</h2>";
 					break;
-				
+
 				case 'details':
 					echo
 						"<div class='poll-details comment'>";
-					
+
 					$this->displayDetails($row);
-					
+
 					echo
 						"</div>";
 					break;
-				
+
 				case 'preview':
 					if ($row['Pictures'])
 						$this->displayLatestPicture($row);
 					break;
-				
+
 				case 'pictures':
 					if ($row['Pictures'])
 						$this->displayPictures($row);
 					break;
-				
+
 				case 'description':
 					if ($row['Description']) {
 						echo
 							"<div class='poll-description'>";
-						
+
 						$this->displayDescription($row);
-						
+
 						echo
 							"</div>";
 					}
 					break;
-				
+
 				case 'attachments':
 					if ($row['Attachments'])
 						$this->displayAttachments($row);
 					break;
-				
+
 				case 'answers':
 					$this->displayAnswers($row);
 					break;
-				
+
 				case 'buttons':
 					if (!isset($row['VotingsClosed']) || !$row['VotingsClosed']) {
 						echo
 							"<div class='poll-vote-button'>";
-						
+
 						$this->displayVoteButton($row);
-						
+
 						echo
 							"</div>";
 					}
 					break;
-				
+
 				case 'links':
-					if ($row['EnableComments'] || $row['Description'] || 
+					if ($row['EnableComments'] || $row['Description'] ||
 						$row['Attachments'] || $row['Pictures'])
 					{
 						echo
 							"<div class='poll-links'>";
-					
+
 						$this->displayFunctions($row);
-							
+
 						echo
 							"<div class='clear-both'></div>" .
 							"</div>";
 					}
 					break;
-				
+
 				case 'link':
 					echo $row['_Link'];
 					break;
-				
+
 				default:
 					echo $part;
 					break;
 			}
 		}
-		
+
 		echo
 				"<div class='spacer bottom'></div>" .
 				"<div class='separator bottom'></div>";
-		
+
 		echo
 			"</form>" .
 			"</div>";
-		
+
 		if ($this->selectedID == $row['ID'] && $row['EnableComments'])
 			$this->displayComments($row);
 	}
-	
+
 	function displayOne(&$row) {
-		echo 
+		echo
 			"<div class='poll one" .
 				" poll".$row['ID']."" .
 				" poll-num".$row['_PollNumber'] .
@@ -2588,62 +2588,62 @@ class poll extends modules {
 			"<form action='".url::uri("request") .
 				"&amp;request=modules/poll' class='ajax-form' method='post'>" .
 				"<input type='hidden' name='_FormSecurityToken' value='".security::genToken(86400)."' />";
-		
+
 		echo
 				"<h2 class='poll-title'>";
-		
+
 		$this->displayTitle($row);
-		
+
 		echo
 				"</h2>" .
 				"<div class='poll-details comment'>";
-				
+
 		$this->displayDetails($row);
-			
+
 		echo
 				"</div>";
-				
+
 		$this->displayAnswers($row);
-		
+
 		if (!isset($row['VotingsClosed']) || !$row['VotingsClosed']) {
 			echo
 				"<div class='poll-vote-button'>";
-				
+
 			$this->displayVoteButton($row);
-			
+
 			echo
 				"</div>";
 		}
-		
-		if ($row['EnableComments'] || $row['Description'] || 
+
+		if ($row['EnableComments'] || $row['Description'] ||
 			$row['Attachments'] || $row['Pictures'])
 		{
 			echo
 				"<div class='poll-links'>";
-		
+
 			$this->displayFunctions($row);
-				
+
 			echo
 				"<div class='clear-both'></div>" .
 				"</div>";
 		}
-		
+
 		echo
 			"<div class='spacer bottom'></div>" .
 			"<div class='separator bottom'></div>";
-		
+
 		echo
 			"</form>" .
 			"</div>";
 	}
-	
+
 	function displaySelected(&$row) {
 		if (!$this->checkAccess($row)) {
 			$this->displayLogin();
 			return false;
 		}
-		
-		echo 
+
+		echo
 			"<div class='poll selected" .
 				" poll".$row['ID']."" .
 				" poll-num".$row['_PollNumber'] .
@@ -2657,154 +2657,154 @@ class poll extends modules {
 			"<form action='".url::uri("request") .
 				"&amp;request=modules/poll' class='ajax-form' method='post'>" .
 				"<input type='hidden' name='_FormSecurityToken' value='".security::genToken(86400)."' />";
-		
+
 		echo
 				"<h2 class='poll-title'>";
-		
+
 		$this->displayTitle($row);
-		
+
 		echo
 				"</h2>";
-	
+
 		echo
 				"<div class='poll-details comment'>";
-		
+
 		$this->displayDetails($row);
-		
+
 		echo
 				"</div>";
-	
+
 		if ($row['Pictures'])
 			$this->displayPictures($row);
-			
+
 		if ($row['Description']) {
 			echo
 				"<div class='poll-description'>";
-			
+
 			$this->displayDescription($row);
-			
+
 			echo
 				"</div>";
 		}
-		
+
 		$this->displayAnswers($row);
-		
+
 		if (!isset($row['VotingsClosed']) || !$row['VotingsClosed']) {
 			echo
 				"<div class='poll-vote-button'>";
-			
+
 			$this->displayVoteButton($row);
-			
+
 			echo
 				"</div>";
 		}
-		
+
 		if ($row['Attachments'])
 			$this->displayAttachments($row);
-		
+
 		echo
 				"<div class='poll-links'>";
-	
+
 		$this->displayFunctions($row);
-			
+
 		echo
 				"<div class='clear-both'></div>" .
 				"</div>";
-			
+
 		echo
 			"<div class='spacer bottom'></div>" .
 			"<div class='separator bottom'></div>";
-			
-		echo 
+
+		echo
 			"</form>" .
 			"</div>"; //.poll
-			
+
 		if ($row['EnableComments'])
 			$this->displayComments($row);
-		
+
 		return true;
 	}
-	
+
 	function displayArguments() {
 		if (!$this->arguments)
 			return false;
-		
+
 		if (preg_match('/(^|\/)rand($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)rand($|\/)/', '\2', $this->arguments);
 			$this->randomize = true;
 		}
-		
+
 		if (preg_match('/(^|\/)latest($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)latest($|\/)/', '\2', $this->arguments);
 			$this->ignorePaging = true;
 			$this->showPaging = false;
 			$this->limit = 1;
 		}
-		
+
 		if (preg_match('/(^|\/)format\/(.*?)($|[^<]\/[^>])/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)format\/.*?($|[^<]\/[^>])/', '\2', $this->arguments);
 			$this->format = trim($matches[2]);
 		}
-		
+
 		if (preg_match('/(^|\/)([0-9]+?)\/ajax($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/\/ajax/', '', $this->arguments);
 			$this->ignorePaging = true;
 			$this->ajaxPaging = true;
 		}
-		
+
 		if (preg_match('/(^|\/)([0-9]+?)($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)[0-9]+?($|\/)/', '\2', $this->arguments);
 			$this->limit = (int)$matches[2];
 		}
-		
+
 		if (preg_match('/(^|\/)comments($|\/)/', $this->arguments)) {
 			$this->arguments = preg_replace('/(^|\/)comments($|\/)/', '\2', $this->arguments);
 			$this->ignorePaging = true;
 			$this->showPaging = false;
-			
+
 			$this->displayComments();
 			return true;
 		}
-		
+
 		$this->selectedID = null;
-		
+
 		if (!$this->arguments)
 			return false;
-			
+
 		$poll = sql::fetch(sql::run(
 			" SELECT `ID` FROM `{polls}` " .
 			" WHERE `Deactivated` = 0" .
 			" AND `Path` LIKE '".sql::escape($this->arguments)."'" .
 			" LIMIT 1"));
-		
+
 		if (!$poll)
 			return true;
-		
+
 		$this->selectedID = $poll['ID'];
 	}
-	
+
 	function display() {
 		if ($this->displayArguments())
 			return true;
-		
+
 		if (!$this->limit && $this->owner['Limit'])
 			$this->limit = $this->owner['Limit'];
-			
+
 		$this->verify();
-			
+
 		$paging = new paging($this->limit);
-		
+
 		if ($this->ajaxPaging) {
 			$paging->ajax = true;
 			$paging->otherArgs = "&amp;request=modules/poll";
 		}
-		
+
 		$limitarg = strtolower(get_class($this)).'limit';
 		$paging->track($limitarg);
-		
+
 		if (!$this->selectedID && $this->ignorePaging)
 			$paging->reset();
-		
+
 		$rows = sql::run(
 			$this->SQL() .
 			(!$this->selectedID?
@@ -2814,17 +2814,17 @@ class poll extends modules {
 						null):
 					" LIMIT ".$paging->limit):
 				null));
-		
+
 		$paging->setTotalItems(sql::count());
-			
+
 		if (!$this->ajaxRequest)
-			echo 
+			echo
 				"<div class='polls'>";
-			
+
 		$i = 1;
 		$total = sql::rows($rows);
 		$link = poll::getURL();
-		
+
 		while($row = sql::fetch($rows)) {
 			$row['_PollNumber'] = $i;
 			$row['_Link'] = $link."&amp;pollid=".$row['ID'] .
@@ -2832,36 +2832,36 @@ class poll extends modules {
 					'&amp;'.url::arg($limitarg):
 					null);
 			$row['_CSSClass'] = null;
-			
+
 			if ($i == 1)
 				$row['_CSSClass'] .= ' first';
 			if ($i == $total)
 				$row['_CSSClass'] .= ' last';
-			
+
 			if ($this->format)
 				$this->displayFormated($row);
 			elseif ($row['ID'] == $this->selectedID)
 				$this->displaySelected($row);
 			else
 				$this->displayOne($row);
-			
+
 			$i++;
 		}
-		
+
 		if (!$this->selectedID && !$this->randomize && $this->showPaging)
 			$paging->display();
-		
+
 		if (!$this->ajaxRequest)
-			echo 
+			echo
 				"</div>";
-			
+
 		return $total;
 	}
 }
 
 modules::register(
-	'poll', 
+	'poll',
 	_('Polls'),
 	_('Quickly gather information on different subjects'));
-	
+
 ?>

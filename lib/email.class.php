@@ -13,5 +13,5 @@ include_once('lib/sources/email.class.php');
 
 class email extends _email {
 }
- 
+
 ?>

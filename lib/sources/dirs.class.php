@@ -13,46 +13,46 @@ class _dirs {
  	static function exists($dir) {
  		return @is_dir($dir);
  	}
- 	
+
  	static function isWritable($dir) {
  		if (!$dir)
  			return false;
- 		
+
  		if (@is_dir($dir))
  			return @is_writable($dir);
- 		
+
  		if (@is_file($dir))
  			return false;
- 		
+
  		return dirs::isWritable(substr($dir, 0, strrpos($dir, '/')));
  	}
- 	
+
  	static function delete($dir) {
  		return files::delete($dir);
  	}
- 	
+
  	static function rename($dir, $to) {
  		return @rename($dir, $to);
  	}
- 	
+
  	static function create($dir, $mode = 0777) {
  		return @mkdir($dir, $mode, true);
  	}
- 	
+
  	static function get($dir) {
 		$dirs = array_diff(scandir($dir), array(".", ".."));
 		$dir_array = array();
-		 
-		foreach($dirs as $d) { 
-			if(is_dir($dir."/".$d)) 
-				$dir_array[$d] = dirs::get($dir."/".$d); 
-			else 
-				$dir_array[$d] = $d; 
+
+		foreach($dirs as $d) {
+			if(is_dir($dir."/".$d))
+				$dir_array[$d] = dirs::get($dir."/".$d);
+			else
+				$dir_array[$d] = $d;
 		}
-		
-		return $dir_array; 
+
+		return $dir_array;
  	}
- 	
+
  	static function protect($directory, $method = 'deny from all') {
 		if (!files::create($directory.'/.htaccess', $method)) {
 			tooltip::display(
@@ -60,17 +60,17 @@ class _dirs {
 				sprintf(__("Please make sure \"%s\" is writable by me or contact webmaster."),
 					$directory),
 				TOOLTIP_ERROR);
-			
+
 			return false;
 		}
-		
+
 		return true;
  	}
- 	
+
  	static function unprotect($directory) {
 		if (files::exists($directory.'/.htaccess'))
 			return files::delete($directory.'/.htaccess');
-		
+
 		return true;
  	}
 }

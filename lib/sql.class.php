@@ -12,6 +12,6 @@
 include_once('lib/sources/sql.class.php');
 
 class sql extends _sql {
-} 
+}
 
 ?>

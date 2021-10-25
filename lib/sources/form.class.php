@@ -8,7 +8,7 @@
  *  me@pijulius.com
  *  For licensing, see LICENSE or http://jcore.net/license
  ****************************************************************************/
- 
+
 define('FORM_INPUT_TYPE_TEXT', 1);
 define('FORM_INPUT_TYPE_EMAIL', 2);
 define('FORM_INPUT_TYPE_CHECKBOX', 3);
@@ -71,7 +71,7 @@ define('FORM_ERROR_EMAIL', 5);
 define('FORM_ERROR_PASSWORD', 6);
 
 include_once('lib/ckeditor.class.php');
- 
+
 class _form {
 	var $title;
 	var $id;
@@ -90,7 +90,7 @@ class _form {
 	var $rememberPasswords = false;
 	var $displayDesign = true;
 	var $displayFormElement = true;
-	
+
 	var $emptyElement = array(
 		'Title' => '',
 		'Name' => 'PlaceholderElement',
@@ -101,49 +101,49 @@ class _form {
 		'Attributes' => '',
 		'ValueType' => FORM_VALUE_TYPE_TEXT,
 		'Value' => null);
-	
+
 	function __construct($title = null, $id = null, $method = 'post') {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::form', $this, $title, $id, $method);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::form', $this, $title, $id, $method, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		$this->title = $title;
 		$this->id = ($id?$id:preg_replace('/ /', '', strtolower($title)));
 		$this->action = url::uri();
 		$this->method = $method;
-		
+
 		if (isset($GLOBALS['_'.strtoupper($this->method)]['formpage']))
 			$this->selectedPage = (int)$GLOBALS['_'.strtoupper($this->method)]['formpage'];
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::form', $this, $title, $id, $method);
 	}
-	
+
 	function submitted() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::submitted', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::submitted', $this, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		$result = false;
-		
+
 		if (isset($GLOBALS['_'.strtoupper($this->method)][$this->id.'submit'])) {
 			$result = (string)$GLOBALS['_'.strtoupper($this->method)][$this->id.'submit'];
-			
+
 		} else {
 			foreach($this->elements as $element) {
-				if ($element['Type'] == FORM_INPUT_TYPE_SUBMIT && 
+				if ($element['Type'] == FORM_INPUT_TYPE_SUBMIT &&
 					isset($GLOBALS['_'.strtoupper($this->method)][$element['Name']]))
 				{
 					$result = (string)$GLOBALS['_'.strtoupper($this->method)][$element['Name']];
@@ -151,29 +151,29 @@ class _form {
 				}
 			}
 		}
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::submitted', $this, $result);
-		
+
 		return $result;
 	}
-	
+
 	function reset($elementname = null) {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::reset', $this, $elementname);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::reset', $this, $elementname, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		foreach($this->elements as $elementnum => $element) {
 			if (!$elementname || $elementname == $element['Name'])
 				unset($GLOBALS['_'.strtoupper($this->method)][$element['Name']]);
 				unset($this->elements[$elementnum]['VerifyResult']);
-				
+
 				if (in_array($element['Type'], array(
 					FORM_INPUT_TYPE_CHECKBOX,
 					FORM_INPUT_TYPE_RADIO,
@@ -184,169 +184,141 @@ class _form {
 					$this->elements[$elementnum]['Value'] = null;
 					continue;
 				}
-				
+
 				$originalvalue = null;
-				
+
 				if (isset($this->elements[$elementnum]['OriginalValue']))
 					$originalvalue = $this->elements[$elementnum]['OriginalValue'];
-				
+
 				$this->elements[$elementnum]['Value'] = $originalvalue;
 		}
-		
+
 		$this->selectedPage = 1;
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::reset', $this, $elementname);
 	}
-	
+
 	function clear() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::clear', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::clear', $this, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		$this->elements = array();
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::clear', $this);
 	}
-	
+
 	function getPostArray() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::getPostArray', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::getPostArray', $this, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		$post = array();
-		
+
 		foreach($this->elements as $element) {
 			$elementid = preg_replace('/\[.*\]/i', '', $element['Name']);
-			
+
 			if (isset($post[$elementid]))
 				continue;
-			
+
 			$post[$elementid] = $this->get($elementid);
 		}
-			
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::getPostArray', $this, $post);
-		
+
 		return $post;
 	}
-	
+
 	function getElementID($elementname = null) {
 		if (!$elementname)
 			return count($this->elements)-1;
-			
+
 		foreach($this->elements as $elementnum => $element) {
 			if (!isset($element['Name']))
 				continue;
-			
-			if ($element['Name'] == $elementname || 
-				preg_replace('/\[.*\]/', '', $element['Name']) == $elementname) 
+
+			if ($element['Name'] == $elementname ||
+				preg_replace('/\[.*\]/', '', $element['Name']) == $elementname)
 				return $elementnum;
 		}
-		
+
 		return null;
 	}
-			
+
 	function getElementIDByTitle($elementtitle = null) {
 		if (!$elementtitle)
 			return count($this->elements)-1;
-			
+
 		foreach($this->elements as $elementnum => $element) {
 			if (!isset($element['Title']))
 				continue;
-			
-			if ($element['Title'] == $elementtitle || 
-				preg_replace('/\[.*\]/', '', $element['Title']) == $elementtitle) 
+
+			if ($element['Title'] == $elementtitle ||
+				preg_replace('/\[.*\]/', '', $element['Title']) == $elementtitle)
 				return $elementnum;
 		}
-		
+
 		return null;
 	}
-			
-	function updateElement($title, $name, $type = FORM_INPUT_TYPE_TEXT, 
-				$required = false, $value = null, $elementid = null) 
+
+	function updateElement($title, $name, $type = FORM_INPUT_TYPE_TEXT,
+				$required = false, $value = null, $elementid = null)
 	{
 		if (isset($elementid) && !isset($this->elements[$elementid]))
 			return false;
-		
+
 		if (!isset($elementid)) {
 			if (isset($this->elements) && is_array($this->elements))
 				$elementid = count($this->elements);
 			else
 				$elementid = 0;
 		}
-		
+
 		if ($type == FORM_INPUT_TYPE_VERIFICATION_CODE) {
 			if ($GLOBALS['USER']->loginok && !$this->preview)
 				return false;
-			
+
 			if (defined('USE_RECAPTCHA') && USE_RECAPTCHA) {
-				$this->elements[$elementid]['EntryID'] = "recaptcha_response_field";				
-				$this->elements[$elementid]['Name'] = "recaptcha_response_field";
-				
-				$this->elements[$elementid]['Title'] =
-					"<script type='text/javascript'>" .
-					((defined('RECAPTCHA_THEME') && RECAPTCHA_THEME) ||
-					 (defined('RECAPTCHA_LANG') && RECAPTCHA_LANG)?
-						"var RecaptchaOptions = {" .
-							(defined('RECAPTCHA_THEME') && RECAPTCHA_THEME?
-								"theme : '".RECAPTCHA_THEME."'":
-								null) .
-							(defined('RECAPTCHA_LANG') && RECAPTCHA_LANG?
-								"lang : '".RECAPTCHA_LANG."'":
-								null) .
-						"};":
-						null) . 
-					"if ($('#recaptcha_widget_div').length > 0) {" .
-						"$('#".$this->id."form .form-entry-recaptcha_response_field')." .
-							"html($('#recaptcha_widget_div:first').parent().html());" .
-						"$('#recaptcha_reload_btn').live('click', function() {" .
-							"var rbut = $(this);" .
-							"$('#recaptcha_response_field:first').focus(function() {" .
-								"$('#".$this->id."form #recaptcha_image')." .
-									"html($('#recaptcha_image:first').html());" .
-								"$(this).unbind('focus');" .
-								"rbut.parent().parent().find('#recaptcha_response_field').val('').focus();" .
-								"$('html,body').scrollTop(rbut.closest('form').offset().top-10);" .
-							"});" .
-						"});" .
-					"}" .
-					"</script>" .
-					recaptcha_get_html(RECAPTCHA_PUBLIC_KEY, null, url::https());
-				
+				$this->elements[$elementid]['EntryID'] = "g-recaptcha-response";
+				$this->elements[$elementid]['Name'] = "g-recaptcha-response";
+
+				$this->elements[$elementid]['Title'] = security::genImageCode();
+
 			} else {
-				$this->elements[$elementid]['EntryID'] = "scimagecode";				
+				$this->elements[$elementid]['EntryID'] = "scimagecode";
 				$this->elements[$elementid]['Name'] = "scimagecode";
-				
-				$this->elements[$elementid]['Title'] = 
+
+				$this->elements[$elementid]['Title'] =
 					"<b>".$title."</b>";
-						
+
 				$this->elements[$elementid]['AdditionalTitle'] =
 					"<div class='comment'>" .
 						__("Enter the code shown in the image") .
 					"<p>&nbsp;</p></div>";
-				
-				$this->elements[$elementid]['AdditionalPreText'] = 
+
+				$this->elements[$elementid]['AdditionalPreText'] =
 					"<div class='security-image ".$this->id."-scimage'>" .
 						"<img src='".url::uri().
 							"&amp;request=security&amp;scimage=1&amp;ajax=1' " .
 							(JCORE_VERSION < '0.6'?
 								"border='2' ":
 								null) .
-							"alt='".htmlspecialchars(__("Security Image"), ENT_QUOTES)."' />" .
+							"alt='".htmlchars(__("Security Image"), ENT_QUOTES)."' />" .
 						"<a class='reload-link' href='javascript://' " .
 							"onclick=\"$('.".$this->id."-scimage img').attr('src', '".
 								url::uri().
@@ -356,180 +328,180 @@ class _form {
 						"</a>" .
 					"</div>";
 			}
-			
+
 			$this->elements[$elementid]['Type'] = $type;
 			$this->elements[$elementid]['Required'] = true;
 			$this->elements[$elementid]['OriginalValue'] = $value;
-			$this->elements[$elementid]['Value'] = 
+			$this->elements[$elementid]['Value'] =
 				(isset($GLOBALS['_'.strtoupper($this->method)]['scimagecode'])?
 					strip_tags((string)$GLOBALS['_'.strtoupper($this->method)]['scimagecode']):
 					null);
-					
+
 			if (!isset($this->elements[$elementid]['Attributes']))
 				$this->elements[$elementid]['Attributes'] = '';
-			
+
 			if (!isset($this->elements[$elementid]['ValueType']))
 				$this->elements[$elementid]['ValueType'] = FORM_VALUE_TYPE_TEXT;
-			
+
 			$this->elements[$elementid]['Attributes'] .= " autocomplete='off' autocapitalize='off' autocorrect='off'";
 			return $elementid;
 		}
-		
-		$this->elements[$elementid]['EntryID'] = 
+
+		$this->elements[$elementid]['EntryID'] =
 			preg_replace('/([^a-z^0-9^_^-]*)/i', '', $name);
 		$this->elements[$elementid]['Title'] = $title;
 		$this->elements[$elementid]['Name'] = $name;
 		$this->elements[$elementid]['Type'] = $type;
 		$this->elements[$elementid]['Required'] = $required;
 		$this->elements[$elementid]['OriginalValue'] = $value;
-		
+
 		if (!isset($this->elements[$elementid]['Attributes']))
 			$this->elements[$elementid]['Attributes'] = '';
-		
+
 		if (!isset($this->elements[$elementid]['ValueType']))
 			$this->elements[$elementid]['ValueType'] = FORM_VALUE_TYPE_TEXT;
-		
-		if (JCORE_VERSION >= '0.6' && 
-			!isset($this->elements[$elementid]['TooltipText'])) 
+
+		if (JCORE_VERSION >= '0.6' &&
+			!isset($this->elements[$elementid]['TooltipText']))
 		{
 			if ($type == FORM_INPUT_TYPE_EMAIL)
-				$this->elements[$elementid]['TooltipText'] = 
+				$this->elements[$elementid]['TooltipText'] =
 					__("e.g. user@domain.com");
 			elseif ($type == FORM_INPUT_TYPE_TIMESTAMP)
-				$this->elements[$elementid]['TooltipText'] = 
+				$this->elements[$elementid]['TooltipText'] =
 					__("e.g. 2010-07-21 21:00:00");
 			elseif ($type == FORM_INPUT_TYPE_DATE)
-				$this->elements[$elementid]['TooltipText'] = 
+				$this->elements[$elementid]['TooltipText'] =
 					__("e.g. 2010-07-21");
 			elseif ($type == FORM_INPUT_TYPE_TIME)
-				$this->elements[$elementid]['TooltipText'] = 
+				$this->elements[$elementid]['TooltipText'] =
 					__("e.g. 21:00:00");
 			elseif ($type == FORM_INPUT_TYPE_COLOR)
-				$this->elements[$elementid]['TooltipText'] = 
+				$this->elements[$elementid]['TooltipText'] =
 					__("e.g. #ff9933");
 			elseif ($type == FORM_INPUT_TYPE_URL)
-				$this->elements[$elementid]['TooltipText'] = 
+				$this->elements[$elementid]['TooltipText'] =
 					__("e.g. http://domain.com");
 			elseif ($type == FORM_INPUT_TYPE_TEL)
-				$this->elements[$elementid]['TooltipText'] = 
+				$this->elements[$elementid]['TooltipText'] =
 					__("e.g. +1 (202) 555-1234");
 		}
-		
+
 		if ($type == FORM_INPUT_TYPE_FILE)
 			$this->elements[$elementid]['ValueType'] = FORM_VALUE_TYPE_FILE;
-		
+
 		if ($type == FORM_INPUT_TYPE_FILE &&
 			!isset($this->fileElements[$elementid]))
 		{
 			$this->fileElements[$elementid] = $elementid;
-			
+
 		} elseif (isset($this->fileElements[$elementid])) {
 			unset($this->fileElements[$elementid]);
 		}
-		
+
 		if ($type == FORM_INPUT_TYPE_RECIPIENT_SELECT &&
 			!isset($this->recipientElements[$elementid]))
 		{
 			$this->recipientElements[$elementid] = $elementid;
-			
+
 		} elseif (isset($this->recipientElements[$elementid])) {
 			unset($this->recipientElements[$elementid]);
 		}
-		
-		if ($type == FORM_PAGE_BREAK && 
-			!isset($this->pageBreakElements[$elementid])) 
+
+		if ($type == FORM_PAGE_BREAK &&
+			!isset($this->pageBreakElements[$elementid]))
 		{
 			$this->pageBreakElements[$elementid] = $elementid;
-			
+
 			if (!$this->selectedPage)
 				$this->selectedPage = 1;
-		
+
 		} elseif (isset($this->pageBreakElements[$elementid])) {
 			unset($this->pageBreakElements[$elementid]);
 		}
-		
+
 		$submittedvalue = $this->get($elementid);
-		
-		if ($type == FORM_INPUT_TYPE_CHECKBOX || 
-			$type == FORM_INPUT_TYPE_RADIO) 
+
+		if ($type == FORM_INPUT_TYPE_CHECKBOX ||
+			$type == FORM_INPUT_TYPE_RADIO)
 		{
 			$this->elements[$elementid]['Value'] = $submittedvalue;
 			return $elementid;
 		}
-		
-		$this->elements[$elementid]['Value'] = 
+
+		$this->elements[$elementid]['Value'] =
 			(isset($submittedvalue)?
 				$submittedvalue:
 				$value);
-		
+
 		return $elementid;
 	}
-	
+
 	function getFile($elementname) {
 		if (!$elementname)
 			return false;
-		
+
 		if (is_numeric($elementname)) {
 			$elementid = $elementname;
 			$elementname = $this->elements[$elementid]['Name'];
 		} else {
 			$elementid = $this->getElementID($elementname);
 		}
-		
+
 		if (!isset($elementid))
 			return false;
-		
+
  		$fileid = preg_replace('/\[.*?\]/', '', $elementname);
  		$filearrayid = null;
- 		
+
  		preg_match('/\[(.*?)\]/', $elementname, $matches);
- 		
+
  		if (isset($matches[1]))
 	 		$filearrayid = $matches[1];
- 		
+
  		if (isset($filearrayid))
 			$file = $_FILES[$fileid]['tmp_name'][$filearrayid];
  		else
 			$file = $_FILES[$fileid]['tmp_name'];
-		
+
 		if (is_array($file)) {
 			$tmpfiles = null;
-			
+
 			foreach($file as $tmpname) {
 				if (!$tmpname)
 					continue;
-				
+
 				$tmpfiles[] = $tmpname;
 			}
-			
+
 			$file = $tmpfiles;
 		}
-		
+
 		return $file;
 	}
-	
-	function get($elementname) {
+
+	function get($elementname, $recipientemail = false) {
 		if (!isset($elementname))
 			return false;
-		
+
 		if (is_numeric($elementname)) {
 			$elementid = $elementname;
 			$elementname = $this->elements[$elementid]['Name'];
 		} else {
 			$elementid = $this->getElementID($elementname);
 		}
-		
+
 		if (!isset($elementid))
 			return false;
-		
-		if (preg_match('/\[(.*)\]/', $elementname, $arraykeys))	
+
+		if (preg_match('/\[(.*)\]/', $elementname, $arraykeys))
 			$elementname = preg_replace('/\[.*\]/', '', $elementname);
-		
+
 		$value = null;
-		
+
 		if (isset($GLOBALS['_'.strtoupper($this->method)][$elementname]))
 			$value = $GLOBALS['_'.strtoupper($this->method)][$elementname];
-			
+
 		if (($this->elements[$elementid]['ValueType'] == FORM_VALUE_TYPE_FILE ||
 			$this->elements[$elementid]['Type'] == FORM_INPUT_TYPE_FILE) &&
 			!$value && isset($GLOBALS['_FILES'][$elementname]))
@@ -538,312 +510,312 @@ class _form {
 				foreach($GLOBALS['_FILES'][$elementname]['name'] as $filename) {
 					if (!$filename)
 						continue;
-					
+
 					$value[] = $filename;
 				}
-				
+
 			} else {
 				$value = $GLOBALS['_FILES'][$elementname]['name'];
 			}
 		}
-		
+
 		if ($value && isset($arraykeys[1])) {
 			$arraykeys = explode('][', $arraykeys[1]);
-			
+
 			foreach($arraykeys as $arraykey) {
 				if (!$value)
 					continue;
-				
+
 				if (isset($value[$arraykey]))
 					$value = $value[$arraykey];
 				else
 					$value = null;
 			}
 		}
-		
+
 		if ($this->elements[$elementid]['Type'] == FORM_INPUT_TYPE_RECIPIENT_SELECT &&
 			$value && isset($this->elements[$elementid]['Values'][(int)($value-1)]))
-			$value = $this->elements[$elementid]['Values'][(int)($value-1)]['Value'];
-		
-		if ($this->elements[$elementid]['Type'] != FORM_INPUT_TYPE_CHECKBOX && 
-			$this->elements[$elementid]['Type'] != FORM_INPUT_TYPE_RADIO && 
-			!isset($value) && !empty($this->elements[$elementid]['OriginalValue']))
-			$value = $this->elements[$elementid]['OriginalValue'];
-		
+		{
+			if ($recipientemail || empty($this->elements[$elementid]['Values'][(int)($value-1)]['ValueText']))
+				$value = $this->elements[$elementid]['Values'][(int)($value-1)]['Value'];
+			else
+				$value = $this->elements[$elementid]['Values'][(int)($value-1)]['ValueText'];
+		}
+
 		if (!isset($value))
 			return null;
-		
+
 		switch ($this->elements[$elementid]['ValueType']) {
 			case FORM_VALUE_TYPE_FILE:
 				if (is_array($value))
 					return form::parseArray($value);
-				
+
 				return trim(strip_tags($value));
-			
+
 			case FORM_VALUE_TYPE_INT:
 				return (strlen($value)?
 							(int)$value:
 							null);
-				
+
 			case FORM_VALUE_TYPE_BOOL:
 				return (strlen($value)?
 							(bool)$value:
 							false);
-		
+
 			case FORM_VALUE_TYPE_FLOAT:
 				return form::parseFloat($value);
-		
+
 			case FORM_VALUE_TYPE_ARRAY:
 				return form::parseArray($value);
-			
+
 			case FORM_VALUE_TYPE_TIMESTAMP:
-				return 
+				return
 					($value?
-						date('Y-m-d H:i:s', 
+						date('Y-m-d H:i:s',
 							strtotime($value)):
 						null);
-			
+
 			case FORM_VALUE_TYPE_DATE:
-				return 
+				return
 					($value?
-						date('Y-m-d', 
+						date('Y-m-d',
 							strtotime($value)):
 						null);
-			
+
 			case FORM_VALUE_TYPE_HTML:
 				return $value;
-		
+
 			case FORM_VALUE_TYPE_URL:
 				return url::fix($value);
-		
+
 			case FORM_VALUE_TYPE_LIMITED_STRING:
 				return trim(preg_replace('/[^a-zA-Z0-9\@\.\_\-]/', '',
 							strip_tags($value)));
-		
+
 			case FORM_VALUE_TYPE_STRING:
 			case FORM_VALUE_TYPE_TEXT:
-			
+
 			default:
 				return form::parseString($value);
 		}
 	}
-	
+
 	function set($element, $value) {
 		$GLOBALS['_'.strtoupper($this->method)][$element] = $value;
 	}
-	
-	function insert($insertto, $title, $name, $type = FORM_INPUT_TYPE_TEXT, 
-				$required = false, $value = null, $inserttype = FORM_INSERT_AFTER) 
+
+	function insert($insertto, $title, $name, $type = FORM_INPUT_TYPE_TEXT,
+				$required = false, $value = null, $inserttype = FORM_INSERT_AFTER)
 	{
 		$inserttoid = $this->getElementID($insertto);
-		
+
 		if (!isset($insertto))
 			return false;
-		
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::insert', $this, $insertto, $title, $name, $type, $required, $value, $inserttype);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::insert', $this, $insertto, $title, $name, $type, $required, $value, $inserttype, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		if ($inserttype == FORM_INSERT_AFTER)
 			$inserttoid++;
-		
-		array_splice($this->elements, $inserttoid, count($this->elements), 
+
+		array_splice($this->elements, $inserttoid, count($this->elements),
 			array_merge(array($this->emptyElement), array_slice($this->elements, $inserttoid)));
-		
+
 		$result = $this->updateElement(
 			$title, $name, $type, $required, $value, $inserttoid);
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::insert', $this, $insertto, $title, $name, $type, $required, $value, $inserttype, $result);
-		
-		return $result; 
+
+		return $result;
 	}
-	
-	function add($title, $name, $type = FORM_INPUT_TYPE_TEXT, 
-				$required = false, $value = null) 
+
+	function add($title, $name, $type = FORM_INPUT_TYPE_TEXT,
+				$required = false, $value = null)
 	{
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::add', $this, $title, $name, $type, $required, $value);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::add', $this, $title, $name, $type, $required, $value, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		$result = $this->updateElement(
 			$title, $name, $type, $required, $value);
-		 
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::add', $this, $title, $name, $type, $required, $value, $result);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::add', $this, $title, $name, $type, $required, $value, $result, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		return $result;
 	}
-	
-	function edit($elementname, $title = null, $name = null, 
-		$type = null, $required = null, $value = null) 
+
+	function edit($elementname, $title = null, $name = null,
+		$type = null, $required = null, $value = null)
 	{
 		$elementid = $this->getElementID($elementname);
-		
+
 		if (!isset($elementid))
 			return false;
-		
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::edit', $this, $elementname, $title, $name, $type, $required, $value);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::edit', $this, $elementname, $title, $name, $type, $required, $value, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		if (!isset($title))
 			$title = $this->elements[$elementid]['Title'];
-		
+
 		if (!isset($name))
 			$name = $this->elements[$elementid]['Name'];
-		
+
 		if (!isset($type))
 			$type = $this->elements[$elementid]['Type'];
-		
+
 		if (!isset($required))
 			$required = $this->elements[$elementid]['Required'];
-		
+
 		if (!isset($value))
 			$value = $this->elements[$elementid]['OriginalValue'];
-		
+
 		$result = $this->updateElement(
 			$title, $name, $type, $required, $value, $elementid);
-		 
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::edit', $this, $elementname, $title, $name, $type, $required, $value, $result);
-		
+
 		return $result;
 	}
-	
-	function editByTitle($elementtitle, $title = null, $name = null, 
-		$type = null, $required = null, $value = null) 
+
+	function editByTitle($elementtitle, $title = null, $name = null,
+		$type = null, $required = null, $value = null)
 	{
 		$elementid = $this->getElementIDByTitle($elementtitle);
-		
+
 		if (!isset($elementid))
 			return false;
-		
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::editByTitle', $this, $elementtitle, $title, $name, $type, $required, $value);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::editByTitle', $this, $elementtitle, $title, $name, $type, $required, $value, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		if (!isset($title))
 			$title = $this->elements[$elementid]['Title'];
-		
+
 		if (!isset($name))
 			$name = $this->elements[$elementid]['Name'];
-		
+
 		if (!isset($type))
 			$type = $this->elements[$elementid]['Type'];
-		
+
 		if (!isset($required))
 			$required = $this->elements[$elementid]['Required'];
-		
+
 		if (!isset($value))
 			$value = $this->elements[$elementid]['OriginalValue'];
-		
+
 		$result = $this->updateElement(
 			$title, $name, $type, $required, $value, $elementid);
-		 
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::editByTitle', $this, $elementtitle, $title, $name, $type, $required, $value, $result);
-		
+
 		return $result;
 	}
-	
-	function delete($elementname) 
+
+	function delete($elementname)
 	{
 		$elementid = $this->getElementID($elementname);
-		
-		if (!isset($elementid)) 
+
+		if (!isset($elementid))
 			return false;
-		
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::delete', $this, $elementname);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::delete', $this, $elementname, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		$result = array_splice($this->elements, $elementid, 1);
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::delete', $this, $elementname, $result);
-		
+
 		return $result;
 	}
-	
+
 	static function parseFloat($floatString){
 		return preg_replace('/[^0-9\.]/', '', $floatString);
 	}
-	
+
 	static function parseArray($array) {
 		if (!is_array($array))
 			return array();
-			
+
 		$strippedarray = array();
-		
+
 		foreach($array as $key => $value) {
 			if ($value == "")
 				continue;
-			
+
 			if (is_array($value))
 				$strippedarray[$key] = form::parseArray($value);
 			else
 				$strippedarray[$key] = form::parseString($value);
 		}
-		
+
 		return $strippedarray;
 	}
-	
+
 	static function parseString($content) {
 		if (!$content)
 			return null;
-		
-		$content = strip_tags((string)$content, 
+
+		$content = strip_tags((string)$content,
 			'<a><b><i><u><span><br><hr><em><blockquote><code><strong>');
-		
+
 		$content = preg_replace(
-			'/<(\/?blockquote|strong|code|span|br|hr|em|b|i|u|a).*?(( (href|class)=(\'|")((ht|f)tps?:\/\/[^\'"]*?|[a-zA-Z0-9-_\/]*?)(\'|"))| ?\/?)>/i', 
+			'/<(\/?blockquote|strong|code|span|br|hr|em|b|i|u|a).*?(( (href|class)=(\'|")((ht|f)tps?:\/\/[^\'"]*?|[a-zA-Z0-9-_\/]*?)(\'|"))| ?\/?)>/i',
 			'<\1\2>', $content);
-		
+
 		return trim($content);
 	}
-	
+
 	static function text2HTML($data) {
-		return 
+		return
 			preg_replace(
-				'/(.*?<\/p>)/i', '<p>\1', 
+				'/(.*?<\/p>)/i', '<p>\1',
 				str_replace("\n", '<br />',
 					str_replace("\n\n", '</p>',
 						str_replace("\r", '', $data))));
@@ -852,7 +824,7 @@ class _form {
 	static function type2Text($type) {
 		if (!$type)
 			return;
-		
+
 		switch($type) {
 			case FORM_INPUT_TYPE_TEXT:
 				return __('Text');
@@ -922,11 +894,11 @@ class _form {
 				return __('Undefined!');
 		}
 	}
-	
+
 	static function valueType2Text($type) {
 		if (!$type)
 			return;
-		
+
 		switch($type) {
 			case FORM_VALUE_TYPE_STRING:
 				return __('String');
@@ -954,98 +926,98 @@ class _form {
 				return __('Undefined!');
 		}
 	}
-	
+
 	static function fcState($name, $state = false) {
 		$name = preg_replace('/^fc/', '', $name);
-		
+
 		if (!$name)
 			if (!$state)
 				return null;
 			else
 				return ' expanded';
-		
-		if ($state && (!isset($_COOKIE['fcstates']) || 
+
+		if ($state && (!isset($_COOKIE['fcstates']) ||
 			!in_array($name, explode('|', $_COOKIE['fcstates']))) ||
-			(!$state && isset($_COOKIE['fcstates']) && 
+			(!$state && isset($_COOKIE['fcstates']) &&
 			in_array($name, explode('|', $_COOKIE['fcstates']))))
 			return ' expanded';
-		
+
 		return null;
 	}
-	
+
 	function addSubmitButtons() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::addSubmitButtons', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::addSubmitButtons', $this, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		form::add(
 			__('Submit'),
 			$this->id.'submit',
 			FORM_INPUT_TYPE_SUBMIT);
-		
+
 		form::add(
 			__('Reset'),
 			$this->id.'reset',
 			FORM_INPUT_TYPE_RESET);
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::addSubmitButtons', $this);
 	}
-	
+
 	function setAttributes($elementname, $value = null) {
 		return $this->setElementKey('Attributes', $elementname, $value);
 	}
-	
+
 	function setPlaceholderText($elementname, $value = null) {
 		return $this->setElementKey('PlaceholderText', $elementname, $value);
 	}
-	
+
 	function setTooltipText($elementname, $value = null) {
 		return $this->setElementKey('TooltipText', $elementname, $value);
 	}
-	
+
 	function setAdditionalTitle($elementname, $value = null) {
 		return $this->setElementKey('AdditionalTitle', $elementname, $value);
 	}
-	
+
 	function setAdditionalText($elementname, $value = null) {
 		return $this->setElementKey('AdditionalText', $elementname, $value);
 	}
-	
+
 	function setAdditionalPreText($elementname, $value = null) {
 		return $this->setElementKey('AdditionalPreText', $elementname, $value);
 	}
-	
+
 	function setAutoFocus($elementname, $value = null) {
 		return $this->setElementKey('AutoFocus', $elementname, $value);
 	}
-	
+
 	function setError($elementname, $value = null) {
 		return $this->setElementKey('VerifyResult', $elementname, $value);
 	}
-	
+
 	function addAttributes($elementname, $value = null) {
 		return $this->setElementKey('Attributes', $elementname, $value, FORM_ELEMENT_ADD);
 	}
-	
+
 	function addAdditionalTitle($elementname, $value = null) {
 		return $this->setElementKey('AdditionalTitle', $elementname, $value, FORM_ELEMENT_ADD);
 	}
-	
+
 	function addAdditionalText($elementname, $value = null) {
 		return $this->setElementKey('AdditionalText', $elementname, $value, FORM_ELEMENT_ADD);
 	}
-	
+
 	function addAdditionalPreText($elementname, $value = null) {
 		return $this->setElementKey('AdditionalPreText', $elementname, $value, FORM_ELEMENT_ADD);
 	}
-	
+
 	function addValue($elementname, $value = null, $valuetext = null) {
 		if (isset($valuetext)) {
 			$value = array(
@@ -1057,116 +1029,116 @@ class _form {
 				'ValueText' => $value);
 			$value = null;
 		}
-		
+
 		return $this->setElementKey('Values', $elementname, $value, FORM_ELEMENT_ARRAY);
 	}
-	
+
 	function disableValues($elementname, $values = null) {
 		return $this->setElementKey('DisabledValues', $elementname, $values);
 	}
-	
+
 	function groupValues($elementname, $values = null) {
 		return $this->setElementKey('GroupValues', $elementname, $values);
 	}
-	
+
 	function setStyle($elementname, $value = null) {
 		if (isset($value))
 			$value = " style='".$value."'";
 		else
 			$elementname = " style='".$elementname."'";
-		
+
 		return $this->setElementKey('Attributes', $elementname, $value, FORM_ELEMENT_ADD);
 	}
-	
+
 	function setValue($elementname, $value = null) {
 		if (isset($value))
 			$this->set($elementname, $value);
-		
+
 		return $this->setElementKey('Value', $elementname, $value);
 	}
-	
+
 	function setValues($values = array()) {
 		if (!$values || !is_array($values) || !count($values))
 			return false;
-		
+
 		$prevvalue = null;
 		foreach($this->elements as $key => $element) {
 			if (!isset($values[$element['Name']])) {
 				if ($element['Type'] == FORM_INPUT_TYPE_CONFIRM)
 					$this->setValue($element['Name'], $prevvalue);
-				
+
 				continue;
 			}
-			
-			if ($element['ValueType'] == FORM_VALUE_TYPE_ARRAY && 
+
+			if ($element['ValueType'] == FORM_VALUE_TYPE_ARRAY &&
 				!is_array($values[$element['Name']]))
 				$value = explode('|', $values[$element['Name']]);
 			else
 				$value = $values[$element['Name']];
-		
+
 			$this->setValue($element['Name'], $value);
 			$prevvalue = $value;
 		}
-		
+
 		return true;
 	}
-	
+
 	function setValueType($elementname, $type = null) {
 		return $this->setElementKey('ValueType', $elementname, $type);
 	}
-	
+
 	function setElementKey($key, $elementname, $value = null, $method = null) {
 		if (!count($this->elements))
 			return false;
-			
+
 		if (!$key)
 			return false;
-			
+
 		if (!isset($elementname))
 			return false;
-		
-		if (isset($value)) {	
+
+		if (isset($value)) {
 			$elementid = $this->getElementID($elementname);
-			
+
 			if (!isset($elementid))
 				return false;
-			
+
 			$elementname = $value;
 		} else {
 			$elementid = $this->getElementID();
 		}
-		
+
 		if (!isset($this->elements[$elementid][$key]))
 			$this->elements[$elementid][$key] = null;
-		
+
 		if ($method == FORM_ELEMENT_ARRAY) {
 			$this->elements[$elementid][$key][] = $elementname;
-			
+
 		} elseif ($method == FORM_ELEMENT_ADD) {
 			$this->elements[$elementid][$key] .= $elementname;
-			
+
 		} else {
 			$this->elements[$elementid][$key] = $elementname;
-			
+
 			if ($key == 'ValueType') {
 				$submittedvalue = $this->get($elementid);
-				
+
 				if (isset($submittedvalue))
 					$this->elements[$elementid]['Value'] = $submittedvalue;
 			}
 		}
-		
+
 		return true;
 	}
-	
+
 	static function isInput($element) {
 		if (!isset($element))
 			return false;
-		
+
 		if (!isset($element['Type']))
 			return false;
-		
-		if (in_array($element['Type'], array( 
+
+		if (in_array($element['Type'], array(
 				FORM_INPUT_TYPE_TEXT,
 				FORM_INPUT_TYPE_EMAIL,
 				FORM_INPUT_TYPE_CHECKBOX,
@@ -1176,6 +1148,7 @@ class _form {
 				FORM_INPUT_TYPE_TEXTAREA,
 				FORM_INPUT_TYPE_HIDDEN,
 				FORM_INPUT_TYPE_FILE,
+				FORM_INPUT_TYPE_URL,
 				FORM_INPUT_TYPE_MULTISELECT,
 				FORM_INPUT_TYPE_TIMESTAMP,
 				FORM_INPUT_TYPE_DATE,
@@ -1183,13 +1156,13 @@ class _form {
 				FORM_INPUT_TYPE_EDITOR,
 				FORM_INPUT_TYPE_COLOR)))
 			return true;
-		
+
 		return false;
 	}
-	
+
 	function verifyToken() {
 		if (!isset($GLOBALS['_'.strtoupper($this->method)]['_FormSecurityToken']) ||
-			!security::checkToken((string)$GLOBALS['_'.strtoupper($this->method)]['_FormSecurityToken'])) 
+			!security::checkToken((string)$GLOBALS['_'.strtoupper($this->method)]['_FormSecurityToken']))
 		{
 			tooltip::display(
 				__("Please review / correct the marked fields in the form below " .
@@ -1197,187 +1170,186 @@ class _form {
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	function verify() {
 		if (!$this->submitted())
 			return false;
-		
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::verify', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::verify', $this, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		$currentpage = 1;
 		$errors = array();
-		
+
 		foreach($this->elements as $elementnum => $element) {
 			$value = $this->get($elementnum);
 			$this->elements[$elementnum]['VerifyResult'] = 0;
-			
+
 			if ($element['Type'] == FORM_PAGE_BREAK) {
 				if ($this->ignorePageBreaks)
 					continue;
-				
+
 				$currentpage++;
-				
+
 				if ($currentpage > $this->selectedPage) {
 					if (!count($errors)) {
 						$this->selectedPage++;
-						
+
 						api::callHooks(API_HOOK_AFTER,
 							'form::verify', $this);
-						
+
 						return false;
 					}
-					
+
 					break;
 				}
-				
+
 				continue;
 			}
-			
+
 			if (!$element['Required'] && !$value &&
 				$element['Type'] != FORM_INPUT_TYPE_CONFIRM)
 				continue;
-			
-			if (in_array($element['Type'], array(
-					FORM_INPUT_TYPE_EMAIL, FORM_INPUT_TYPE_RECIPIENT_SELECT)) &&
+
+			if ($element['Type'] == FORM_INPUT_TYPE_EMAIL &&
 				!email::verify($value))
 			{
 				$this->elements[$elementnum]['VerifyResult'] = 5;
 				$errors[] = 5;
-				
+
 			} elseif ($element['Type'] == FORM_INPUT_TYPE_PASSWORD &&
 				$this->verifyPassword &&
 				strlen($value) < MINIMUM_PASSWORD_LENGTH)
 			{
 				$this->elements[$elementnum]['VerifyResult'] = 6;
 				$errors[] = 6;
-				
+
 			} elseif ($element['Type'] == FORM_INPUT_TYPE_VERIFICATION_CODE &&
 				!security::verifyImageCode($value))
 			{
 				$this->elements[$elementnum]['VerifyResult'] = 4;
 				$errors[] = 4;
-				
+
 			} elseif ($element['Type'] == FORM_INPUT_TYPE_CONFIRM &&
-				isset($this->elements[($elementnum-1)]) && 
+				isset($this->elements[($elementnum-1)]) &&
 				$this->get($elementnum-1) != $value)
 			{
 				$this->elements[$elementnum]['VerifyResult'] = 3;
 				$errors[] = 3;
-				
-			} elseif ($element['Type'] == FORM_INPUT_TYPE_FILE && !$value) 
+
+			} elseif ($element['Type'] == FORM_INPUT_TYPE_FILE && !$value)
 			{
 				$this->elements[$elementnum]['VerifyResult'] = 2;
 				$errors[] = 2;
-				
+
 			} elseif (!in_array($element['Type'], array(
 				FORM_INPUT_TYPE_CONFIRM,
 				FORM_OPEN_FRAME_CONTAINER,
 				FORM_CLOSE_FRAME_CONTAINER,
-				FORM_STATIC_TEXT)) && 
-				!$value) 
+				FORM_STATIC_TEXT)) &&
+				!$value)
 			{
 				$this->elements[$elementnum]['VerifyResult'] = 1;
 				$errors[] = 1;
 			}
 		}
-		
+
 		$error = null;
-		
+
 		if (in_array(1, $errors))
 			$error .=
 				(JCORE_VERSION >= '0.6'?
-					__("Fields marked with an asterisk (*) are required."): 
+					__("Fields marked with an asterisk (*) are required."):
 					__("Field(s) marked with an asterisk (*) is/are required.")) .
 				" ";
-		
+
 		if (in_array(2, $errors))
-			$error .= 
+			$error .=
 				__("No file selected for upload.")." ";
-		
+
 		if (in_array(3, $errors))
-			$error .= 
+			$error .=
 				__("Some fields do not match. Please make sure to enter " .
 					"the same value when asked to confirm a previous field.")." ";
-		
+
 		if (in_array(4, $errors))
-			$error .= 
+			$error .=
 				__("Incorrect verification code. " .
 					"Please enter the code shown on the image.")." ";
-		
+
 		if (in_array(5, $errors))
-			$error .= 
+			$error .=
 				__("Invalid email address. Please make sure you enter " .
 					"a valid email address.")." ";
-		
+
 		if (in_array(6, $errors))
-			$error .= 
+			$error .=
 				sprintf(__("The password you entered is too short. Your " .
-					"password must be at least %s characters long."), 
+					"password must be at least %s characters long."),
 					MINIMUM_PASSWORD_LENGTH)." ";
-		
+
 		if ($error) {
-			$error .= 
+			$error .=
 				__("Please review / correct the marked fields in the form below " .
 					"and try again.");
-			
+
 			tooltip::display($error, TOOLTIP_ERROR);
 			$result = false;
-			
+
 		} else if (!$this->verifyToken()) {
 			$result = false;
-			
+
 		} else {
 			$result = true;
 		}
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::verify', $this, $result);
-		
+
 		return $result;
 	}
-	
+
 	function displayData($values, $ignoreelements = null) {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::displayData', $this, $values, $ignoreelements);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::displayData', $this, $values, $ignoreelements, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		$prevelement = null;
-		
+
 		foreach($this->elements as $element) {
 			if (in_array($element['Type'], array(
 				FORM_INPUT_TYPE_PASSWORD,
 				FORM_INPUT_TYPE_CONFIRM)))
 				continue;
-				
+
 			$isinput = form::isInput($element);
-			
-			if ($isinput && (!isset($values[$element['Name']]) || 
+
+			if ($isinput && (!isset($values[$element['Name']]) ||
 				!$values[$element['Name']]))
 				continue;
-			
+
 			if ($ignoreelements && is_array($ignoreelements) &&
 				in_array($element['Name'], $ignoreelements))
 				continue;
-			
-			if (($isinput || $element['Type'] == FORM_STATIC_TEXT) && 
-				$prevelement && $prevelement['Type'] == FORM_OPEN_FRAME_CONTAINER) 
+
+			if (($isinput || $element['Type'] == FORM_STATIC_TEXT) &&
+				$prevelement && $prevelement['Type'] == FORM_OPEN_FRAME_CONTAINER)
 			{
 				echo
 					"<div class='fc" .
@@ -1399,8 +1371,8 @@ class _form {
 						"</a>" .
 						"<div class='fc-content'>";
 			}
-			
-			if ($isinput || $element['Type'] == FORM_STATIC_TEXT) 
+
+			if ($isinput || $element['Type'] == FORM_STATIC_TEXT)
 				echo
 					"<div class='form-entry" .
 						($element['Name'] || $element['Title']?
@@ -1410,7 +1382,7 @@ class _form {
 								url::genPathFromString($element['Title'])):
 							null) .
 						" preview'>";
-			
+
 			if ($isinput) {
 				if (!isset($values[$element['Name']]))
 					$value = null;
@@ -1420,14 +1392,14 @@ class _form {
 					$value = ($values[$element['Name']]?__("Yes"):__("No"));
 				else
 					$value = $values[$element['Name']];
-		
+
 				if ($element['ValueType'] != FORM_VALUE_TYPE_HTML)
-					$value = htmlspecialchars($value);
-				
+					$value = htmlchars($value);
+
 				if ($element['Type'] == FORM_INPUT_TYPE_EDITOR) {
-					echo 
+					echo
 						$value;
-					
+
 				} else {
 					echo
 						"<div class='form-entry-title'>" .
@@ -1435,95 +1407,95 @@ class _form {
 						"</div>" .
 						"<div class='form-entry-content'>" .
 							"<b>";
-				
+
 					if (isset($element['AdditionalPreText']) && $element['AdditionalPreText'])
 						echo $element['AdditionalPreText']." ";
-						
+
 					if ($element['Type'] == FORM_INPUT_TYPE_TEXTAREA &&
 						$element['ValueType'] != FORM_VALUE_TYPE_HTML)
 						echo nl2br($value);
 					else
 						echo $value;
-					
+
 					if (isset($element['AdditionalText']) && $element['AdditionalText'])
 						echo " ".$element['AdditionalText'];
-				
+
 					echo
 							"</b>" .
 						"</div>";
 				}
-		
+
 			} elseif ($element['Type'] == FORM_STATIC_TEXT) {
-				echo 
+				echo
 					$element['Title'];
-		
+
 			} elseif ($element['Type'] == FORM_OPEN_FRAME_CONTAINER) {
 				if ($prevelement && $prevelement['Type'] != FORM_CLOSE_FRAME_CONTAINER)
 					$element['_SpacerRequired'] = true;
-				
+
 			} elseif ($element['Type'] == FORM_CLOSE_FRAME_CONTAINER) {
 				if ($prevelement && $prevelement['Type'] != FORM_OPEN_FRAME_CONTAINER)
-					echo 
+					echo
 							"<div class='clear-both'></div>" .
 						"</div>" .
 					"</div>";
 			}
-			
-			if ($isinput || $element['Type'] == FORM_STATIC_TEXT) 
+
+			if ($isinput || $element['Type'] == FORM_STATIC_TEXT)
 				echo
 					"</div>";
-			
+
 			$prevelement = $element;
 		}
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::displayData', $this, $values, $ignoreelements);
 	}
-	
+
 	function displayElements($elements) {
 		if (!is_array($elements))
 			return false;
-		
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::displayElements', $this, $elements);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::displayElements', $this, $elements, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		if (!$this->ignorePageBreaks && $this->selectedPage)
 			echo
 				"<input type='hidden' name='formpage' value='".$this->selectedPage."' />";
-		
+
 		$pages = count((array)$this->pageBreakElements);
 		$currentpage = 1;
 		$nextpage = null;
-		
+
 		$requiredelements = 0;
 		$totalelements = count($elements)-1;
-		$submitbuttonid = 0;		
-		
+		$submitbuttonid = 0;
+
 		foreach($elements as $elementnum => $element) {
 			if (!isset($element['Type']))
 				continue;
-			
+
 			if ($element['Required'])
 				$requiredelements++;
-			
-			if ($element['Type'] == FORM_INPUT_TYPE_VERIFICATION_CODE && 
+
+			if ($element['Type'] == FORM_INPUT_TYPE_VERIFICATION_CODE &&
 				(!defined('USE_RECAPTCHA') || !USE_RECAPTCHA) &&
-				isset($element['VerifyResult']) && !$element['VerifyResult']) 
+				isset($element['VerifyResult']) && !$element['VerifyResult'])
 			{
-				echo 
+				echo
 					"<input type='hidden' name='".$element['Name']."' " .
-						"value='".htmlspecialchars($element['Value'], ENT_QUOTES)."' />";
-				
+						"value='".htmlchars($element['Value'], ENT_QUOTES)."' />";
+
 				continue;
 			}
-			
+
 			if ($element['Type'] == FORM_PAGE_BREAK) {
 				if ($this->ignorePageBreaks) {
 					echo
@@ -1533,22 +1505,22 @@ class _form {
 						"</div>" .
 						"<hr />" .
 						"<br />";
-					
+
 					continue;
 				}
-				
+
 				if ($this->selectedPage == $currentpage)
 					$nextpage = $element;
-				
+
 				$currentpage++;
 				continue;
 			}
-			
-			if (!$this->ignorePageBreaks && $this->selectedPage && 
+
+			if (!$this->ignorePageBreaks && $this->selectedPage &&
 				!in_array($element['Type'], array(
 					FORM_INPUT_TYPE_SUBMIT,
-					FORM_INPUT_TYPE_RESET, 
-					FORM_INPUT_TYPE_BUTTON))) 
+					FORM_INPUT_TYPE_RESET,
+					FORM_INPUT_TYPE_BUTTON)))
 			{
 				if ($currentpage < $this->selectedPage || $currentpage > $this->selectedPage) {
 					if (in_array($element['Type'], array(
@@ -1561,29 +1533,29 @@ class _form {
 						$element['Type'] = FORM_INPUT_TYPE_HIDDEN;
 				}
 			}
-			
+
 			if (in_array($element['Type'], array(
-				FORM_INPUT_TYPE_HIDDEN, 
-				FORM_INPUT_TYPE_REVIEW))) 
+				FORM_INPUT_TYPE_HIDDEN,
+				FORM_INPUT_TYPE_REVIEW)))
 			{
 				if ($element['ValueType'] == FORM_VALUE_TYPE_ARRAY) {
 					foreach((array)$element['Value'] as $value)
-						echo 
+						echo
 							"<input type='hidden' name='".$element['Name']."[]' " .
-								"value='".htmlspecialchars($value, ENT_QUOTES)."' />";
+								"value='".htmlchars($value, ENT_QUOTES)."' />";
 				} else {
-					echo 
+					echo
 						"<input type='hidden' name='".$element['Name']."' " .
-							"value='".htmlspecialchars($element['Value'], ENT_QUOTES)."' />";
+							"value='".htmlchars($element['Value'], ENT_QUOTES)."' />";
 				}
-				
+
 				if ($element['Type'] == FORM_INPUT_TYPE_HIDDEN)
 					continue;
 			}
-			 
+
 			if (in_array($element['Type'], array(
 				FORM_INPUT_TYPE_SUBMIT,
-				FORM_INPUT_TYPE_RESET, 
+				FORM_INPUT_TYPE_RESET,
 				FORM_INPUT_TYPE_BUTTON)))
 			{
 				if (isset($elements[($elementnum-1)]) && !in_array(
@@ -1593,22 +1565,22 @@ class _form {
 						FORM_INPUT_TYPE_BUTTON)))
 					echo
 						"<div class='clear-both'></div>";
-				
+
 				if (isset($element['AdditionalPreText']) && $element['AdditionalPreText'])
 					echo $element['AdditionalPreText'];
-				
+
 				if ($element['Type'] == FORM_INPUT_TYPE_SUBMIT) {
-				
-					if (!$this->ignorePageBreaks && $this->selectedPage && 
-						$this->selectedPage <= $pages) 
+
+					if (!$this->ignorePageBreaks && $this->selectedPage &&
+						$this->selectedPage <= $pages)
 					{
 						$element['Title'] = __("Next") .
 							($nextpage && trim($nextpage['Title'])?
 								" (".$nextpage['Title'].")":
 								null);
 					}
-					
-					echo 
+
+					echo
 						"<input type='submit' " .
 							"name='".$element['Name']."' " .
 							"id='button".$element['EntryID']."' " .
@@ -1617,66 +1589,66 @@ class _form {
 								"additional-":
 								null) .
 								"submit button-".$element['Name']."' " .
-							"value='".htmlspecialchars($element['Title'], ENT_QUOTES)."' " .
+							"value='".htmlchars($element['Title'], ENT_QUOTES)."' " .
 							(isset($element['TooltipText']) &&
 							 $element['TooltipText']?
-							 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
+							 	"title='".htmlchars($element['TooltipText'], ENT_QUOTES)."' ":
 							 	null) .
 							$element['Attributes'] .
 							" /> ";
-					
-					if (!$this->ignorePageBreaks && $this->selectedPage && 
-						$this->selectedPage > 1) 
+
+					if (!$this->ignorePageBreaks && $this->selectedPage &&
+						$this->selectedPage > 1)
 					{
-						echo 
+						echo
 							"<input type='button' " .
 								"class='button button-back' " .
-								"value='".htmlspecialchars(__("Back"), ENT_QUOTES)."' " .
+								"value='".htmlchars(__("Back"), ENT_QUOTES)."' " .
 								"onclick=\"this.form.formpage.value=".
 									(int)($this->selectedPage-1).
 									"; this.form.submit();\" /> ";
 					}
-					
+
 					if (!$submitbuttonid)
 						$submitbuttonid = key($element);
 				}
-					
+
 				if ($element['Type'] == FORM_INPUT_TYPE_RESET) {
-					echo 
+					echo
 						"<input type='reset' " .
 							"name='".$element['Name']."' " .
 							"id='button".$element['EntryID']."' " .
 							"class='button reset button-".$element['Name']."' " .
-							"value='".htmlspecialchars($element['Title'], ENT_QUOTES)."' " .
+							"value='".htmlchars($element['Title'], ENT_QUOTES)."' " .
 							(isset($element['TooltipText']) &&
 							 $element['TooltipText']?
-							 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
+							 	"title='".htmlchars($element['TooltipText'], ENT_QUOTES)."' ":
 							 	null) .
 							$element['Attributes'] .
 							" /> ";
 				}
-					
+
 				if ($element['Type'] == FORM_INPUT_TYPE_BUTTON) {
-					echo 
+					echo
 						"<input type='button' " .
 							"name='".$element['Name']."' " .
 							"id='button".$element['EntryID']."' " .
 							"class='button button-".$element['Name']."' " .
-							"value='".htmlspecialchars($element['Title'], ENT_QUOTES)."' " .
+							"value='".htmlchars($element['Title'], ENT_QUOTES)."' " .
 							(isset($element['TooltipText']) &&
 							 $element['TooltipText']?
-							 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
+							 	"title='".htmlchars($element['TooltipText'], ENT_QUOTES)."' ":
 							 	null) .
 							$element['Attributes'] .
 							" /> ";
 				}
-				
+
 				if (isset($element['AdditionalText']) && $element['AdditionalText'])
 					echo $element['AdditionalText'];
-					
+
 				continue;
 			}
-			
+
 			if ($element['Type'] == FORM_OPEN_FRAME_CONTAINER) {
 				echo
 				"<div tabindex='0' class='fc" .
@@ -1695,26 +1667,26 @@ class _form {
 						$element['Title'] .
 					"</a>" .
 					"<div class='fc-content'>";
-				
+
 				continue;
-			} 
-			
+			}
+
 			if ($element['Type'] == FORM_CLOSE_FRAME_CONTAINER) {
 				echo
 						"<div class='clear-both'></div>" .
 					"</div>" .
 				"</div>";
-				
+
 				continue;
 			}
-			
+
 			if ($element['Type'] == FORM_INPUT_TYPE_CONFIRM) {
 				if (!$elements[($elementnum-1)])
 					continue;
-				
+
 				$element['Type'] = $elements[($elementnum-1)]['Type'];
 			}
-			
+
 			echo
 				"<div class='form-entry" .
 					($element['Name'] || $element['Title']?
@@ -1739,11 +1711,11 @@ class _form {
 						" preview":
 						null) .
 					"'>";
-			
+
 			if (in_array($element['Type'], array(
 				FORM_INPUT_TYPE_TEXT,
 				FORM_INPUT_TYPE_EMAIL,
-				FORM_INPUT_TYPE_CHECKBOX, 
+				FORM_INPUT_TYPE_CHECKBOX,
 				FORM_INPUT_TYPE_RADIO,
 				FORM_INPUT_TYPE_SELECT,
 				FORM_INPUT_TYPE_MULTISELECT,
@@ -1762,7 +1734,7 @@ class _form {
 				FORM_INPUT_TYPE_RANGE,
 				FORM_INPUT_TYPE_NUMBER)) ||
 				($element['Type'] == FORM_INPUT_TYPE_VERIFICATION_CODE &&
-				(!defined('USE_RECAPTCHA') || !USE_RECAPTCHA))) 
+				(!defined('USE_RECAPTCHA') || !USE_RECAPTCHA)))
 			{
 				echo
 						"<" .
@@ -1799,10 +1771,10 @@ class _form {
 								" bold":
 								null) .
 							"'>";
-					
+
 				if (isset($element['AdditionalPreText']) && $element['AdditionalPreText'])
 					echo $element['AdditionalPreText'];
-					
+
 				if (in_array($element['Type'], array(
 					FORM_INPUT_TYPE_TEXT,
 					FORM_INPUT_TYPE_EMAIL,
@@ -1815,11 +1787,11 @@ class _form {
 					FORM_INPUT_TYPE_TEL,
 					FORM_INPUT_TYPE_URL,
 					FORM_INPUT_TYPE_RANGE,
-					FORM_INPUT_TYPE_NUMBER))) 
+					FORM_INPUT_TYPE_NUMBER)))
 				{
-					echo 
+					echo
 						"<input type='";
-					
+
 					if (JCORE_VERSION >= '0.6') {
 						if ($element['Type'] == FORM_INPUT_TYPE_EMAIL)
 							echo "email";
@@ -1845,21 +1817,21 @@ class _form {
 							echo "number";
 						else
 							echo "text";
-						
+
 					} else {
 						echo "text";
 					}
-					
+
 					echo
 							"' " .
 							"name='".$element['Name']."' " .
 							(isset($element['PlaceholderText']) &&
 							 $element['PlaceholderText']?
-							 	"placeholder='".htmlspecialchars($element['PlaceholderText'], ENT_QUOTES)."' ":
+							 	"placeholder='".htmlchars($element['PlaceholderText'], ENT_QUOTES)."' ":
 							 	null) .
 							(isset($element['TooltipText']) &&
 							 $element['TooltipText']?
-							 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
+							 	"title='".htmlchars($element['TooltipText'], ENT_QUOTES)."' ":
 							 	null) .
 							"id='entry".$element['EntryID']."' " .
 							"class='text-entry" .
@@ -1875,7 +1847,7 @@ class _form {
 									null).
 								"' " .
 							($element['Type'] != FORM_INPUT_TYPE_VERIFICATION_CODE?
-								"value='".htmlspecialchars($element['Value'], ENT_QUOTES)."' ":
+								"value='".htmlchars($element['Value'], ENT_QUOTES)."' ":
 								null) .
 							(isset($element['AutoFocus']) &&
 							 $element['AutoFocus']?
@@ -1884,24 +1856,24 @@ class _form {
 							$element['Attributes'] .
 							" /> ";
 				}
-				
+
 				if ($element['Type'] == FORM_INPUT_TYPE_PASSWORD) {
-					echo 
+					echo
 						"<input type='password' " .
 							"name='".$element['Name']."' " .
 							"id='entry".$element['EntryID']."' " .
 							"class='text-entry' " .
 							(isset($element['TooltipText']) &&
 							 $element['TooltipText']?
-							 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
+							 	"title='".htmlchars($element['TooltipText'], ENT_QUOTES)."' ":
 							 	null) .
 							($this->rememberPasswords?
-								"value='".htmlspecialchars($element['Value'], ENT_QUOTES)."' ":
+								"value='".htmlchars($element['Value'], ENT_QUOTES)."' ":
 								null) .
 							$element['Attributes'] .
 							" /> ";
 				}
-				
+
 				if ($element['Type'] == FORM_INPUT_TYPE_CHECKBOX) {
 					if (isset($element['Values']) && is_array($element['Values'])) {
 						foreach($element['Values'] as $key => $value) {
@@ -1911,18 +1883,18 @@ class _form {
 									"name='".$element['Name']."[]' " .
 									"id='entry".$element['EntryID'].$key."' " .
 									"class='checkbox-entry' " .
-									"value='".htmlspecialchars($value['Value'], ENT_QUOTES)."' " .
+									"value='".htmlchars($value['Value'], ENT_QUOTES)."' " .
 									(isset($element['TooltipText']) &&
 									 $element['TooltipText']?
-									 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
+									 	"title='".htmlchars($element['TooltipText'], ENT_QUOTES)."' ":
 									 	null) .
 									$element['Attributes'] .
-									(is_array($element['Value']) && 
+									(is_array($element['Value']) &&
 									 in_array($value['Value'], $element['Value'])?
 										"checked='checked' ":
 										null) .
-									(isset($element['DisabledValues']) && 
-									 is_array($element['DisabledValues']) && 
+									(isset($element['DisabledValues']) &&
+									 is_array($element['DisabledValues']) &&
 									 in_array($value['Value'], $element['DisabledValues'])?
 										"disabled='disabled' ":
 										null) .
@@ -1932,17 +1904,17 @@ class _form {
 											$value['Value']).
 								"</label> ";
 						}
-						
+
 					} else {
-						echo 
+						echo
 							"<input type='checkbox' " .
 								"name='".$element['Name']."' " .
 								"id='entry".$element['EntryID']."' " .
 								"class='checkbox-entry' " .
-								"value='".htmlspecialchars($element['OriginalValue'], ENT_QUOTES)."' " .
+								"value='".htmlchars($element['OriginalValue'], ENT_QUOTES)."' " .
 								(isset($element['TooltipText']) &&
 								 $element['TooltipText']?
-								 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
+								 	"title='".htmlchars($element['TooltipText'], ENT_QUOTES)."' ":
 								 	null) .
 								$element['Attributes'] .
 								($element['OriginalValue'] == $element['Value'] ||
@@ -1952,7 +1924,7 @@ class _form {
 								" /> ";
 					}
 				}
-						
+
 				if ($element['Type'] == FORM_INPUT_TYPE_RADIO) {
 					if (isset($element['Values']) && is_array($element['Values'])) {
 						foreach($element['Values'] as $key => $value) {
@@ -1962,17 +1934,17 @@ class _form {
 									"name='".$element['Name']."' " .
 									"id='entry".$element['EntryID'].$key."' " .
 									"class='radio-entry' " .
-									"value='".htmlspecialchars($value['Value'], ENT_QUOTES)."' " .
+									"value='".htmlchars($value['Value'], ENT_QUOTES)."' " .
 									(isset($element['TooltipText']) &&
 									 $element['TooltipText']?
-									 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
+									 	"title='".htmlchars($element['TooltipText'], ENT_QUOTES)."' ":
 									 	null) .
 									$element['Attributes'] .
 									($value['Value'] == $element['Value']?
 										"checked='checked' ":
 										null) .
 									(isset($element['DisabledValues']) &&
-									 is_array($element['DisabledValues']) && 
+									 is_array($element['DisabledValues']) &&
 									 in_array($value['Value'], $element['DisabledValues'])?
 										"disabled='disabled' ":
 										null) .
@@ -1982,17 +1954,17 @@ class _form {
 											$value['Value']).
 								"</label> ";
 						}
-						
+
 					} else {
-						echo 
+						echo
 							"<input type='radio' " .
 								"name='".$element['Name']."' " .
 								"id='entry".$element['EntryID']."' " .
 								"class='radio-entry' " .
-								"value='".htmlspecialchars($element['OriginalValue'], ENT_QUOTES)."' " .
+								"value='".htmlchars($element['OriginalValue'], ENT_QUOTES)."' " .
 								(isset($element['TooltipText']) &&
 								 $element['TooltipText']?
-								 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
+								 	"title='".htmlchars($element['TooltipText'], ENT_QUOTES)."' ":
 								 	null) .
 								$element['Attributes'] .
 								($element['OriginalValue'] == $element['Value'] ||
@@ -2002,56 +1974,57 @@ class _form {
 								" /> ";
 					}
 				}
-						
+
 				if (in_array($element['Type'], array(
-					FORM_INPUT_TYPE_SELECT, FORM_INPUT_TYPE_RECIPIENT_SELECT))) 
+					FORM_INPUT_TYPE_SELECT, FORM_INPUT_TYPE_RECIPIENT_SELECT)))
 				{
-					echo 
+					echo
 						"<select " .
 							"name='".$element['Name']."' " .
 							"id='entry".$element['EntryID']."' " .
 							"class='select-entry' " .
 							(isset($element['TooltipText']) &&
 							 $element['TooltipText']?
-							 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
+							 	"title='".htmlchars($element['TooltipText'], ENT_QUOTES)."' ":
 							 	null) .
 							$element['Attributes'] .
 							">";
-					
+
 					if (is_array($element['Values'])) {
 						$optgroup = false;
-						
+
 						foreach($element['Values'] as $key => $value) {
-							if (isset($element['GroupValues']) && 
-								is_array($element['GroupValues']) && 
+							if (isset($element['GroupValues']) &&
+								is_array($element['GroupValues']) &&
 								in_array($value['Value'], $element['GroupValues']))
 							{
 								if ($optgroup)
 									echo "</optgroup>";
-								
+
 								echo "<optgroup label='" .
-									htmlspecialchars(
+									htmlchars(
 										(isset($value['ValueText']) && $value['ValueText']?
 												$value['ValueText']:
 												$value['Value']), ENT_QUOTES)."'>";
-								
+
 								$optgroup = true;
 								continue;
 							}
-							
+
 							echo
 								"<option value='".
 									($element['Type'] == FORM_INPUT_TYPE_RECIPIENT_SELECT?
 										(int)($key+1):
-										htmlspecialchars($value['Value'], ENT_QUOTES)) .
+										htmlchars($value['Value'], ENT_QUOTES)) .
 									"' " .
-									(isset($element['DisabledValues']) && 
-									 is_array($element['DisabledValues']) && 
+									(isset($element['DisabledValues']) &&
+									 is_array($element['DisabledValues']) &&
 									 in_array($value['Value'], $element['DisabledValues'])?
 										"disabled='disabled' ":
 										($value['Value'] == $element['Value'] ||
 										 ($element['Type'] == FORM_INPUT_TYPE_RECIPIENT_SELECT &&
-										 (int)($key+1) == $element['Value'])?
+										 ((int)($key+1) == $element['Value'] ||
+										  $value['ValueText'] == $element['Value']))?
 											"selected='selected' ":
 											null)) .
 									">" .
@@ -2060,56 +2033,56 @@ class _form {
 											$value['Value']).
 								"</option>";
 						}
-						
+
 						if ($optgroup)
 							echo "</optgroup>";
 					}
-					
+
 					echo
 						"</select>";
 				}
-					
+
 				if ($element['Type'] == FORM_INPUT_TYPE_MULTISELECT) {
-					echo 
+					echo
 						"<select multiple='multiple' " .
 							"name='".$element['Name']."[]' " .
 							"id='entry".$element['EntryID']."' " .
 							"class='select-entry' " .
 							(isset($element['TooltipText']) &&
 							 $element['TooltipText']?
-							 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
+							 	"title='".htmlchars($element['TooltipText'], ENT_QUOTES)."' ":
 							 	null) .
 							$element['Attributes'] .
 							">";
-					
+
 					if (is_array($element['Values'])) {
 						$optgroup = false;
-						
+
 						foreach($element['Values'] as $value) {
-							if (isset($element['GroupValues']) && 
-								is_array($element['GroupValues']) && 
+							if (isset($element['GroupValues']) &&
+								is_array($element['GroupValues']) &&
 								in_array($value['Value'], $element['GroupValues']))
 							{
 								if ($optgroup)
 									echo "</optgroup>";
-								
+
 								echo "<optgroup label='" .
-									htmlspecialchars(
+									htmlchars(
 										(isset($value['ValueText']) && $value['ValueText']?
 												$value['ValueText']:
 												$value['Value']), ENT_QUOTES)."'>";
-								
+
 								$optgroup = true;
 								continue;
 							}
-							
+
 							echo
-								"<option value='".htmlspecialchars($value['Value'], ENT_QUOTES)."' " .
-									(isset($element['DisabledValues']) && 
-									 is_array($element['DisabledValues']) && 
+								"<option value='".htmlchars($value['Value'], ENT_QUOTES)."' " .
+									(isset($element['DisabledValues']) &&
+									 is_array($element['DisabledValues']) &&
 									 in_array($value['Value'], $element['DisabledValues'])?
 										"disabled='disabled' ":
-										(is_array($element['Value']) && 
+										(is_array($element['Value']) &&
 										 in_array($value['Value'], $element['Value'])?
 											"selected='selected'":
 											null)) .
@@ -2119,17 +2092,17 @@ class _form {
 											$value['Value']).
 								"</option>";
 						}
-						
+
 						if ($optgroup)
 							echo "</optgroup>";
 					}
-					
+
 					echo
 						"</select>";
 				}
-				
+
 				if ($element['Type'] == FORM_INPUT_TYPE_TEXTAREA) {
-					echo 
+					echo
 						"<textarea " .
 							(!stristr($element['Attributes'], 'rows=')?
 								"rows='5' ":
@@ -2142,16 +2115,16 @@ class _form {
 							"class='text-entry' " .
 							(isset($element['TooltipText']) &&
 							 $element['TooltipText']?
-							 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
+							 	"title='".htmlchars($element['TooltipText'], ENT_QUOTES)."' ":
 							 	null) .
 							$element['Attributes'] .
 							">" .
-							htmlspecialchars($element['Value']) .
+							htmlchars($element['Value']) .
 						"</textarea>";
 				}
-				
+
 				if ($element['Type'] == FORM_INPUT_TYPE_FILE) {
-					echo 
+					echo
 						($element['Value']?
 							"<b>".$element['Value']."</b><br />":
 							null).
@@ -2159,14 +2132,14 @@ class _form {
 							"name='".$element['Name']."' " .
 							"id='entry".$element['EntryID']."' " .
 							"class='file-entry' " .
-							"value='".htmlspecialchars($element['Value'], ENT_QUOTES)."' " .
+							"value='".htmlchars($element['Value'], ENT_QUOTES)."' " .
 							(isset($element['TooltipText']) &&
 							 $element['TooltipText']?
-							 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
+							 	"title='".htmlchars($element['TooltipText'], ENT_QUOTES)."' ":
 							 	null) .
 							$element['Attributes'] . " /> ";
 				}
-				
+
 				if ($element['Type'] == FORM_INPUT_TYPE_REVIEW) {
 					if ($element['ValueType'] == FORM_VALUE_TYPE_ARRAY)
 						echo nl2br(implode('; ', (array)$element['Value']));
@@ -2175,14 +2148,14 @@ class _form {
 					else
 						echo nl2br($element['Value']);
 				}
-					
+
 				if (isset($element['AdditionalText']) && $element['AdditionalText'])
 					echo $element['AdditionalText'];
-				
+
 				echo
 						"</div>";
 			}
-					
+
 			if ($element['Type'] == FORM_INPUT_TYPE_EDITOR) {
 				echo
 						"<textarea " .
@@ -2198,14 +2171,14 @@ class _form {
 							"class='text-entry ck-editor' " .
 							$element['Attributes'] .
 							">" .
-							htmlspecialchars($element['Value']) .
+							htmlchars($element['Value']) .
 						"</textarea>";
-				
+
 				ckEditor::display("entry".$element['EntryID']);
 			}
-			
+
 			if ($element['Type'] == FORM_INPUT_TYPE_CODE_EDITOR) {
-					echo 
+					echo
 						"<textarea " .
 							"style='width: 98%;'  spellcheck='false' " .
 							(!stristr($element['Attributes'], 'rows=')?
@@ -2219,195 +2192,195 @@ class _form {
 							"class='text-entry code-editor' " .
 							(isset($element['TooltipText']) &&
 							 $element['TooltipText']?
-							 	"title='".htmlspecialchars($element['TooltipText'], ENT_QUOTES)."' ":
+							 	"title='".htmlchars($element['TooltipText'], ENT_QUOTES)."' ":
 							 	null) .
 							$element['Attributes'] .
 							">" .
-							htmlspecialchars($element['Value']) .
+							htmlchars($element['Value']) .
 						"</textarea>";
 			}
-			
+
 			if ($element['Type'] == FORM_STATIC_TEXT ||
-				(defined('USE_RECAPTCHA') && USE_RECAPTCHA && 
-				 $element['Type'] == FORM_INPUT_TYPE_VERIFICATION_CODE)) 
+				(defined('USE_RECAPTCHA') && USE_RECAPTCHA &&
+				 $element['Type'] == FORM_INPUT_TYPE_VERIFICATION_CODE))
 			{
 				echo $element['Title'];
 			}
-						
+
 			echo
 				"</div>";
 		}
-		
+
 		if (!isset($this->footer) || $this->footer)
 			echo
 				"<div class='form-footer comment'>";
-				
+
 		$this->displayFooter($requiredelements);
-		
+
 		if (!isset($this->footer))
 			$this->displayDefaultFooter($requiredelements);
-		
+
 		if (!isset($this->footer) || $this->footer)
 			echo
 				"</div>";
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::displayElements', $this, $elements);
 	}
-	
+
 	function displayToken() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::displayToken', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::displayToken', $this, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		echo
 			"<input type='hidden' name='_FormSecurityToken' value='".security::genToken()."' />";
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::displayToken', $this);
 	}
-	
+
 	function displayTitle() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::displayTitle', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::displayTitle', $this, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		echo $this->title;
-		
+
 		if (!$this->ignorePageBreaks && count((array)$this->pageBreakElements))
 			echo " ".sprintf(__("(Step %s of %s)"),
 				$this->selectedPage, count($this->pageBreakElements)+1);
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::displayTitle', $this);
 	}
-	
+
 	function displayContent() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::displayContent', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::displayContent', $this, $handled);
-			
+
 			return $handled;
 		}
-		
-		if ($this->displayFormElement)		
+
+		if ($this->displayFormElement)
 			echo
 				"<form action='".$this->action."' method='".$this->method."' " .
 					"enctype='multipart/form-data' ".$this->attributes.">";
-		
+
 		$this->displayToken();
 		$this->displayElements($this->elements);
-		
-		if ($this->displayFormElement)		
+
+		if ($this->displayFormElement)
 			echo
 				"</form>";
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::displayContent', $this);
 	}
-	
+
 	function displayFooter() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::displayFooter', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::displayFooter', $this, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		echo
 			$this->footer;
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::displayFooter', $this);
 	}
-	
+
 	function displayDefaultFooter($requiredelements = 0) {
 		if (!$requiredelements)
 			return;
-		
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::displayDefaultFooter', $this, $requiredelements);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::displayDefaultFooter', $this, $requiredelements, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		if (JCORE_VERSION >= '0.6') {
 			echo
 				"<p>";
-			
+
 			if ($requiredelements > 1)
 				echo
 					__("Fields marked with an asterisk (*) are required.");
 			else
 				echo
 					__("Field marked with an asterisk (*) is required.");
-			
+
 			echo
 				"</p>";
-			
+
 		} else {
 			echo
 				"<br />" .
 				__("Field(s) marked with an asterisk (*) is/are required.");
 		}
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::displayDefaultFooter', $this, $requiredelements);
 	}
-	
+
 	function display($formdesign = true) {
 		if (!is_array($this->elements))
 			return false;
-		
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'form::display', $this, $formdesign);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'form::display', $this, $formdesign, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		if (!$formdesign)
 			$this->displayDesign = false;
-		
-		echo 
+
+		echo
 			"<div id='".$this->id."form'" .
 				" class='" .
 				(JCORE_VERSION >= '0.6'?
 					"form ":
 					null) .
 				"rounded-corners'>";
-			
+
 		if ($this->displayDesign) {
 			echo
 				"<div class='form-title rounded-corners-top'>";
-			
+
 			$this->displayTitle();
-			
+
 			echo
 				"</div>" .
 				"<div class='" .
@@ -2416,16 +2389,16 @@ class _form {
 						"form") .
 					" rounded-corners-bottom'>";
 		}
-			
+
 		$this->displayContent();
-		
+
 		if ($this->displayDesign)
 			echo
 				"</div>"; //#form
-		
+
 		echo
 			"</div>"; //#formid
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'form::display', $this, $formdesign);
 	}

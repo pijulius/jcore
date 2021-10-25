@@ -2,15 +2,15 @@
 
 /**
  * tar Class
- * 
+ *
  * This class reads and writes Tape-Archive (TAR) Files and Gzip
  * compressed TAR files, which are mainly used on UNIX systems.
  * This class works on both windows AND unix systems, and does
  * NOT rely on external applications!! Woohoo!
- * 
+ *
  * @author    Josh Barger <joshb@npt.com>
  * @copyright    Copyright (C) 2002  Josh Barger
- * 
+ *
  * @package     kernel
  * @subpackage  core
  */
@@ -23,7 +23,7 @@ class _tar
     var $isGzipped;
     var $tar_file;
     /**#@-*/
- 
+
     /**#@+
      * Processed Archive Information
      */
@@ -32,8 +32,8 @@ class _tar
     var $numFiles;
     var $numDirectories;
     /**#@-*/
- 
- 
+
+
     /**
      * Class Constructor -- Does nothing...
      */
@@ -41,13 +41,13 @@ class _tar
     {
         return true;
     }
- 
+
     /**
      * Computes the unsigned Checksum of a file's header
      * to try to ensure valid file
-     * 
-     * @param    string  $bytestring 
-     * 
+     *
+     * @param    string  $bytestring
+     *
      * @access    private
      */
     function __computeUnsignedChecksum($bytestring)
@@ -58,18 +58,18 @@ class _tar
         for($i=0; $i<8; $i++)
             $unsigned_chksum -= ord($bytestring[148 + $i]);
         $unsigned_chksum += ord(" ") * 8;
- 
+
         return $unsigned_chksum;
     }
- 
- 
+
+
     /**
      * Converts a NULL padded string to a non-NULL padded string
-     * 
-     * @param   string  $string 
-     * 
-     * @return  string 
-     * 
+     *
+     * @param   string  $string
+     *
+     * @return  string
+     *
      * @access    private
      ***/
     function __parseNullPaddedString($string)
@@ -77,12 +77,12 @@ class _tar
         $position = strpos($string,chr(0));
         return substr($string,0,$position);
     }
- 
+
     /**
      * This function parses the current TAR file
-     * 
+     *
      * @return  bool    always TRUE
-     * 
+     *
      * @access    private
      ***/
     function __parseTar()
@@ -95,41 +95,41 @@ class _tar
             // If we read a block of 512 nulls, we are at the end of the archive
             if(substr($this->tar_file,$main_offset,512) == str_repeat(chr(0),512))
                 break;
- 
+
             // Parse file name
             $file_name        = $this->__parseNullPaddedString(substr($this->tar_file,$main_offset,100));
- 
+
             // Parse the file mode
             $file_mode        = substr($this->tar_file,$main_offset + 100,8);
- 
+
             // Parse the file user ID
             $file_uid        = octdec(substr($this->tar_file,$main_offset + 108,8));
- 
+
             // Parse the file group ID
             $file_gid        = octdec(substr($this->tar_file,$main_offset + 116,8));
- 
+
             // Parse the file size
             $file_size        = octdec(substr($this->tar_file,$main_offset + 124,12));
- 
+
             // Parse the file update time - unix timestamp format
             $file_time        = octdec(substr($this->tar_file,$main_offset + 136,12));
- 
+
             // Parse Checksum
             $file_chksum        = octdec(substr($this->tar_file,$main_offset + 148,6));
- 
+
             // Parse user name
             $file_uname        = $this->__parseNullPaddedString(substr($this->tar_file,$main_offset + 265,32));
- 
+
             // Parse Group name
             $file_gname        = $this->__parseNullPaddedString(substr($this->tar_file,$main_offset + 297,32));
- 
+
             // Make sure our file is valid
             if($this->__computeUnsignedChecksum(substr($this->tar_file,$main_offset,512)) != $file_chksum)
                 return false;
- 
+
             // Parse File Contents
             $file_contents        = substr($this->tar_file,$main_offset + 512,$file_size);
- 
+
             /*    ### Unused Header Information ###
                 $activeFile["typeflag"]        = substr($this->tar_file,$main_offset + 156,1);
                 $activeFile["linkname"]        = substr($this->tar_file,$main_offset + 157,100);
@@ -140,16 +140,16 @@ class _tar
                 $activeFile["prefix"]        = substr($this->tar_file,$main_offset + 345,155);
                 $activeFile["endheader"]    = substr($this->tar_file,$main_offset + 500,12);
             */
-            
+
             $file_type = substr($this->tar_file,$main_offset + 156,1);
-            
+
             if ($file_type == 5) {
                 // Increment number of directories
                 $this->numDirectories++;
- 
+
                 // Create a new directory in our array
                 $activeDir = &$this->directories[];
- 
+
                 // Assign values
                 $activeDir["name"]        = $file_name;
                 $activeDir["mode"]        = $file_mode;
@@ -159,14 +159,14 @@ class _tar
                 $activeDir["user_name"]        = $file_uname;
                 $activeDir["group_name"]    = $file_gname;
                 $activeDir["checksum"]        = $file_chksum;
-            	
+
             } else {
                 // Increment number of files
                 $this->numFiles++;
- 
+
                 // Create us a new file in our array
                 $activeFile = &$this->files[];
- 
+
                 // Asign Values
                 $activeFile["name"]        = $file_name;
                 $activeFile["mode"]        = $file_mode;
@@ -179,20 +179,20 @@ class _tar
                 $activeFile["checksum"]        = $file_chksum;
                 $activeFile["file"]        = $file_contents;
             }
- 
+
             // Move our offset the number of blocks we have processed
             $main_offset += 512 + (ceil($file_size / 512) * 512);
         }
- 
+
         return true;
     }
- 
+
     /**
      * Read a non gzipped tar file in for processing.
-     * 
+     *
      * @param   string  $filename   full filename
      * @return  bool    always TRUE
-     * 
+     *
      * @access    private
      ***/
     function __readTar($filename='')
@@ -200,47 +200,47 @@ class _tar
         // Set the filename to load
         if(!$filename)
             $filename = $this->filename;
- 
+
         // Read in the TAR file
         $fp = fopen($filename,"rb");
         $this->tar_file = fread($fp,filesize($filename));
         fclose($fp);
- 		
+
  		if (strlen($this->tar_file) < 3)
  			return false;
- 		
+
         if($this->tar_file[0] == chr(31) && $this->tar_file[1] == chr(139) && $this->tar_file[2] == chr(8)) {
             if(!function_exists("gzinflate"))
                 return false;
- 
+
             $this->isGzipped = true;
- 
+
             $this->tar_file = gzinflate(substr($this->tar_file,10,-4));
         }
- 
+
         // Parse the TAR file
         $this->__parseTar();
- 
+
         return true;
     }
- 
+
     /**
      * Generates a TAR file from the processed data
-     * 
+     *
      * @return  bool    always TRUE
-     * 
+     *
      * @access    private
      ***/
     function __generateTAR()
     {
         // Clear any data currently in $this->tar_file
         unset($this->tar_file);
- 
+
         // Generate Records for each directory, if we have directories
         if($this->numDirectories > 0) {
             foreach($this->directories as $key => $information) {
                 $header = null;
- 
+
                 // Generate tar header for this directory
                 // Filename, Permissions, UID, GID, size, Time, checksum, typeflag, linkname, magic, version, user name, group name, devmajor, devminor, prefix, end
                 $header .= str_pad($information["name"],100,chr(0));
@@ -260,7 +260,7 @@ class _tar
                 $header .= str_repeat(chr(0),8);
                 $header .= str_repeat(chr(0),155);
                 $header .= str_repeat(chr(0),12);
- 
+
                 // Compute header checksum
                 $checksum = str_pad(decoct($this->__computeUnsignedChecksum($header)),6,"0",STR_PAD_LEFT);
                 for($i=0; $i<6; $i++) {
@@ -268,17 +268,17 @@ class _tar
                 }
                 $header[154] = chr(0);
                 $header[155] = chr(32);
- 
+
                 // Add new tar formatted data to tar file contents
                 $this->tar_file .= $header;
             }
         }
- 
+
         // Generate Records for each file, if we have files (We should...)
         if($this->numFiles > 0) {
             foreach($this->files as $key => $information) {
                 $header = null;
- 
+
                 // Generate the TAR header for this file
                 // Filename, Permissions, UID, GID, size, Time, checksum, typeflag, linkname, magic, version, user name, group name, devmajor, devminor, prefix, end
                 $header = str_pad($information["name"],100,chr(0));
@@ -298,7 +298,7 @@ class _tar
                 $header .= str_repeat(chr(0),8);
                 $header .= str_repeat(chr(0),155);
                 $header .= str_repeat(chr(0),12);
- 
+
                 // Compute header checksum
                 $checksum = str_pad(decoct($this->__computeUnsignedChecksum($header)),6,"0",STR_PAD_LEFT);
                 for($i=0; $i<6; $i++) {
@@ -306,27 +306,27 @@ class _tar
                 }
                 $header[154] = chr(0);
                 $header[155] = chr(32);
- 
+
                 // Pad file contents to byte count divisible by 512
                 $file_contents = str_pad($information["file"],(ceil($information["size"] / 512) * 512),chr(0));
- 
+
                 // Add new tar formatted data to tar file contents
                 $this->tar_file .= $header . $file_contents;
             }
         }
- 
+
         // Add 512 bytes of NULLs to designate EOF
         $this->tar_file .= str_repeat(chr(0),512);
- 
+
         return true;
     }
- 
- 
+
+
     /**
      * Open a TAR file
-     * 
-     * @param   string  $filename 
-     * @return  bool 
+     *
+     * @param   string  $filename
+     * @return  bool
      ***/
     function openTAR($filename)
     {
@@ -338,40 +338,40 @@ class _tar
         unset($this->directories);
         unset($this->numFiles);
         unset($this->numDirectories);
- 
+
         // If the tar file doesn't exist...
         if(!file_exists($filename))
             return false;
- 
+
         $this->filename = $filename;
- 
+
         // Parse this file
         $this->__readTar();
- 
+
         return true;
     }
- 
+
     /**
      * Appends a tar file to the end of the currently opened tar file.
-     * 
-     * @param   string  $filename 
-     * @return  bool 
+     *
+     * @param   string  $filename
+     * @return  bool
      ***/
     function appendTar($filename)
     {
         // If the tar file doesn't exist...
         if(!file_exists($filename))
             return false;
- 
+
         $this->__readTar($filename);
- 
+
         return true;
     }
- 
+
     /**
      * Retrieves information about a file in the current tar archive
-     * 
-     * @param   string  $filename 
+     *
+     * @param   string  $filename
      * @return  string  FALSE on fail
      ***/
     function getFile($filename)
@@ -382,14 +382,14 @@ class _tar
                     return $information;
             }
         }
- 
+
         return false;
     }
- 
+
     /**
      * Retrieves information about a directory in the current tar archive
-     * 
-     * @param   string  $dirname 
+     *
+     * @param   string  $dirname
      * @return  string  FALSE on fail
      ***/
     function getDirectory($dirname)
@@ -400,15 +400,15 @@ class _tar
                     return $information;
             }
         }
- 
+
         return false;
     }
- 
+
     /**
      * Check if this tar archive contains a specific file
-     * 
-     * @param   string  $filename 
-     * @return  bool 
+     *
+     * @param   string  $filename
+     * @return  bool
      ***/
     function containsFile($filename)
     {
@@ -420,12 +420,12 @@ class _tar
         }
         return false;
     }
- 
+
     /**
      * Check if this tar archive contains a specific directory
-     * 
-     * @param   string  $dirname 
-     * @return  bool 
+     *
+     * @param   string  $dirname
+     * @return  bool
      ***/
     function containsDirectory($dirname)
     {
@@ -438,22 +438,22 @@ class _tar
         }
         return false;
     }
- 
+
     /**
      * Add a directory to this tar archive
-     * 
-     * @param   string  $dirname 
-     * @return  bool 
+     *
+     * @param   string  $dirname
+     * @return  bool
      ***/
     function addDirectory($dirname)
     {
         if ( !file_exists($dirname) ) {
             return false;
         }
- 
+
         // Get directory information
         $file_information = stat($dirname);
- 
+
         // Add directory to processed data
         $this->numDirectories++;
         $activeDir        = &$this->directories[];
@@ -463,16 +463,16 @@ class _tar
         $activeDir["user_id"]    = $file_information["uid"];
         $activeDir["group_id"]    = $file_information["gid"];
         $activeDir["checksum"]    = null;
- 
+
         return true;
     }
- 
+
     /**
      * Add a file to the tar archive
-     * 
-     * @param   string  $filename 
+     *
+     * @param   string  $filename
      * @param   boolean $binary     Binary file?
-     * @return  bool 
+     * @return  bool
      ***/
     function addFile($filename, $binary = false)
     {
@@ -480,15 +480,15 @@ class _tar
         if ( !file_exists($filename) ) {
             return false;
         }
- 
+
         // Make sure there are no other files in the archive that have this same filename
         if ( $this->containsFile($filename) ) {
             return false;
         }
- 
+
         // Get file information
         $file_information = stat($filename);
- 
+
         // Read in the file's contents
         if (!$binary) {
             $fp = fopen($filename, "r");
@@ -497,7 +497,7 @@ class _tar
         }
         $file_contents = fread($fp,filesize($filename));
         fclose($fp);
- 
+
         // Add file to processed data
         $this->numFiles++;
         $activeFile            = &$this->files[];
@@ -511,24 +511,24 @@ class _tar
         $activeFile["user_name"]    = "";
         $activeFile["group_name"]    = "";
         $activeFile["file"]        = trim($file_contents);
- 
+
         return true;
     }
- 
+
     function pushDirectory($dirname, $options = null)
     {
     	if (!isset($options['mode']))
         	$options["mode"] = 0755;
-        
+
     	if (!isset($options['mtime']))
         	$options["mtime"] = time();
-        
+
     	if (!isset($options['uid']))
         	$options["uid"] = 0;
-        
+
     	if (!isset($options['gid']))
         	$options["gid"] = 0;
-        
+
         // Add directory to processed data
         $this->numDirectories++;
         $activeDir        = &$this->directories[];
@@ -538,24 +538,24 @@ class _tar
         $activeDir["user_id"]    = $options["uid"];
         $activeDir["group_id"]    = $options["gid"];
         $activeDir["checksum"]    = null;
- 
+
         return true;
     }
- 
+
     function pushFile($filename, $filecontents, $options = null)
     {
     	if (!isset($options['mode']))
         	$options["mode"] = 0644;
-        
+
     	if (!isset($options['mtime']))
         	$options["mtime"] = time();
-        
+
     	if (!isset($options['uid']))
         	$options["uid"] = 0;
-        
+
     	if (!isset($options['gid']))
         	$options["gid"] = 0;
-        
+
         // Add file to processed data
         $this->numFiles++;
         $activeFile            = &$this->files[];
@@ -569,15 +569,15 @@ class _tar
         $activeFile["user_name"]    = "";
         $activeFile["group_name"]    = "";
         $activeFile["file"]        = $filecontents;
- 
+
         return true;
     }
- 
+
     /**
      * Remove a file from the tar archive
-     * 
-     * @param   string  $filename 
-     * @return  bool 
+     *
+     * @param   string  $filename
+     * @return  bool
      ***/
     function removeFile($filename)
     {
@@ -592,12 +592,12 @@ class _tar
         }
         return false;
     }
- 
+
     /**
      * Remove a directory from the tar archive
-     * 
-     * @param   string  $dirname 
-     * @return  bool 
+     *
+     * @param   string  $dirname
+     * @return  bool
      ***/
     function removeDirectory($dirname)
     {
@@ -612,90 +612,90 @@ class _tar
         }
         return false;
     }
- 
+
     /**
      * Write the currently loaded tar archive to disk
-     * 
-     * @return  bool 
+     *
+     * @return  bool
      ***/
     function saveTar()
     {
         if ( !$this->filename ) {
             return false;
         }
- 
+
         // Write tar to current file using specified gzip compression
         $this->toTar($this->filename,$this->isGzipped);
- 
+
         return true;
     }
- 
+
     /**
      * Saves tar archive to a different file than the current file
-     * 
-     * @param   string  $filename 
+     *
+     * @param   string  $filename
      * @param   bool    $useGzip    Use GZ compression?
-     * @return  bool 
+     * @return  bool
      ***/
     function toTar($filename,$useGzip)
     {
         if ( !$filename ) {
             return false;
         }
- 
+
         // Encode processed files into TAR file format
         $this->__generateTar();
- 
+
         // GZ Compress the data if we need to
         if ( $useGzip ) {
             // Make sure we have gzip support
             if ( !function_exists("gzencode") ) {
                 return false;
             }
- 
+
             $file = gzencode($this->tar_file);
         } else {
             $file = $this->tar_file;
         }
- 
+
         // Write the TAR file
         $fp = @fopen($filename,"wb");
-        
+
         if (!$fp)
         	return false;
-        
+
         fwrite($fp,$file);
         fclose($fp);
- 
+
         return true;
     }
- 
+
     /**
      * Sends tar archive to stdout
-     * 
-     * @param   string  $filename 
+     *
+     * @param   string  $filename
      * @param   bool    $useGzip    Use GZ compression?
-     * @return  string 
+     * @return  string
      ***/
     function toTarOutput($useGzip)
     {
         // Encode processed files into TAR file format
         $this->__generateTar();
- 
+
         // GZ Compress the data if we need to
         if ( $useGzip ) {
             // Make sure we have gzip support
             if ( !function_exists("gzencode") ) {
                 return false;
             }
- 
+
             $file = gzencode($this->tar_file);
         } else {
             $file = $this->tar_file;
         }
- 
+
         return $file;
     }
 }
- 
+
 ?>

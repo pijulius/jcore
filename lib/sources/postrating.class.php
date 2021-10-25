@@ -19,51 +19,51 @@ class _postRating extends starRating {
 		'admin/content/menuitems/posts/postrating',
 		'admin/content/pages/posts/postrating',
 		'admin/content/postsatglance/postrating');
-	
+
 	function __construct() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postRating::postRating', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'postRating::postRating', $this, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		parent::__construct();
-		
+
 		$this->selectedOwner = __('Post');
 		$this->uriRequest = "posts/".$this->uriRequest;
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'postRating::postRating', $this);
 	}
-	
+
 	function ajaxRequest() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'postRating::ajaxRequest', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'postRating::ajaxRequest', $this, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		if (!posts::checkAccess($this->selectedOwnerID)) {
 			$page = new pages();
 			$page->displayLogin();
 			unset($page);
 			$result = true;
-			
+
 		} else {
 			$result = parent::ajaxRequest();
 		}
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'postRating::ajaxRequest', $this, $result);
-		
+
 		return $result;
 	}
 }

@@ -25,8 +25,8 @@ if ($sitehost && $sitehost != $currenthost &&
 	$https = false;
 	if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && $_SERVER['HTTPS'] != 'off')
 		$https = true;
-	
-	$redirecturl = 
+
+	$redirecturl =
 		'http'.($https?'s':null) .
 		'://' .
 		(isset($_SERVER['PHP_AUTH_USER']) && $_SERVER['PHP_AUTH_USER']?
@@ -45,11 +45,40 @@ if ($sitehost && $sitehost != $currenthost &&
 			':'.$_SERVER['SERVER_PORT']:
 			null) .
 		$_SERVER['REQUEST_URI'];
-	
+
 	header('HTTP/1.1 301 Moved Permanently');
 	header('Location: '.$redirecturl);
-	
+
 	exit();
+}
+
+if (!function_exists('ereg')) {
+	function ereg($pattern, $string) {
+		return preg_match('/'.$pattern.'/', $string);
+	}
+}
+
+if (!function_exists('eregi')) {
+	function eregi($pattern, $string) {
+		return preg_match('/'.$pattern.'/i', $string);
+	}
+}
+
+if (!function_exists('split')) {
+	function split($pattern, $string) {
+		return preg_split('/'.$pattern.'/', $string);
+	}
+}
+
+if (!function_exists('spliti')) {
+	function spliti($pattern, $string) {
+		return preg_split('/'.$pattern.'/i', $string);
+	}
+}
+
+// Dirty fix for websites with ISO-8859-2 charsets
+function htmlchars($string, $flags = null) {
+	return @htmlspecialchars($string, $flags, (strtoupper(PAGE_CHARSET) != 'ISO-8859-2'?PAGE_CHARSET:'ISO-8859-1'));
 }
 
 // If magic quotes are enabled, strip slashes from all user data
@@ -70,12 +99,12 @@ include_once('lib/api.class.php');
 
 if (((defined('MAINTENANCE_SUSPEND_WEBSITE') && MAINTENANCE_SUSPEND_WEBSITE) ||
 	(defined('MAINTENANCE_WEBSITE_SUSPENDED') && MAINTENANCE_WEBSITE_SUSPENDED)) &&
-	!preg_match('/admin\//', $_SERVER['PHP_SELF']) && 
+	!preg_match('/admin\//', $_SERVER['PHP_SELF']) &&
 	(!isset($_GET['ajax']) || !$_GET['ajax'] || !isset($_GET['request']) || !$_GET['request']))
-{ 
+{
 	include_once('lib/url.class.php');
 	include_once('lib/users.class.php');
-	
+
 	if (!users::fastCheck('Admin'))
 		exit(MAINTENANCE_SUSPEND_TEXT);
 }
@@ -118,7 +147,7 @@ pages::populate();
 posts::populate();
 
 // We look for requests (including ajax requests) and if the request
-// isn't handled (for e.g. javascript disabled) then we forward the 
+// isn't handled (for e.g. javascript disabled) then we forward the
 // variables to the rest of the code, otherwise we exit here if ajax
 $requests =  new requests();
 $requests->display();

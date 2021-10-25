@@ -1,16 +1,16 @@
 <?php
 
 /***************************************************************************
- * 
+ *
  *  Name: Shopping Orders Module
  *  URI: http://jcore.net
  *  Description: Hande new/processed orders and display order status to the clients. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
  *  Version: 1.0
  *  Tags: shopping orders module, gpl, lgpl, mpl
- * 
+ *
  ****************************************************************************/
- 
+
 include_once('lib/json.class.php');
 include_once('lib/modules/shoppingcart.class.php');
 include_once('lib/modules/shopping.class.php');
@@ -69,41 +69,41 @@ email::add('ShoppingItemsLowStock',
 class shoppingOrderMethods {
 	static $available = array();
 	static $activated = array();
-	
+
 	static function add($id, $title, $description = null) {
 		if (!$id)
 			return false;
-		
+
 		$id = strtolower(preg_replace(
 					'/[^a-zA-Z0-9\@\.\_\-]/', '', $id));
-		
+
 		if (!$description) {
 			$description = $title;
 			$title = $id;
 		}
-		
+
 		languages::load('shopping');
-		
+
 		shoppingOrderMethods::$available[$id] = array(
 			'Title' => _($title),
 			'Description' => sprintf(_($description),
 				(defined('SHOPPING_CART_ORDER_METHOD_CHECK_TO_NAME')?
 					SHOPPING_CART_ORDER_METHOD_CHECK_TO_NAME:
 					PAGE_TITLE)));
-		
+
 		languages::unload('shopping');
-		
-		if ((defined('SHOPPING_CART_ENABLE_ORDER_METHOD_'.strtoupper($id)) && 
+
+		if ((defined('SHOPPING_CART_ENABLE_ORDER_METHOD_'.strtoupper($id)) &&
 			!constant('SHOPPING_CART_ENABLE_ORDER_METHOD_'.strtoupper($id))) ||
-			(defined('SHOPPING_CART_ORDER_METHOD_'.strtoupper($id).'_ENABLED') && 
+			(defined('SHOPPING_CART_ORDER_METHOD_'.strtoupper($id).'_ENABLED') &&
 			!constant('SHOPPING_CART_ORDER_METHOD_'.strtoupper($id).'_ENABLED')) ||
-			(!defined('SHOPPING_CART_ENABLE_ORDER_METHOD_'.strtoupper($id)) && 
+			(!defined('SHOPPING_CART_ENABLE_ORDER_METHOD_'.strtoupper($id)) &&
 			!defined('SHOPPING_CART_ORDER_METHOD_'.strtoupper($id).'_ENABLED') &&
-			in_array(strtolower($id), 
+			in_array(strtolower($id),
 				array(
-					'invoicecustomer', 
-					'check', 
-					'paypal', 
+					'invoicecustomer',
+					'check',
+					'paypal',
 					'ccbill',
 					'alertpay',
 					'authorizedotnet',
@@ -111,46 +111,46 @@ class shoppingOrderMethods {
 					'moneybookers',
 					'ogone'))))
 			return false;
-		
+
 		shoppingOrderMethods::$activated[$id] = shoppingOrderMethods::$available[$id];
 		return true;
 	}
-	
+
 	static function get($methodid = null) {
 		if (!$methodid)
 			return shoppingOrderMethods::$activated;
-			
+
 		if (isset(shoppingOrderMethods::$activated[$methodid]))
 			return shoppingOrderMethods::$activated[$methodid];
-		
+
 		return null;
 	}
 }
- 
+
 class shoppingOrderMethodInvoiceCustomer extends form {
 	var $postProcessText = null;
 	var $processResult = null;
-	
+
 	function __construct() {
 		parent::__construct(
 			_('Invoice Customer'), 'invoicecustomer');
 	}
-	
+
 	function process() {
-		$this->processResult = 
+		$this->processResult =
 			_("Please contact client to finalize the payments.");
-		
+
 		return SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
 	}
-	
+
 	function postProcess($orderid) {
 		return false;
 	}
-	
+
 	function verify() {
 		return true;
 	}
-	
+
 	function setUp() {
 	}
 }
@@ -159,18 +159,18 @@ shoppingOrderMethods::add(
 	'invoiceCustomer',
 	_('Invoice Customer'),
 	_('You will be contacted personally to finalize the payments'));
- 
+
 class shoppingOrderMethodCheck extends form {
 	var $postProcessText = null;
 	var $processResult = null;
-	 
+
 	function __construct() {
 		parent::__construct(
 			_('Check Payment'), 'checkpayment');
 	}
-	
+
 	function process() {
-		$this->processResult = 
+		$this->processResult =
 			_("Name on Check").": ".
 				$this->checkoutForm->get('NameOnCheck').
 			"\n" .
@@ -179,18 +179,18 @@ class shoppingOrderMethodCheck extends form {
 			"\n" .
 			_("Check Amount").": ".
 				$this->checkoutForm->get('CheckAmount');
-		
+
 		return SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
 	}
-	
+
 	function postProcess($orderid) {
 		return false;
 	}
-	
+
 	function verify() {
 		return true;
 	}
-	
+
 	function setUp() {
 		$this->add(
 			_('Name on Check'),
@@ -198,14 +198,14 @@ class shoppingOrderMethodCheck extends form {
 			FORM_INPUT_TYPE_TEXT,
 			true);
 		$this->setStyle("width: 200px;");
-		
+
 		$this->add(
 			_('Check Number'),
 			'CheckNumber',
 			FORM_INPUT_TYPE_TEXT,
 			true);
 		$this->setStyle("width: 200px;");
-		
+
 		$this->add(
 			_('Check Amount'),
 			'CheckAmount',
@@ -219,199 +219,199 @@ shoppingOrderMethods::add(
 	'check',
 	_('Check Payment'),
 	_('Please complete the check to be sent to %s'));
- 
+
 class shoppingOrderMethodPayPal extends form {
 	var $postProcessText = null;
 	var $processResult = null;
 	var $ajaxRequest = null;
-	
+
 	function __construct() {
 		parent::__construct(
 			_('PayPal'), 'paypal');
-		
-		$this->postProcessText = 			
+
+		$this->postProcessText =
 			_("Your order has been successfully created but your payment has not been processed yet. " .
 				"To finalize your payments please click on the button below.");
 	}
-	
+
 	function process() {
-		$this->processResult = 
+		$this->processResult =
 			_("User redirected to paypal, payment is being processed.");
-		
+
 		return SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
 	}
-	
+
 	function postProcess($orderid) {
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `ID` = '".$orderid."'"));
-		
+
 		if (!$order)
 			return false;
-		
+
 		$orderurl = shoppingOrders::getURL().
 				"&shoppingorderid=".$order['ID'];
-		
+
 		$grandtotal = number_format($order['Subtotal']+
 			(isset($order['Tax'])?$order['Tax']:0)-
 			$order['Discount']+$order['Fee'], 2, '.', '');
-		
+
 		$items = array();
 		$orderitems = sql::run(
 			" SELECT * FROM `{shoppingorderitems}`" .
 			" WHERE `ShoppingOrderID` = '".$order['ID']."'");
-		
+
 		while($orderitem = sql::fetch($orderitems)) {
 			$item = sql::fetch(sql::run(
 				" SELECT `RefNumber` FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$orderitem['ShoppingItemID']."'"));
-			
+
 			$items[] = $item['RefNumber'];
 		}
-		
+
 		tooltip::display(
 			//"<form action='https://www.sandbox.paypal.com/cgi-bin/webscr' method='post' id='shoppingordermethodpaypalform'>" .
 			"<form action='https://www.paypal.com/cgi-bin/webscr' method='post' id='shoppingordermethodpaypalform'>" .
 			"<input type='hidden' name='business' value='".SHOPPING_CART_ORDER_METHOD_PAYPAL_ID."' />" .
 			"<input type='hidden' name='cmd' value='_xclick' />" .
-			"<input type='hidden' name='item_name' value='Checkout for ".htmlspecialchars(PAGE_TITLE, ENT_QUOTES)."' />" . 
+			"<input type='hidden' name='item_name' value='Checkout for ".htmlchars(PAGE_TITLE, ENT_QUOTES)."' />" .
 			"<input type='hidden' name='item_number' value='".$order['OrderID']."' />" .
-			"<input type='hidden' name='on0' value='Items' />" . 
-			"<input type='hidden' name='os0' value='".htmlspecialchars(implode('; ', $items), ENT_QUOTES)."' />" . 
+			"<input type='hidden' name='on0' value='Items' />" .
+			"<input type='hidden' name='os0' value='".htmlchars(implode('; ', $items), ENT_QUOTES)."' />" .
 			"<input type='hidden' name='invoice' value='".$order['OrderID']."' />" .
-			"<input type='hidden' name='currency_code' value='".SHOPPING_CART_ORDER_METHOD_PAYPAL_CURRENCY."' />" . 
+			"<input type='hidden' name='currency_code' value='".SHOPPING_CART_ORDER_METHOD_PAYPAL_CURRENCY."' />" .
 			"<input type='hidden' name='amount' value='".$grandtotal."' />" .
 			"<input type='hidden' name='return' value='".$orderurl."' />" .
-			"<input type='hidden' name='cancel_return' value='".$orderurl."' />" . 
+			"<input type='hidden' name='cancel_return' value='".$orderurl."' />" .
 			"<input type='hidden' name='notify_url' value='".SITE_URL."index.php?request=modules/shoppingorders/shoppingordermethodpaypal&ajax=1' />" .
 			$this->postProcessText .
 			"<br /><br />" .
 			"<input type='submit' name='submitorder' value='".
-				htmlspecialchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
+				htmlchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
 				"class='button submit' />" .
-			"</form>", 
+			"</form>",
 			TOOLTIP_NOTIFICATION);
-		
+
 		return true;
 	}
-	
+
 	function ipnProcess() {
 		if (!isset($_POST['invoice']) || !isset($_POST['txn_id']) ||
 			!$_POST['invoice'] || !$_POST['txn_id'])
 			exit("Invalid IPN request!");
-		
+
 		$grandtotal = strip_tags((string)$_POST['mc_gross']);
 		$ordernumber = strip_tags((string)$_POST['invoice']);
 		$ordertransactionid = strip_tags((string)$_POST['txn_id']);
 		$orderemail = strip_tags((string)$_POST['payer_email']);
 		$paymentstatus = strip_tags((string)$_POST['payment_status']);
 		$paymenttype = strip_tags((string)$_POST['payment_type']);
-		
+
 		$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
-		
+
 		if (in_array($paymentstatus, array(
 			'Completed',
-			'Canceled_Reversal'))) 
+			'Canceled_Reversal')))
 		{
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PAID;
-			
+
 		} elseif (in_array($paymentstatus, array(
 			'Refunded',
 			'Reversed',
 			'Voided')))
 		{
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_CANCELLED;
-			
+
 		} elseif (in_array($paymentstatus, array(
 			'Denied',
 			'Failed')))
 		{
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_FAILED;
-			
+
 		} elseif ($paymentstatus == 'Expired') {
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_EXPIRED;
-			
+
 		} elseif (in_array($paymentstatus, array(
-			'Created', 
+			'Created',
 			'Pending',
 			'Processed')))
 		{
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PROCESSING;
 		}
-		
+
 		// These are used for debugging
 		$postgetarguments = "GET arguments:\n";
 		foreach($_GET as $key => $value) {
 			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
-		
+
 		$postgetarguments .= "\nPOST arguments:\n";
 		foreach($_POST as $key => $value) {
 			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
-   		
+
 		$email = new email();
 		$email->load('WebmasterWarning');
-	
+
 		$email->to = WEBMASTER_EMAIL;
-	
+
 		$email->variables = array(
 			'Warning' => $postgetarguments.
-				"\nProcessing Order Payment\n"); 
-		
+				"\nProcessing Order Payment\n");
+
 		if (!$grandtotal) {
-			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";	
+			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";
 			$email->send();
-	
+
 			exit("FAILED: No Grand Total returned!");
 		}
-	
+
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `OrderID` = '".sql::escape($ordernumber)."'"));
-		
+
 		if (!$order) {
-			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";	
+			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";
 			$email->send();
-			
+
 			exit("FAILED: Order Number not found!");
 		}
-		
+
 		$ordertotal = number_format($order['Subtotal']+
 				(isset($order['Tax'])?$order['Tax']:0)-
 				$order['Discount']+$order['Fee'], 2, '.', '');
-		
+
 		if ($grandtotal != $ordertotal) {
 			$email->variables['Warning'] .= "FAILED: Grand Total returned (".
-				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";	
+				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";
 			$email->send();
-			
+
 			exit("FAILED: Grand Total returned (".$grandtotal.") doesn't mach " .
 				" Order's total (".$ordertotal.")!");
 		}
-		
+
 		include_once('lib/phpbrowser.class.php');
 		$browser = new phpBrowser();
-		
+
 		$_POST['cmd'] = '_notify-validate';
 		$browser->submit(
 			'https://www.paypal.com/cgi-bin/webscr',
 			$_POST);
-	
+
 		if (!stristr($browser->results, 'VERIFIED')) {
 			$email->variables['Warning'] .= "FAILED: " .
 				"Order couldn't be verified by PayPal! ".
-				$browser->results."\n";	
+				$browser->results."\n";
 			$email->send();
-		
+
 			exit("FAILED: Order couldn't be verified by PayPal!");
 		}
-		
+
 		unset($browser);
-		
+
 		$orderdetails = $order['OrderMethodDetails'];
-		
-		$orderdetails = 
+
+		$orderdetails =
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			(!stristr($orderdetails, 'Transaction ID')?
 				"Transaction ID: ".$ordertransactionid."\n" .
@@ -420,7 +420,7 @@ class shoppingOrderMethodPayPal extends form {
 			"Payment Status: ".$paymentstatus."\n" .
 			"Payment Type: ".$paymenttype .
 			($orderdetails?"\n\n".$orderdetails:null);
-		
+
 		sql::run(
 			" UPDATE `{shoppingorders}` SET " .
 			" `PaymentStatus` = '".
@@ -431,23 +431,23 @@ class shoppingOrderMethodPayPal extends form {
 				" `TimeStamp` = NOW()":
 				" `TimeStamp` = `TimeStamp`") .
 			" WHERE `ID` = '".$order['ID']."'");
-		
+
 		shoppingOrders::sendNotificationEmails($order['ID']);
-		
+
 		if ($orderstatus == SHOPPING_ORDER_PAYMENT_STATUS_PAID ||
 			$orderstatus == SHOPPING_ORDER_PAYMENT_STATUS_PROCESSING)
 			users::activate($order['UserID']);
-		
+
 		exit("OK: Order successfully updated!");
 	}
-	
+
 	function verify() {
 		return true;
 	}
-	
+
 	function setUp() {
 	}
-	
+
 	function ajaxRequest() {
 		$this->ipnProcess();
 		return true;
@@ -458,69 +458,69 @@ shoppingOrderMethods::add(
 	'payPal',
 	_('Credit Card Payment (PayPal)'),
 	_('An extra step will be required trough Paypal.com'));
- 
+
 class shoppingOrderMethodCCBill extends form {
 	var $postProcessText = null;
 	var $processResult = null;
 	var $ajaxRequest = null;
-	 
+
 	function __construct() {
 		parent::__construct(
 			_('CCBill'), 'ccbill');
-		
-		$this->postProcessText = 			
+
+		$this->postProcessText =
 			_("Your order has been successfully created but your payment has not been processed yet. " .
 				"To finalize your payments please click on the button below.");
 	}
-	
+
 	function process() {
-		$this->processResult = 
-			_("User redirected to ccbill, payment is being processed."); 
-		
+		$this->processResult =
+			_("User redirected to ccbill, payment is being processed.");
+
 		return SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
 	}
-	
+
 	function postProcess($orderid) {
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `ID` = '".$orderid."'"));
-		
+
 		if (!$order)
 			return false;
-			
+
 		$orderurl = shoppingOrders::getURL().
 				"&shoppingorderid=".$order['ID'];
-		
+
 		$grandtotal = number_format($order['Subtotal']+
 			(isset($order['Tax'])?$order['Tax']:0)-
 			$order['Discount']+$order['Fee'], 2, '.', '');
-		
+
 		$items = array();
 		$orderitems = sql::run(
 			" SELECT * FROM `{shoppingorderitems}`" .
 			" WHERE `ShoppingOrderID` = '".$order['ID']."'");
-		
+
 		while($orderitem = sql::fetch($orderitems)) {
 			$item = sql::fetch(sql::run(
 				" SELECT `RefNumber` FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$orderitem['ShoppingItemID']."'"));
-			
+
 			$items[] = $item['RefNumber'];
 		}
-		
+
 		$formdiggest = md5(
 			$grandtotal.'10'.
 			SHOPPING_CART_ORDER_METHOD_CCBILL_CURRENCY_CODE.
 			SHOPPING_CART_ORDER_METHOD_CCBILL_ENCRYPTION_KEY);
-			
+
 		tooltip::display(
 			"<form action='https://bill.ccbill.com/jpost/signup.cgi' method='post' id='shoppingordermethodccbillform'>" .
 			"<input type='hidden' name='clientAccnum' value='".SHOPPING_CART_ORDER_METHOD_CCBILL_ACCOUNT_NUMBER."' />" .
 			"<input type='hidden' name='clientSubacc' value='".SHOPPING_CART_ORDER_METHOD_CCBILL_SUBACCOUNT_NUMBER."' />" .
 			"<input type='hidden' name='formName' value='".SHOPPING_CART_ORDER_METHOD_CCBILL_FORM_ID."' />" .
 			"<input type='hidden' name='orderid' value='".$order['OrderID']."' />" .
-			"<input type='hidden' name='ordertitle' value='Checkout for ".htmlspecialchars(PAGE_TITLE, ENT_QUOTES)."' />" .
-			"<input type='hidden' name='orderdetails' value='".htmlspecialchars(implode('; ', $items), ENT_QUOTES)."' />" .
+			"<input type='hidden' name='ordertitle' value='Checkout for ".htmlchars(PAGE_TITLE, ENT_QUOTES)."' />" .
+			"<input type='hidden' name='orderdetails' value='".htmlchars(implode('; ', $items), ENT_QUOTES)."' />" .
 			"<input type='hidden' name='formPrice' value='".$grandtotal."' />" .
 			"<input type='hidden' name='formPeriod' value='10' />" .
 			"<input type='hidden' name='formDigest' value='".$formdiggest."' />" .
@@ -528,97 +528,97 @@ class shoppingOrderMethodCCBill extends form {
 			$this->postProcessText .
 			"<br /><br />" .
 			"<input type='submit' name='submitorder' value='".
-				htmlspecialchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
+				htmlchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
 				"class='button submit' />" .
 			"</form>",
 			TOOLTIP_NOTIFICATION);
-			
+
 		return true;
 	}
-	
+
 	function ipnProcess() {
 		if (!isset($_POST['orderid']) || !isset($_POST['subscription_id']) ||
 			!isset($_POST['responseDigest']) || !$_POST['responseDigest'] ||
-			!$_POST['orderid'] || !$_POST['subscription_id']) 
+			!$_POST['orderid'] || !$_POST['subscription_id'])
 			exit("Invalid IPN request!");
-		
+
 		$grandtotal = strip_tags((string)$_POST['initialPrice']);
 		$ordernumber = strip_tags((string)$_POST['orderid']);
 		$ordertransactionid = strip_tags((string)$_POST['subscription_id']);
 		$orderemail = strip_tags((string)$_POST['email']);
 		$paymentdeclined = strip_tags((string)@$_POST['reasonForDeclineCode']);
 		$paymentdeclinedmsg = strip_tags((string)@$_POST['reasonForDecline']);
-		
+
 		if ($paymentdeclined)
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_FAILED;
 		else
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PAID;
-		
+
 		// These are used for debugging
 		$postgetarguments = "GET arguments:\n";
 		foreach($_GET as $key => $value) {
 			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
     	}
-		
+
 		$postgetarguments .= "\nPOST arguments:\n";
 		foreach($_POST as $key => $value) {
 			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
     	}
-    	
+
 		$email = new email();
 		$email->load('WebmasterWarning');
-		
+
 		$email->to = WEBMASTER_EMAIL;
 		$email->variables = array(
 			'Warning' => $postgetarguments.
-				"\nProcessing Order Payment\n"); 
-		
+				"\nProcessing Order Payment\n");
+
 		if (!$grandtotal) {
-			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";	
+			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";
 			$email->send();
-			
+
 			exit("FAILED: No Grand Total returned!");
 		}
-		
+
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `OrderID` = '".sql::escape($ordernumber)."'"));
-		
+
 		if (!$order) {
-			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";	
+			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";
 			$email->send();
-			
+
 			exit("FAILED: Order Number not found!");
 		}
-		
+
 		$ordertotal = number_format($order['Subtotal']+
 				(isset($order['Tax'])?$order['Tax']:0)-
 				$order['Discount']+$order['Fee'], 2, '.', '');
-		
+
 		if ($grandtotal != $ordertotal) {
 			$email->variables['Warning'] .= "FAILED: Grand Total returned (".
-				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";	
+				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";
 			$email->send();
-		
+
 			exit("FAILED: Grand Total returned (".$grandtotal.") doesn't mach " .
 				" Order's total (".$ordertotal.")!");
 		}
-		
+
 		$diggest = md5(
 			$ordertransactionid .
 			'1' .
 			SHOPPING_CART_ORDER_METHOD_CCBILL_ENCRYPTION_KEY);
-		
+
 		if ($diggest != strip_tags((string)$_POST['responseDigest'])) {
-			$email->variables['Warning'] .= "FAILED: Not a CCBill request!\n";	
+			$email->variables['Warning'] .= "FAILED: Not a CCBill request!\n";
 			$email->send();
-			
+
 			exit("Not a CCBill request!");
 		}
-			
+
 		$orderdetails = $order['OrderMethodDetails'];
-		
-		$orderdetails = 
+
+		$orderdetails =
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			(!stristr($orderdetails, 'Transaction ID')?
 				"Transaction ID: ".$ordertransactionid."\n" .
@@ -629,7 +629,7 @@ class shoppingOrderMethodCCBill extends form {
 					"Declined (".$paymentdeclinedmsg.")":
 					"Approved") .
 			($orderdetails?"\n\n".$orderdetails:null);
-		
+
 		sql::run(
 			" UPDATE `{shoppingorders}` SET " .
 			" `PaymentStatus` = '".
@@ -638,20 +638,20 @@ class shoppingOrderMethodCCBill extends form {
 				sql::escape($orderdetails)."', " .
 			" `TimeStamp` = `TimeStamp` " .
 			" WHERE `ID` = '".$order['ID']."'");
-		
+
 		shoppingOrders::sendNotificationEmails($order['ID']);
-		
+
 		users::activate($order['UserID']);
 		exit("OK: Order successfully updated!");
 	}
-	
+
 	function verify() {
 		return true;
 	}
-	
+
 	function setUp() {
 	}
-	
+
 	function ajaxRequest() {
 		$this->ipnProcess();
 		return true;
@@ -662,65 +662,65 @@ shoppingOrderMethods::add(
 	'ccBill',
 	_('Credit Card Payment (CCBill)'),
 	_('An extra step will be required trough CCBill.com'));
- 
+
 class shoppingOrderMethodAlertPay extends form {
 	var $postProcessText = null;
 	var $processResult = null;
 	var $ajaxRequest = null;
-	 
+
 	function __construct() {
 		parent::__construct(
 			_('AlertPay'), 'alertpay');
-		
-		$this->postProcessText = 			
+
+		$this->postProcessText =
 			_("Your order has been successfully created but your payment has not been processed yet. " .
 				"To finalize your payments please click on the button below.");
 	}
-	
+
 	function process() {
-		$this->processResult = 
-			_("User redirected to alertpay, payment is being processed."); 
-		
+		$this->processResult =
+			_("User redirected to alertpay, payment is being processed.");
+
 		return SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
 	}
-	
+
 	function postProcess($orderid) {
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `ID` = '".$orderid."'"));
-		
+
 		if (!$order)
 			return false;
-			
+
 		$orderurl = shoppingOrders::getURL().
 				"&shoppingorderid=".$order['ID'];
-		
+
 		$grandtotal = number_format($order['Subtotal']+
 			(isset($order['Tax'])?$order['Tax']:0)-
 			$order['Discount']+$order['Fee'], 2, '.', '');
-		
+
 		$items = array();
 		$orderitems = sql::run(
 			" SELECT * FROM `{shoppingorderitems}`" .
 			" WHERE `ShoppingOrderID` = '".$order['ID']."'");
-		
+
 		while($orderitem = sql::fetch($orderitems)) {
 			$item = sql::fetch(sql::run(
 				" SELECT `RefNumber` FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$orderitem['ShoppingItemID']."'"));
-			
+
 			$items[] = $item['RefNumber'];
 		}
-		
+
 		tooltip::display(
 			"<form action='https://www.alertpay.com/PayProcess.aspx' method='post' id='shoppingordermethodalertpayform'>" .
 			"<input type='hidden' name='ap_purchasetype' value='Item' />" .
 			"<input type='hidden' name='ap_merchant' value='".SHOPPING_CART_ORDER_METHOD_ALERTPAY_ID."' />" .
-			"<input type='hidden' name='ap_itemname' value='Checkout for ".htmlspecialchars(PAGE_TITLE, ENT_QUOTES)."' />" .
+			"<input type='hidden' name='ap_itemname' value='Checkout for ".htmlchars(PAGE_TITLE, ENT_QUOTES)."' />" .
 			"<input type='hidden' name='ap_currency' value='".SHOPPING_CART_ORDER_METHOD_ALERTPAY_CURRENCY."' />" .
 			"<input type='hidden' name='ap_itemcode' value='".$order['OrderID']."' />" .
 			"<input type='hidden' name='ap_quantity' value='1' />" .
-			"<input type='hidden' name='ap_description' value='".htmlspecialchars(implode('; ', $items), ENT_QUOTES)."' />" .
+			"<input type='hidden' name='ap_description' value='".htmlchars(implode('; ', $items), ENT_QUOTES)."' />" .
 			"<input type='hidden' name='ap_amount' value='".$grandtotal."' />" .
 			"<input type='hidden' name='ap_returnurl' value='".$orderurl."' />" .
 			"<input type='hidden' name='ap_cancelurl' value='".$orderurl."' />" .
@@ -730,28 +730,28 @@ class shoppingOrderMethodAlertPay extends form {
 			$this->postProcessText .
 			"<br /><br />" .
 			"<input type='submit' name='submitorder' value='".
-				htmlspecialchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
+				htmlchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
 				"class='button submit' />" .
 			"</form>",
 			TOOLTIP_NOTIFICATION);
-		
+
 		return true;
 	}
-	
+
 	function ipnProcess() {
 		if (!isset($_POST['ap_securitycode']) || !isset($_POST['ap_itemcode']) ||
 			!$_POST['ap_securitycode'] || !$_POST['ap_itemcode'])
 			exit("Invalid IPN request!");
-		
+
 		$securitycode = strip_tags((string)$_POST['ap_securitycode']);
 		$grandtotal = strip_tags((string)$_POST['ap_totalamount']);
 		$ordernumber = strip_tags((string)$_POST['ap_itemcode']);
 		$ordertransactionid = strip_tags((string)$_POST['ap_referencenumber']);
 		$orderemail = strip_tags((string)$_POST['ap_custemailaddress']);
 		$paymentstatus = strip_tags((string)$_POST['ap_status']);
-		
+
 		$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
-		
+
 		if (stristr($paymentstatus, 'Success'))
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PAID;
 		elseif (stristr($paymentstatus, 'Canceled'))
@@ -762,68 +762,68 @@ class shoppingOrderMethodAlertPay extends form {
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_EXPIRED;
 		elseif (stristr($paymentstatus, 'Rescheduled'))
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PROCESSING;
-		
+
 		// These are used for debugging
 		$postgetarguments = "GET arguments:\n";
 		foreach($_GET as $key => $value) {
 			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
-		
+
 		$postgetarguments .= "\nPOST arguments:\n";
 		foreach($_POST as $key => $value) {
 			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
-   		
+
 		$email = new email();
 		$email->load('WebmasterWarning');
-	
+
 		$email->to = WEBMASTER_EMAIL;
-	
+
 		$email->variables = array(
 			'Warning' => $postgetarguments.
-				"\nProcessing Order Payment\n"); 
-		
+				"\nProcessing Order Payment\n");
+
 		if ($securitycode != SHOPPING_CART_ORDER_METHOD_ALERTPAY_SECURITY_CODE) {
-			$email->variables['Warning'] .= "FAILED: Invalid security code defined!\n";	
+			$email->variables['Warning'] .= "FAILED: Invalid security code defined!\n";
 			$email->send();
-	
+
 			exit("FAILED: Invalid security code defined!");
 		}
-	
+
 		if (!$grandtotal) {
-			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";	
+			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";
 			$email->send();
-	
+
 			exit("FAILED: No Grand Total returned!");
 		}
-	
+
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `OrderID` = '".sql::escape($ordernumber)."'"));
-		
+
 		if (!$order) {
-			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";	
+			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";
 			$email->send();
-			
+
 			exit("FAILED: Order Number not found!");
 		}
-		
+
 		$ordertotal = number_format($order['Subtotal']+
 				(isset($order['Tax'])?$order['Tax']:0)-
 				$order['Discount']+$order['Fee'], 2, '.', '');
-		
+
 		if ($grandtotal != $ordertotal) {
 			$email->variables['Warning'] .= "FAILED: Grand Total returned (".
-				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";	
+				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";
 			$email->send();
-			
+
 			exit("FAILED: Grand Total returned (".$grandtotal.") doesn't mach " .
 				" Order's total (".$ordertotal.")!");
 		}
-		
+
 		$orderdetails = $order['OrderMethodDetails'];
-		
-		$orderdetails = 
+
+		$orderdetails =
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			(!stristr($orderdetails, 'Transaction ID')?
 				"Transaction ID: ".$ordertransactionid."\n" .
@@ -831,7 +831,7 @@ class shoppingOrderMethodAlertPay extends form {
 				null) .
 			"Payment Status: ".$paymentstatus .
 			($orderdetails?"\n\n".$orderdetails:null);
-		
+
 		sql::run(
 			" UPDATE `{shoppingorders}` SET " .
 			" `PaymentStatus` = '".
@@ -842,23 +842,23 @@ class shoppingOrderMethodAlertPay extends form {
 				" `TimeStamp` = NOW()":
 				" `TimeStamp` = `TimeStamp`") .
 			" WHERE `ID` = '".$order['ID']."'");
-		
+
 		shoppingOrders::sendNotificationEmails($order['ID']);
-		
+
 		if ($orderstatus == SHOPPING_ORDER_PAYMENT_STATUS_PAID ||
 			$orderstatus == SHOPPING_ORDER_PAYMENT_STATUS_PROCESSING)
 			users::activate($order['UserID']);
-		
+
 		exit("OK: Order successfully updated!");
 	}
-	
+
 	function verify() {
 		return true;
 	}
-	
+
 	function setUp() {
 	}
-	
+
 	function ajaxRequest() {
 		$this->ipnProcess();
 		return true;
@@ -869,75 +869,75 @@ shoppingOrderMethods::add(
 	'alertPay',
 	_('Credit Card Payment (AlertPay)'),
 	_('An extra step will be required trough AlertPay.com'));
- 
+
 class shoppingOrderMethodAuthorizeDotNet extends form {
 	var $postProcessText = null;
 	var $processResult = null;
 	var $ajaxRequest = null;
-	
+
 	function __construct() {
 		parent::__construct(
 			_('Authorize.net'), 'authorizenet');
-		
-		$this->postProcessText = 			
+
+		$this->postProcessText =
 			_("Your order has been successfully created but your payment has not been processed yet. " .
 				"To finalize your payments please click on the button below.");
 	}
-	
+
 	function process() {
-		$this->processResult = 
+		$this->processResult =
 			_("User redirected to authorize.net, payment is being processed.");
-		
+
 		return SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
 	}
-	
+
 	function postProcess($orderid) {
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `ID` = '".$orderid."'"));
-		
+
 		if (!$order)
 			return false;
-		
+
 		$orderurl = shoppingOrders::getURL().
 				"&shoppingorderid=".$order['ID'];
-		
+
 		$grandtotal = number_format($order['Subtotal']+
 			(isset($order['Tax'])?$order['Tax']:0)-
 			$order['Discount']+$order['Fee'], 2, '.', '');
-		
+
 		$items = array();
 		$orderitems = sql::run(
 			" SELECT * FROM `{shoppingorderitems}`" .
 			" WHERE `ShoppingOrderID` = '".$order['ID']."'");
-		
+
 		while($orderitem = sql::fetch($orderitems)) {
 			$item = sql::fetch(sql::run(
 				" SELECT `RefNumber` FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$orderitem['ShoppingItemID']."'"));
-			
+
 			$items[] = $item['RefNumber'];
 		}
-		
+
 		$fptime = time();
 		$fpsequence = $order['OrderID'].$fptime;
-		
+
 		if (function_exists('hash_hmac'))
-            $hash = hash_hmac("md5", SHOPPING_CART_ORDER_METHOD_AUTHORIZEDOTNET_API_LOGIN_ID . 
-				"^".$fpsequence."^".$fptime."^".$grandtotal."^", 
+            $hash = hash_hmac("md5", SHOPPING_CART_ORDER_METHOD_AUTHORIZEDOTNET_API_LOGIN_ID .
+				"^".$fpsequence."^".$fptime."^".$grandtotal."^",
 				SHOPPING_CART_ORDER_METHOD_AUTHORIZEDOTNET_TRANSACTION_KEY);
 		else
-	        $hash = bin2hex(mhash(MHASH_MD5, SHOPPING_CART_ORDER_METHOD_AUTHORIZEDOTNET_API_LOGIN_ID . 
-				"^".$fpsequence."^".$fptime."^".$grandtotal."^", 
+	        $hash = bin2hex(mhash(MHASH_MD5, SHOPPING_CART_ORDER_METHOD_AUTHORIZEDOTNET_API_LOGIN_ID .
+				"^".$fpsequence."^".$fptime."^".$grandtotal."^",
 				SHOPPING_CART_ORDER_METHOD_AUTHORIZEDOTNET_TRANSACTION_KEY));
-		
+
 		tooltip::display(
 			"<form action='https://secure.authorize.net/gateway/transact.dll' method='post' id='shoppingordermethodauthorizedotnetform'>" .
 			"<input type='hidden' name='x_login' value='".SHOPPING_CART_ORDER_METHOD_AUTHORIZEDOTNET_API_LOGIN_ID."' />" .
 			"<input type='hidden' name='x_fp_hash' value='".$hash."' />" .
 			"<input type='hidden' name='x_amount' value='".$grandtotal."' />" .
 			"<input type='hidden' name='x_fp_timestamp' value='".$fptime."' />" .
-			"<input type='hidden' name='x_description' value='Checkout for ".htmlspecialchars(PAGE_TITLE, ENT_QUOTES)."' />" . 
+			"<input type='hidden' name='x_description' value='Checkout for ".htmlchars(PAGE_TITLE, ENT_QUOTES)."' />" .
 			"<input type='hidden' name='x_invoice_num' value='".$order['OrderID']."' />" .
 			"<input type='hidden' name='x_fp_sequence' value='".$fpsequence."' />" .
 			"<input type='hidden' name='x_version' value='3.1' />" .
@@ -946,108 +946,108 @@ class shoppingOrderMethodAuthorizeDotNet extends form {
 			"<input type='hidden' name='x_method' value='cc' />" .
 			"<input type='hidden' name='x_relay_response' value='false' />" .
 			"<input type='hidden' name='x_receipt_link_url' value='".$orderurl."' />" .
-			"<input type='hidden' name='x_receipt_link_text' value='Back to ".htmlspecialchars(PAGE_TITLE, ENT_QUOTES)."' />" .
+			"<input type='hidden' name='x_receipt_link_text' value='Back to ".htmlchars(PAGE_TITLE, ENT_QUOTES)."' />" .
 			"<input type='hidden' name='x_receipt_link_method' value='link' />" .
 			$this->postProcessText .
 			"<br /><br />" .
 			"<input type='submit' name='submitorder' value='".
-				htmlspecialchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
+				htmlchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
 				"class='button submit' />" .
-			"</form>", 
+			"</form>",
 			TOOLTIP_NOTIFICATION);
-		
+
 		return true;
 	}
-	
+
 	function ipnProcess() {
 		if (!isset($_POST['x_invoice_num']) || !isset($_POST['x_trans_id']) ||
 			!isset($_POST['x_MD5_Hash']) || !$_POST['x_MD5_Hash'] ||
 			!$_POST['x_invoice_num'] || !$_POST['x_trans_id'])
 			exit("Invalid IPN request!");
-		
+
 		$grandtotal = strip_tags((string)$_POST['x_amount']);
 		$ordernumber = strip_tags((string)$_POST['x_invoice_num']);
 		$ordertransactionid = strip_tags((string)$_POST['x_trans_id']);
 		$orderemail = strip_tags((string)$_POST['x_email']);
 		$paymentstatus = strip_tags((string)$_POST['x_response_code']);
 		$paymentstatusmsg = strip_tags((string)$_POST['x_response_reason_text']);
-		
+
 		$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
-		
+
 		if ($paymentstatus == 1)
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PAID;
 		elseif ($paymentstatus == 2 || $paymentstatus == 3)
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_FAILED;
 		elseif ($paymentstatus == 4)
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PROCESSING;
-		
+
 		// These are used for debugging
 		$postgetarguments = "GET arguments:\n";
 		foreach($_GET as $key => $value) {
 			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
-		
+
 		$postgetarguments .= "\nPOST arguments:\n";
 		foreach($_POST as $key => $value) {
 			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
-   		
+
 		$email = new email();
 		$email->load('WebmasterWarning');
-	
+
 		$email->to = WEBMASTER_EMAIL;
-	
+
 		$email->variables = array(
 			'Warning' => $postgetarguments.
-				"\nProcessing Order Payment\n"); 
-		
+				"\nProcessing Order Payment\n");
+
 		if (!$grandtotal) {
-			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";	
+			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";
 			$email->send();
-	
+
 			exit("FAILED: No Grand Total returned!");
 		}
-	
+
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `OrderID` = '".sql::escape($ordernumber)."'"));
-		
+
 		if (!$order) {
-			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";	
+			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";
 			$email->send();
-			
+
 			exit("FAILED: Order Number not found!");
 		}
-		
+
 		$ordertotal = number_format($order['Subtotal']+
 				(isset($order['Tax'])?$order['Tax']:0)-
 				$order['Discount']+$order['Fee'], 2, '.', '');
-		
+
 		if ($grandtotal != $ordertotal) {
 			$email->variables['Warning'] .= "FAILED: Grand Total returned (".
-				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";	
+				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";
 			$email->send();
-			
+
 			exit("FAILED: Grand Total returned (".$grandtotal.") doesn't mach " .
 				" Order's total (".$ordertotal.")!");
 		}
-		
+
 		$fptime = time();
 		$fpsequence = $order['OrderID'].$fptime;
 		$md5 = strtoupper(md5(SHOPPING_CART_ORDER_METHOD_AUTHORIZEDOTNET_API_LOGIN_ID .
 			SHOPPING_CART_ORDER_METHOD_AUTHORIZEDOTNET_API_LOGIN_ID .
 			$ordertransactionid.$ordertotal));
-		
+
 		if ($md5 != strip_tags((string)$_POST['x_MD5_Hash'])) {
-			$email->variables['Warning'] .= "FAILED: Not an Authorize.net request!\n";	
+			$email->variables['Warning'] .= "FAILED: Not an Authorize.net request!\n";
 			$email->send();
-			
+
 			exit("Not an Authorize.net request!");
 		}
-		
+
 		$orderdetails = $order['OrderMethodDetails'];
-		
-		$orderdetails = 
+
+		$orderdetails =
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			(!stristr($orderdetails, 'Transaction ID')?
 				"Transaction ID: ".$ordertransactionid."\n" .
@@ -1055,7 +1055,7 @@ class shoppingOrderMethodAuthorizeDotNet extends form {
 				null) .
 			"Payment Status: ".$paymentstatusmsg." (".$paymentstatus.")" .
 			($orderdetails?"\n\n".$orderdetails:null);
-		
+
 		sql::run(
 			" UPDATE `{shoppingorders}` SET " .
 			" `PaymentStatus` = '".
@@ -1066,23 +1066,23 @@ class shoppingOrderMethodAuthorizeDotNet extends form {
 				" `TimeStamp` = NOW()":
 				" `TimeStamp` = `TimeStamp`") .
 			" WHERE `ID` = '".$order['ID']."'");
-		
+
 		shoppingOrders::sendNotificationEmails($order['ID']);
-		
+
 		if ($orderstatus == SHOPPING_ORDER_PAYMENT_STATUS_PAID ||
 			$orderstatus == SHOPPING_ORDER_PAYMENT_STATUS_PROCESSING)
 			users::activate($order['UserID']);
-		
+
 		exit("OK: Order successfully updated!");
 	}
-	
+
 	function verify() {
 		return true;
 	}
-	
+
 	function setUp() {
 	}
-	
+
 	function ajaxRequest() {
 		$this->ipnProcess();
 		return true;
@@ -1093,56 +1093,56 @@ shoppingOrderMethods::add(
 	'authorizeDotNet',
 	_('Credit Card Payment (Authorize.net)'),
 	_('An extra step will be required trough Authorize.net'));
- 
+
 class shoppingOrderMethod2CheckOut extends form {
 	var $postProcessText = null;
 	var $processResult = null;
 	var $ajaxRequest = null;
-	
+
 	function __construct() {
 		parent::__construct(
 			_('2CheckOut'), '2checkout');
-		
-		$this->postProcessText = 			
+
+		$this->postProcessText =
 			_("Your order has been successfully created but your payment has not been processed yet. " .
 				"To finalize your payments please click on the button below.");
 	}
-	
+
 	function process() {
-		$this->processResult = 
+		$this->processResult =
 			_("User redirected to 2checkout, payment is being processed.");
-		
+
 		return SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
 	}
-	
+
 	function postProcess($orderid) {
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `ID` = '".$orderid."'"));
-		
+
 		if (!$order)
 			return false;
-		
+
 		$orderurl = shoppingOrders::getURL().
 				"&shoppingorderid=".$order['ID'];
-		
+
 		$grandtotal = number_format($order['Subtotal']+
 			(isset($order['Tax'])?$order['Tax']:0)-
 			$order['Discount']+$order['Fee'], 2, '.', '');
-		
+
 		$items = array();
 		$orderitems = sql::run(
 			" SELECT * FROM `{shoppingorderitems}`" .
 			" WHERE `ShoppingOrderID` = '".$order['ID']."'");
-		
+
 		while($orderitem = sql::fetch($orderitems)) {
 			$item = sql::fetch(sql::run(
 				" SELECT `RefNumber` FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$orderitem['ShoppingItemID']."'"));
-			
+
 			$items[] = $item['RefNumber'];
 		}
-		
+
 		tooltip::display(
 			"<form action='https://www.2checkout.com/checkout/purchase' method='post' id='shoppingordermethod2checkoutform'>" .
 			"<input type='hidden' name='sid' value='".SHOPPING_CART_ORDER_METHOD_2CHECKOUT_VENDOR_ID."' />" .
@@ -1150,29 +1150,29 @@ class shoppingOrderMethod2CheckOut extends form {
 			"<input type='hidden' name='total' value='".$grandtotal."' />" .
 			"<input type='hidden' name='vendor_order_id' value='".$order['OrderID']."' />" .
 			"<input type='hidden' name='id_type' value='1' />" .
-			"<input type='hidden' name='c_prod' value='".$order['OrderID']."' />" . 
-			"<input type='hidden' name='c_name' value='Checkout for ".htmlspecialchars(PAGE_TITLE, ENT_QUOTES)."' />" . 
-			"<input type='hidden' name='c_description' value='".htmlspecialchars(implode('; ', $items), ENT_QUOTES)."' />" . 
-			"<input type='hidden' name='c_price' value='".$grandtotal."' />" . 
+			"<input type='hidden' name='c_prod' value='".$order['OrderID']."' />" .
+			"<input type='hidden' name='c_name' value='Checkout for ".htmlchars(PAGE_TITLE, ENT_QUOTES)."' />" .
+			"<input type='hidden' name='c_description' value='".htmlchars(implode('; ', $items), ENT_QUOTES)."' />" .
+			"<input type='hidden' name='c_price' value='".$grandtotal."' />" .
 			//"<input type='hidden' name='x_receipt_link_url' value='".SITE_URL."index.php?request=modules/shoppingorders/shoppingordermethod2checkout&ajax=1' />" .
 			"<input type='hidden' name='return_url' value='".$orderurl."' />" .
 			$this->postProcessText .
 			"<br /><br />" .
 			"<input type='submit' name='submitorder' value='".
-				htmlspecialchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
+				htmlchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
 				"class='button submit' />" .
-			"</form>", 
+			"</form>",
 			TOOLTIP_NOTIFICATION);
-		
+
 		return true;
 	}
-	
+
 	function ipnProcess() {
 		if (!isset($_POST['sale_id']) || !isset($_POST['vendor_order_id']) ||
 			!isset($_POST['md5_hash']) || !$_POST['md5_hash'] ||
 			!$_POST['sale_id'] || !$_POST['vendor_order_id'])
 			exit("Invalid IPN request!");
-		
+
 		$grandtotal = strip_tags((string)$_POST['invoice_list_amount']);
 		$ordernumber = strip_tags((string)$_POST['vendor_order_id']);
 		$ordertransactionid = strip_tags((string)$_POST['sale_id']);
@@ -1181,11 +1181,11 @@ class shoppingOrderMethod2CheckOut extends form {
 		$paymentstatus = strip_tags((string)@$_POST['invoice_status']);
 		$paymentstatustype = strip_tags((string)$_POST['message_type']);
 		$paymentstatusmsg = strip_tags((string)$_POST['message_description']);
-		
+
 		$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
-		
+
 		if (in_array($paymentstatustype, array(
-			'ORDER_CREATED', 
+			'ORDER_CREATED',
 			'FRAUD_STATUS_CHANGED',
 			'SHIP_STATUS_CHANGED',
 			'INVOICE_STATUS_CHANGED')))
@@ -1197,7 +1197,7 @@ class shoppingOrderMethod2CheckOut extends form {
 				$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PAID;
 			elseif ($paymentstatus == 'declined')
 				$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_FAILED;
-			
+
 			if ($fraudstatus && !SHOPPING_CART_ORDER_METHOD_2CHECKOUT_SKIP_FRAUD_CHECK) {
 				if ($fraudstatus == 'pass')
 					$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PAID;
@@ -1206,90 +1206,90 @@ class shoppingOrderMethod2CheckOut extends form {
 				elseif ($fraudstatus == 'fail')
 					$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_FAILED;
 			}
-			
+
 		} elseif ($paymentstatustype == 'REFUND_ISSUED') {
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_CANCELLED;
-			
+
 		} elseif ($paymentstatustype == 'RECURRING_INSTALLMENT_SUCCESS') {
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PAID;
-			
+
 		} elseif ($paymentstatustype == 'RECURRING_INSTALLMENT_FAILED') {
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_FAILED;
-			
-		} elseif ($paymentstatustype == 'RECURRING_STOPPED' || 
+
+		} elseif ($paymentstatustype == 'RECURRING_STOPPED' ||
 			$paymentstatustype == 'RECURRING_COMPLETE') {
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_EXPIRED;
-		
+
 		} elseif ($paymentstatustype == 'RECURRING_RESTARTED') {
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PAID;
 		}
-		
+
 		// These are used for debugging
 		$postgetarguments = "GET arguments:\n";
 		foreach($_GET as $key => $value) {
 			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
-		
+
 		$postgetarguments .= "\nPOST arguments:\n";
 		foreach($_POST as $key => $value) {
 			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
-   		
+
 		$email = new email();
 		$email->load('WebmasterWarning');
-	
+
 		$email->to = WEBMASTER_EMAIL;
-	
+
 		$email->variables = array(
 			'Warning' => $postgetarguments.
-				"\nProcessing Order Payment\n"); 
-		
+				"\nProcessing Order Payment\n");
+
 		if (!$grandtotal) {
-			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";	
+			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";
 			$email->send();
-	
+
 			exit("FAILED: No Grand Total returned!");
 		}
-	
+
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `OrderID` = '".sql::escape($ordernumber)."'"));
-		
+
 		if (!$order) {
-			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";	
+			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";
 			$email->send();
-			
+
 			exit("FAILED: Order Number not found!");
 		}
-		
+
 		$ordertotal = number_format($order['Subtotal']+
 				(isset($order['Tax'])?$order['Tax']:0)-
 				$order['Discount']+$order['Fee'], 2, '.', '');
-		
+
 		if ($grandtotal != $ordertotal) {
 			$email->variables['Warning'] .= "FAILED: Grand Total returned (".
-				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";	
+				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";
 			$email->send();
-			
+
 			exit("FAILED: Grand Total returned (".$grandtotal.") doesn't mach " .
 				" Order's total (".$ordertotal.")!");
 		}
-		
+
 		$md5 = strtoupper(md5($ordertransactionid .
 			SHOPPING_CART_ORDER_METHOD_2CHECKOUT_VENDOR_ID .
 			strip_tags((string)$_POST['invoice_id']) .
 			SHOPPING_CART_ORDER_METHOD_2CHECKOUT_SECRET_WORD));
-		
+
 		if ($md5 != strip_tags((string)$_POST['md5_hash'])) {
-			$email->variables['Warning'] .= "FAILED: Not a 2CheckOut request!\n";	
+			$email->variables['Warning'] .= "FAILED: Not a 2CheckOut request!\n";
 			$email->send();
-			
+
 			exit("Not a 2CheckOut request!");
 		}
-		
+
 		$orderdetails = $order['OrderMethodDetails'];
-		
-		$orderdetails = 
+
+		$orderdetails =
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			(!stristr($orderdetails, 'Transaction ID')?
 				"Transaction ID: ".$ordertransactionid."\n" .
@@ -1303,7 +1303,7 @@ class shoppingOrderMethod2CheckOut extends form {
 				null) .
 			$paymentstatusmsg .
 			($orderdetails?"\n\n".$orderdetails:null);
-		
+
 		sql::run(
 			" UPDATE `{shoppingorders}` SET " .
 			" `PaymentStatus` = '".
@@ -1314,22 +1314,22 @@ class shoppingOrderMethod2CheckOut extends form {
 				" `TimeStamp` = NOW()":
 				" `TimeStamp` = `TimeStamp`") .
 			" WHERE `ID` = '".$order['ID']."'");
-		
+
 		shoppingOrders::sendNotificationEmails($order['ID']);
-		
+
 		if ($orderstatus == SHOPPING_ORDER_PAYMENT_STATUS_PAID)
 			users::activate($order['UserID']);
-		
+
 		exit("OK: Order successfully updated!");
 	}
-	
+
 	function verify() {
 		return true;
 	}
-	
+
 	function setUp() {
 	}
-	
+
 	function ajaxRequest() {
 		$this->ipnProcess();
 		return true;
@@ -1340,165 +1340,165 @@ shoppingOrderMethods::add(
 	'2CheckOut',
 	_('Credit Card Payment (2CheckOut)'),
 	_('An extra step will be required trough 2CheckOut.com'));
- 
+
 class shoppingOrderMethodMoneyBookers extends form {
 	var $postProcessText = null;
 	var $processResult = null;
 	var $ajaxRequest = null;
-	
+
 	function __construct() {
 		parent::__construct(
 			_('MoneyBookers'), 'moneybookers');
-		
-		$this->postProcessText = 			
+
+		$this->postProcessText =
 			_("Your order has been successfully created but your payment has not been processed yet. " .
 				"To finalize your payments please click on the button below.");
 	}
-	
+
 	function process() {
-		$this->processResult = 
+		$this->processResult =
 			_("User redirected to moneybookers, payment is being processed.");
-		
+
 		return SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
 	}
-	
+
 	function postProcess($orderid) {
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `ID` = '".$orderid."'"));
-		
+
 		if (!$order)
 			return false;
-		
+
 		$orderurl = shoppingOrders::getURL().
 				"&shoppingorderid=".$order['ID'];
-		
+
 		$grandtotal = number_format($order['Subtotal']+
 			(isset($order['Tax'])?$order['Tax']:0)-
 			$order['Discount']+$order['Fee'], 2, '.', '');
-		
+
 		$items = array();
 		$orderitems = sql::run(
 			" SELECT * FROM `{shoppingorderitems}`" .
 			" WHERE `ShoppingOrderID` = '".$order['ID']."'");
-		
+
 		while($orderitem = sql::fetch($orderitems)) {
 			$item = sql::fetch(sql::run(
 				" SELECT `RefNumber` FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$orderitem['ShoppingItemID']."'"));
-			
+
 			$items[] = $item['RefNumber'];
 		}
-		
+
 		tooltip::display(
 			"<form action='https://www.moneybookers.com/app/payment.pl' method='post' id='shoppingordermethodmoneybookersform'>" .
 			"<input type='hidden' name='pay_to_email' value='".SHOPPING_CART_ORDER_METHOD_MONEYBOOKERS_ID."' />" .
-			"<input type='hidden' name='recipient_description' value='Checkout for ".htmlspecialchars(PAGE_TITLE, ENT_QUOTES)."' />" . 
+			"<input type='hidden' name='recipient_description' value='Checkout for ".htmlchars(PAGE_TITLE, ENT_QUOTES)."' />" .
 			"<input type='hidden' name='transaction_id' value='".$order['OrderID']."' />" .
-			"<input type='hidden' name='detail1_description' value='Items' />" . 
-			"<input type='hidden' name='detail1_text' value='".htmlspecialchars(implode('; ', $items), ENT_QUOTES)."' />" . 
-			"<input type='hidden' name='currency' value='".SHOPPING_CART_ORDER_METHOD_MONEYBOOKERS_CURRENCY."' />" . 
+			"<input type='hidden' name='detail1_description' value='Items' />" .
+			"<input type='hidden' name='detail1_text' value='".htmlchars(implode('; ', $items), ENT_QUOTES)."' />" .
+			"<input type='hidden' name='currency' value='".SHOPPING_CART_ORDER_METHOD_MONEYBOOKERS_CURRENCY."' />" .
 			"<input type='hidden' name='amount' value='".$grandtotal."' />" .
 			"<input type='hidden' name='cancel_url' value='".$orderurl."' />" .
-			"<input type='hidden' name='return_url' value='".$orderurl."' />" . 
+			"<input type='hidden' name='return_url' value='".$orderurl."' />" .
 			"<input type='hidden' name='status_url' value='".SITE_URL."index.php?request=modules/shoppingorders/shoppingordermethodpaypal&ajax=1' />" .
 			$this->postProcessText .
 			"<br /><br />" .
 			"<input type='submit' name='submit' value='".
-				htmlspecialchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
+				htmlchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
 				"class='button submit' />" .
-			"</form>", 
+			"</form>",
 			TOOLTIP_NOTIFICATION);
-		
+
 		return true;
 	}
-	
+
 	function ipnProcess() {
 		if (!isset($_POST['transaction_id']) || !isset($_POST['mb_transaction_id']) ||
 			!$_POST['transaction_id'] || !$_POST['mb_transaction_id'])
 			exit("Invalid IPN request!");
-		
+
 		$grandtotal = strip_tags((string)$_POST['mb_amount']);
 		$ordernumber = strip_tags((string)$_POST['transaction_id']);
 		$ordertransactionid = strip_tags((string)$_POST['mb_transaction_id']);
 		$orderemail = strip_tags((string)$_POST['pay_from_email']);
 		$paymentstatus = strip_tags((string)$_POST['status']);
 		$paymenttype = strip_tags((string)$_POST['payment_type']);
-		
+
 		$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
-		
+
 		if ($paymentstatus == -2)
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_FAILED;
 		elseif ($paymentstatus == 2)
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PAID;
 		elseif ($paymentstatus == -1)
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_CANCELLED;
-		
+
 		// These are used for debugging
 		$postgetarguments = "GET arguments:\n";
 		foreach($_GET as $key => $value) {
 			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
-		
+
 		$postgetarguments .= "\nPOST arguments:\n";
 		foreach($_POST as $key => $value) {
 			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
-   		
+
 		$email = new email();
 		$email->load('WebmasterWarning');
-	
+
 		$email->to = WEBMASTER_EMAIL;
-	
+
 		$email->variables = array(
 			'Warning' => $postgetarguments.
-				"\nProcessing Order Payment\n"); 
-		
+				"\nProcessing Order Payment\n");
+
 		if (!$grandtotal) {
-			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";	
+			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";
 			$email->send();
-	
+
 			exit("FAILED: No Grand Total returned!");
 		}
-		
+
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `OrderID` = '".sql::escape($ordernumber)."'"));
-		
+
 		if (!$order) {
-			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";	
+			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";
 			$email->send();
-			
+
 			exit("FAILED: Order Number not found!");
 		}
-		
+
 		$ordertotal = number_format($order['Subtotal']+
 				(isset($order['Tax'])?$order['Tax']:0)-
 				$order['Discount']+$order['Fee'], 2, '.', '');
-		
+
 		if ($grandtotal != $ordertotal) {
 			$email->variables['Warning'] .= "FAILED: Grand Total returned (".
-				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";	
+				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";
 			$email->send();
-			
+
 			exit("FAILED: Grand Total returned (".$grandtotal.") doesn't mach " .
 				" Order's total (".$ordertotal.")!");
 		}
-		
+
 		$md5 = md5(strip_tags((string)$_POST['merchant_id']).$order['OrderID'] .
 			strtoupper(md5(SHOPPING_CART_ORDER_METHOD_MONEYBOOKERS_SECRET_WORD)) .
 			$ordertotal.strip_tags((string)$_POST['mb_currency']).$paymentstatus);
-		
+
 		if ($md5 != strip_tags((string)$_POST['md5sig'])) {
-			$email->variables['Warning'] .= "FAILED: Not a MoneyBookers request!\n";	
+			$email->variables['Warning'] .= "FAILED: Not a MoneyBookers request!\n";
 			$email->send();
-			
+
 			exit("Not a MoneyBookers request!");
 		}
-		
+
 		$orderdetails = $order['OrderMethodDetails'];
-		
-		$orderdetails = 
+
+		$orderdetails =
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			(!stristr($orderdetails, 'Transaction ID')?
 				"Transaction ID: ".$ordertransactionid."\n" .
@@ -1509,7 +1509,7 @@ class shoppingOrderMethodMoneyBookers extends form {
 				" (".$paymentstatus.")\n" .
 			"Payment Type: ".$paymenttype .
 			($orderdetails?"\n\n".$orderdetails:null);
-		
+
 		sql::run(
 			" UPDATE `{shoppingorders}` SET " .
 			" `PaymentStatus` = '".
@@ -1520,22 +1520,22 @@ class shoppingOrderMethodMoneyBookers extends form {
 				" `TimeStamp` = NOW()":
 				" `TimeStamp` = `TimeStamp`") .
 			" WHERE `ID` = '".$order['ID']."'");
-		
+
 		shoppingOrders::sendNotificationEmails($order['ID']);
-		
+
 		if ($orderstatus == SHOPPING_ORDER_PAYMENT_STATUS_PAID)
 			users::activate($order['UserID']);
-		
+
 		exit("OK: Order successfully updated!");
 	}
-	
+
 	function verify() {
 		return true;
 	}
-	
+
 	function setUp() {
 	}
-	
+
 	function ajaxRequest() {
 		$this->ipnProcess();
 		return true;
@@ -1546,56 +1546,56 @@ shoppingOrderMethods::add(
 	'MoneyBookers',
 	_('Credit Card Payment (MoneyBookers)'),
 	_('An extra step will be required trough MoneyBookers.com'));
- 
+
 class shoppingOrderMethodOgone extends form {
 	var $postProcessText = null;
 	var $processResult = null;
 	var $ajaxRequest = null;
-	
+
 	function __construct() {
 		parent::__construct(
 			_('Ogone'), 'ogone');
-		
-		$this->postProcessText = 			
+
+		$this->postProcessText =
 			_("Your order has been successfully created but your payment has not been processed yet. " .
 				"To finalize your payments please click on the button below.");
 	}
-	
+
 	function process() {
-		$this->processResult = 
+		$this->processResult =
 			_("User redirected to ogone, payment is being processed.");
-		
+
 		return SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
 	}
-	
+
 	function postProcess($orderid) {
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `ID` = '".$orderid."'"));
-		
+
 		if (!$order)
 			return false;
-		
+
 		$orderurl = shoppingOrders::getURL().
 				"&shoppingorderid=".$order['ID'];
-		
+
 		$grandtotal = number_format($order['Subtotal']+
 			(isset($order['Tax'])?$order['Tax']:0)-
 			$order['Discount']+$order['Fee'], 2, '.', '');
-		
+
 		$items = array();
 		$orderitems = sql::run(
 			" SELECT * FROM `{shoppingorderitems}`" .
 			" WHERE `ShoppingOrderID` = '".$order['ID']."'");
-		
+
 		while($orderitem = sql::fetch($orderitems)) {
 			$item = sql::fetch(sql::run(
 				" SELECT `RefNumber` FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$orderitem['ShoppingItemID']."'"));
-			
+
 			$items[] = $item['RefNumber'];
 		}
-		
+
 		$arguments =
 			array(
 				'AMOUNT' => $grandtotal*100,
@@ -1617,24 +1617,24 @@ class shoppingOrderMethodOgone extends form {
 				'TITLE' => SHOPPING_CART_ORDER_METHOD_OGONE_PAGE_TITLE,
 				'TP' => SHOPPING_CART_ORDER_METHOD_OGONE_DYNAMIC_TEMPLATE_URL,
 				'TXTCOLOR' => SHOPPING_CART_ORDER_METHOD_OGONE_PAGE_TEXT_COLOR);
-		
+
 		contentCodes::replaceDefinitions($arguments['TITLE']);
-		
+
 		if (languages::$selected)
 			$arguments['LANGUAGE'] = languages::$selected['Locale'];
-		
+
 		$sha1_signature = '';
 		$htmlfields = '';
-			
+
 		foreach ($arguments as $key => $value) {
 			if (strlen($value) == 0)
 				continue;
-			
+
 			$sha1_signature .= $key.'='.$value.SHOPPING_CART_ORDER_METHOD_OGONE_SHA_IN_PASS_PHRASE;
 			$htmlfields .= "<input type='hidden' name='".$key."' " .
-				"value='".htmlspecialchars($value, ENT_QUOTES)."' />";
+				"value='".htmlchars($value, ENT_QUOTES)."' />";
 		}
-		
+
 		tooltip::display(
 			//"<form action='https://secure.ogone.com/ncol/test/orderstandard.asp' method='post' id='shoppingordermethodogoneform'>" .
 			"<form action='https://secure.ogone.com/ncol/prod/orderstandard.asp' method='post' id='shoppingordermethodogoneform'>" .
@@ -1643,20 +1643,20 @@ class shoppingOrderMethodOgone extends form {
 			$this->postProcessText .
 			"<br /><br />" .
 			"<input type='submit' name='submitorder' value='".
-				htmlspecialchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
+				htmlchars(_("Click to Finalize Payments"), ENT_QUOTES)."' " .
 				"class='button submit' />" .
-			"</form>", 
+			"</form>",
 			TOOLTIP_NOTIFICATION);
-		
+
 		return true;
 	}
-	
+
 	function ipnProcess() {
 		if (!isset($_POST['PAYID']) || !isset($_POST['SHASIGN']) ||
 			!$_POST['PAYID'] || !$_POST['SHASIGN'])
 			exit("Invalid IPN request!");
-		
-		$arguments = 
+
+		$arguments =
 			array(
 				'AAVADDRESS' => (isset($_POST['AAVADDRESS'])?strip_tags((string)$_POST['AAVADDRESS']):null),
 				'AAVCHECK' => (isset($_POST['AAVCHECK'])?strip_tags((string)$_POST['AAVCHECK']):null),
@@ -1682,22 +1682,22 @@ class shoppingOrderMethodOgone extends form {
 				'STATUS' => (isset($_POST['STATUS'])?strip_tags((string)$_POST['STATUS']):null),
 				'TRXDATE' => (isset($_POST['TRXDATE'])?strip_tags((string)$_POST['TRXDATE']):null),
 				'VC' => (isset($_POST['VC'])?strip_tags((string)$_POST['VC']):null));
-		
+
 		$sha1key = '';
 		foreach ($arguments as $key => $value) {
 			if (strlen($value) == 0)
 				continue;
-			
+
 			$sha1key .= $key.'='.$value.SHOPPING_CART_ORDER_METHOD_OGONE_SHA_OUT_PASS_PHRASE;
 		}
-		
+
 		$sha1key = sha1($sha1key);
 		$grandtotal = strip_tags((string)$_POST['amount']);
 		$ordernumber = strip_tags((string)$_POST['orderID']);
 		$ordertransactionid = strip_tags((string)$_POST['PAYID']);
 		$paymentmethod = strip_tags((string)$_POST['PM']);
 		$paymentstatus = strip_tags((string)$_POST['STATUS']);
-		
+
 		switch(strip_tags((string)$_POST['STATUS'])) {
 			case 0:
 				$paymentstatusmsg = 'Incomplete or invalid';
@@ -1801,83 +1801,83 @@ class shoppingOrderMethodOgone extends form {
 				$paymentstatusmsg = 'Unknown';
 				break;
 		}
-		
+
 		$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PENDING;
-		
+
 		if ($paymentstatus == 5) {
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PAID;
-			
+
 		} elseif (in_array($paymentstatus, array(1, 6, 7, 8))) {
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_CANCELLED;
-			
+
 		} elseif (in_array($paymentstatus, array(2))) {
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_FAILED;
-			
+
 		} elseif (in_array($paymentstatus, array(4, 41, 51, 52, 59, 61, 62, 63, 71, 72, 73, 74, 75, 81, 82, 83, 84, 85, 9, 91, 92, 93, 94, 95, 97, 98, 99))) {
 			$orderstatus = SHOPPING_ORDER_PAYMENT_STATUS_PROCESSING;
 		}
-		
+
 		// These are used for debugging
 		$postgetarguments = "GET arguments:\n";
 		foreach($_GET as $key => $value) {
 			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
-		
+
 		$postgetarguments .= "\nPOST arguments:\n";
 		foreach($_POST as $key => $value) {
 			$postgetarguments .= strip_tags((string)$key)."=".strip_tags((string)$value)."\n";
    		}
-   		
+
 		$email = new email();
 		$email->load('WebmasterWarning');
-	
+
 		$email->to = WEBMASTER_EMAIL;
-	
+
 		$email->variables = array(
 			'Warning' => $postgetarguments.
-				"\nProcessing Order Payment\n"); 
-		
+				"\nProcessing Order Payment\n");
+
 		if (!$grandtotal) {
-			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";	
+			$email->variables['Warning'] .= "FAILED: No Grand Total returned!\n";
 			$email->send();
-	
+
 			exit("FAILED: No Grand Total returned!");
 		}
-	
+
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `OrderID` = '".sql::escape($ordernumber)."'"));
-		
+
 		if (!$order) {
-			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";	
+			$email->variables['Warning'] .= "FAILED: Order Number not found!\n";
 			$email->send();
-			
+
 			exit("FAILED: Order Number not found!");
 		}
-		
+
 		$ordertotal = number_format($order['Subtotal']+
 				(isset($order['Tax'])?$order['Tax']:0)-
 				$order['Discount']+$order['Fee'], 2, '.', '');
-		
+
 		if ($grandtotal != $ordertotal) {
 			$email->variables['Warning'] .= "FAILED: Grand Total returned (".
-				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";	
+				$grandtotal.") doesn't mach Order's total (".$ordertotal.")!\n";
 			$email->send();
-			
+
 			exit("FAILED: Grand Total returned (".$grandtotal.") doesn't mach " .
 				" Order's total (".$ordertotal.")!");
 		}
-		
+
 		if(strtoupper($sha1key) != strtoupper(strip_tags((string)$_POST['SHASIGN']))) {
-			$email->variables['Warning'] .= "FAILED: Not an Ogone request!\n";	
+			$email->variables['Warning'] .= "FAILED: Not an Ogone request!\n";
 			$email->send();
-			
+
 			exit("Not an Ogone request!");
 		}
-		
+
 		$orderdetails = $order['OrderMethodDetails'];
-		
-		$orderdetails = 
+
+		$orderdetails =
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			(!stristr($orderdetails, 'Transaction ID')?
 				"Transaction ID: ".$ordertransactionid."\n":
@@ -1885,7 +1885,7 @@ class shoppingOrderMethodOgone extends form {
 			"Payment Status: ".$paymentstatusmsg." (".$paymentstatus.")\n" .
 			"Payment Method: ".$paymentmethod .
 			($orderdetails?"\n\n".$orderdetails:null);
-		
+
 		sql::run(
 			" UPDATE `{shoppingorders}` SET " .
 			" `PaymentStatus` = '".
@@ -1896,23 +1896,23 @@ class shoppingOrderMethodOgone extends form {
 				" `TimeStamp` = NOW()":
 				" `TimeStamp` = `TimeStamp`") .
 			" WHERE `ID` = '".$order['ID']."'");
-		
+
 		shoppingOrders::sendNotificationEmails($order['ID']);
-		
+
 		if ($orderstatus == SHOPPING_ORDER_PAYMENT_STATUS_PAID ||
 			$orderstatus == SHOPPING_ORDER_PAYMENT_STATUS_PROCESSING)
 			users::activate($order['UserID']);
-		
+
 		exit("OK: Order successfully updated!");
 	}
-	
+
 	function verify() {
 		return true;
 	}
-	
+
 	function setUp() {
 	}
-	
+
 	function ajaxRequest() {
 		$this->ipnProcess();
 		return true;
@@ -1923,23 +1923,23 @@ shoppingOrderMethods::add(
 	'Ogone',
 	_('Credit Card Payment (Ogone)'),
 	_('An extra step will be required trough Ogone.com'));
- 
+
 class shoppingOrderForm extends dynamicForms {
 	function __construct() {
 		languages::load('shopping');
-		
+
 		parent::__construct(
 			_('Shopping Orders'), 'shoppingorders');
 	}
-	
+
 	function __destruct() {
 		languages::unload('shopping');
 	}
-	
+
 	function verify($customdatahandling = true) {
 		if (!parent::verify(true))
 			return false;
-		
+
 		return true;
 	}
 }
@@ -1952,33 +1952,33 @@ class shoppingOrderComments extends comments {
 	var $adminPath = array(
 		'admin/modules/shoppingorders/shoppingneworders/shoppingordercomments',
 		'admin/modules/shoppingorders/shoppingprocessedorders/shoppingordercomments');
-	
+
 	function __construct() {
 		languages::load('shopping');
-		
+
 		parent::__construct();
-		
+
 		$this->selectedOwner = _('Order');
 		$this->uriRequest = "modules/shoppingorders/".$this->uriRequest;
 	}
-	
+
 	function __destruct() {
 		languages::unload('shopping');
 	}
-	
+
 	static function getCommentURL($comment = null) {
 		if ($comment)
 			return shoppingOrders::getURL().
 				"&shoppingorderid=".$comment['ShoppingOrderID'];
-		
+
 		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
 			return shoppingOrders::getURL().
 				"&shoppingorderid=".admin::getPathID();
-		
-		return 
+
+		return
 			parent::getCommentURL();
 	}
-	
+
 	function ajaxRequest() {
 		if (shoppingOrders::checkAccess($this->selectedOwnerID)) {
 			$orders = new shoppingOrders();
@@ -1986,7 +1986,7 @@ class shoppingOrderComments extends comments {
 			unset($orders);
 			return true;
 		}
-		
+
 		return parent::ajaxRequest();
 	}
 }
@@ -1995,36 +1995,36 @@ class shoppingOrderItems {
 	function __construct() {
 		languages::load('shopping');
 	}
-	
+
 	function __destruct() {
 		languages::unload('shopping');
 	}
-	
+
 	function add($values) {
 		if (!is_array($values))
 			return false;
-		
+
 		$newid = sql::run(
 			" INSERT INTO `{shoppingorderitems}` SET " .
 			" `ShoppingOrderID` = '".(int)$values['ShoppingOrderID']."', " .
 			" `ShoppingItemID` = '".(int)$values['ShoppingItemID']."', " .
-			(isset($values['ShoppingItemOptions']) && 
+			(isset($values['ShoppingItemOptions']) &&
 			 $values['ShoppingItemOptions']?
 				" `ShoppingItemOptions` = '" .
 					sql::escape($values['ShoppingItemOptions'])."', ":
 				null) .
 			" `Price` = '".sql::escape($values['Price'])."', " .
 			" `Quantity` = '".sql::escape($values['Quantity'])."'");
-		
+
 		if (!$newid) {
 			tooltip::display(
 				_("Order item couldn't be added to the db! Please contact us " .
 					"with this error as soon as possible."),
 				TOOLTIP_ERROR);
-			
+
 			return false;
 		}
-		
+
 		if (JCORE_VERSION >= '0.5') {
 			sql::run(
 				" UPDATE `{shoppingitems}` SET" .
@@ -2032,17 +2032,17 @@ class shoppingOrderItems {
 				" `TimeStamp` = `TimeStamp`" .
 				" WHERE `ID` = '".(int)$values['ShoppingItemID']."'");
 		}
-		
+
 		return $newid;
 	}
-	
+
 	function edit($id, $values) {
 		if (!$id)
 			return false;
-		
+
 		if (!is_array($values))
 			return false;
-		
+
 		sql::run(
 			" UPDATE `{shoppingorderitems}` SET " .
 			(isset($values['ShoppingItemOptions'])?
@@ -2055,26 +2055,26 @@ class shoppingOrderItems {
 			" `Price` = '".sql::escape($values['Price'])."', " .
 			" `Quantity` = '".sql::escape($values['Quantity'])."'" .
 			" WHERE `ID` = '".(int)$id."'");
-		
+
 		if (sql::affected() == -1) {
 			tooltip::display(
-				sprintf(_("Order item couldn't be updated! Error: %s"), 
+				sprintf(_("Order item couldn't be updated! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	function delete($id) {
 		if (!$id)
 			return false;
-			
+
 		sql::run(
 			" DELETE FROM `{shoppingorderitems}` " .
 			" WHERE `ID` = '".$id."'");
-			
+
 		return true;
 	}
 }
@@ -2089,34 +2089,34 @@ class shoppingOrders extends modules {
 	var $ajaxPaging = AJAX_PAGING;
 	var $ajaxRequest = null;
 	var $adminPath = 'admin/modules/shoppingorders';
-	
+
 	function __construct() {
 		languages::load('shopping');
-		
+
 		if (isset($_GET['shoppingorderid']))
 			$this->selectedID = (int)$_GET['shoppingorderid'];
 	}
-	
+
 	function __destruct() {
 		languages::unload('shopping');
 	}
-	
+
 	function SQL() {
 		$permission = null;
-		
+
 		if ($GLOBALS['USER']->data['Admin']) {
 			include_once('lib/userpermissions.class.php');
-			
-			$permission = userPermissions::check((int)$GLOBALS['USER']->data['ID'], 
+
+			$permission = userPermissions::check((int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
 		}
-		
+
 		return
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE 1" .
 			($this->selectedID?
 				" AND `ID` = '".$this->selectedID."'":
-				null) . 
+				null) .
 			(!$GLOBALS['USER']->data['Admin'] || !$permission['PermissionType']?
 				" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 				null) .
@@ -2126,15 +2126,15 @@ class shoppingOrders extends modules {
 				null) .
 			" ORDER BY `ID` DESC";
 	}
-	
+
 	function installSQL() {
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicforms}` " .
 			" WHERE `FormID` = 'shoppingorders';"));
-		
+
 		if (sql::error())
 			return false;
-		
+
 		if ($exists)
 			$formid = $exists['ID'];
 		else
@@ -2142,17 +2142,17 @@ class shoppingOrders extends modules {
 				" INSERT INTO `{dynamicforms}` " .
 				" (`Title`, `FormID`, `Method`, `SendNotificationEmail`, `SQLTable`, `Protected`, `ProtectedSQLTable`, `BrowseDataURL`) VALUES" .
 				" ('Shopping Orders', 'shoppingorders', 'post', 0, 'shoppingorders', 1, 1, '?path=admin/modules/shoppingorders');");
-			
+
 		if (sql::error())
 			return false;
-		
+
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicformfields}` " .
 			" WHERE `FormID` = '".$formid."';"));
-		
+
 		if (sql::error())
 			return false;
-		
+
 		if (!$exists) {
 			sql::run(
 				" INSERT INTO `{dynamicformfields}` " .
@@ -2183,11 +2183,11 @@ class shoppingOrders extends modules {
 				" (".$formid.", 'Is this a gift order?', 'GiftOrder', 3, 10, 0, '', '', '', '', '', 24, 0)," .
 				" (".$formid.", 'Please enter your gift message here', 'GiftMessage', 6, 9, 0, '', '', '', '', 'width: 300px;', 25, 0)," .
 				" (".$formid.", ' ', '', 14, 0, 0, '', '', '', '', '', 26, 0);");
-			
+
 			if (sql::error())
 				return false;
 		}
-		
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{shoppingorders}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -2229,10 +2229,10 @@ class shoppingOrders extends modules {
 			" KEY `OrderStatus` (`OrderStatus`)," .
 			" KEY `PaymentStatus` (`PaymentStatus`)" .
 			") ENGINE=MyISAM ;");
-		
+
 		if (sql::error())
 			return false;
-		
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{shoppingorderitems}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -2244,10 +2244,10 @@ class shoppingOrders extends modules {
 			" PRIMARY KEY  (`ID`)," .
 			" KEY `ShoppingOrderID` (`ShoppingOrderID`)" .
 			") ENGINE=MyISAM ;");
-		
+
 		if (sql::error())
 			return false;
-		
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{shoppingordercomments}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -2269,10 +2269,10 @@ class shoppingOrders extends modules {
 			" KEY `UserName` (`UserName`)," .
 			" KEY `Pending` (`Pending`)" .
 			") ENGINE=MyISAM ;");
-		
+
 		if (sql::error())
 			return false;
-		
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{shoppingordercommentsratings}` (" .
 			" `CommentID` int(10) unsigned NOT NULL default '0'," .
@@ -2286,10 +2286,10 @@ class shoppingOrders extends modules {
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `Rating` (`Rating`)" .
 			") ENGINE=MyISAM ;");
-		
+
 		if (sql::error())
 			return false;
-		
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{shoppingorderdownloads}` (" .
 			" `ID` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," .
@@ -2304,47 +2304,47 @@ class shoppingOrders extends modules {
 			" KEY `ShoppingItemID` (`ShoppingItemID`)," .
 			" KEY `ShoppingItemDigitalGoodID` (`ShoppingItemDigitalGoodID`)" .
 			") ENGINE = MYISAM ;");
-		
+
 		if (sql::error())
 			return false;
-		
+
 		$exists = sql::fetch(sql::run(
 			" SHOW TABLES LIKE '" .
 				(SQL_PREFIX?
 					SQL_PREFIX.'_':
 					null) .
 				"shoppingcartsettings'"));
-		
+
 		if (sql::error())
 			return false;
-		
+
 		if (!$exists) {
 			tooltip::display(
 				_("Shopping cart settings table cannot be found! Please " .
 					"first install the Shopping Cart module and then try again."),
 				TOOLTIP_ERROR);
-			
+
 			return false;
 		}
-		
+
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingcartsettings}`" .
 			" WHERE `ID` LIKE 'Shopping_Cart_Order_Method%'"));
-		
+
 		if (sql::error())
 			return false;
-		
+
 		if (!$exists) {
 			$lastorderid = sql::fetch(sql::run(
 				" SELECT `OrderID` FROM `{shoppingcartsettings}`" .
 				" ORDER BY `OrderID` DESC" .
 				" LIMIT 1"));
-		
+
 			if (sql::error())
 				return false;
-				
+
 			$nextorderid = (int)($lastorderid['OrderID']+1);
-		
+
 			sql::run(
 				" INSERT INTO `{shoppingcartsettings}` (`ID`, `Value`, `TypeID`, `OrderID`) VALUES" .
 				" ('Shopping_Cart_Order_Method_InvoiceCustomer', '', 0, ".$nextorderid.")," .
@@ -2399,21 +2399,21 @@ class shoppingOrders extends modules {
 				" ('Shopping_Cart_Order_Method_Ogone_Page_Font_Type', 'Verdana', 1, ".($nextorderid+8).")," .
 				" ('Shopping_Cart_Order_Method_Ogone_Page_Logo', '', 1, ".($nextorderid+8).")," .
 				" ('Shopping_Cart_Order_Method_Ogone_Dynamic_Template_URL', '', 1, ".($nextorderid+8).");");
-			
+
 			if (sql::error())
 				return false;
 		}
-		
+
 		if (JCORE_VERSION >= '0.9')
 			$this->installjQueryPlugins('numberformat');
 		else
 			jQuery::addPlugin('numberformat');
-		
+
 		return true;
 	}
-	
+
 	function installFiles() {
-		$css = 
+		$css =
 			".shopping-order-comments-link {\n" .
 			"	width: 32px;\n" .
 			"	height: 32px;\n" .
@@ -2514,22 +2514,22 @@ class shoppingOrders extends modules {
 			".as-shopping-new-orders a {\n" .
 			"	background-image: url(\"http://icons.jcore.net/48/shopping-orders-new.png\");\n" .
 			"}\n";
-		
+
 		return
 			files::save(SITE_PATH.'template/modules/css/shoppingorders.css', $css);
 	}
-	
+
 	function uninstallSQL() {
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{dynamicforms}` " .
 			" WHERE `FormID` = 'shoppingorders';"));
-		
+
 		if ($exists) {
 			$form = new dynamicForms();
 			$form->deleteForm($exists['ID']);
 			unset($form);
 		}
-		
+
 		sql::run(
 			" DROP TABLE IF EXISTS `{shoppingorders}`;");
 		sql::run(
@@ -2540,32 +2540,32 @@ class shoppingOrders extends modules {
 			" DROP TABLE IF EXISTS `{shoppingordercommentsratings}`;");
 		sql::run(
 			" DROP TABLE IF EXISTS `{shoppingorderdownloads}`;");
-		
+
 		$exists = sql::fetch(sql::run(
 			" SHOW TABLES LIKE '" .
 				(SQL_PREFIX?
 					SQL_PREFIX.'_':
 					null) .
 				"shoppingcartsettings'"));
-		
+
 		if ($exists)
 			sql::run(
 				" DELETE FROM `{shoppingcartsettings}`" .
 				" WHERE `ID` LIKE 'Shopping_Cart_Order_Method%'");
-		
+
 		return true;
 	}
-	
+
 	function uninstallFiles() {
 		return
 			files::delete(SITE_PATH.'template/modules/css/shoppingorders.css');
 	}
-	
+
 	// ************************************************   Admin Part
 	function countAdminItems($ordertypes = null) {
 		if (!parent::installed($this))
 			return 0;
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{shoppingorders}`" .
@@ -2575,34 +2575,34 @@ class shoppingOrders extends modules {
 			" LIMIT 1"));
 		return $row['Rows'];
 	}
-	
+
 	function setupAdmin() {
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
-				_('New Order'), 
+				_('New Order'),
 				'?path=admin/modules/shoppingorders/shoppingneworders#adminform');
-		
+
 		favoriteLinks::add(
-			_('Items'), 
+			_('Items'),
 			'?path=admin/modules/shopping');
 		favoriteLinks::add(
-			_('Cart Settings'), 
+			_('Cart Settings'),
 			'?path=admin/modules/shoppingcart');
 		favoriteLinks::add(
-			__('Users'), 
+			__('Users'),
 			'?path=admin/members/users');
 	}
-	
+
 	function setupAdminForm(&$form) {
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		if ($edit) {
 			$form->add(
 				_('Order Status'),
@@ -2610,57 +2610,57 @@ class shoppingOrders extends modules {
 				FORM_INPUT_TYPE_SELECT,
 				true);
 			$form->setValueType(FORM_VALUE_TYPE_INT);
-			
+
 			$form->addValue(
 				SHOPPING_ORDER_STATUS_NEW,
 				$this->status2Text(SHOPPING_ORDER_STATUS_NEW));
-			
+
 			$form->addValue(
 				SHOPPING_ORDER_STATUS_PROCESSING,
 				$this->status2Text(SHOPPING_ORDER_STATUS_PROCESSING));
-			
+
 			$form->addValue(
 				SHOPPING_ORDER_STATUS_ACCEPTED,
 				$this->status2Text(SHOPPING_ORDER_STATUS_ACCEPTED));
-			
+
 			$form->addValue(
 				SHOPPING_ORDER_STATUS_DELIVERED,
 				$this->status2Text(SHOPPING_ORDER_STATUS_DELIVERED));
-				
+
 			$form->addValue(
 				SHOPPING_ORDER_STATUS_CANCELLED,
 				$this->status2Text(SHOPPING_ORDER_STATUS_CANCELLED));
-			
+
 			$form->addValue(
 				SHOPPING_ORDER_STATUS_REJECTED,
 				$this->status2Text(SHOPPING_ORDER_STATUS_REJECTED));
-				
+
 			$form->add(
 				"<div class='separator'></div>",
 				null,
 				FORM_STATIC_TEXT);
-				
+
 		} else {
 			$form->add(
 				"<b style='zoom: 1;'>"._("Order Owner")."</b>",
 				null,
 				FORM_STATIC_TEXT);
-				
+
 			$form->add(
 				__("Username"),
 				"UserName",
 				FORM_INPUT_TYPE_TEXT,
 				true);
-			
+
 			$form->addAdditionalText(
 				"<a style='zoom: 1;' href='".url::uri('request, users').
 					"&amp;request=".url::path() .
 					"&amp;users=1' " .
 					"class='shopping-order-new-order-add-user ajax-content-link' " .
-					"title='".htmlspecialchars(_("Define the owner of this order"), ENT_QUOTES)."'>" .
+					"title='".htmlchars(_("Define the owner of this order"), ENT_QUOTES)."'>" .
 					_("Select User") .
 				"</a>");
-				
+
 			$form->add(
 				"<br /><b style='zoom: 1;'>"._("Shopping Items")."</b><br />" .
 				"<span style='zoom: 1;'>" .
@@ -2668,38 +2668,38 @@ class shoppingOrders extends modules {
 				"</span>",
 				null,
 				FORM_STATIC_TEXT);
-				
+
 			$form->add(
 				null,
 				'ShoppingCart',
 				FORM_STATIC_TEXT);
 		}
-		
+
 		$orderform = new shoppingOrderForm();
 		$orderform->id = 'neworder';
 		$orderform->load(false);
-		
+
 		foreach($orderform->elements as $element)
 			$form->elements[] = $element;
-		
+
 		unset($orderform);
-		
+
 		$form->add(
 			_('Order Method'),
 			null,
 			FORM_OPEN_FRAME_CONTAINER,
 			true);
-			
+
 		if ($edit) {
 			$order = sql::fetch(sql::run(
 				" SELECT `OrderMethod` FROM `{shoppingorders}` " .
 				" WHERE `ID` = '".$id."'"));
-			
+
 			$ordermethod = null;
-			
+
 			if ($order['OrderMethod'])
 				$ordermethod = shoppingOrderMethods::get($order['OrderMethod']);
-			
+
 			if ($ordermethod)
 				$form->add(
 					"<b>".$ordermethod['Title']."</b><br />" .
@@ -2713,59 +2713,59 @@ class shoppingOrders extends modules {
 					"</b>",
 					null,
 					FORM_STATIC_TEXT);
-			
+
 			$form->add(
 				_('Status'),
 				'PaymentStatus',
 				FORM_INPUT_TYPE_SELECT,
 				true);
 			$form->setValueType(FORM_VALUE_TYPE_INT);
-			
+
 			$form->addValue(
 				SHOPPING_ORDER_PAYMENT_STATUS_PENDING,
 				$this->paymentStatus2Text(SHOPPING_ORDER_PAYMENT_STATUS_PENDING));
-			
+
 			$form->addValue(
 				SHOPPING_ORDER_PAYMENT_STATUS_PROCESSING,
 				$this->paymentStatus2Text(SHOPPING_ORDER_PAYMENT_STATUS_PROCESSING));
-			
+
 			$form->addValue(
 				SHOPPING_ORDER_PAYMENT_STATUS_PAID,
 				$this->paymentStatus2Text(SHOPPING_ORDER_PAYMENT_STATUS_PAID));
-			
+
 			$form->addValue(
 				SHOPPING_ORDER_PAYMENT_STATUS_CANCELLED,
 				$this->paymentStatus2Text(SHOPPING_ORDER_PAYMENT_STATUS_CANCELLED));
-			
+
 			$form->addValue(
 				SHOPPING_ORDER_PAYMENT_STATUS_FAILED,
 				$this->paymentStatus2Text(SHOPPING_ORDER_PAYMENT_STATUS_FAILED));
-			
+
 			$form->addValue(
 				SHOPPING_ORDER_PAYMENT_STATUS_EXPIRED,
 				$this->paymentStatus2Text(SHOPPING_ORDER_PAYMENT_STATUS_EXPIRED));
-			
+
 			$form->add(
 				_('Details'),
 				'OrderMethodDetails',
 				FORM_INPUT_TYPE_TEXTAREA);
-			
+
 			$form->setStyle('width: ' .
 				(JCORE_VERSION >= '0.7'?
 					'90%':
 					'300px') .
 				'; height: 200px;');
-			
+
 		} else {
 			$form->add(
 				_("Please select the order method you would " .
 					"like to proceed with"),
 				null,
 				FORM_STATIC_TEXT);
-					
+
 			$ordermethods = new shoppingOrderMethods();
 			$methods = $ordermethods->get();
-			
+
 			foreach($methods as $methodid => $method) {
 				$form->add(
 					$method['Title'],
@@ -2773,47 +2773,47 @@ class shoppingOrders extends modules {
 					FORM_INPUT_TYPE_RADIO,
 					true,
 					$methodid);
-				
+
 				$form->setElementKey(
-					'EntryID', 
+					'EntryID',
 					'ordermethod'.$methodid);
-					
+
 				$form->addAdditionalText(
 					"<span class='comment'>" .
 						$method['Description'].
 					"</span>");
-					
+
 				$ordermethodclass = 'shoppingOrderMethod'.
 					$methodid;
-				
+
 				$ordermethod = new $ordermethodclass;
 				$ordermethod->checkoutForm = $form;
 				$ordermethod->setUp();
-				
+
 				foreach($ordermethod->elements as $element) {
 					if ($form->get('ordermethod') != $methodid)
 						$element['Required'] = false;
-					
+
 					$form->elements[] = $element;
 				}
-				
+
 				unset($ordermethod);
 			}
-			
+
 			unset($ordermethods);
 		}
-		
+
 		$form->add(
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
 	}
-	
+
 	function setupAdminFormCart(&$form) {
 		$submittedcart = null;
 		$currencyleft = '';
 		$currencyright = '';
-		
+
 		if (defined('SHOPPING_CART_CURRENCY')) {
 			if (defined('SHOPPING_CART_CURRENCY_POSITION') && SHOPPING_CART_CURRENCY_POSITION &&
 				stristr(SHOPPING_CART_CURRENCY_POSITION, 'right'))
@@ -2821,32 +2821,32 @@ class shoppingOrders extends modules {
 			else
 				$currencyleft = SHOPPING_CART_CURRENCY;
 		}
-		
+
 		if (JCORE_VERSION >= '0.7') {
 			$items = null;
 			$quantities = null;
 			$customoptions = null;
 			$prices = null;
-			
+
 			if (isset($_POST['ShoppingItemID']))
 				$items = (array)$_POST['ShoppingItemID'];
-			
+
 			if (isset($_POST['ShoppingItemQuantity']))
 				$quantities = (array)$_POST['ShoppingItemQuantity'];
-			
+
 			if (isset($_POST['ShoppingItemCustomOption']))
 				$customoptions = (array)$_POST['ShoppingItemCustomOption'];
-			
+
 			if (isset($_POST['ShoppingItemPrice']))
 				$prices = (array)$_POST['ShoppingItemPrice'];
-		
-			if ($items && is_array($items)) {			
+
+			if ($items && is_array($items)) {
 				foreach($items as $key => $itemid) {
 					$item = sql::fetch(sql::run(
 						" SELECT * FROM `{shoppingitems}`" .
 						" WHERE `ID` = '".(int)$itemid."'"));
-					
-					$submittedcart .= 
+
+					$submittedcart .=
 						"<tr>" .
 							"<td>" .
 								$item['RefNumber'] .
@@ -2867,7 +2867,7 @@ class shoppingOrders extends modules {
 									strip_tags((string)$customoptions[(int)$key]) .
 								"</textarea>" .
 							"</td>" .
-							"<td style='text-align: right;'>" . 
+							"<td style='text-align: right;'>" .
 								"<input type='text' name='ShoppingItemQuantity[]' " .
 									"value='".(int)$quantities[(int)$key]."' " .
 									"style='width: 30px;' />" .
@@ -2883,20 +2883,20 @@ class shoppingOrders extends modules {
 							"</td>" .
 							"<td style='text-align: right;'>" .
 								"<span class='shopping-order-new-order-item-total-price nowrap'>" .
-								$currencyleft . 
+								$currencyleft .
 								number_format((int)$quantities[(int)$key]*(float)$prices[(int)$key], 2) .
 								$currencyright .
 								"</span>" .
 							"</td>" .
 							"<td align='center'>" .
 								"<a class='shopping-order-new-order-remove-item' " .
-									"href='javascript://'></a>" . 
+									"href='javascript://'></a>" .
 							"</td>" .
 						"</tr>";
 				}
 			}
 		}
-	
+
 		$form->edit(
 			'ShoppingCart',
 			"<div class='shopping-cart shopping-order-cart'>" .
@@ -2945,13 +2945,13 @@ class shoppingOrders extends modules {
 					"&amp;request=".url::path() .
 					"&amp;shoppingitems=1' " .
 					"class='shopping-orders-cart-add-item ajax-content-link' " .
-					"title='".htmlspecialchars(_("Add items to this order"), ENT_QUOTES)."'>" .
+					"title='".htmlchars(_("Add items to this order"), ENT_QUOTES)."'>" .
 					_("Add Items") .
 				"</a>" .
 				(JCORE_VERSION >= '0.7'?
 					"<a href='javascript://' " .
 						"class='shopping-orders-cart-refresh' " .
-						"title='".htmlspecialchars(_("Refresh order totals"), ENT_QUOTES)."'>" .
+						"title='".htmlchars(_("Refresh order totals"), ENT_QUOTES)."'>" .
 						_("Refresh") .
 					"</a>":
 					null) .
@@ -2984,7 +2984,7 @@ class shoppingOrders extends modules {
 					"</div>" .
 					"<div class='shopping-cart-fee shopping-order-cart-fee'>" .
 						"<span class='shopping-cart-total-title'>".
-							htmlspecialchars(_("Shipping & Handling")).":" .
+							htmlchars(_("Shipping & Handling")).":" .
 						"</span>" .
 						"<span class='bold'>" .
 							shoppingOrders::constructPrice(0) .
@@ -3010,7 +3010,7 @@ class shoppingOrders extends modules {
 							"cart: {" .
 								"add: function(itemid, refnumber, title, quantity, price) {" .
 									"cart = $('#neworderform .shopping-order-cart tbody');" .
-									
+
 									"if (!refnumber || !title || !quantity || !price) {" .
 										"itemtds = $('#shoppingorderneworderitemlistrow'+itemid+' td');" .
 										"if (!refnumber)" .
@@ -3026,7 +3026,7 @@ class shoppingOrders extends modules {
 												"quantity = $(itemtds.get(2)).find('input').val();" .
 										"}" .
 									"}" .
-									
+
 									"newitem = $(" .
 										"\"<tr>" .
 											"<td>" .
@@ -3043,7 +3043,7 @@ class shoppingOrders extends modules {
 													"style='display: none; width: 90%;'>" .
 												"</textarea>" .
 											"</td>" .
-											"<td style='text-align: right;'>" . 
+											"<td style='text-align: right;'>" .
 												"<input type='text' name='ShoppingItemQuantity[]' " .
 													"value='\"+quantity+\"' " .
 													"style='width: 30px;' />" .
@@ -3067,25 +3067,25 @@ class shoppingOrders extends modules {
 											"</td>" .
 											"<td align='center'>" .
 												"<a class='shopping-order-new-order-remove-item' " .
-													"href='javascript://'></a>" . 
+													"href='javascript://'></a>" .
 											"</td>" .
 										"</tr>\");" .
-									
+
 									"newitem.find('.shopping-order-new-order-remove-item').click(function() {" .
 										"$(this).parent().parent().remove();" .
 									"});" .
-									
+
 									"newitem.find('.shopping-order-new-order-custom-option').click(function() {" .
 										"$(this).next().next().toggle();" .
 									"});" .
-									
+
 									"newitem.find('.shopping-order-new-order-remove-item, .shopping-order-new-order-custom-option').click(function() {" .
 										"$.jCore.modules.shoppingOrders.admin.newOrder.cart.refresh();" .
 									"});" .
-									
+
 									"cart.append(newitem);" .
 									"$.jCore.modules.shoppingOrders.admin.newOrder.cart.refresh();" .
-									
+
 									"return false;" .
 								"}," .
 								"refresh: function() {" .
@@ -3135,11 +3135,11 @@ class shoppingOrders extends modules {
 			'ShoppingCart',
 			FORM_STATIC_TEXT);
 	}
-	
+
 	function getAdminNewOrderTotals($values = null) {
 		if (!$values)
 			$values = $_POST;
-		
+
 		$userid = 0;
 		$totals = array(
 			'Subtotal' => 0,
@@ -3148,209 +3148,209 @@ class shoppingOrders extends modules {
 			'Fee' => 0,
 			'GrandTotal' => 0,
 			'Weight' => 0);
-		
-		if (!isset($values['ShoppingItemID']) || !is_array($values['ShoppingItemID']) || 
+
+		if (!isset($values['ShoppingItemID']) || !is_array($values['ShoppingItemID']) ||
 			!count($values['ShoppingItemID']))
 			return $totals;
-		
+
 		if (isset($values['UserName']) && $values['UserName']) {
 			$user = sql::fetch(sql::run(
 				" SELECT `ID` FROM `{users}` " .
 				" WHERE `UserName` = '".sql::escape((string)$values['UserName'])."'"));
-			
+
 			if ($user)
 				$userid = $user['ID'];
 		}
-		
+
 		if (!$userid && $GLOBALS['USER']->loginok)
 			$userid = $GLOBALS['USER']->data['ID'];
-		
+
 		$taxpercentage = shoppingCart::getTax();
-		
+
 		foreach($values['ShoppingItemID'] as $key => $itemid) {
 			$item = sql::fetch(sql::run(
 				" SELECT `Price`, `Weight`, `Taxable`" .
 				" FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".(int)$itemid."'"));
-			
+
 			if (!$item)
 				continue;
-			
+
 			if (!isset($values['ShoppingItemQuantity'][(int)$key]))
 				$values['ShoppingItemQuantity'][(int)$key] = 1;
-			
+
 			if (!isset($values['ShoppingItemPrice'][(int)$key]))
 				$values['ShoppingItemPrice'][(int)$key] = $item['Price'];
-			
+
 			if ($taxpercentage > 0 && $item['Taxable'] &&
 				(int)$values['ShoppingItemQuantity'][(int)$key] * (float)$values['ShoppingItemPrice'][(int)$key] > 0)
 			{
 				$totals['Tax'] += round(((int)$values['ShoppingItemQuantity'][(int)$key] *
 					(float)$values['ShoppingItemPrice'][(int)$key])*$taxpercentage/100, 2);
 			}
-			
-			$totals['Subtotal'] += round((int)$values['ShoppingItemQuantity'][(int)$key] * 
+
+			$totals['Subtotal'] += round((int)$values['ShoppingItemQuantity'][(int)$key] *
 				(float)$values['ShoppingItemPrice'][(int)$key], 2);
 			$totals['Weight'] += (int)$values['ShoppingItemQuantity'][(int)$key]*$item['Weight'];
 		}
-		
+
 		$totals['Discount'] = shoppingCart::getDiscount($totals['Subtotal']+$totals['Tax'],
 			$userid);
-		
-		$totals['Fee'] = shoppingCart::getFee($totals['Subtotal']+$totals['Tax'], 
+
+		$totals['Fee'] = shoppingCart::getFee($totals['Subtotal']+$totals['Tax'],
 			$totals['Weight']);
-		
+
 		$totals['GrandTotal'] = round($totals['Subtotal']+$totals['Tax']-
 			$totals['Discount']+$totals['Fee'], 2);
-		
+
 		return $totals;
 	}
-	
+
 	function verifyAdmin(&$form = null) {
 		$delete = null;
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_POST['delete']))
 			$delete = (int)$_POST['delete'];
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		if ($delete) {
 			if (!security::checkToken())
 				return false;
-			
+
 			if (!$this->delete($id))
 				return false;
-				
+
 			tooltip::display(
 				_("Order has been successfully deleted."),
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if (!$form->verify())
 			return false;
-		
+
 		if ($edit) {
 			if (!$this->edit($id, $form->getPostArray()))
 				return false;
-				
+
 			tooltip::display(
 				_("Order has been successfully updated.")." " .
 				"<a href='#adminform'>" .
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if ($this->userPermissionIDs)
 			return false;
-		
+
 		$ordermethodclass = 'shoppingOrderMethod'.
 			$form->get('ordermethod');
-		
-		if (!class_exists($ordermethodclass) || 
-			!method_exists($ordermethodclass,'process')) 
+
+		if (!class_exists($ordermethodclass) ||
+			!method_exists($ordermethodclass,'process'))
 		{
 			tooltip::display(
 				_("We are sorry for the inconvenience but it seems this order " .
 					"method doesn't have order processing capabilities. " .
 					"Please choose a different order method or contact webmaster."),
 				TOOLTIP_ERROR);
-			
+
 			return false;
 		}
-		
+
 		$user = sql::fetch(sql::run(
 			" SELECT * FROM `{users}` " .
 			" WHERE `UserName` = '".sql::escape($form->get('UserName'))."'"));
-		
+
 		if (!$user) {
 			tooltip::display(
-				sprintf(__("User \"%s\" couldn't be found!"), 
+				sprintf(__("User \"%s\" couldn't be found!"),
 					$form->get('UserName'))." " .
 				__("Please make sure you have entered / selected the right " .
 					"username or if it's a new user please first create " .
 					"the user at Member Management -> Users."),
 				TOOLTIP_ERROR);
-			
+
 			$form->setError('UserName', FORM_ERROR_REQUIRED);
 			return false;
 		}
-		
+
 		$ordermethod = new $ordermethodclass;
 		$ordermethod->checkoutForm = $form;
-		
+
 		$paymentstatus = $ordermethod->process();
 		$paymentresult = $ordermethod->processResult;
-		
+
 		unset($ordermethod);
-		
+
 		if (!$paymentstatus)
 			return false;
-		
+
 		$items = null;
 		$quantities = null;
 		$customoptions = null;
 		$prices = null;
-		
+
 		if (isset($_POST['ShoppingItemID']))
 			$items = (array)$_POST['ShoppingItemID'];
-		
+
 		if (isset($_POST['ShoppingItemQuantity']))
 			$quantities = (array)$_POST['ShoppingItemQuantity'];
-		
+
 		if (isset($_POST['ShoppingItemCustomOption']))
 			$customoptions = (array)$_POST['ShoppingItemCustomOption'];
-		
+
 		if (isset($_POST['ShoppingItemPrice']))
 			$prices = (array)$_POST['ShoppingItemPrice'];
-		
+
 		if (!$items || !is_array($items) || !count($items)) {
 			tooltip::display(
 				_("No items added / selected for this order! " .
 					"Please select / add at least one item for the " .
 					"new order to proceed."),
 				TOOLTIP_ERROR);
-			
+
 			return false;
 		}
-		
+
 		$subtotal = 0;
 		$weight = 0;
 		$tax = 0;
 		$taxpercentage = shoppingCart::getTax();
-		
+
 		foreach($items as $key => $itemid) {
 			$item = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".(int)$itemid."'"));
-			
+
 			if (!$item)
 				continue;
-			
+
 			if (JCORE_VERSION >= '0.7') {
 				$weight += $item['Weight']*(int)$quantities[(int)$key];
-				
+
 				if ($taxpercentage > 0 && $item['Taxable'] &&
 					(int)$quantities[(int)$key]*(float)$prices[(int)$key] > 0)
 					$tax += round(((int)$quantities[(int)$key]*(float)$prices[(int)$key])*$taxpercentage/100, 2);
 			}
-			
+
 			$subtotal += ((float)$prices[(int)$key]*(int)$quantities[(int)$key]);
 		}
-		
+
 		$ordernumber = shoppingOrders::genOrderID();
 		$ordervalues = $form->getPostArray();
-		
+
 		$ordervalues['OrderID'] = $ordernumber;
 		$ordervalues['UserID'] = $user['ID'];
 		$ordervalues['PaymentStatus'] = $paymentstatus;
@@ -3360,29 +3360,29 @@ class shoppingOrders extends modules {
 		$ordervalues['Fee'] = shoppingCart::getFee($subtotal+$tax, $weight);
 		$ordervalues['Tax'] = $tax;
 		$ordervalues['Subtotal'] = $subtotal;
-		
+
 		$orderid = $this->add($ordervalues);
-		
+
 		if (!$orderid)
 			return false;
-			
+
 		$orderitems = new shoppingOrderItems();
-		
+
 		foreach($items as $key => $itemid) {
 			$item = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".(int)$itemid."'"));
-			
+
 			$itemvalues['ShoppingOrderID'] = $orderid;
 			$itemvalues['ShoppingItemID'] = (int)$itemid;
 			$itemvalues['Price'] = (float)$prices[(int)$key];
 			$itemvalues['Quantity'] = (int)$quantities[(int)$key];
-			
+
 			if (JCORE_VERSION >= '0.7')
 				$itemvalues['ShoppingItemOptions'] = strip_tags((string)$customoptions[(int)$key]);
-			
+
 			$newid = $orderitems->add($itemvalues);
-			
+
 			if ($newid) {
 				// Update items AvailableQuantity value
 				sql::run(
@@ -3392,7 +3392,7 @@ class shoppingOrders extends modules {
 					" WHERE `ID` = '".(int)$itemid."'" .
 					" AND `AvailableQuantity` IS NOT NULL" .
 					" AND `AvailableQuantity` > 0");
-			
+
 			} else {
 				tooltip::display(
 					_("There were some errors while processing your order (some " .
@@ -3401,9 +3401,9 @@ class shoppingOrders extends modules {
 					TOOLTIP_ERROR);
 			}
 		}
-		
+
 		unset($orderitems);
-		
+
 		tooltip::display(
 			sprintf(_("Order has been successfully created.<br /> " .
 					"The confirmation / tracking number is <b>%s</b>."), $ordernumber) .
@@ -3418,41 +3418,41 @@ class shoppingOrders extends modules {
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
-				
+
 		shoppingOrders::sendNotificationEmails($orderid);
-		
+
 		unset($_POST['ShoppingItemID']);
 		unset($_POST['ShoppingItemQuantity']);
 		unset($_POST['ShoppingItemCustomOption']);
 		unset($_POST['ShoppingItemPrice']);
-		
+
 		$form->reset();
 		return true;
 	}
-	
+
 	function displayAdminShoppingItems() {
 		$shoppingid = null;
 		$search = null;
-		
+
 		$shoppingids = null;
 		$shoppingurl = shopping::getURL();
-		
+
 		if (isset($_POST['ajaxshoppingid']))
 			$shoppingid = (int)$_POST['ajaxshoppingid'];
-		
+
 		if (isset($_GET['ajaxshoppingid']))
 			$shoppingid = (int)$_GET['ajaxshoppingid'];
-		
+
 		if (isset($_POST['ajaxsearch']))
 			$search = trim(strip_tags((string)$_POST['ajaxsearch']));
-		
+
 		if (isset($_GET['ajaxsearch']))
 			$search = trim(strip_tags((string)$_GET['ajaxsearch']));
-		
+
 		if (!isset($search) && !isset($_GET['ajaxlimit']))
-			echo 
+			echo
 				"<div class='shopping-order-new-order-items'>";
-		
+
 		echo
 				"<div class='shopping-order-new-order-items-search' " .
 					"style='margin-right: 20px;'>" .
@@ -3463,48 +3463,48 @@ class shoppingOrders extends modules {
 					"<select name='ajaxshoppingid' " .
 						"onchange=\"$('.shopping-order-new-order-items form').ajaxSubmit();\">" .
 					"<option value=''></option>";
-					
+
 		foreach(shopping::getTree() as $row)
 			echo
 				"<option value='".$row['ID']."' " .
 					($row['ID'] == $shoppingid?
 						"selected='selected'":
 						null) .
-					">" . 
+					">" .
 					($row['SubCategoryOfID']?
-						str_replace(' ', '&nbsp;', 
+						str_replace(' ', '&nbsp;',
 							str_pad('', $row['PathDeepnes']*4, ' ')).
 						"|- ":
 						null) .
 					$row['Title'] .
 				"</option>";
-		
+
 		echo
 					"</select> " .
 					"<input type='search' " .
 						"name='ajaxsearch' " .
 						"value='".
-							htmlspecialchars($search, ENT_QUOTES).
-						"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' " .
+							htmlchars($search, ENT_QUOTES).
+						"' results='5' placeholder='".htmlchars(__("search..."), ENT_QUOTES)."' " .
 						"autofocus='autofocus' />" .
 					"</form>" .
 				"</div>" .
 				"<br />";
-				
+
 		if ($shoppingid) {
 			$category = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppings}` " .
 				" WHERE `Deactivated` = 0" .
 				" AND `ID` = '".$shoppingid."'"));
-				
+
 			if (!$category['Items']) {
 				$shoppingids[] = $shoppingid;
-				
+
 				foreach(shopping::getTree($shoppingid) as $category)
 					$shoppingids[] = $category['ID'];
 			}
 		}
-		
+
 		echo
 				"<table cellpadding='0' cellspacing='0' class='list'>" .
 					"<thead>" .
@@ -3542,14 +3542,14 @@ class shoppingOrders extends modules {
 					"</tr>" .
 					"</thead>" .
 					"<tbody>";
-					
+
 		$paging = new paging(10,
 			'&amp;ajaxsearch='.urlencode($search) .
 			'&amp;ajaxshoppingid='.$shoppingid);
-		
+
 		$paging->track('ajaxlimit');
 		$paging->ajax = true;
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{shoppingitems}`" .
 			" WHERE `Deactivated` = 0" .
@@ -3566,26 +3566,26 @@ class shoppingOrders extends modules {
 				null) .
 			" ORDER BY `OrderID`, `ID` DESC" .
 			" LIMIT ".$paging->limit);
-		
+
 		$paging->setTotalItems(sql::count());
-		
+
 		$i = 1;
 		$total = sql::rows($rows);
-		
+
 		while ($row = sql::fetch($rows)) {
 			$price = $row['Price'];
 			$specialprice = null;
-			
+
 			if (JCORE_VERSION >= '0.7' && $row['SpecialPrice'] != '') {
-				if ((!$row['SpecialPriceStartDate'] || 
+				if ((!$row['SpecialPriceStartDate'] ||
 						$row['SpecialPriceStartDate'] <= date('Y-m-d')) &&
-					(!$row['SpecialPriceEndDate'] || 
+					(!$row['SpecialPriceEndDate'] ||
 						$row['SpecialPriceEndDate'] >= date('Y-m-d')))
 				{
 					$specialprice = $row['SpecialPrice'];
 				}
 			}
-			
+
 			echo
 				"<tr id='shoppingorderneworderitemlistrow".$row['ID']."' ".
 					($i%2?" class='pair'":NULL).">" .
@@ -3594,7 +3594,7 @@ class shoppingOrders extends modules {
 							"onclick=\"$.jCore.modules.shoppingOrders.admin.newOrder.cart.add(" .
 								$row['ID']."," .
 								"'".$row['RefNumber']."'," .
-								"'".htmlspecialchars($row['Title'], ENT_QUOTES)."'," .
+								"'".htmlchars($row['Title'], ENT_QUOTES)."'," .
 								"$('#newordershoppingitemquantity".$row['ID']."').val()," .
 								"'".
 									(isset($specialprice)?
@@ -3617,46 +3617,46 @@ class shoppingOrders extends modules {
 						"</a>" .
 					"</td>" .
 					"<td style='text-align: right;'>";
-				
+
 			if ($row['ShowQuantityPicker']) {
 				echo
 						"<select id='newordershoppingitemquantity".$row['ID']."'>";
-				
+
 				if (!$row['MaxQuantityAtOnce'])
 					$row['MaxQuantityAtOnce'] = 30;
-				
-				for($i = 1; $i < $row['MaxQuantityAtOnce']; $i++) {	
+
+				for($i = 1; $i < $row['MaxQuantityAtOnce']; $i++) {
 					echo
 							"<option>".$i."</option>";
 				}
-							
+
 				echo
 						"</select>";
-				
+
 			} else {
 				echo	"1" .
 						"<input id='newordershoppingitemquantity".$row['ID']."' " .
 							"type='hidden' value='1' />";
 			}
-			
+
 			echo
 					"</td>" .
 					"<td style='text-align: right;'>" .
 						"<span class='nowrap'>";
-			
+
 			if (isset($specialprice)) {
 				shoppingOrders::displayPrice($specialprice);
-				
-				echo 
+
+				echo
 					"<br />" .
 					"<span class='comment' style='text-decoration: line-trough;'>" .
 						shoppingOrders::constructPrice($price) .
 					"</span>";
-				
+
 			} else {
 				shoppingOrders::displayPrice($price);
 			}
-			
+
 			echo
 						"</span>" .
 						"<input type='hidden' value='".
@@ -3673,22 +3673,22 @@ class shoppingOrders extends modules {
 						"</span>" .
 					"</td>" .
 				"</tr>";
-			
+
 			$i++;
 		}
-		
+
 		echo
 					"</tbody>" .
 				"</table>" .
 				"<br />";
-				
+
 		$paging->display();
-		
+
 		if (!isset($search) && !isset($_GET['ajaxlimit']))
 			echo
 				"</div>";
 	}
-	
+
 	function displayAdminListHeader() {
 		echo
 			"<th><span class='nowrap'>".
@@ -3698,13 +3698,13 @@ class shoppingOrders extends modules {
 			"<th style='text-align: right;'><span class='nowrap'>".
 				_("Status")."</span></th>";
 	}
-	
+
 	function displayAdminListHeaderOptions() {
 		echo
 			"<th><span class='nowrap'>".
 				__("Comments")."</span></th>";
 	}
-	
+
 	function displayAdminListHeaderFunctions() {
 		echo
 			"<th><span class='nowrap'>".
@@ -3712,10 +3712,10 @@ class shoppingOrders extends modules {
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
 	}
-	
+
 	function displayAdminListItem(&$row) {
 		$user = $GLOBALS['USER']->get($row['UserID']);
-				
+
 		echo
 			"<td class='auto-width'>" .
 				"<a href='".url::uri('id, edit, delete') .
@@ -3725,18 +3725,18 @@ class shoppingOrders extends modules {
 				"</a>" .
 				"<div class='comment' style='padding-left: 10px;'>" .
 				calendar::datetime($row['TimeStamp'])." ";
-		
+
 		$GLOBALS['USER']->displayUserName($user, __('by %s'));
-		
+
 		echo
 				"</div>" .
 			"</td>" .
 			"<td style='text-align: right;'>" .
 				"<span class='nowrap'>";
-		
+
 		shoppingOrders::displayPrice($row['Subtotal']+
 			(isset($row['Tax'])?$row['Tax']:0)-$row['Discount']+$row['Fee']);
-		
+
 		echo
 				"</span>" .
 			"</td>" .
@@ -3749,43 +3749,43 @@ class shoppingOrders extends modules {
 					$this->status2Text($row['OrderStatus']) .
 				"</div>" .
 				"<div class='shopping-order-payment-status nowrap'>";
-		
+
 		$this->displayOrderMethodStatus($row);
-		
+
 		echo
 				"</div>" .
 			"</td>";
 	}
-	
+
 	function displayAdminListItemOptions(&$row) {
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link comments' " .
-					"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
+					"title='".htmlchars(__("Comments"), ENT_QUOTES).
 						" (".$row['Comments'].")' " .
 					"href='".url::uri('ALL') .
 					"?path=".admin::path()."/".$row['ID']."/shoppingordercomments'>";
-		
+
 		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments'])
 			counter::display($row['Comments']);
-		
+
 		echo
 				"</a>" .
 			"</td>";
 	}
-	
+
 	function displayAdminListItemFunctions(&$row) {
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
-					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
+					"title='".htmlchars(__("Edit"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."&amp;edit=1#adminform'>" .
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
-					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
+					"title='".htmlchars(__("Delete"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
@@ -3794,93 +3794,93 @@ class shoppingOrders extends modules {
 
 	function displayAdminListItemSelected(&$row) {
 		if ($row['PaymentStatus'] == SHOPPING_ORDER_PAYMENT_STATUS_PAID) {
-			tooltip::display( 
+			tooltip::display(
 				_("It's now safe to ship the goods if necessary."),
 				TOOLTIP_SUCCESS);
-			
+
 		} elseif ($row['PaymentStatus'] == SHOPPING_ORDER_PAYMENT_STATUS_CANCELLED) {
-			tooltip::display( 
+			tooltip::display(
 				_("IMPORTANT: payment has been cancelled so " .
 					"shipment should be cancelled too!"),
 				TOOLTIP_NOTIFICATION);
-			
+
 		} else {
-			tooltip::display( 
+			tooltip::display(
 				_("IMPORTANT: do NOT ship any goods until payment has been " .
 					"confirmed / processed!"),
 				TOOLTIP_ERROR);
 		}
-		
+
 		$this->displayCart($row);
 		$this->displayOrderInfo($row);
 		$this->displayOrderMethod($row);
-		
-		if (JCORE_VERSION >= '0.5')		
+
+		if (JCORE_VERSION >= '0.5')
 			$this->displayDownloads($row);
 	}
-	
+
 	function displayAdminList(&$rows) {
 		$id = null;
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
-		echo 
+
+		echo
 			"<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>";
-		
+
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
-		
+
 		echo
 				"</tr>" .
 				"</thead>" .
 				"<tbody>";
-		
-		$i = 0;		
+
+		$i = 0;
 		while($row = sql::fetch($rows)) {
-			echo 
+			echo
 				"<tr class='shopping-order-".
 					strtolower($this->paymentStatus2Text($row['PaymentStatus'])) .
 					($i%2?" pair":null)."'>";
-			
+
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
-					
+
 			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
-			
+
 			echo
 				"</tr>";
-				
+
 			if ($row['ID'] == $id) {
 				echo
 					"<tr".($i%2?" class='pair'":NULL).">" .
 						"<td class='auto-width' colspan='10'>" .
 							"<div class='admin-content-preview'>";
-				
+
 				$this->displayAdminListItemSelected($row);
-				
+
 				echo
 							"</div>" .
 						"</td>" .
 					"</tr>";
 			}
-			
+
 			$i++;
 		}
-		
-		echo 
+
+		echo
 				"</tbody>" .
 			"</table>";
-		
+
 		echo "<br />";
 	}
-	
+
 	function displayAdminForm(&$form) {
 		$form->display();
 	}
@@ -3888,13 +3888,13 @@ class shoppingOrders extends modules {
 	function displayAdminListSearch($ordertypes = null) {
 		$search = null;
 		$status = null;
-		
+
 		if (isset($_GET['search']))
 			$search = trim(strip_tags((string)$_GET['search']));
-		
+
 		if (isset($_GET['status']))
 			$status = (int)$_GET['status'];
-		
+
 		if (!$ordertypes)
 			$ordertypes = array(
 				SHOPPING_ORDER_STATUS_NEW,
@@ -3903,68 +3903,68 @@ class shoppingOrders extends modules {
 				SHOPPING_ORDER_STATUS_DELIVERED,
 				SHOPPING_ORDER_STATUS_CANCELLED,
 				SHOPPING_ORDER_STATUS_REJECTED);
-		
+
 		echo
 			"<input type='hidden' name='path' value='".admin::path()."' />" .
 			"<input type='search' name='search' value='".
-				htmlspecialchars($search, ENT_QUOTES).
-				"' results='5' placeholder='".htmlspecialchars(__("search..."), ENT_QUOTES)."' /> " .
+				htmlchars($search, ENT_QUOTES).
+				"' results='5' placeholder='".htmlchars(__("search..."), ENT_QUOTES)."' /> " .
 			"<select name='status' style='width: 100px;' " .
 				"onchange='this.form.submit();'>" .
 				"<option value=''>".__("All")."</option>";
-		
+
 		foreach($ordertypes as $type)
 			echo
 				"<option value='".$type."'" .
 					($status == $type?" selected='selected'":null) .
 					">".$this->status2Text($type)."</option>";
-		
+
 		echo
 			"</select> " .
 			"<input type='submit' value='" .
-				htmlspecialchars(__("Search"), ENT_QUOTES)."' class='button' />";
+				htmlchars(__("Search"), ENT_QUOTES)."' class='button' />";
 	}
-	
+
 	function displayAdminOrders($ordertypes = null) {
 		$search = null;
 		$status = null;
 		$delete = null;
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_GET['search']))
 			$search = trim(strip_tags((string)$_GET['search']));
-		
+
 		if (isset($_GET['status']))
 			$status = (int)$_GET['status'];
-		
+
 		if (isset($_GET['delete']))
 			$delete = (int)$_GET['delete'];
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		echo
 			"<div style='float: right;'>" .
 				"<form action='".url::uri('ALL')."' method='get'>";
-		
+
 		$this->displayAdminListSearch();
-		
+
 		echo
 				"</form>" .
 			"</div>";
-		
+
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
-		
+
 		$this->shoppingURL = shopping::getURL();
-		
+
 		echo
 			"<div class='admin-content'>";
-				
+
 		$form = new form(
 				($edit?
 					_("Edit Order"):
@@ -3972,13 +3972,13 @@ class shoppingOrders extends modules {
 				($edit?
 					'editorder':
 					'neworder'));
-		
+
 		if (!$edit)
 			$form->action = url::uri('id, delete, limit');
-			
-		$this->setupAdminForm($form);			
+
+		$this->setupAdminForm($form);
 		$form->addSubmitButtons();
-		
+
 		if ($edit) {
 			$form->add(
 				__('Cancel'),
@@ -3987,10 +3987,10 @@ class shoppingOrders extends modules {
 			$form->addAttributes("onclick=\"window.location='".
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
-		
+
 		$selected = null;
 		$verifyok = false;
-		
+
 		if ($id) {
 			$selected = sql::fetch(sql::run(
 				" SELECT `ID`, `OrderID` FROM `{shoppingorders}`" .
@@ -4001,18 +4001,18 @@ class shoppingOrders extends modules {
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
 					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
-			
+
 			if ($delete && empty($_POST['delete']))
 				url::displayConfirmation(
 					'<b>'.__('Delete').'?!</b> "'.$selected['OrderID'].'"');
 		}
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			((!$edit && !$delete) || $selected))
 			$verifyok = $this->verifyAdmin($form);
-		
+
 		$paging = new paging(20);
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE 1" .
@@ -4039,18 +4039,18 @@ class shoppingOrders extends modules {
 				null) .
 			" ORDER BY `ID` DESC" .
 			" LIMIT ".$paging->limit);
-			
+
 		$paging->setTotalItems(sql::count());
-				
+
 		if ($paging->items)
 			$this->displayAdminList($rows);
 		else
 			tooltip::display(
 				_("No orders found."),
 				TOOLTIP_NOTIFICATION);
-		
+
 		$paging->display();
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			(!$this->userPermissionIDs || ($edit && $selected)))
 		{
@@ -4058,84 +4058,84 @@ class shoppingOrders extends modules {
 				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{shoppingorders}`" .
 					" WHERE `ID` = '".$id."'"));
-				
+
 				$form->setValues($selected);
 			}
-			
+
 			if (!$edit)
 				$this->setupAdminFormCart($form);
-			
+
 			echo
 				"<a name='adminform'></a>";
-			
+
 			if (!$ordertypes || !is_array($ordertypes) || $edit ||
 				in_array(SHOPPING_ORDER_STATUS_NEW, $ordertypes))
 				$this->displayAdminForm($form);
-			
+
 			if (JCORE_VERSION < '0.7') {
 				echo
 					"<script type='text/javascript'>" .
 						"window.onload = function() {" .
 						"$.jCore.modules.shoppingOrders.admin.newOrder.cart.currency = '".SHOPPING_CART_CURRENCY."';";
-						
+
 				$items = null;
 				$quantities = null;
 				$prices = null;
-				
+
 				if (isset($_POST['ShoppingItemID']))
 					$items = (array)$_POST['ShoppingItemID'];
-				
+
 				if (isset($_POST['ShoppingItemQuantity']))
 					$quantities = (array)$_POST['ShoppingItemQuantity'];
-				
+
 				if (isset($_POST['ShoppingItemPrice']))
 					$prices = (array)$_POST['ShoppingItemPrice'];
-			
-				if ($items && is_array($items)) {			
+
+				if ($items && is_array($items)) {
 					foreach($items as $key => $itemid) {
 						$item = sql::fetch(sql::run(
 							" SELECT * FROM `{shoppingitems}`" .
 							" WHERE `ID` = '".(int)$itemid."'"));
-						
+
 						echo
 							"$.jCore.modules.shoppingOrders.admin.newOrder.cart.add(".
 								(int)$itemid.", " .
-								"'".htmlspecialchars($item['RefNumber'], ENT_QUOTES)."', " .
+								"'".htmlchars($item['RefNumber'], ENT_QUOTES)."', " .
 								"'<a href=\"".$this->shoppingURL .
 									"&amp;shoppingid=".$item['ShoppingID'].
 									"&amp;shoppingitemid=".$item['ID'] ."\" " .
 									"target=\"_blank\" class=\"bold\">" .
-									htmlspecialchars($item['Title'], ENT_QUOTES) .
+									htmlchars($item['Title'], ENT_QUOTES) .
 								"</a>', " .
 								(int)$quantities[(int)$key].", " .
 								(float)$prices[(int)$key].");";
 					}
 				}
-				
-				echo 		
+
+				echo
 						"}" .
 					"</script>";
 			}
 		}
-		
+
 		unset($form);
-		
+
 		echo
 			"</div>"; //admin-content
 	}
-	
+
 	function displayAdminTitle($ownertitle = null) {
 		echo
 			_('Shopping Orders Administration');
 	}
-	
+
 	function displayAdminDescription() {
 	}
-	
+
 	function displayAdminSections() {
 		$new = 0;
 		$processed = 0;
-		
+
 		if (ADMIN_ITEMS_COUNTER_ENABLED) {
 			$new = $this->countAdminItems(array(
 				SHOPPING_ORDER_STATUS_NEW,
@@ -4146,17 +4146,17 @@ class shoppingOrders extends modules {
 				SHOPPING_ORDER_STATUS_DELIVERED,
 				SHOPPING_ORDER_STATUS_REJECTED));
 		}
-			
+
 		echo
 			"<div class='admin-section-item as-modules-shoppingorders as-shopping-new-orders'>";
-		
+
 		if ($new)
 			counter::display((int)$new);
-		
+
 		echo
 				"<a href='".url::uri('ALL') .
 					"?path=".admin::path()."/shoppingneworders' " .
-					"title='".htmlspecialchars(_("Handle pending and processing orders"), ENT_QUOTES).
+					"title='".htmlchars(_("Handle pending and processing orders"), ENT_QUOTES).
 					"'>" .
 					"<span>" .
 					_("New Orders")."" .
@@ -4164,14 +4164,14 @@ class shoppingOrders extends modules {
 				"</a>" .
 			"</div>" .
 			"<div class='admin-section-item as-modules-shoppingorders as-shopping-processed-orders'>";
-		
+
 		if ($processed)
 			counter::display((int)$processed);
-		
+
 		echo
 				"<a href='".url::uri('ALL') .
 					"?path=".admin::path()."/shoppingprocessedorders' " .
-					"title='".htmlspecialchars(_("Lookup and update processed orders"), ENT_QUOTES).
+					"title='".htmlchars(_("Lookup and update processed orders"), ENT_QUOTES).
 					"'>" .
 					"<span>" .
 					_("Processed Orders")."" .
@@ -4179,50 +4179,50 @@ class shoppingOrders extends modules {
 				"</a>" .
 			"</div>";
 	}
-	
+
 	function displayAdminDashboard() {
 		echo
 			"<div class='admin-content'>";
-		
-		echo 
+
+		echo
 			"<div tabindex='0' class='fc" .
 				form::fcState('fcshod', true) .
 				"'>" .
 				"<a class='fc-title' name='fcshod'>";
-		
+
 		$this->displayAdminTitle();
-		
+
 		echo
 				"</a>" .
 				"<div class='fc-content'>";
-		
+
 		$this->displayAdminDashboardSales();
 		$this->displayAdminSections();
-		
+
 		echo
 					"<div class='clear-both'></div>" .
 				"</div>" .
 			"</div>";
-		
+
 		$this->displayAdminDashboardOrders();
 		$this->displayAdminDashboardBestsellers();
 		$this->displayAdminDashboardMostViewedProducts();
-		
+
 		echo
 				"<div class='clear-both'></div>" .
 			"</div>"; //admin-content
 	}
-	
+
 	function displayAdminDashboardSales() {
 		$startdate = date("Y-m-01");
 		$enddate = date("Y-m-d");
-		
+
 		if (isset($_GET['startdate']))
 			$startdate = strip_tags((string)$_GET['startdate']);
-		
+
 		if (isset($_GET['enddate']))
 			$enddate = strip_tags((string)$_GET['enddate']);
-		
+
 		$sales = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`, " .
 			" SUM(`Subtotal`" .
@@ -4241,7 +4241,7 @@ class shoppingOrders extends modules {
 				null) .
 			" AND `PaymentStatus` = '".SHOPPING_ORDER_PAYMENT_STATUS_PAID."'" .
 			" LIMIT 1"));
-		
+
 		echo
 			"<div class='shopping-orders-sales align-right'>" .
 				"<form action='?' method='get'>" .
@@ -4270,12 +4270,12 @@ class shoppingOrders extends modules {
 							"<div class='shopping-orders-sales-range-start'>" .
 								"<input type='date' class='calendar-input' style='width: 90px;' " .
 									"title='".__("e.g. 2010-07-21")."' name='startdate' " .
-									"value='".htmlspecialchars($startdate, ENT_QUOTES)."' />" .
+									"value='".htmlchars($startdate, ENT_QUOTES)."' />" .
 							"</div>" .
 							"<div class='shopping-orders-sales-range-end'>" .
 								"<input type='date' class='calendar-input' style='width: 90px;' " .
 									"title='".__("e.g. 2010-07-21")."' name='enddate' " .
-									"value='".htmlspecialchars($enddate, ENT_QUOTES)."' />" .
+									"value='".htmlchars($enddate, ENT_QUOTES)."' />" .
 							"</div>" .
 						"</div>" .
 					"</td>" .
@@ -4284,23 +4284,23 @@ class shoppingOrders extends modules {
 				"</form>" .
 			"</div>";
 	}
-	
+
 	function displayAdminDashboardOrders() {
 		$startdate = null;
 		$enddate = null;
-		
+
 		if (isset($_GET['startdate']))
 			$startdate = strip_tags((string)$_GET['startdate']);
-		
+
 		if (isset($_GET['enddate']))
 			$enddate = strip_tags((string)$_GET['enddate']);
-		
+
 		$paging = new paging(10,
 			"&amp;request=admin/modules/shoppingorders" .
 			"&amp;orders=1");
-		
+
 		$paging->ajax = true;
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `TimeStamp` >= " .
@@ -4313,11 +4313,11 @@ class shoppingOrders extends modules {
 				null) .
 			" ORDER BY `ID` DESC" .
 			" LIMIT ".$paging->limit);
-		
+
 		$paging->setTotalItems(sql::count());
-		
+
 		if (!$this->ajaxRequest) {
-			echo 
+			echo
 			"<div tabindex='0' class='fc" .
 				form::fcState('fcshos') .
 				"'>" .
@@ -4328,7 +4328,7 @@ class shoppingOrders extends modules {
 					_("Orders") .
 				"</a>" .
 				"<div class='fc-content'>";
-		
+
 			$totals = sql::fetch(sql::run(
 				" SELECT" .
 				" SUM(`Subtotal`" .
@@ -4351,8 +4351,8 @@ class shoppingOrders extends modules {
 						"'".sql::escape($enddate)." 23:59:59'":
 					null) .
 				" LIMIT 1"));
-			
-			echo 
+
+			echo
 				"<table width='100%' style='position: relative; top: -7px;'>" .
 				"<tr>" .
 					"<td style='text-align: center;'>" .
@@ -4393,29 +4393,29 @@ class shoppingOrders extends modules {
 				"</table>" .
 				"<div class='shopping-orders-dashboard-orders'>";
 		}
-		
+
 		echo
 			"<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>";
-		
+
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
-		
+
 		echo
 				"</tr>" .
 				"</thead>" .
 				"<tbody>";
-		
-		$i = 0;		
+
+		$i = 0;
 		while($row = sql::fetch($rows)) {
-			echo 
+			echo
 				"<tr class='shopping-order-".
 					strtolower($this->paymentStatus2Text($row['PaymentStatus'])) .
 					($i%2?" pair":null)."'>";
-			
+
 			$user = $GLOBALS['USER']->get($row['UserID']);
-					
+
 			echo
 				"<td class='auto-width'>" .
 					"<a href='?path=".admin::path()."/" .
@@ -4431,18 +4431,18 @@ class shoppingOrders extends modules {
 					"</a>" .
 					"<div class='comment' style='padding-left: 10px;'>" .
 					calendar::datetime($row['TimeStamp'])." ";
-			
+
 			$GLOBALS['USER']->displayUserName($user, __('by %s'));
-			
+
 			echo
 					"</div>" .
 				"</td>" .
 				"<td style='text-align: right;'>" .
 					"<span class='nowrap'>";
-			
+
 			shoppingOrders::displayPrice($row['Subtotal']+
 				(isset($row['Tax'])?$row['Tax']:0)-$row['Discount']+$row['Fee']);
-			
+
 			echo
 					"</span>" .
 				"</td>" .
@@ -4455,15 +4455,15 @@ class shoppingOrders extends modules {
 						$this->status2Text($row['OrderStatus']) .
 					"</div>" .
 					"<div class='shopping-order-payment-status nowrap'>";
-			
+
 			$this->displayOrderMethodStatus($row);
-			
+
 			echo
 					"</div>" .
 				"</td>" .
 				"<td align='center'>" .
 					"<a class='admin-link comments' " .
-						"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
+						"title='".htmlchars(__("Comments"), ENT_QUOTES).
 							" (".$row['Comments'].")' " .
 						"href='?path=".admin::path()."/" .
 						(in_array($row['OrderStatus'], array(
@@ -4472,28 +4472,28 @@ class shoppingOrders extends modules {
 							"shoppingneworders":
 							"shoppingprocessedorders") .
 						"/".$row['ID']."/shoppingordercomments' target='_blank'>";
-			
+
 			if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments'])
 				counter::display($row['Comments']);
-			
+
 			echo
 					"</a>" .
 				"</td>";
-			
+
 			echo
 				"</tr>";
-				
+
 			$i++;
 		}
-		
-		echo 
+
+		echo
 				"</tbody>" .
 			"</table>";
-		
+
 		echo "<br />";
-		
+
 		$paging->display();
-		
+
 		if (!$this->ajaxRequest)
 			echo
 					"</div>" .
@@ -4501,28 +4501,28 @@ class shoppingOrders extends modules {
 				"</div>" .
 			"</div>";
 	}
-	
+
 	function displayAdminDashboardBestsellers() {
 		$startdate = null;
 		$enddate = null;
-		
+
 		if (isset($_GET['startdate']))
 			$startdate = strip_tags((string)$_GET['startdate']);
-		
+
 		if (isset($_GET['enddate']))
 			$enddate = strip_tags((string)$_GET['enddate']);
-		
+
 		$paging = new paging(10,
 			"&amp;request=admin/modules/shoppingorders" .
 			"&amp;orderedproducts=1");
-		
+
 		$paging->ajax = true;
-		
+
 		sql::run(
 			" CREATE TEMPORARY TABLE `{TMPMostOrderedItems}`" .
 			" (`ShoppingItemID` mediumint(8) unsigned NOT NULL default '0'," .
 			" `Sales` int(10) unsigned NOT NULL default '0')");
-		
+
 		sql::run(
 			" INSERT INTO `{TMPMostOrderedItems}`" .
 			" SELECT `ShoppingItemID`," .
@@ -4539,18 +4539,18 @@ class shoppingOrders extends modules {
 					"'".sql::escape($enddate)." 23:59:59'":
 				null) .
 			" GROUP BY `ShoppingItemID`");
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{TMPMostOrderedItems}`" .
 			" LEFT JOIN `{shoppingitems}` ON `{shoppingitems}`.`ID` =" .
 				" `{TMPMostOrderedItems}`.`ShoppingItemID`" .
 			" ORDER BY `Sales` DESC" .
 			" LIMIT ".$paging->limit);
-		
+
 		$paging->setTotalItems(sql::count());
-		
+
 		if (!$this->ajaxRequest)
-			echo 
+			echo
 			"<div tabindex='0' class='fc" .
 				form::fcState('fcshob') .
 				"'>" .
@@ -4561,8 +4561,8 @@ class shoppingOrders extends modules {
 					_("Bestsellers") .
 				"</a>" .
 				"<div class='fc-content'>";
-		
-		echo 
+
+		echo
 			"<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>" .
@@ -4575,23 +4575,23 @@ class shoppingOrders extends modules {
 				"</tr>" .
 				"</thead>" .
 				"<tbody>";
-		
-		$i = 0;		
+
+		$i = 0;
 		while($row = sql::fetch($rows)) {
 			$item = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$row['ShoppingItemID']."'"));
-			
+
 			if (!$item)
 				continue;
-			
+
 			$row += $item;
-			
-			echo 
+
+			echo
 				"<tr".($i%2?" class='pair'":NULL).">";
-			
+
 			$user = $GLOBALS['USER']->get($row['UserID']);
-			
+
 			echo
 				"<td class='auto-width' " .
 					($row['Deactivated']?
@@ -4601,7 +4601,7 @@ class shoppingOrders extends modules {
 					"<a href='?path=admin/modules/shopping/" .
 						$row['ShoppingID']."/shoppingitems" .
 						"&amp;id=".$row['ID']."" .
-						"&amp;search=".htmlspecialchars($row['Title'], ENT_QUOTES)."' " .
+						"&amp;search=".htmlchars($row['Title'], ENT_QUOTES)."' " .
 					" class='bold' target='_blank'>" .
 						$row['Title'] .
 					"</a>" .
@@ -4620,63 +4620,63 @@ class shoppingOrders extends modules {
 				"</td>" .
 				"<td align='center'>" .
 					"<a class='admin-link comments' " .
-						"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
+						"title='".htmlchars(__("Comments"), ENT_QUOTES).
 							" (".$row['Comments'].")' " .
 						"href='?path=admin/modules/shopping/" .
 							$row['ShoppingID']."/shoppingitems/" .
 							$row['ID']."/shoppingitemcomments' " .
 						"target='_blank'>";
-			
+
 			if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments'])
 				counter::display($row['Comments']);
-			
+
 			echo
 					"</a>" .
 				"</td>";
-			
+
 			echo
 				"</tr>";
-				
+
 			$i++;
 		}
-		
+
 		sql::run("DROP TEMPORARY TABLE `{TMPMostOrderedItems}`");
-		
-		echo 
+
+		echo
 				"</tbody>" .
 			"</table>";
-		
+
 		echo "<br />";
-		
+
 		$paging->display();
-		
+
 		if (!$this->ajaxRequest)
 			echo
 					"<div class='clear-both'></div>" .
 				"</div>" .
 			"</div>";
 	}
-	
+
 	function displayAdminDashboardMostViewedProducts() {
 		$startdate = null;
 		$enddate = null;
-		
+
 		if (isset($_GET['startdate']))
 			$startdate = strip_tags((string)$_GET['startdate']);
-		
+
 		if (isset($_GET['enddate']))
 			$enddate = strip_tags((string)$_GET['enddate']);
-		
+
 		$paging = new paging(10,
 			"&amp;request=admin/modules/shoppingorders" .
 			"&amp;viewedproducts=1");
-		
+
 		$paging->ajax = true;
-		
+
 		sql::run(
 			" CREATE TEMPORARY TABLE `{TMPMostViewedOrderItems}`" .
 			" (`ShoppingItemID` mediumint(8) unsigned NOT NULL default '0')");
-		
+
 		sql::run(
 			" INSERT INTO `{TMPMostViewedOrderItems}`" .
 			" SELECT `ShoppingItemID` FROM `{shoppingorders}`" .
@@ -4691,18 +4691,18 @@ class shoppingOrders extends modules {
 					"'".sql::escape($enddate)." 23:59:59'":
 				null) .
 			" GROUP BY `ShoppingItemID`");
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{TMPMostViewedOrderItems}`" .
 			" LEFT JOIN `{shoppingitems}` ON `{shoppingitems}`.`ID` =" .
 				" `{TMPMostViewedOrderItems}`.`ShoppingItemID`" .
 			" ORDER BY `Views` DESC" .
 			" LIMIT ".$paging->limit);
-		
+
 		$paging->setTotalItems(sql::count());
-		
+
 		if (!$this->ajaxRequest)
-			echo 
+			echo
 			"<div tabindex='0' class='fc" .
 				form::fcState('fcshom') .
 				"'>" .
@@ -4713,8 +4713,8 @@ class shoppingOrders extends modules {
 					_("Most Viewed Products") .
 				"</a>" .
 				"<div class='fc-content'>";
-		
-		echo 
+
+		echo
 			"<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>" .
@@ -4727,14 +4727,14 @@ class shoppingOrders extends modules {
 				"</tr>" .
 				"</thead>" .
 				"<tbody>";
-		
-		$i = 0;		
+
+		$i = 0;
 		while($row = sql::fetch($rows)) {
-			echo 
+			echo
 				"<tr".($i%2?" class='pair'":NULL).">";
-			
+
 			$user = $GLOBALS['USER']->get($row['UserID']);
-			
+
 			echo
 				"<td class='auto-width' " .
 					($row['Deactivated']?
@@ -4744,7 +4744,7 @@ class shoppingOrders extends modules {
 					"<a href='?path=admin/modules/shopping/" .
 						$row['ShoppingID']."/shoppingitems" .
 						"&amp;id=".$row['ID']."" .
-						"&amp;search=".htmlspecialchars($row['Title'], ENT_QUOTES)."' " .
+						"&amp;search=".htmlchars($row['Title'], ENT_QUOTES)."' " .
 					" class='bold' target='_blank'>" .
 						$row['Title'] .
 					"</a>" .
@@ -4762,64 +4762,64 @@ class shoppingOrders extends modules {
 				"</td>" .
 				"<td align='center'>" .
 					"<a class='admin-link comments' " .
-						"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
+						"title='".htmlchars(__("Comments"), ENT_QUOTES).
 							" (".$row['Comments'].")' " .
 						"href='?path=admin/modules/shopping/" .
 							$row['ShoppingID']."/shoppingitems/" .
 							$row['ID']."/shoppingitemcomments' " .
 						"target='_blank'>";
-			
+
 			if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments'])
 				counter::display($row['Comments']);
-			
+
 			echo
 					"</a>" .
 				"</td>";
-			
+
 			echo
 				"</tr>";
-				
+
 			$i++;
 		}
-		
+
 		sql::run("DROP TEMPORARY TABLE `{TMPMostViewedOrderItems}`");
-		
-		echo 
+
+		echo
 				"</tbody>" .
 			"</table>";
-		
+
 		echo "<br />";
-		
+
 		$paging->display();
-		
+
 		if (!$this->ajaxRequest)
 			echo
 					"<div class='clear-both'></div>" .
 				"</div>" .
 			"</div>";
 	}
-	
+
 	function displayAdmin() {
 		$this->displayAdminDashboard();
 	}
-	
+
 	function add($values) {
 		if (!is_array($values))
 			return false;
-		
+
 		$orderform = new shoppingOrderForm();
 		$newid = $orderform->addData($values);
 		unset($orderform);
-		
+
 		if (!$newid) {
 			tooltip::display(
 				_("We are sorry for the inconvenience but the order couldn't be " .
 					"added to the db. Please contact us with this error as soon as possible."),
 				TOOLTIP_ERROR);
-			
+
 			return false;
 		}
-		
+
 		sql::run(
 			" UPDATE `{shoppingorders}` SET" .
 			" `OrderID` = '".sql::escape($values['OrderID'])."'," .
@@ -4835,34 +4835,34 @@ class shoppingOrders extends modules {
 				null) .
 			" `Subtotal` = '".sql::escape($values['Subtotal'])."'" .
 			" WHERE `ID` = '".$newid."'");
-			
+
 		if (sql::affected() == -1) {
 			tooltip::display(
-				sprintf(_("Order couldn't be created / updated! Error: %s"), 
+				sprintf(_("Order couldn't be created / updated! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return $newid;
 	}
-	
+
 	function edit($id, $values) {
 		if (!$id)
 			return false;
-		
+
 		if (!is_array($values))
 			return false;
-		
+
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}`" .
 			" WHERE `ID` = '".$id."'" .
 			" LIMIT 1"));
-		
+
 		$orderform = new shoppingOrderForm();
 		$orderform->edit($id, $values);
 		unset($orderform);
-		
+
 		if (in_array($values['OrderStatus'], array(
 				SHOPPING_ORDER_STATUS_NEW,
 				SHOPPING_ORDER_STATUS_PROCESSING,
@@ -4875,7 +4875,7 @@ class shoppingOrders extends modules {
 			$orderitems = sql::run(
 				" SELECT * FROM `{shoppingorderitems}`" .
 				" WHERE `ShoppingOrderID` = '".$id."'");
-			
+
 			while($orderitem = sql::fetch($orderitems)) {
 				sql::run(
 					" UPDATE `{shoppingitems}` SET " .
@@ -4884,7 +4884,7 @@ class shoppingOrders extends modules {
 					" WHERE `ID` = '".$orderitem['ShoppingItemID']."'");
 			}
 		}
-		
+
 		if (in_array($values['OrderStatus'], array(
 				SHOPPING_ORDER_STATUS_CANCELLED,
 				SHOPPING_ORDER_STATUS_REJECTED)) &&
@@ -4897,7 +4897,7 @@ class shoppingOrders extends modules {
 			$orderitems = sql::run(
 				" SELECT * FROM `{shoppingorderitems}`" .
 				" WHERE `ShoppingOrderID` = '".$id."'");
-			
+
 			while($orderitem = sql::fetch($orderitems)) {
 				sql::run(
 					" UPDATE `{shoppingitems}` SET " .
@@ -4906,7 +4906,7 @@ class shoppingOrders extends modules {
 					" WHERE `ID` = '".$orderitem['ShoppingItemID']."'");
 			}
 		}
-		
+
 		sql::run(
 			" UPDATE `{shoppingorders}` SET" .
 			" `OrderStatus` = ".(int)$values['OrderStatus']."," .
@@ -4917,74 +4917,74 @@ class shoppingOrders extends modules {
 			" `OrderMethodDetails` = '".sql::escape($values['OrderMethodDetails'])."'," .
 			" `TimeStamp` = `TimeStamp`" .
 			" WHERE `ID` = '".$id."'");
-		
+
 		if (sql::affected() == -1) {
 			tooltip::display(
-				sprintf(_("Order couldn't be updated! Error: %s"), 
+				sprintf(_("Order couldn't be updated! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	function delete($id) {
 		if (!$id)
 			return false;
-			
+
 		$comments = new shoppingOrderComments();
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{shoppingordercomments}`" .
 			" WHERE `ShoppingOrderID` = '".$id."'");
-		
+
 		while($row = sql::fetch($rows))
 			$comments->delete($row['ID']);
-			
+
 		unset($comments);
-		
+
 		$orderitems = new shoppingOrderItems();
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{shoppingorderitems}`" .
 			" WHERE `ShoppingOrderID` = '".$id."'");
-		
+
 		while($row = sql::fetch($rows))
 			$orderitems->delete($row['ID']);
-		
+
 		unset($orderitems);
-		
+
 		sql::run(
 			" DELETE FROM `{shoppingorderdownloads}` " .
 			" WHERE `ShoppingOrderID` = '".$id."'");
-			
+
 		sql::run(
 			" DELETE FROM `{shoppingorders}` " .
 			" WHERE `ID` = '".$id."'");
-			
+
 		return true;
 	}
-	
+
 	// ************************************************   Client Part
 	static function getURL() {
 		$url = modules::getOwnerURL('shoppingOrders');
-		
+
 		if (!$url)
 			return url::site() .
 				url::uri('shoppingorderid');
-		
-		return $url;	
+
+		return $url;
 	}
-	
+
 	static function genOrderID() {
 		return "O".date('YmdHis').security::randomChars();
 	}
-	
+
 	static function status2Text($status) {
 		if (!$status)
 			return;
-		
+
 		switch($status) {
 			case SHOPPING_ORDER_STATUS_ACCEPTED:
 				return _('Accepted');
@@ -5002,11 +5002,11 @@ class shoppingOrders extends modules {
 				return _('Undefined!');
 		}
 	}
-	
+
 	static function paymentStatus2Text($status) {
 		if (!$status)
 			return;
-		
+
 		switch($status) {
 			case SHOPPING_ORDER_PAYMENT_STATUS_CANCELLED:
 				return _('Cancelled');
@@ -5024,35 +5024,35 @@ class shoppingOrders extends modules {
 				return _('Undefined!');
 		}
 	}
-	
+
 	static function sendNotificationEmails($orderid) {
 		if (!(int)$orderid)
 			return false;
-			
+
 		$order = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingorders}` " .
 			" WHERE `ID` = '".(int)$orderid."'" .
 			" LIMIT 1"));
-			
+
 		if (!$order) {
 			tooltip::display(
 				_("Email couldn't be sent! The defined order cannot be found."),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		$user = sql::fetch(sql::run(
 			" SELECT * FROM `{users}`" .
 			" WHERE `ID` = '".$order['UserID']."'"));
-			
+
 		$orderitems = sql::run(
 			" SELECT * FROM `{shoppingorderitems}`" .
 			" WHERE `ShoppingOrderID` = '".$order['ID']."'");
-		
+
 		$ordermethod = shoppingOrderMethods::get($order['OrderMethod']);
-		
+
 		$email = new email();
-		
+
 		$email->variables = array(
 			'UserName' => $user['UserName'],
 			'OrderID' => $order['ID'],
@@ -5066,31 +5066,31 @@ class shoppingOrders extends modules {
 			'AdminLinkToOrder' => SITE_URL."admin/?path=admin/modules/shoppingorders/shoppingneworders&id=".$order['ID'],
 			'PaymentStatus' => '',
 			'PaymentStatusNote' => '');
-		
+
 		if ($order['PaymentStatus'] == SHOPPING_ORDER_PAYMENT_STATUS_PAID) {
-			$email->variables['PaymentStatus'] = 
+			$email->variables['PaymentStatus'] =
 				strtoupper(_("Paid"));
-			$email->variables['PaymentStatusNote'] = 
+			$email->variables['PaymentStatusNote'] =
 				_("It's now safe to ship the goods if necessary.");
-			
+
 		} elseif ($order['PaymentStatus'] == SHOPPING_ORDER_PAYMENT_STATUS_CANCELLED) {
-			$email->variables['PaymentStatus'] = 
+			$email->variables['PaymentStatus'] =
 				strtoupper(_("Cancelled"));
-			$email->variables['PaymentStatusNote'] = 
+			$email->variables['PaymentStatusNote'] =
 				_("IMPORTANT: payment has been cancelled so " .
 					"shipment should be cancelled too!");
-			
+
 		} else {
-			$email->variables['PaymentStatus'] = 
+			$email->variables['PaymentStatus'] =
 				strtoupper(_("Pending"));
-			$email->variables['PaymentStatusNote'] = 
+			$email->variables['PaymentStatusNote'] =
 				_("IMPORTANT: do NOT ship any goods until payment has been " .
 					"confirmed / processed!");
 		}
-		
+
 		$orderform = new shoppingOrderForm();
 		$orderform->load(false);
-				
+
 		foreach($orderform->elements as $element) {
 			if (form::isInput($element)) {
 				if (!isset($order[$element['Name']]))
@@ -5101,198 +5101,198 @@ class shoppingOrders extends modules {
 					$value = ($order[$element['Name']]?__("Yes"):__("No"));
 				else
 					$value = $order[$element['Name']];
-				
+
 				if ($element['Type'] == FORM_INPUT_TYPE_TEXTAREA)
-					$email->variables['OrderForm'] .= 
+					$email->variables['OrderForm'] .=
 						"\n".$element['Title'].":\n".$value."\n\n";
 				else
-					$email->variables['OrderForm'] .= 
+					$email->variables['OrderForm'] .=
 						$element['Title'].": ".$value."\n";
-			
+
 			} elseif ($element['Type'] == FORM_STATIC_TEXT) {
-				$email->variables['OrderForm'] .= 
+				$email->variables['OrderForm'] .=
 					strip_tags(str_replace("<br />", "\n", $element['Title']))."\n".
 					(strip_tags($element['Title'])?
 						"\n":
 						null);
-			
+
 			} elseif ($element['Type'] == FORM_OPEN_FRAME_CONTAINER) {
-				$email->variables['OrderForm'] .= 
+				$email->variables['OrderForm'] .=
 					"\n".$element['Title']."\n" .
 					"-----------------------------------------------------------------\n";
 			}
 		}
-		
+
 		unset($orderform);
-		
-		$email->variables['OrderForm'] .= 
+
+		$email->variables['OrderForm'] .=
 			"\n"._("Order Method")."\n" .
 			"-----------------------------------------------------------------\n" .
 			$ordermethod['Title']."\n" .
 			$ordermethod['Description'];
-		
-		$email->variables['OrderItems'] .= 
+
+		$email->variables['OrderItems'] .=
 			_("Items ordered")."\n" .
 			"-----------------------------------------------------------------\n\n";
-		
-		$email->variables['OutOfStockItems'] .= 
+
+		$email->variables['OutOfStockItems'] .=
 			_("Out of Stock Items")."\n" .
 			"-----------------------------------------------------------------";
-		
+
 		$digitalgoods = false;
 		$outofstockitems = false;
-		
+
 		while($orderitem = sql::fetch($orderitems)) {
 			$item = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppingitems}` " .
 				" WHERE `ID` = '".$orderitem['ShoppingItemID']."'"));
-			
+
 			if (isset($item['DigitalGoods']) && $item['DigitalGoods'])
 				$digitalgoods = true;
-			
-			$email->variables['OrderItems'] .= 
+
+			$email->variables['OrderItems'] .=
 				$item['RefNumber']." - ".
 				$item['Title']."\n" .
 				(isset($orderitem['ShoppingItemOptions']) &&
 				 $orderitem['ShoppingItemOptions']?
 					$orderitem['ShoppingItemOptions']."\n":
 					null);
-				
+
 			if ($orderitem['Quantity'] > 1)
 				$email->variables['OrderItems'] .=
 					strip_tags(shoppingOrders::constructPrice(
-						$orderitem['Quantity']*$orderitem['Price'])) . 
+						$orderitem['Quantity']*$orderitem['Price'])) .
 					" (".$orderitem['Quantity']." x ".
 					strip_tags(shoppingOrders::constructPrice(
 						$orderitem['Price'])).")\n\n";
 			else
-				$email->variables['OrderItems'] .= 
+				$email->variables['OrderItems'] .=
 					strip_tags(shoppingOrders::constructPrice(
 						$orderitem['Price']))."\n\n";
-			
-			if (defined('SHOPPING_CART_LOW_STOCK_QUANTITY') && 
+
+			if (defined('SHOPPING_CART_LOW_STOCK_QUANTITY') &&
 				isset($item['AvailableQuantity']) && is_numeric($item['AvailableQuantity']) &&
 				$item['AvailableQuantity'] <= SHOPPING_CART_LOW_STOCK_QUANTITY)
 			{
-				$email->variables['OutOfStockItems'] .= 
+				$email->variables['OutOfStockItems'] .=
 					"\n\n".$item['RefNumber']." - ".
 					$item['Title']."\n" .
 					sprintf(_("Stock left: %s"), $item['AvailableQuantity'])."\n" .
 					SITE_URL."admin/?path=admin/modules/shopping/" .
 						$item['ShoppingID']."/shoppingitems&id=".$item['ID'];
-				
+
 				$outofstockitems = true;
-			} 
+			}
 		}
-		
-		$email->variables['OrderItems'] .= 
+
+		$email->variables['OrderItems'] .=
 			"-----------------------------------------------------------------\n" .
 			_("Subtotal").": ".
 				strip_tags(shoppingOrders::constructPrice(
 					$order['Subtotal']))."\n";
-				
+
 		if (isset($order['Tax']) && $order['Tax'] > 0)
-			$email->variables['OrderItems'] .= 
+			$email->variables['OrderItems'] .=
 				_("Tax").": ".
 					strip_tags(shoppingOrders::constructPrice(
 						$order['Tax']))."\n";
-		
+
 		if ($order['Discount'] > 0)
-			$email->variables['OrderItems'] .= 
+			$email->variables['OrderItems'] .=
 				_("Discount").": ".
 					strip_tags(shoppingOrders::constructPrice(
 						$order['Discount']))."\n";
-		
+
 		if ($order['Fee'] > 0)
-			$email->variables['OrderItems'] .= 
+			$email->variables['OrderItems'] .=
 				_("Shipping & Handling").": ".
 					strip_tags(shoppingOrders::constructPrice(
 						$order['Fee']))."\n";
-		
-		$email->variables['OrderItems'] .= 
+
+		$email->variables['OrderItems'] .=
 			"==============================\n" .
 			_("Grand Total").": ".
 				strip_tags(shoppingOrders::constructPrice($order['Subtotal']+
 					(isset($order['Tax'])?$order['Tax']:0)-$order['Discount']+$order['Fee']));
-		
-		if ($digitalgoods && 
+
+		if ($digitalgoods &&
 			$order['PaymentStatus'] == SHOPPING_ORDER_PAYMENT_STATUS_PAID)
-			$email->variables['LinkToDigitalGoods'] .= 
+			$email->variables['LinkToDigitalGoods'] .=
 				_("You can access / download your digital goods at:")."\n" .
 				$email->variables['LinkToOrders'] .
 				"\n\n";
-		
-		
+
+
 		$email->load('ShoppingOrder');
 		$email->to = $user['Email'];
 		$emailsent = $email->send();
-		
+
 		if (!defined('SHOPPING_CART_SEND_NOTIFICATION_EMAIL_ON_NEW_ORDER') ||
-			SHOPPING_CART_SEND_NOTIFICATION_EMAIL_ON_NEW_ORDER) 
+			SHOPPING_CART_SEND_NOTIFICATION_EMAIL_ON_NEW_ORDER)
 		{
 			$email->reset();
-			
+
 			if (defined('SHOPPING_CART_SEND_NOTIFICATION_EMAIL_TO') &&
 				SHOPPING_CART_SEND_NOTIFICATION_EMAIL_TO)
 				$email->to = SHOPPING_CART_SEND_NOTIFICATION_EMAIL_TO;
 			else
 				$email->to = WEBMASTER_EMAIL;
-			
-			$email->variables['OrderForm'] .= 
+
+			$email->variables['OrderForm'] .=
 				"\n\n".$order['OrderMethodDetails'];
-			
+
 			$email->load('ShoppingOrderToWebmaster');
 			$email->send();
 		}
-		
+
 		if (defined('SHOPPING_CART_SEND_NOTIFICATION_EMAIL_ON_LOW_STOCK') &&
-			SHOPPING_CART_SEND_NOTIFICATION_EMAIL_ON_LOW_STOCK && $outofstockitems) 
+			SHOPPING_CART_SEND_NOTIFICATION_EMAIL_ON_LOW_STOCK && $outofstockitems)
 		{
 			$email->reset();
-			
+
 			if (defined('SHOPPING_CART_SEND_LOW_STOCK_NOTIFICATION_EMAIL_TO') &&
 				SHOPPING_CART_SEND_LOW_STOCK_NOTIFICATION_EMAIL_TO)
 				$email->to = SHOPPING_CART_SEND_LOW_STOCK_NOTIFICATION_EMAIL_TO;
 			else
 				$email->to = WEBMASTER_EMAIL;
-			
+
 			$email->load('ShoppingItemsLowStock');
 			$email->send();
 		}
-		
+
 		unset($email);
 		return $emailsent;
 	}
-	
+
 	static function checkAccess($row) {
 		if (!$GLOBALS['USER']->loginok)
 			return false;
-		
+
 		if ($row && !is_array($row))
 			$row = sql::fetch(sql::run(
 				" SELECT `UserID`" .
 				" FROM `{shoppingorders}`" .
 				" WHERE `ID` = '".(int)$row."'"));
-		
+
 		if (!$row)
 			return true;
-		
+
 		$permission = null;
-		
+
 		if ($GLOBALS['USER']->data['Admin']) {
 			include_once('lib/userpermissions.class.php');
-			
-			$permission = userPermissions::check((int)$GLOBALS['USER']->data['ID'], 
-				$this->adminPath);
+
+			$permission = userPermissions::check((int)$GLOBALS['USER']->data['ID'],
+				'admin/modules/shoppingorders');
 		}
-		
-		if ((!$GLOBALS['USER']->data['Admin'] || !$permission['PermissionType']) && 
+
+		if ((!$GLOBALS['USER']->data['Admin'] || !$permission['PermissionType']) &&
 			$GLOBALS['USER']->data['ID'] != $row['UserID'])
 			return false;
-		
+
 		return $row;
 	}
-	
+
 	function ajaxRequest() {
 		$users = null;
 		$items = null;
@@ -5303,149 +5303,149 @@ class shoppingOrders extends modules {
 		$orders = null;
 		$orderedproducts = null;
 		$viewedproducts = null;
-		
+
 		if (isset($_GET['users']))
 			$users = (int)$_GET['users'];
-		
+
 		if (isset($_GET['shoppingitems']))
 			$items = (int)$_GET['shoppingitems'];
-		
+
 		if (isset($_GET['discount']))
 			$discount = (int)$_GET['discount'];
-		
+
 		if (isset($_GET['fee']))
 			$fee = (int)$_GET['fee'];
-		
+
 		if (isset($_GET['subtotal']))
 			$subtotal = (int)$_GET['subtotal'];
-		
+
 		if (isset($_GET['totals']))
 			$totals = (int)$_GET['totals'];
-		
+
 		if (isset($_GET['orders']))
 			$orders = (int)$_GET['orders'];
-		
+
 		if (isset($_GET['orderedproducts']))
 			$orderedproducts = (int)$_GET['orderedproducts'];
-		
+
 		if (isset($_GET['viewedproducts']))
 			$viewedproducts = (int)$_GET['viewedproducts'];
-		
+
 		if ($users || $items || $orders || $orderedproducts || $viewedproducts) {
-			if (!$GLOBALS['USER']->loginok || 
-				!$GLOBALS['USER']->data['Admin']) 
+			if (!$GLOBALS['USER']->loginok ||
+				!$GLOBALS['USER']->data['Admin'])
 			{
 				tooltip::display(
 					__("Request can only be accessed by administrators!"),
 					TOOLTIP_ERROR);
 				return true;
 			}
-			
+
 			include_once('lib/userpermissions.class.php');
-			
+
 			$permission = userPermissions::check(
 				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
-			
+
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
 				return true;
 			}
-			
+
 			if ($users) {
 				$GLOBALS['USER']->displayQuickList('#neworderform #entryUserName');
 				return true;
 			}
-			
+
 			if ($items) {
 				$this->displayAdminShoppingItems();
 				return true;
 			}
-			
+
 			if ($orders) {
 				$this->displayAdminDashboardOrders();
 				return true;
 			}
-			
+
 			if ($orderedproducts) {
 				$this->displayAdminDashboardBestsellers();
 				return true;
 			}
-			
+
 			if ($viewedproducts) {
 				$this->displayAdminDashboardMostViewedProducts();
 				return true;
 			}
 		}
-		
+
 		if ($discount) {
 			echo shoppingCart::getDiscount($subtotal);
 			return true;
 		}
-		
+
 		if ($fee) {
 			echo shoppingCart::getFee($subtotal);
 			return true;
 		}
-		
+
 		if ($totals) {
 			$totals = $this->getAdminNewOrderTotals();
 			echo json::encode($totals);
 			return true;
 		}
-		
+
 		$this->ajaxPaging = true;
 		$this->display();
 		return true;
 	}
-	
+
 	static function constructPrice($price) {
 		if (method_exists('shopping', 'constructPrice'))
 			return shopping::constructPrice($price);
-		
+
 		if (!defined('SHOPPING_CART_CURRENCY') || !SHOPPING_CART_CURRENCY)
 			return number_format($price, 2);
-		
+
 		return
 				"<span class='shopping-currency'>" .
 					SHOPPING_CART_CURRENCY .
 				"</span>" .
 				number_format($price, 2);
 	}
-	
+
 	static function displayPrice($price) {
 		echo shoppingOrders::constructPrice($price);
 	}
-	
+
 	function displayDigitalGoods($row) {
 		if (!in_array($row['PaymentStatus'], array(
 				SHOPPING_ORDER_PAYMENT_STATUS_PAID,
 				SHOPPING_ORDER_PAYMENT_STATUS_PENDING)))
 			return;
-		
+
 		$orderitems = sql::fetch(sql::run(
 			" SELECT GROUP_CONCAT(ShoppingItemID SEPARATOR ',') AS `ItemIDs` " .
 			" FROM `{shoppingorderitems}`" .
 			" WHERE `ShoppingOrderID` = '".$row['ID']."'" .
 			" LIMIT 1"));
-		
+
 		if (!$orderitems)
 			return;
-		
+
 		$items = sql::run(
 			" SELECT * FROM `{shoppingitems}`" .
 			" WHERE `ID` IN (".$orderitems['ItemIDs'].")" .
 			" AND `Deactivated` = 0" .
 			" AND `DigitalGoods` = 1");
-		
+
 		if (!sql::rows($items))
 			return;
-		
+
 		if ($row['PaymentStatus'] != SHOPPING_ORDER_PAYMENT_STATUS_PAID) {
 			echo "<br />";
-			
+
 			tooltip::display(
 				_("Your payment is still pending. To access your Digital Goods " .
 					"please finalize your payments below or wait until we receive " .
@@ -5453,12 +5453,12 @@ class shoppingOrders extends modules {
 				TOOLTIP_NOTIFICATION);
 			return;
 		}
-		
+
 		$digitalgoods = new shoppingItemDigitalGoods();
-		
+
 		echo
-			"<div class='shopping-order-digital-goods'>";			
-		
+			"<div class='shopping-order-digital-goods'>";
+
 		while ($item = sql::fetch($items)) {
 			$downloadable = sql::fetch(sql::run(
 				" SELECT `DigitalGoodsExpiration` FROM `{shoppings}`" .
@@ -5466,47 +5466,47 @@ class shoppingOrders extends modules {
 				" AND (`DigitalGoodsExpiration` = 0" .
 					" OR DATEDIFF(NOW(), '".$row['TimeStamp']."')" .
 						" <= `DigitalGoodsExpiration`)"));
-			
+
 			if (!$downloadable)
 				continue;
-			
+
 			echo
 				"<h3 class='shopping-order-digital-good-item-title'>" .
 					$item['Title'] .
 				"</h3>";
-			
+
 			$digitalgoods->selectedOwnerID = $item['ID'];
 			$digitalgoods->display();
 		}
-		
+
 		echo
 			"</div>";
-		
+
 		unset($digitalgoods);
 	}
-	
+
 	function displayTitle(&$row) {
 		echo
 			_("Order #").$row['OrderID'];
-		
+
 		echo
 			" (";
 		$this->displayOrderMethodStatus($row);
-		
+
 		echo
 			")";
 	}
-	
+
 	function displayDetails(&$row) {
 		$user = $GLOBALS['USER']->get($row['UserID']);
-		
+
 		echo
 			"<span class='details-date'>" .
 			calendar::datetime($row['TimeStamp']) .
 			" </span>";
-				
+
 		$GLOBALS['USER']->displayUserName($user, __('by %s'));
-		
+
 		echo
 			"<span class='details-separator separator-1'>" .
 			", " .
@@ -5515,7 +5515,7 @@ class shoppingOrders extends modules {
 				_($this->status2Text($row['OrderStatus'])) .
 			"</span>";
 	}
-	
+
 	function displayDescription(&$row) {
 		echo
 			"<p>" .
@@ -5525,55 +5525,55 @@ class shoppingOrders extends modules {
 					"in the comments.") .
 			"</p>";
 	}
-	
+
 	function displayCartListHeader(&$row) {
 		$cart = new shoppingCart();
 		$cart->displayListHeader($row);
 		unset($cart);
 	}
-	
+
 	function displayCartListItem(&$row) {
 		$cart = new shoppingCart();
 		$cart->displayListItem($row);
 		unset($cart);
 	}
-	
+
 	function displayCartList(&$row) {
 		echo
 				"<table cellpadding='0' cellspacing='0' class='list'>" .
 					"<thead>" .
 					"<tr>";
-		
+
 		$this->displayCartListHeader($row);
-		
+
 		echo
 					"</tr>" .
 					"</thead>" .
 					"<tbody>";
-	
+
 		$orderitems = sql::run(
 			" SELECT * FROM `{shoppingorderitems}`" .
 			" WHERE `ShoppingOrderID` = '".$row['ID']."'");
-		
+
 		$ii = 0;
 		while($orderitem = sql::fetch($orderitems)) {
 			$orderitem['TimeStamp'] = $row['TimeStamp'];
-			
+
 			echo
 				"<tr".($ii%2?" class='pair'":NULL).">";
-			
+
 			$this->displayCartListItem($orderitem);
-			
+
 			echo
 				"</tr>";
-				
+
 			$ii++;
 		}
-		
+
 		echo
 					"</tbody>" .
 				"</table>";
-		
+
 		$totals = array(
 			'SubTotal' => $row['Subtotal'],
 			'Discount' => $row['Discount'],
@@ -5582,101 +5582,101 @@ class shoppingOrders extends modules {
 			'GrandTotal' => $row['Subtotal']+
 				(isset($row['Tax'])?$row['Tax']:0)-
 				$row['Discount']+$row['Fee']);
-		
+
 		$cart = new shoppingCart();
 		$cart->displayListTotals($totals);
 		unset($cart);
 	}
-	
+
 	function displayCart(&$row) {
 		echo
 			"<div class='shopping-cart'>";
-		
+
 		$this->displayCartList($row);
-		
+
 		echo
 				"<div class='clear-both'></div>" .
 			"</div>"; //shopping-cart
 	}
-	
+
 	function displayOrderInfo(&$row) {
 		$orderform = new shoppingOrderForm();
 		$orderform->load(false);
 		$orderform->displayData($row);
 		unset($orderform);
 	}
-	
+
 	function displayOrderMethodTitle(&$ordermethod) {
 		echo $ordermethod['Title'];
 	}
-	
+
 	function displayOrderMethodDescription(&$ordermethod) {
 		echo $ordermethod['Description'];
 	}
-	
+
 	function displayOrderMethodStatus(&$row) {
 		echo
 			"<span class='tip ";
-		
+
 		switch ($row['PaymentStatus']) {
 			case SHOPPING_ORDER_PAYMENT_STATUS_PAID:
-				echo 
+				echo
 					"green'" .
 					" title='" .
-							htmlspecialchars(_("Payment confirmed and received."), ENT_QUOTES) .
+							htmlchars(_("Payment confirmed and received."), ENT_QUOTES) .
 						"'";
 				break;
-				
+
 			case SHOPPING_ORDER_PAYMENT_STATUS_PENDING:
-				echo 
+				echo
 					"red'" .
 					" title='" .
-							htmlspecialchars(_("Payment still pending!"), ENT_QUOTES) . 
+							htmlchars(_("Payment still pending!"), ENT_QUOTES) .
 						"'";
 				break;
-				
+
 			case SHOPPING_ORDER_PAYMENT_STATUS_FAILED:
-				echo 
+				echo
 					"'" .
 					" title='" .
-							htmlspecialchars(_("Payment failed!"), ENT_QUOTES) . 
+							htmlchars(_("Payment failed!"), ENT_QUOTES) .
 						"'";
 				break;
-				
+
 			case SHOPPING_ORDER_PAYMENT_STATUS_EXPIRED:
-				echo 
+				echo
 					"'" .
 					" title='" .
-							htmlspecialchars(_("Payment expired!"), ENT_QUOTES) . 
+							htmlchars(_("Payment expired!"), ENT_QUOTES) .
 						"'";
 				break;
-				
+
 			case SHOPPING_ORDER_PAYMENT_STATUS_PROCESSING:
-				echo 
+				echo
 					"'" .
 					" title='" .
-							htmlspecialchars(_("Awaiting payment deposit!"), ENT_QUOTES) . 
+							htmlchars(_("Awaiting payment deposit!"), ENT_QUOTES) .
 						"'";
 				break;
-				
+
 			default:
-				echo 
+				echo
 					"'";
 				break;
 		}
-					
+
 		echo
 			">" .
 			$this->paymentStatus2Text($row['PaymentStatus']) .
 			"</span>";
 	}
-	
+
 	function displayFinalizePayments(&$row) {
 		$ordermethodclass = 'shoppingOrderMethod'.
 			$row['OrderMethod'];
-		
+
 		$ordermethod = new $ordermethodclass;
-		$ordermethod->postProcessText = 
+		$ordermethod->postProcessText =
 			_("It seems the payment has not been processed yet or you " .
 				"haven't finalized the payment. If you sure the " .
 				"payment has been processed please wait a few more minutes " .
@@ -5685,10 +5685,10 @@ class shoppingOrders extends modules {
 		$ordermethod->postProcess($row['ID']);
 		unset($ordermethod);
 	}
-	
+
 	function displayOrderMethod(&$row) {
 		$ordermethod = shoppingOrderMethods::get($row['OrderMethod']);
-		
+
 		echo
 			"<div tabindex='0' class='fc" .
 				($row['PaymentStatus'] != SHOPPING_ORDER_PAYMENT_STATUS_PAID?
@@ -5705,15 +5705,15 @@ class shoppingOrders extends modules {
 						"</div>" .
 						"<div class='form-entry-content'>" .
 						"<b>";
-		
+
 		$this->displayOrderMethodTitle($ordermethod);
-		
+
 		echo
 						"</b><br />";
-		
+
 		if ($row['PaymentStatus'] == SHOPPING_ORDER_PAYMENT_STATUS_PENDING)
 			$this->displayOrderMethodDescription($ordermethod);
-		
+
 		echo
 						"</div>" .
 					"</div>" .
@@ -5722,16 +5722,16 @@ class shoppingOrders extends modules {
 							_("Status").":" .
 						"</div>" .
 						"<div class='form-entry-content bold'>";
-		
+
 		$this->displayOrderMethodStatus($row);
-		
+
 		echo
 						"</div>" .
 					"</div>";
-							
+
 		if ($row['PaymentStatus'] == SHOPPING_ORDER_PAYMENT_STATUS_PENDING)
 			$this->displayFinalizePayments($row);
-							
+
 		if ($GLOBALS['USER']->loginok && $GLOBALS['USER']->data['Admin']) {
 			echo
 					"<div class='form-entry preview'>" .
@@ -5743,36 +5743,36 @@ class shoppingOrders extends modules {
 						"</div>" .
 					"</div>";
 		}
-		
+
 		echo
 				"</div>" .
 			"</div>";
 	}
-	
+
 	function displayDownloadsList(&$downloads) {
 		$previtemid = 0;
 		while($download = sql::fetch($downloads)) {
 			if ($previtemid != $download['ShoppingItemID']) {
 				if ($previtemid)
 					echo "</ul>";
-				
+
 				$downloaditem = sql::fetch(sql::run(
 					" SELECT `Title` FROM `{shoppingitems}`" .
 					" WHERE `ID` = '".$download['ShoppingItemID']."'"));
-				
+
 				echo
 					"<b>" .
 						$downloaditem['Title'] .
 					"</b>" .
 					"<ul>";
-				
+
 				$previtemid = $download['ShoppingItemID'];
 			}
-			
+
 			$downloaddigitalgood = sql::fetch(sql::run(
 				" SELECT `Title`, `FileSize` FROM `{shoppingitemdigitalgoods}`" .
 				" WHERE `ID` = '".$download['ShoppingItemDigitalGoodID']."'"));
-			
+
 			echo
 				"<li>\"" .
 					sprintf(_("%s, started on <i>%s</i>, finished on <i>%s</i>, from %s"),
@@ -5782,35 +5782,35 @@ class shoppingOrders extends modules {
 							calendar::datetime($download['FinishTimeStamp']):
 							_('unknown')),
 						security::long2ip($download['IP']));
-					
+
 			if ($download['FinishTimeStamp']) {
-				$timediff = strtotime($download['FinishTimeStamp']) - 
+				$timediff = strtotime($download['FinishTimeStamp']) -
 					strtotime($download['StartTimeStamp']);
-				
+
 				if ($timediff)
 					echo
 						" (" .
 						files::humanSize($downloaddigitalgood['FileSize']/$timediff) .
 						"/s)";
 			}
-				
+
 			echo
 				"</li>";
 		}
-		
+
 		echo
 			"</ul>";
 	}
-	
+
 	function displayDownloads(&$row) {
 		$downloads = sql::run(
 			" SELECT * FROM `{shoppingorderdownloads}`" .
 			" WHERE `ShoppingOrderID` = '".$row['ID']."'" .
 			" ORDER BY `ShoppingItemID`, `ID`");
-		
+
 		if (!sql::rows($downloads))
 			return;
-		
+
 		echo
 			"<div tabindex='0' class='fc'>" .
 				"<a class='fc-title'>" .
@@ -5818,14 +5818,14 @@ class shoppingOrders extends modules {
 					" (".sql::rows($downloads).")" .
 				"</a>" .
 				"<div class='fc-content'>";
-		
+
 		$this->displayDownloadsList($downloads);
-			
+
 		echo
 				"</div>" .
 			"</div>";
 	}
-	
+
 	function displayFunctions(&$row) {
 		echo
 			"<a href='".url::uri('shoppingorderid')."' class='back comment'>".
@@ -5834,64 +5834,64 @@ class shoppingOrders extends modules {
 				"</span>" .
 			"</a>";
 	}
-	
+
 	function displayComments(&$row) {
 		$comments = new shoppingOrderComments();
 		$comments->selectedOwnerID = $row['ID'];
 		$comments->display();
 		unset($comments);
 	}
-	
+
 	function displaySelected(&$row) {
 		echo
 			"<div class='shopping-order selected'>" .
 				"<h2 class='shopping-order-number'>";
-		
+
 		$this->displayTitle($row);
-		
+
 		echo
 				"</h2>" .
 				"<div class='shopping-order-details comment'>";
-		
+
 		$this->displayDetails($row);
-		
+
 		echo
 				"</div>";
-		
-		if (JCORE_VERSION >= '0.5')		
+
+		if (JCORE_VERSION >= '0.5')
 			$this->displayDigitalGoods($row);
-				
+
 		echo
 				"<div class='shopping-order-content'>";
-		
+
 		$this->displayDescription($row);
 		$this->displayCart($row);
 		$this->displayOrderInfo($row);
 		$this->displayOrderMethod($row);
-		
-		if (JCORE_VERSION >= '0.5')		
+
+		if (JCORE_VERSION >= '0.5')
 			$this->displayDownloads($row);
-		
+
 		echo
 				"</div>" . //shopping-order-content
 				"<div class='shopping-order-links'>";
-		
+
 		$this->displayFunctions($row);
-		
+
 		echo
 				"</div>" .
 				"<div class='spacer bottom'></div>" .
 				"<div class='separator bottom'></div>" .
 			"</div>"; //shopping-order
-		
+
 		if ($this->selectedID == $row['ID'])
 			$this->displayComments($row);
 	}
-	
+
 	function displayLogin() {
 		$GLOBALS['USER']->displayLogin();
 	}
-	
+
 	function displayListHeader() {
 		echo
 			"<th><span class='nowrap'>".
@@ -5901,38 +5901,38 @@ class shoppingOrders extends modules {
 			"<th style='text-align: right;'><span class='nowrap'>".
 				_("Status")."</span></th>";
 	}
-	
+
 	function displayListHeaderOptions() {
 		echo
 			"<th><span class='nowrap'>".
 				__("Comments")."</span></th>";
 	}
-	
+
 	function displayListHeaderFunctions() {
 	}
-	
+
 	function displayListItem(&$row, $class = null) {
 		$user = $GLOBALS['USER']->get($row['UserID']);
-		
-		echo 
+
+		echo
 			"<td class='auto-width'>" .
 				"<a href='".$row['_Link']."' " .
 				" class='bold'>" .
 				$row['OrderID'] .
 				"</a>" .
 				"<div class='comment' style='padding-left: 10px;'>";
-		
+
 		$this->displayDetails($row);
-		
+
 		echo
 				"</div>" .
 			"</td>" .
 			"<td style='text-align: right;'>" .
 				"<span class='nowrap'>";
-		
+
 		shoppingOrders::displayPrice($row['Subtotal']+
 			(isset($row['Tax'])?$row['Tax']:0)-$row['Discount']+$row['Fee']);
-		
+
 		echo
 				"</span>" .
 			"</td>" .
@@ -5945,141 +5945,141 @@ class shoppingOrders extends modules {
 					_($this->status2Text($row['OrderStatus'])) .
 				"</div>" .
 				"<div class='shopping-order-payment-status'>";
-		
+
 		$this->displayOrderMethodStatus($row);
-		
+
 		echo
 				"</div>" .
 			"</td>";
 	}
-	
+
 	function displayListItemOptions(&$row) {
 		echo
 			"<td align='center'>" .
 				"<a class='shopping-order-comments-link' " .
-					"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
+					"title='".htmlchars(__("Comments"), ENT_QUOTES).
 						" (".$row['Comments'].")' " .
 					"href='".$row['_Link']."#comments'>";
-		
+
 		if (JCORE_VERSION >= '0.5' && $row['Comments'])
 			counter::display($row['Comments']);
-		
+
 		echo
 				"</a>" .
 			"</td>";
 	}
-	
+
 	function displayListItemFunctions(&$row) {
 	}
-	
+
 	function displayList(&$rows) {
-		echo 
+		echo
 			"<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>";
-		
+
 		$this->displayListHeader();
 		$this->displayListHeaderOptions();
 		$this->displayListHeaderFunctions();
-		
+
 		echo
 				"</tr>" .
 				"</thead>" .
 				"<tbody>";
-		
-		$i = 0;		
+
+		$i = 0;
 		while($row = sql::fetch($rows)) {
 			$row['_Link'] = $this->shoppingOrdersURL .
 				(isset($_GET['shoppingorderslimit'])?
 					"&amp;shoppingorderslimit=".strip_tags((string)$_GET['shoppingorderslimit']):
-					null) . 
+					null) .
 				"&amp;shoppingorderid=".$row['ID'];
-			
-			echo 
+
+			echo
 				"<tr class='shopping-order-".
 					strtolower($this->paymentStatus2Text($row['PaymentStatus'])) .
 					" ".($i%2?"pair":null)."'>";
-			
+
 			$this->displayListItem($row);
 			$this->displayListItemOptions($row);
 			$this->displayListItemFunctions($row);
-			
+
 			echo
 				"</tr>";
-			
+
 			$i++;
 		}
-		
-		echo 
+
+		echo
 				"</tbody>" .
 			"</table>" .
 			"<br />";
 	}
-	
+
 	function displayArguments() {
 		if (!$this->arguments)
 			return false;
-		
+
 		if (preg_match('/(^|\/)([0-9]+?)\/ajax($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/\/ajax/', '', $this->arguments);
 			$this->ignorePaging = true;
 			$this->ajaxPaging = true;
 		}
-		
+
 		if (preg_match('/(^|\/)([0-9]+?)($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)[0-9]+?($|\/)/', '\2', $this->arguments);
 			$this->limit = (int)$matches[2];
 		}
-		
+
 		return false;
 	}
-	
+
 	function display() {
 		if ($this->displayArguments())
 			return true;
-		
+
 		if (!$GLOBALS['USER']->loginok) {
 			$this->displayLogin();
 			return;
 		}
-		
+
 		if (!$this->shoppingURL)
 			$this->shoppingURL = shopping::getURL();
-		
+
 		if (!$this->shoppingOrdersURL)
 			$this->shoppingOrdersURL = shoppingOrders::getURL();
-		
+
 		if ($this->selectedID) {
 			$row = sql::fetch(sql::run(
 				$this->SQL() .
 				" LIMIT 1"));
-			
+
 			echo
 				"<div class='shopping-orders'>";
-			
+
 			$this->displaySelected($row);
-			
+
 			echo
 				"</div>";
-			
+
 			return;
-		}	
-		
+		}
+
 		if (!$this->ajaxRequest)
 			echo
 				"<div class='shopping-orders'>";
-		
+
 		$paging = new paging($this->limit);
 		$paging->track(strtolower(get_class($this)).'limit');
-		
+
 		if ($this->ajaxPaging) {
 			$paging->ajax = true;
 			$paging->otherArgs = "&amp;request=modules/shoppingorders";
 		}
-		
+
 		if (!$this->selectedID && $this->ignorePaging)
 			$paging->reset();
-		
+
 		$rows = sql::run(
 			$this->SQL() .
 			(!$this->selectedID?
@@ -6089,25 +6089,25 @@ class shoppingOrders extends modules {
 						null):
 					" LIMIT ".$paging->limit):
 				null));
-		
+
 		$paging->setTotalItems(sql::count());
-		
+
 		echo
 			"<div class='shopping-orders-list'>";
-				
+
 		if (!sql::rows($rows))
 			tooltip::display(
 					_("No orders found."),
 					TOOLTIP_NOTIFICATION);
 		else
 			$this->displayList($rows);
-		
+
 		echo
 			"</div>";
-		
+
 		if (!$this->selectedID && $this->showPaging)
 			$paging->display();
-		
+
 		if (!$this->ajaxRequest)
 			echo
 				"</div>"; //shopping-orders
@@ -6116,19 +6116,19 @@ class shoppingOrders extends modules {
 
 class shoppingNewOrders extends shoppingOrders {
 	var $adminPath = 'admin/modules/shoppingorders/shoppingneworders';
-	
+
 	function displayAdminTitle($ownertitle = null) {
 		admin::displayTitle(
 			_('Shopping Orders'),
 			_('New and Processing Orders'));
 	}
-	
+
 	function displayAdminListSearch($ordertypes = null) {
 		parent::displayAdminListSearch(array(
 			SHOPPING_ORDER_STATUS_NEW,
 			SHOPPING_ORDER_STATUS_PROCESSING));
 	}
-	
+
 	function displayAdmin() {
 		parent::displayAdminOrders(array(
 			SHOPPING_ORDER_STATUS_NEW,
@@ -6138,13 +6138,13 @@ class shoppingNewOrders extends shoppingOrders {
 
 class shoppingProcessedOrders extends shoppingOrders {
 	var $adminPath = 'admin/modules/shoppingorders/shoppingprocessedorders';
-	
+
 	function displayAdminTitle($ownertitle = null) {
 		admin::displayTitle(
 			_('Shopping Orders'),
 			_('Processed Orders'));
 	}
-	
+
 	function displayAdminListSearch($ordertypes = null) {
 		parent::displayAdminListSearch(array(
 			SHOPPING_ORDER_STATUS_ACCEPTED,
@@ -6152,7 +6152,7 @@ class shoppingProcessedOrders extends shoppingOrders {
 			SHOPPING_ORDER_STATUS_DELIVERED,
 			SHOPPING_ORDER_STATUS_REJECTED));
 	}
-	
+
 	function displayAdmin() {
 		parent::displayAdminOrders(array(
 			SHOPPING_ORDER_STATUS_ACCEPTED,
@@ -6163,7 +6163,7 @@ class shoppingProcessedOrders extends shoppingOrders {
 }
 
 modules::register(
-	'shoppingOrders', 
+	'shoppingOrders',
 	_('Shopping Orders'),
 	_('Handle New / Processed orders and display members their orders history'));
 

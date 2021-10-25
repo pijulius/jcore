@@ -19,104 +19,104 @@ class _debug {
 	static $data = null;
 	static $customData = null;
 	static $runtime = 0;
-	
+
 	static function start() {
 		if (!isset($_COOKIE['XDEBUG_PROFILE'])) {
 			setcookie('XDEBUG_PROFILE', true);
 			header('Location: '.$_SERVER['REQUEST_URI']);
 			exit;
 		}
-		
+
 		debug::$runtime = microtime(true);
 	}
-	
+
 	static function end() {
 		debug::$runtime = number_format(microtime(true)-debug::$runtime, 5);
 		debug::parse();
 	}
-	
+
 	static function parse($file = null) {
 		if (!$file && debug::xdebug())
 			$file = xdebug_get_profiler_filename();
-		
+
 		if (!$file)
 			return false;
-		
+
 		debug::$data = null;
-		
+
 		$ffile = null;
 		$function = null;
 		$cfunc = false;
-		
+
 		foreach(preg_split("/\r?\n/", file_get_contents($file)) as $line) {
 			if (!$line)
 				continue;
-			
+
 			if (strpos($line, 'fl=') !== false) {
 				$ffile = substr($line, strpos($line, '=')+1);
-				
+
 			} else if (strpos($line, 'fn=') !== false) {
 				$function = substr($line, strpos($line, '=')+1);
-				
+
 				if (strpos($line, 'cfn=') !== false)
 					$cfunc = true;
 				else
 					$cfunc = false;
-				
+
 				if (!isset(debug::$data[0][$function])) {
 					debug::$data[0][$function] = '0.0';
-					
+
 				} elseif ($cfunc) {
 					list($time, $calls) = explode('.', debug::$data[0][$function]);
 					$calls++;
 					debug::$data[0][$function] = $time.'.'.$calls;
 				}
-				
+
 			} else {
 				if ($function && (int)$line) {
 					list($fline, $ftime) = explode(' ', $line);
-					
+
 					if (!$cfunc) {
 						list($time, $calls) = explode('.', debug::$data[0][$function]);
 						$time += (int)$ftime;
 						debug::$data[0][$function] = $time.'.'.$calls;
 					}
-					
+
 					if ($ffile) {
 						if (!isset(debug::$data[1][$function][$ffile]))
 							debug::$data[1][$function][$ffile] = 0;
-						
+
 						if ($cfunc)
 							debug::$data[1][$function][$ffile]++;
 					}
-					
+
 					$function = null;
 				}
 			}
 		}
-		
+
 		if (isset(debug::$data[0]) && is_array(debug::$data[0]))
 			arsort(debug::$data[0]);
-		
+
 		return true;
 	}
-	
+
 	static function xdebug() {
 		if (function_exists('xdebug_get_profiler_filename'))
 			return true;
-		
+
 		return false;
 	}
-	
+
 	static function log($type, $data) {
 		if (!isset(debug::$customData[$type]))
 			debug::$customData[$type] = '';
-		 
+
 		debug::$customData[$type] .= $data;
 	}
-	
+
 	static function display() {
-		echo 
+		echo
 			"<div class='fc' tabindex='0' style='margin: 20px;'>" .
 				"<a class='fc-title'>" .
 					"<span class='align-right'>" .
@@ -125,17 +125,17 @@ class _debug {
 					"DEBUG Info" .
 				"</a>" .
 				"<div class='fc-content' style='padding: 1px 20px;'>";
-		
+
 		if (debug::$customData && is_array(debug::$customData)) {
 			foreach(debug::$customData as $title => $data)
 				echo
 					"<h2>".$title."</h2>" .
 					$data;
-			
+
 			echo
 				"<p>&nbsp;</p>";
 		}
-		
+
 		if (!debug::$data || !isset(debug::$data[0]) || !debug::$data[0]) {
 			if (!debug::xdebug())
 				echo
@@ -169,7 +169,7 @@ class _debug {
 							"</a> the website." .
 						"</li>" .
 					"</ul>";
-			else 
+			else
 				echo
 					"<h2>Empty xDebug data!</h2>" .
 					"<p>Please make sure that the followings are met.</p>" .
@@ -194,7 +194,7 @@ class _debug {
 							"like this." .
 						"</li>" .
 					"</ul>";
-			
+
 		} else {
 			echo
 				(debug::$customData?
@@ -216,32 +216,32 @@ class _debug {
 					"</tr>" .
 				"</thead>" .
 				"<tbody>";
-			
+
 			$i = 0;
 			$totaltime = 0;
-			
+
 			foreach(debug::$data[0] as $function => $data) {
 				list($time, $calls) = explode('.', $data);
 				$sec = number_format($time/1000000, 5);
-				
+
 				if ($i < 300) {
 					echo
 					"<tr>" .
 						"<td class='auto-width".($sec >= 0.001?" bold":null)."'>" .
 							$function;
-					
+
 					if (isset(debug::$data[1][$function])) {
 						echo
 							"<div class='comment' style='padding-left: 10px;'>";
-						
+
 						foreach(debug::$data[1][$function] as $file => $fcalls)
 							echo
 								$file.' ['.$fcalls.']<br/>';
-					
+
 						echo
 							"</div>";
 					}
-					
+
 					echo
 						"</td>" .
 						"<td style='text-align: right;'>" .
@@ -252,11 +252,11 @@ class _debug {
 						"</td>" .
 					"</tr>";
 				}
-				
+
 				$i++;
 				$totaltime += $time;
 			}
-			
+
 			echo
 				"</tbody>" .
 				"</table>" .
@@ -265,7 +265,7 @@ class _debug {
 					number_format($totaltime/1000000, 5) .
 				"</h3>";
 		}
-			
+
 		echo
 				"</div>" .
 			"</div>";

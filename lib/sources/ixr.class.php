@@ -1,5 +1,5 @@
 <?php
-/* 
+/*
    IXR - The Inutio XML-RPC Library - (c) Incutio Ltd 2002-2005
    Version 1.7 (beta) - Simon Willison, 23rd May 2005
    Site:   http://scripts.incutio.com/xmlrpc/
@@ -47,7 +47,7 @@ class _IXR_Value {
         }
         // If it is a normal PHP object convert it in to a struct
         if (is_object($this->data)) {
-            
+
             $this->data = get_object_vars($this->data);
             return 'struct';
         }
@@ -74,7 +74,7 @@ class _IXR_Value {
                 return '<double>'.$this->data.'</double>';
                 break;
             case 'string':
-                return '<string>'.htmlspecialchars($this->data).'</string>';
+                return '<string>'.htmlchars($this->data).'</string>';
                 break;
             case 'array':
                 $return = '<array><data>'."\n";
@@ -87,7 +87,7 @@ class _IXR_Value {
             case 'struct':
                 $return = '<struct>'."\n";
                 foreach ($this->data as $name => $value) {
-					$name = htmlspecialchars($name);
+					$name = htmlchars($name);
                     $return .= "  <member><name>$name</name><value>";
                     $return .= $value->getXml()."</value></member>\n";
                 }
@@ -254,7 +254,7 @@ class _IXR_Message {
             }
         }
 		$this->_currentTagContents = '';
-    }       
+    }
 }
 
 
@@ -379,7 +379,7 @@ EOD;
                 'specUrl' => 'http://www.xmlrpc.com/discuss/msgReader$1208',
                 'specVersion' => 1
             ),
-        );   
+        );
     }
     function getCapabilities($args) {
         return $this->capabilities;
@@ -494,7 +494,7 @@ class _IXR_Client {
         $request .= $xml;
         // Now send the request
         if ($this->debug) {
-            echo '<pre>'.htmlspecialchars($request)."\n</pre>\n\n";
+            echo '<pre>'.htmlchars($request)."\n</pre>\n\n";
         }
         if ($this->timeout) {
             $fp = @fsockopen($this->server, $this->port, $errno, $errstr, $this->timeout);
@@ -527,7 +527,7 @@ class _IXR_Client {
             }
         }
         if ($this->debug) {
-            echo '<pre>'.htmlspecialchars($contents)."\n</pre>\n\n";
+            echo '<pre>'.htmlchars($contents)."\n</pre>\n\n";
         }
         // Now parse what we've got back
         $this->message = new IXR_Message($contents);
@@ -658,27 +658,27 @@ class _IXR_IntrospectionServer extends _IXR_Server {
             'specVersion' => 1
         );
         $this->addCallback(
-            'system.methodSignature', 
-            'this:methodSignature', 
-            array('array', 'string'), 
+            'system.methodSignature',
+            'this:methodSignature',
+            array('array', 'string'),
             'Returns an array describing the return type and required parameters of a method'
         );
         $this->addCallback(
-            'system.getCapabilities', 
-            'this:getCapabilities', 
-            array('struct'), 
+            'system.getCapabilities',
+            'this:getCapabilities',
+            array('struct'),
             'Returns a struct describing the XML-RPC specifications supported by this server'
         );
         $this->addCallback(
-            'system.listMethods', 
-            'this:listMethods', 
-            array('array'), 
+            'system.listMethods',
+            'this:listMethods',
+            array('array'),
             'Returns an array of available methods on this server'
         );
         $this->addCallback(
-            'system.methodHelp', 
-            'this:methodHelp', 
-            array('string', 'string'), 
+            'system.methodHelp',
+            'this:methodHelp',
+            array('string', 'string'),
             'Returns a documentation string for the specified method'
         );
     }

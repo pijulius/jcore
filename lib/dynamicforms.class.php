@@ -8,7 +8,7 @@
  *  me@pijulius.com
  *  For licensing, see LICENSE or http://jcore.net/license
  ****************************************************************************/
- 
+
 include_once('lib/sources/dynamicforms.class.php');
 
 class dynamicForms extends _dynamicForms {

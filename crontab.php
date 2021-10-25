@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 /***************************************************************************
  *            crontab.php
@@ -8,8 +8,8 @@
  *  me@pijulius.com
  *  For licensing, see LICENSE or http://jcore.net/license
  ****************************************************************************/
- 
-include_once('config.inc.php'); 
+
+include_once('config.inc.php');
 include_once('lib/includes.fxn.php');
 
 $code = null;
@@ -27,18 +27,18 @@ if (!$code || !$do) {
 
 if ($code != '98430123') {
 	include_once('lib/email.class.php');
-	
+
 	$email = new email();
-	
+
 	$email->load('WebmasterWarning');
 	$email->to = WEBMASTER_EMAIL;
-	
+
 	$email->variables = array(
 		"Warning" => 'Hmmmm...');
-		
+
 	$email->send();
 	unset($email);
-	
+
 	exit("Hmmmmm...");
 }
 

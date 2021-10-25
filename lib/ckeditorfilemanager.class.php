@@ -8,10 +8,10 @@
  *  me@pijulius.com
  *  For licensing, see LICENSE or http://jcore.net/license
  ****************************************************************************/
- 
+
 include_once('lib/sources/ckeditorfilemanager.class.php');
 
 class ckEditorFileManager extends _ckEditorFileManager {
 }
- 
+
 ?>

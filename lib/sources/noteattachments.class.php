@@ -16,23 +16,23 @@ class _noteAttachments extends attachments {
 	var $sqlRow = 'NoteID';
 	var $sqlOwnerTable = 'notes';
 	var $adminPath = 'admin/site/notes/noteattachments';
-	
+
 	function __construct() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'noteAttachments::noteAttachments', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'noteAttachments::noteAttachments', $this, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		parent::__construct();
-		
+
 		$this->selectedOwner = __('Note');
 		$this->uriRequest = "notes&amp;attachments=1";
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'noteAttachments::noteAttachments', $this);
 	}

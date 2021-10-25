@@ -16,23 +16,23 @@ class _noteComments extends comments {
 	var $sqlRow = 'NoteID';
 	var $sqlOwnerTable = 'notes';
 	var $adminPath = 'admin/site/notes/notecomments';
-	
+
 	function __construct() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'noteComments::noteComments', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'noteComments::noteComments', $this, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		parent::__construct();
-		
+
 		$this->selectedOwner = __('Note');
 		$this->uriRequest = "notes&amp;comments=1";
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'noteComments::noteComments', $this);
 	}

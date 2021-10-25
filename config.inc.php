@@ -8,7 +8,7 @@
  *  me@pijulius.com
  *  For licensing, see LICENSE or http://jcore.net/license
  ****************************************************************************/
- 
+
 @define('SQL_HOST', 'localhost');
 @define('SQL_DATABASE', 'yourdomain_DB');
 @define('SQL_USER', 'yourdomain_mysqluser');
@@ -23,10 +23,10 @@
 /*
  *  Do Not touch these unless you know what to do
  */
- 
+
 @define('JCORE_VERSION', '1.0');
 
-if (!defined('ROOT_DIR')) 
+if (!defined('ROOT_DIR'))
 	define('ROOT_DIR', '');
 
 set_include_path(get_include_path().PATH_SEPARATOR.SITE_PATH);
@@ -39,9 +39,9 @@ settings::defineSettings();
 
 if (defined('WEBSITE_TEMPLATE') && WEBSITE_TEMPLATE) {
 	if (defined('JCORE_PATH'))
-		set_include_path(preg_replace('/'.preg_quote(SITE_PATH, '/').'/', 
+		set_include_path(preg_replace('/'.preg_quote(SITE_PATH, '/').'/',
 			SITE_PATH.PATH_SEPARATOR.SITE_PATH.'template/'.
-			preg_replace('/[^a-zA-Z0-9\@\.\_\- ]/', '', WEBSITE_TEMPLATE), 
+			preg_replace('/[^a-zA-Z0-9\@\.\_\- ]/', '', WEBSITE_TEMPLATE),
 			get_include_path(), 1));
 	else
 		set_include_path(SITE_PATH.'template/'.

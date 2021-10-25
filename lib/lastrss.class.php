@@ -2,11 +2,11 @@
 /*
  ======================================================================
  lastRSS 0.9.1
- 
+
  Simple yet powerfull PHP class to parse RSS files.
- 
+
  by Vojtech Semecky, webmaster @ oslab . net
- 
+
  Latest version, features, manual and examples:
      http://lastrss.oslab.net/
 

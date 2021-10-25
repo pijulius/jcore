@@ -1,14 +1,14 @@
 <?php
 
 /***************************************************************************
- * 
+ *
  *  Name: File Sharing Module
  *  URI: http://jcore.net
  *  Description: Implements a directory like structure to share files. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
  *  Version: 1.0
  *  Tags: file sharing module, gpl, lgpl, mpl
- * 
+ *
  ****************************************************************************/
 
 class fileSharingRating extends starRating {
@@ -16,20 +16,20 @@ class fileSharingRating extends starRating {
 	var $sqlRow = 'FileSharingID';
 	var $sqlOwnerTable = 'filesharings';
 	var $adminPath = 'admin/modules/filesharing/filesharingrating';
-	
+
 	function __construct() {
 		languages::load('filesharing');
-		
+
 		parent::__construct();
-		
+
 		$this->selectedOwner = _('Folder');
 		$this->uriRequest = "modules/filesharing/".$this->uriRequest;
 	}
-	
+
 	function __destruct() {
 		languages::unload('filesharing');
 	}
-	
+
 	function ajaxRequest() {
 		if (!fileSharing::checkAccess((int)$this->selectedOwnerID)) {
 			$folder = new fileSharing();
@@ -37,7 +37,7 @@ class fileSharingRating extends starRating {
 			unset($folder);
 			return true;
 		}
-		
+
 		return parent::ajaxRequest();
 	}
 }
@@ -48,36 +48,36 @@ class fileSharingAttachments extends attachments {
 	var $sqlRow = 'FileSharingID';
 	var $sqlOwnerTable = 'filesharings';
 	var $adminPath = 'admin/modules/filesharing/filesharingattachments';
-	
+
 	function __construct() {
 		languages::load('filesharing');
-		
+
 		parent::__construct();
-		
-		if (isset($_GET['searchin']) && isset($_GET['search']) && 
+
+		if (isset($_GET['searchin']) && isset($_GET['search']) &&
 			$_GET['searchin'] == 'modules/filesharing')
 			$this->search = trim(strip_tags((string)$_GET['search']));
-			
+
 		if (JCORE_VERSION >= '0.5') {
 			$this->rootPath = $this->rootPath.'filesharing/';
 			$this->rootURL = $this->rootURL.'filesharing/';
 		}
-		
+
 		$this->selectedOwner = _('Folder');
 		$this->uriRequest = "modules/filesharing/".$this->uriRequest;
 	}
-	
+
 	function __destruct() {
 		languages::unload('filesharing');
 	}
-	
+
 	function SQL() {
 		if (!$this->search)
 			return parent::SQL();
-		
+
 		$folders = null;
 		$ignorefolders = null;
-		
+
 		if (!$GLOBALS['USER']->loginok) {
 			$row = sql::fetch(sql::run(
 				" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS `FolderIDs`" .
@@ -86,11 +86,11 @@ class fileSharingAttachments extends attachments {
 				" AND `MembersOnly` = 1 " .
 				" AND `ShowToGuests` = 0" .
 				" LIMIT 1"));
-					
+
 			if ($row['FolderIDs'])
 				$ignorefolders = explode(',', $row['FolderIDs']);
 		}
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT GROUP_CONCAT(`ID` SEPARATOR ',') AS `FolderIDs`" .
 			" FROM `{filesharings}`" .
@@ -104,7 +104,7 @@ class fileSharingAttachments extends attachments {
 					array('Title', 'Description')):
 				null) .
 			" LIMIT 1"));
-		
+
 		if ($row['FolderIDs']) {
 			foreach(explode(',', $row['FolderIDs']) as $id) {
 				$folders[] = $id;
@@ -112,7 +112,7 @@ class fileSharingAttachments extends attachments {
 					$folders[] = $folder['ID'];
 			}
 		}
-		
+
 		return
 			" SELECT * FROM `{" .$this->sqlTable."}`" .
 			" WHERE ((1" .
@@ -131,7 +131,7 @@ class fileSharingAttachments extends attachments {
 				null) .
 			" ORDER BY `Downloads` DESC, `ID` DESC";
 	}
-	
+
 	function download($id) {
 		if (!(int)$id) {
 			tooltip::display(
@@ -139,19 +139,19 @@ class fileSharingAttachments extends attachments {
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT `".$this->sqlRow."` FROM `{" .$this->sqlTable . "}`" .
 			" WHERE `ID` = '".(int)$id."'" .
 			" LIMIT 1"));
-		
+
 		if (!$row) {
 			tooltip::display(
 				_("The selected file cannot be found!"),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		if (!fileSharing::checkAccess((int)$row[$this->sqlRow], true)) {
 			tooltip::display(
 				_("You need to be logged in to download this file. " .
@@ -159,10 +159,10 @@ class fileSharingAttachments extends attachments {
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return attachments::download($id);
 	}
-	
+
 	function ajaxRequest() {
 		if (!$row = fileSharing::checkAccess((int)$this->selectedOwnerID)) {
 			$folder = new fileSharing();
@@ -170,14 +170,14 @@ class fileSharingAttachments extends attachments {
 			unset($folder);
 			return true;
 		}
-		
+
 		if (isset($row['MembersOnly']) && $row['MembersOnly'] && !$GLOBALS['USER']->loginok)
-			$attachments->customLink = 
+			$attachments->customLink =
 				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
-				htmlspecialchars(_("You need to be logged in to download this file. " .
+				htmlchars(_("You need to be logged in to download this file. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
-		
+
 		return parent::ajaxRequest();
 	}
 }
@@ -187,33 +187,33 @@ class fileSharingComments extends comments {
 	var $sqlRow = 'FileSharingID';
 	var $sqlOwnerTable = 'filesharings';
 	var $adminPath = 'admin/modules/filesharing/filesharingcomments';
-	
+
 	function __construct() {
 		languages::load('filesharing');
-		
+
 		parent::__construct();
-		
+
 		$this->selectedOwner = _('Folder');
 		$this->uriRequest = "modules/filesharing/".$this->uriRequest;
 	}
-	
+
 	function __destruct() {
 		languages::unload('filesharing');
 	}
-	
+
 	static function getCommentURL($comment = null) {
 		if ($comment)
 			return fileSharing::getURL($comment['FileSharingID']).
 				"&filesharingid=".$comment['FileSharingID'];
-		
+
 		if ((bool)$GLOBALS['ADMIN'])
 			return fileSharing::getURL(admin::getPathID()).
 				"&filesharingid=".admin::getPathID();
-		
-		return 
+
+		return
 			parent::getCommentURL();
 	}
-	
+
 	function ajaxRequest() {
 		if (!fileSharing::checkAccess((int)$this->selectedOwnerID)) {
 			$folder = new fileSharing();
@@ -221,7 +221,7 @@ class fileSharingComments extends comments {
 			unset($folder);
 			return true;
 		}
-		
+
 		return parent::ajaxRequest();
 	}
 }
@@ -233,19 +233,19 @@ class fileSharingIcons extends pictures {
 	var $sqlOwnerTable = 'filesharings';
 	var $sqlOwnerCountField = 'Icons';
 	var $adminPath = 'admin/modules/filesharing/filesharingicons';
-	
+
 	function __construct() {
 		languages::load('filesharing');
-		
+
 		parent::__construct();
-		
+
 		$this->rootPath = $this->rootPath.'icons/';
 		$this->rootURL = $this->rootURL.'icons/';
-		
+
 		$this->selectedOwner = _('Folder');
 		$this->uriRequest = "modules/filesharing/".$this->uriRequest;
 	}
-	
+
 	function __destruct() {
 		languages::unload('filesharing');
 	}
@@ -266,24 +266,24 @@ class fileSharing extends modules {
 	var $ajaxPaging = AJAX_PAGING;
 	var $ajaxRequest = null;
 	var $adminPath = 'admin/modules/filesharing';
-	
+
 	function __construct() {
 		languages::load('filesharing');
-		
+
 		if (isset($_GET['filesharingid']))
 			$this->selectedID = (int)$_GET['filesharingid'];
-		
-		if (isset($_GET['searchin']) && isset($_GET['search']) && 
+
+		if (isset($_GET['searchin']) && isset($_GET['search']) &&
 			$_GET['searchin'] == 'modules/filesharing')
 			$this->search = trim(strip_tags((string)$_GET['search']));
-			
+
 		$this->attachmentsPath = SITE_PATH.'sitefiles/file/filesharing/';
 	}
-	
+
 	function __destruct() {
 		languages::unload('filesharing');
 	}
-	
+
 	function SQL() {
 		return
 			" SELECT * FROM `{filesharings}`" .
@@ -301,7 +301,7 @@ class fileSharing extends modules {
 					" AND `SubFolderOfID` = 0")) .
 			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`";
 	}
-	
+
 	function installSQL() {
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{filesharings}` (" .
@@ -337,10 +337,10 @@ class fileSharing extends modules {
 			" KEY `MembersOnly` (`MembersOnly`)," .
 			" KEY `ShowToGuests` (`ShowToGuests`)" .
 			" ) ENGINE=MyISAM;");
-		
+
 		if (sql::error())
 			return false;
-		
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{filesharingicons}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -357,10 +357,10 @@ class fileSharing extends modules {
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `FileSharingID` (`FileSharingID`)" .
 			" ) ENGINE=MyISAM;");
-		
+
 		if (sql::error())
 			return false;
-		
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{filesharingcomments}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -382,10 +382,10 @@ class fileSharing extends modules {
 			" KEY `UserName` (`UserName`)," .
 			" KEY `Pending` (`Pending`)" .
 			" ) ENGINE=MyISAM;");
-		
+
 		if (sql::error())
 			return false;
-		
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{filesharingcommentsratings}` (" .
 			" `CommentID` int(10) unsigned NOT NULL default '0'," .
@@ -399,10 +399,10 @@ class fileSharing extends modules {
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `Rating` (`Rating`)" .
 			" ) ENGINE=MyISAM;");
-		
+
 		if (sql::error())
 			return false;
-		
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{filesharingattachments}` (" .
 			" `ID` int(10) unsigned NOT NULL auto_increment," .
@@ -419,10 +419,10 @@ class fileSharing extends modules {
 			" KEY `TimeStamp` (`TimeStamp`)," .
 			" KEY `FileSharingID` (`FileSharingID`)" .
 			" ) ENGINE=MyISAM;");
-		
+
 		if (sql::error())
 			return false;
-		
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{filesharingratings}` (" .
 			" `FileSharingID` smallint(5) unsigned NOT NULL default '0'," .
@@ -436,15 +436,15 @@ class fileSharing extends modules {
 			" KEY `IP` (`IP`)," .
 			" KEY `TimeStamp` (`TimeStamp`)" .
 			" ) ENGINE=MyISAM;");
-		
+
 		if (sql::error())
 			return false;
-		
+
 		return true;
 	}
-	
+
 	function installFiles() {
-		$css = 
+		$css =
 			".file-sharing-selected {\n" .
 			"	margin-bottom: 15px;\n" .
 			"}\n" .
@@ -544,11 +544,11 @@ class fileSharing extends modules {
 			".as-modules-filesharing a {\n" .
 			"	background-image: url(\"http://icons.jcore.net/48/document-open.png\");\n" .
 			"}\n";
-		
-		return 
+
+		return
 			files::save(SITE_PATH.'template/modules/css/filesharing.css', $css);
 	}
-	
+
 	function uninstallSQL() {
 		sql::run(
 			" DROP TABLE IF EXISTS `{filesharings}`;");
@@ -562,42 +562,42 @@ class fileSharing extends modules {
 			" DROP TABLE IF EXISTS `{filesharingattachments}`;");
 		sql::run(
 			" DROP TABLE IF EXISTS `{filesharingratings}`;");
-		
+
 		return true;
 	}
-	
+
 	function uninstallFiles() {
-		return 
+		return
 			files::delete(SITE_PATH.'template/modules/css/filesharing.css');
 	}
-	
+
 	// ************************************************   Admin Part
 	function countAdminItems() {
 		if (!parent::installed($this))
 			return 0;
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{filesharings}`" .
 			" LIMIT 1"));
 		return $row['Rows'];
 	}
-	
+
 	function setupAdmin() {
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
-				_('New Folder'), 
+				_('New Folder'),
 				'?path='.admin::path().'#adminform');
-		
+
 		favoriteLinks::add(
-			__('Pages / Posts'), 
+			__('Pages / Posts'),
 			'?path=' .
 			(JCORE_VERSION >= '0.8'?'admin/content/pages':'admin/content/menuitems'));
 		favoriteLinks::add(
-			__('Settings'), 
+			__('Settings'),
 			'?path=admin/site/settings');
 	}
-	
+
 	function setupAdminForm(&$form) {
 		$form->add(
 			__('Title'),
@@ -605,20 +605,20 @@ class fileSharing extends modules {
 			FORM_INPUT_TYPE_TEXT,
 			true);
 		$form->setStyle('width: 250px;');
-		
+
 		$form->add(
 			_('Sub Folder of'),
 			'SubFolderOfID',
 			FORM_INPUT_TYPE_SELECT);
 		$form->setValueType(FORM_VALUE_TYPE_INT);
-			
+
 		$form->addValue('', '');
-		
+
 		$form->add(
 			__('Content Options'),
 			null,
 			FORM_OPEN_FRAME_CONTAINER);
-		
+
 		$form->add(
 			__('Description'),
 			'Description',
@@ -629,14 +629,14 @@ class fileSharing extends modules {
 				'350px') .
 			'; height: 200px;');
 		$form->setValueType(FORM_VALUE_TYPE_HTML);
-		
+
 		$form->add(
 			__('Limit'),
 			'Limit',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 50px;');
 		$form->setValueType(FORM_VALUE_TYPE_INT);
-		
+
 		if (JCORE_VERSION >= '0.7') {
 			$form->add(
 				_('Show Icons'),
@@ -648,17 +648,17 @@ class fileSharing extends modules {
 			$form->addAdditionalText(
 				_("(display icons when folder selected)"));
 		}
-		
+
 		$form->add(
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
-		
+
 		$form->add(
 			__('Rating Options'),
 			null,
 			FORM_OPEN_FRAME_CONTAINER);
-		
+
 		$form->add(
 			__('Enable Rating'),
 			'EnableRating',
@@ -666,7 +666,7 @@ class fileSharing extends modules {
 			false,
 			'1');
 		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-			
+
 		$form->add(
 			__('Enable Guest Rating'),
 			'EnableGuestRating',
@@ -674,17 +674,17 @@ class fileSharing extends modules {
 			false,
 			'1');
 		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-			
+
 		$form->add(
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
-		
+
 		$form->add(
 			__('Comments Options'),
 			null,
 			FORM_OPEN_FRAME_CONTAINER);
-		
+
 		$form->add(
 			__('Enable Comments'),
 			'EnableComments',
@@ -692,7 +692,7 @@ class fileSharing extends modules {
 			false,
 			'1');
 		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-			
+
 		$form->add(
 			__('Enable Guest Comments'),
 			'EnableGuestComments',
@@ -700,30 +700,30 @@ class fileSharing extends modules {
 			false,
 			'1');
 		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-			
+
 		$form->add(
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
-		
+
 		$form->add(
 			__('Additional Options'),
 			null,
 			FORM_OPEN_FRAME_CONTAINER);
-		
+
 		$form->add(
 			__('Created on'),
 			'TimeStamp',
 			FORM_INPUT_TYPE_TIMESTAMP);
 		$form->setStyle('width: 170px;');
 		$form->setValueType(FORM_VALUE_TYPE_TIMESTAMP);
-		
+
 		$form->add(
 			__('Path'),
 			'Path',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 300px;');
-		
+
 		if (JCORE_VERSION >= '0.6') {
 			$form->add(
 				__('Link to URL'),
@@ -733,7 +733,7 @@ class fileSharing extends modules {
 			$form->setValueType(FORM_VALUE_TYPE_URL);
 			$form->setTooltipText(_("e.g. http://domain.com"));
 		}
-		
+
 		$form->add(
 			_('Members Only'),
 			'MembersOnly',
@@ -741,7 +741,7 @@ class fileSharing extends modules {
 			false,
 			'1');
 		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-		
+
 		$form->add(
 			_('Show to Guests'),
 			'ShowToGuests',
@@ -749,7 +749,7 @@ class fileSharing extends modules {
 			false,
 			'1');
 		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-		
+
 		$form->add(
 			__('Deactivated'),
 			'Deactivated',
@@ -757,25 +757,25 @@ class fileSharing extends modules {
 			false,
 			'1');
 		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-		
+
 		$form->addAdditionalText(
 			"<span class='comment' style='text-decoration: line-through;'>" .
 			__("(marked with strike through)").
-			"</span>");	
-			
+			"</span>");
+
 		$form->add(
 			__('Order'),
 			'OrderID',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 50px;');
 		$form->setValueType(FORM_VALUE_TYPE_INT);
-		
+
 		$form->add(
 			__('Owner'),
 			'Owner',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 110px;');
-		
+
 		$form->addAdditionalText(
 			"<a style='zoom: 1;' href='".url::uri('request, users') .
 				"&amp;request=".url::path() .
@@ -783,39 +783,39 @@ class fileSharing extends modules {
 				"class='select-owner-link ajax-content-link'>" .
 				_("Select User") .
 			"</a>");
-		
+
 		$form->add(
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER);
 	}
-	
+
 	function verifyAdmin(&$form = null) {
 		$reorder = null;
 		$orders = null;
 		$delete = null;
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_POST['reordersubmit']))
 			$reorder = (string)$_POST['reordersubmit'];
-		
+
 		if (isset($_POST['orders']))
 			$orders = (array)$_POST['orders'];
-		
+
 		if (isset($_POST['delete']))
 			$delete = (int)$_POST['delete'];
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		if ($reorder) {
 			if (!security::checkToken())
 				return false;
-			
+
 			foreach((array)$orders as $oid => $ovalue) {
 				sql::run(
 					" UPDATE `{filesharings}` " .
@@ -829,88 +829,88 @@ class fileSharing extends modules {
 						" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 						null));
 			}
-			
+
 			tooltip::display(
 				_("Folders have been successfully re-ordered."),
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if ($delete) {
 			if (!security::checkToken())
 				return false;
-			
+
 			if (!$this->delete($id))
 				return false;
-				
+
 			tooltip::display(
 				_("Folder has been successfully deleted."),
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if (!$form->verify())
 			return false;
-		
+
 		if ($form->get('Owner')) {
 			$user = sql::fetch(sql::run(
 				" SELECT * FROM `{users}` " .
 				" WHERE `UserName` = '".sql::escape($form->get('Owner'))."'"));
-			
+
 			if (!$user) {
 				tooltip::display(
-					sprintf(__("User \"%s\" couldn't be found!"), 
+					sprintf(__("User \"%s\" couldn't be found!"),
 						$form->get('Owner'))." " .
 					__("Please make sure you have entered / selected the right " .
 						"username or if it's a new user please first create " .
 						"the user at Member Management -> Users."),
 					TOOLTIP_ERROR);
-				
+
 				$form->setError('Owner', FORM_ERROR_REQUIRED);
 				return false;
 			}
-			
+
 			$form->add(
 				'UserID',
 				'UserID',
 				FORM_INPUT_TYPE_HIDDEN);
 			$form->setValue('UserID', $user['ID']);
 		}
-		
+
 		if ($edit && $form->get('SubFolderOfID')) {
 			foreach(fileSharing::getBackTraceTree($form->get('SubFolderOfID')) as $folder) {
 				if ($folder['ID'] == $id) {
 					tooltip::display(
 						_("Folder cannot be subfolder of itself!"),
 						TOOLTIP_ERROR);
-					
+
 					return false;
 				}
 			}
 		}
-			
+
 		if (!$form->get('Path')) {
 			$path = '';
-			
+
 			if ($form->get('SubFolderOfID')) {
 				$subfolderof = sql::fetch(sql::run(
 					" SELECT `Path` FROM `{filesharings}`" .
 					" WHERE `ID` = ".(int)$form->get('SubFolderOfID')));
-				
-				$path .= $subfolderof['Path'].'/'; 
+
+				$path .= $subfolderof['Path'].'/';
 			}
-			
+
 			$path .= url::genPathFromString($form->get('Title'));
-			
+
 			$form->set('Path', $path);
 		}
-				
+
 		if ($edit) {
 			if (!$this->edit($id, $form->getPostArray()))
 				return false;
-			
+
 			tooltip::display(
 				_("Folder has been successfully updated.")." " .
 				(modules::getOwnerURL('fileSharing')?
@@ -924,16 +924,16 @@ class fileSharing extends modules {
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if ($this->userPermissionIDs)
 			return false;
-		
+
 		if (!$newid = $this->add($form->getPostArray()))
 			return false;
-				
+
 		tooltip::display(
 			_("Folder has been successfully created.")." " .
 			(modules::getOwnerURL('fileSharing')?
@@ -948,11 +948,11 @@ class fileSharing extends modules {
 				__("Edit") .
 			"</a>",
 			TOOLTIP_SUCCESS);
-			
+
 		$form->reset();
 		return true;
 	}
-	
+
 	function displayAdminListHeader() {
 		echo
 			"<th><span class='nowrap'>".
@@ -962,20 +962,20 @@ class fileSharing extends modules {
 			"<th style='text-align: right;'><span class='nowrap'>".
 				__("Limit")."</span></th>";
 	}
-	
+
 	function displayAdminListHeaderOptions() {
 		echo
 			"<th><span class='nowrap'>".
 				__("Comments")."</span></th>" .
 			"<th><span class='nowrap'>".
 				_("Files")."</span></th>";
-		
+
 		if (JCORE_VERSION >= '0.6')
 			echo
 				"<th><span class='nowrap'>".
 					_("Icon")."</span></th>";
 	}
-	
+
 	function displayAdminListHeaderFunctions() {
 		echo
 			"<th><span class='nowrap'>".
@@ -983,7 +983,7 @@ class fileSharing extends modules {
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
 	}
-	
+
 	function displayAdminListItem(&$row) {
 		echo
 			"<td>" .
@@ -1015,92 +1015,92 @@ class fileSharing extends modules {
 					null) .
 			"</td>";
 	}
-	
+
 	function displayAdminListItemOptions(&$row) {
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link comments' " .
-					"title='".htmlspecialchars(__("Comments"), ENT_QUOTES).
+					"title='".htmlchars(__("Comments"), ENT_QUOTES).
 						" (".$row['Comments'].")' " .
 					"href='".url::uri('ALL') .
 					"?path=".admin::path()."/".$row['ID']."/filesharingcomments'>";
-		
+
 		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Comments'])
 			counter::display($row['Comments']);
-		
+
 		echo
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
 				"<a class='admin-link files' " .
-					"title='".htmlspecialchars(_("Files"), ENT_QUOTES) .
+					"title='".htmlchars(_("Files"), ENT_QUOTES) .
 						" (".$row['Attachments'].")' " .
 					"href='".url::uri('ALL') .
 					"?path=".admin::path()."/".$row['ID']."/filesharingattachments'>";
-		
+
 		if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Attachments'])
 			counter::display($row['Attachments']);
-		
+
 		echo
 				"</a>" .
 			"</td>";
-		
+
 		if (JCORE_VERSION >= '0.6') {
 			echo
 				"<td align='center'>" .
 					"<a class='admin-link icons' " .
-						"title='".htmlspecialchars(_("Icons"), ENT_QUOTES) .
+						"title='".htmlchars(_("Icons"), ENT_QUOTES) .
 							" (".$row['Icons'].")' " .
 						"href='".url::uri('ALL') .
 						"?path=".admin::path()."/".$row['ID']."/filesharingicons'>";
-			
+
 			if (ADMIN_ITEMS_COUNTER_ENABLED && $row['Icons'])
 				counter::display($row['Icons']);
-			
+
 			echo
 					"</a>" .
 				"</td>";
 		}
 	}
-	
+
 	function displayAdminListItemFunctions(&$row) {
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
-					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
+					"title='".htmlchars(__("Edit"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."&amp;edit=1#adminform'>" .
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
-					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
+					"title='".htmlchars(__("Delete"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
 	}
-	
+
 	function displayAdminListItemSelected(&$row) {
 		$user = $GLOBALS['USER']->get($row['UserID']);
-		
+
 		admin::displayItemData(
 			__("Created on"),
 			calendar::dateTime($row['TimeStamp'])." " .
 			$GLOBALS['USER']->constructUserName($user, __('by %s')));
-		
+
 		if (JCORE_VERSION >= '0.6' && $row['URL'])
 			admin::displayItemData(
 				__("Link to URL"),
-				"<a href='".$row['URL']."' target='_blank'>" . 
-					$row['URL'] . 
+				"<a href='".$row['URL']."' target='_blank'>" .
+					$row['URL'] .
 				"</a>");
-		
+
 		if (JCORE_VERSION >= '0.7' && $row['DisplayIcons'])
 			admin::displayItemData(
 				_("Show Icons"),
 				__("Yes"));
-		
+
 		if ($row['EnableRating'])
 			admin::displayItemData(
 				__("Enable Rating"),
@@ -1108,7 +1108,7 @@ class fileSharing extends modules {
 				($row['EnableGuestRating']?
 					" ".__("(Guests can rate too!)"):
 					null));
-		
+
 		if ($row['EnableComments'])
 			admin::displayItemData(
 				__("Enable Comments"),
@@ -1116,39 +1116,39 @@ class fileSharing extends modules {
 				($row['EnableGuestComments']?
 					" ".__("(Guests can comment too!)"):
 					null));
-		
+
 		if ($row['MembersOnly'])
 			admin::displayItemData(
 				_("Members Only"),
 				__("Yes"));
-		
+
 		if ($row['ShowToGuests'])
 			admin::displayItemData(
 				_("Show to Guests"),
 				__("Yes"));
-		
+
 		admin::displayItemData(
 			"<hr />");
 		admin::displayItemData(
 			nl2br($row['Description']));
 	}
-	
+
 	function displayAdminListFunctions() {
 		echo
 			"<input type='submit' name='reordersubmit' value='".
-				htmlspecialchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
+				htmlchars(__("Reorder"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
-				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+				htmlchars(__("Reset"), ENT_QUOTES)."' class='button' />";
 	}
-	
+
 	function displayAdminList(&$rows, $rowpair = null) {
 		$id = null;
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		if (isset($rowpair)) {
-			echo 
+			echo
 				"<tr".($rowpair?" class='pair'":NULL).">" .
 					"<td></td>" .
 					"<td colspan='7' class='auto-width nopadding'>";
@@ -1157,138 +1157,138 @@ class fileSharing extends modules {
 				"<form action='".url::uri('edit, delete')."' method='post'>" .
 					"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
 		}
-				
+
 		echo "<table cellpadding='0' cellspacing='0' class='list'>";
-		
+
 		if (!isset($rowpair)) {
 			echo
 				"<thead>" .
 				"<tr>";
-				
+
 			$this->displayAdminListHeader();
 			$this->displayAdminListHeaderOptions();
-					
+
 			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListHeaderFunctions();
-					
+
 			echo
 				"</tr>" .
 				"</thead>" .
 				"<tbody>";
 		}
-		
-		$i = 0;		
+
+		$i = 0;
 		while($row = sql::fetch($rows)) {
-			echo 
+			echo
 				"<tr".($i%2?" class='pair'":NULL).">";
-				
+
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
-					
+
 			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
-					
+
 			echo
 				"</tr>";
-			
+
 			if ($row['ID'] == $id) {
 				echo
 					"<tr".($i%2?" class='pair'":NULL).">" .
 						"<td class='auto-width' colspan='10'>" .
 							"<div class='admin-content-preview'>";
-				
+
 				$this->displayAdminListItemSelected($row);
-							
+
 				echo
 							"</div>" .
 						"</td>" .
 					"</tr>";
 			}
-			
+
 			if (!$this->userPermissionIDs) {
 				$subrows = sql::run(
 					" SELECT * FROM `{filesharings}`" .
 					" WHERE `SubFolderOfID` = '".$row['ID']."'" .
 					" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
-				
+
 				if (sql::rows($subrows))
 					$this->displayAdminList($subrows, $i%2);
 			}
-			
+
 			$i++;
 		}
-		
+
 		if (isset($rowpair)) {
-			echo 
+			echo
 				"</table>" .
 				"</td>" .
 				"</tr>";
 		} else {
-			echo 
+			echo
 				"</tbody>" .
 				"</table>" .
 				"<br />";
-		
+
 			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 				$this->displayAdminListFunctions();
-				
+
 				echo
 					"<div class='clear-both'></div>" .
 					"<br />";
 			}
-					
+
 			echo
 				"</form>";
 		}
-			
+
 		return true;
 	}
-	
+
 	function displayAdminForm(&$form) {
 		$form->display();
 	}
-	
+
 	function displayAdminTitle($ownertitle = null) {
 		admin::displayTitle(
 			_('File Sharing Administration'),
 			$ownertitle);
 	}
-	
+
 	function displayAdminDescription() {
 	}
-	
+
 	function displayAdmin() {
 		$delete = null;
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_GET['delete']))
 			$delete = (int)$_GET['delete'];
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
-			
+
 		echo
 			"<div class='admin-content'>";
-				
+
 		$form = new form(
 				($edit?
 					_("Edit Folder"):
 					_("New Folder")),
 				'neweditfolder');
-		
+
 		if (!$edit)
 			$form->action = url::uri('id, delete, limit');
-					
+
 		$this->setupAdminForm($form);
 		$form->addSubmitButtons();
-		
+
 		if ($edit) {
 			$form->add(
 				__('Cancel'),
@@ -1297,10 +1297,10 @@ class fileSharing extends modules {
 			$form->addAttributes("onclick=\"window.location='".
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
-		
+
 		$selected = null;
 		$verifyok = false;
-		
+
 		if ($id) {
 			$selected = sql::fetch(sql::run(
 				" SELECT `ID`, `Title` FROM `{filesharings}`" .
@@ -1311,27 +1311,27 @@ class fileSharing extends modules {
 				($this->userPermissionType & USER_PERMISSION_TYPE_OWN?
 					" AND `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'":
 					null)));
-			
+
 			if ($delete && empty($_POST['delete']))
 				url::displayConfirmation(
 					'<b>'.__('Delete').'?!</b> "'.$selected['Title'].'"');
 		}
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			((!$edit && !$delete) || $selected))
 			$verifyok = $this->verifyAdmin($form);
-		
+
 		foreach(fileSharing::getTree() as $row) {
 			$form->addValue('SubFolderOfID',
-				$row['ID'], 
+				$row['ID'],
 				($row['SubItemOfID']?
-					str_replace(' ', '&nbsp;', 
+					str_replace(' ', '&nbsp;',
 						str_pad('', $row['PathDeepnes']*4, ' ')).
 					"|- ":
 					null) .
 				$row['Title']);
 		}
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{filesharings}`" .
 			" WHERE 1" .
@@ -1345,14 +1345,14 @@ class fileSharing extends modules {
 				" AND `SubFolderOfID` = 0":
 				null) .
 			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
-		
+
 		if (sql::rows($rows))
 			$this->displayAdminList($rows);
 		else
 			tooltip::display(
 				_("No folders found."),
 				TOOLTIP_NOTIFICATION);
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE &&
 			(!$this->userPermissionIDs || ($edit && $selected)))
 		{
@@ -1360,37 +1360,37 @@ class fileSharing extends modules {
 				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{filesharings}`" .
 					" WHERE `ID` = '".$id."'"));
-				
+
 				$form->setValues($selected);
-				
+
 				$user = $GLOBALS['USER']->get($selected['UserID']);
 				$form->setValue('Owner', $user['UserName']);
 			}
-			
+
 			echo
 				"<a name='adminform'></a>";
-			
+
 			$this->displayAdminForm($form);
 		}
-		
+
 		unset($form);
-		
-		echo 
+
+		echo
 			"</div>";	//admin-content
 	}
-	
+
 	function add($values) {
 		if (!is_array($values))
 			return false;
-		
+
 		if ($values['OrderID'] == '') {
 			$row = sql::fetch(sql::run(
 				" SELECT `OrderID` FROM `{filesharings}` " .
 				" WHERE `SubFolderOfID` = '".(int)$values['SubFolderOfID']."'" .
 				" ORDER BY `OrderID` DESC"));
-			
+
 			$values['OrderID'] = (int)$row['OrderID']+1;
-			
+
 		} else {
 			sql::run(
 				" UPDATE `{filesharings}` SET " .
@@ -1399,22 +1399,22 @@ class fileSharing extends modules {
 				" WHERE `SubFolderOfID` = '".(int)$values['SubFolderOfID']."'" .
 				" AND `OrderID` >= '".(int)$values['OrderID']."'");
 		}
-		
+
 		if ((int)$values['SubFolderOfID']) {
 			$parentfolder = sql::fetch(sql::run(
 				" SELECT * FROM `{filesharings}`" .
 				" WHERE `ID` = '".(int)$values['SubFolderOfID']."'"));
-			
+
 			if ($parentfolder['Deactivated'] && !$values['Deactivated'])
 				$values['Deactivated'] = true;
-			
+
 			if ($parentfolder['MembersOnly'] && !$values['MembersOnly'])
 				$values['MembersOnly'] = true;
-			
+
 			if ($parentfolder['ShowToGuests'] && !$values['ShowToGuests'])
 				$values['ShowToGuests'] = true;
 		}
-		
+
 		$newid = sql::run(
 			" INSERT INTO `{filesharings}` SET ".
 			" `Title` = '".
@@ -1464,48 +1464,48 @@ class fileSharing extends modules {
 				"'," .
 			" `OrderID` = '".
 				(int)$values['OrderID']."'");
-		
+
 		if (!$newid) {
 			tooltip::display(
-				sprintf(_("Folder couldn't be created! Error: %s"), 
+				sprintf(_("Folder couldn't be created! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		$this->protectAttachments();
-		
+
 		return $newid;
 	}
-	
+
 	function edit($id, $values) {
 		if (!$id)
 			return false;
-		
+
 		if (!is_array($values))
 			return false;
-		
+
 		$folder = sql::fetch(sql::run(
 			" SELECT * FROM `{filesharings}`" .
 			" WHERE `ID` = '".$id."'"));
-			
-		if ((int)$values['SubFolderOfID'] && 
-			(int)$values['SubFolderOfID'] != $folder['SubFolderOfID']) 
+
+		if ((int)$values['SubFolderOfID'] &&
+			(int)$values['SubFolderOfID'] != $folder['SubFolderOfID'])
 		{
 			$parentfolder = sql::fetch(sql::run(
 				" SELECT * FROM `{filesharings}`" .
 				" WHERE `ID` = '".(int)$values['SubFolderOfID']."'"));
-			
+
 			if ($parentfolder['Deactivated'] && !$values['Deactivated'])
 				$values['Deactivated'] = true;
-			
+
 			if ($parentfolder['MembersOnly'] && !$values['MembersOnly'])
 				$values['MembersOnly'] = true;
-			
+
 			if ($parentfolder['ShowToGuests'] && !$values['ShowToGuests'])
 				$values['ShowToGuests'] = true;
 		}
-		
+
 		sql::run(
 			" UPDATE `{filesharings}` SET ".
 			" `Title` = '".
@@ -1554,60 +1554,60 @@ class fileSharing extends modules {
 			" `OrderID` = '".
 				(int)$values['OrderID']."'" .
 			" WHERE `ID` = '".(int)$id."'");
-		
+
 		if (sql::affected() == -1) {
 			tooltip::display(
-				sprintf(_("Folder couldn't be updated! Error: %s"), 
+				sprintf(_("Folder couldn't be updated! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		foreach(fileSharing::getTree((int)$id) as $row) {
 			$updatesql = null;
-			
+
 			if (($folder['Deactivated'] && !$values['Deactivated']) ||
-				(!$folder['Deactivated'] && $values['Deactivated'])) 
+				(!$folder['Deactivated'] && $values['Deactivated']))
 			{
 				if (!$row['Deactivated'] && $values['Deactivated'])
 					$updatesql[] = " `Deactivated` = 1";
 				if ($row['Deactivated'] && !$values['Deactivated'])
 					$updatesql[] = " `Deactivated` = 0";
 			}
-			
+
 			if (($folder['MembersOnly'] && !$values['MembersOnly']) ||
-				(!$folder['MembersOnly'] && $values['MembersOnly'])) 
+				(!$folder['MembersOnly'] && $values['MembersOnly']))
 			{
 				if (!$row['MembersOnly'] && $values['MembersOnly'])
 					$updatesql[] = " `MembersOnly` = 1";
 				if ($row['MembersOnly'] && !$values['MembersOnly'])
 					$updatesql[] = " `MembersOnly` = 0";
 			}
-			
+
 			if (($folder['ShowToGuests'] && !$values['ShowToGuests']) ||
-				(!$folder['ShowToGuests'] && $values['ShowToGuests'])) 
+				(!$folder['ShowToGuests'] && $values['ShowToGuests']))
 			{
 				if (!$row['ShowToGuests'] && $values['ShowToGuests'])
 					$updatesql[] = " `ShowToGuests` = 1";
 				if ($row['ShowToGuests'] && !$values['ShowToGuests'])
 					$updatesql[] = " `ShowToGuests` = 0";
 			}
-			
+
 			if ($updatesql)
 				sql::run(
 					" UPDATE `{filesharings}` SET" .
 					implode(',', $updatesql) .
 					" WHERE `ID` = '".$row['ID']."'");
 		}
-		
+
 		foreach(fileSharing::getBackTraceTree((int)$id) as $row) {
 			$updatesql = null;
-			
+
 			if ($row['Deactivated'] && !$values['Deactivated'])
 				$updatesql[] = " `Deactivated` = 0";
 			if ($row['MembersOnly'] && !$values['MembersOnly'])
 				$updatesql[] = " `MembersOnly` = 0";
-			
+
 			if ($updatesql)
 				sql::run(
 					" UPDATE `{filesharings}` SET" .
@@ -1616,84 +1616,84 @@ class fileSharing extends modules {
 		}
 
 		$this->protectAttachments();
-		
+
 		return true;
 	}
-	
+
 	function delete($id) {
 		if (!$id)
 			return false;
-		
+
 		$filesharingattachments = new fileSharingAttachments();
 		$filesharingcomments = new fileSharingComments();
 		$folderids = array($id);
-		
+
 		foreach(fileSharing::getTree((int)$id) as $row)
 			$folderids[] = $row['ID'];
-		
-		
+
+
 		foreach($folderids as $folderid) {
 			$rows = sql::run(
 				" SELECT * FROM `{filesharingattachments}` " .
 				" WHERE `FileSharingID` = '".$folderid."'");
-			
+
 			while($row = sql::fetch($rows))
 				$filesharingattachments->delete($row['ID']);
-			
+
 			$rows = sql::run(
 				" SELECT * FROM `{filesharingcomments}` " .
 				" WHERE `FileSharingID` = '".$folderid."'");
-			
+
 			while($row = sql::fetch($rows))
 				$filesharingcomments->delete($row['ID']);
-			
+
 			sql::run(
 				" DELETE FROM `{filesharingratings}` " .
 				" WHERE `FileSharingID` = '".$folderid."'");
-			
+
 			sql::run(
 				" DELETE FROM `{filesharings}` " .
 				" WHERE `ID` = '".(int)$id."'");
 		}
-		
+
 		unset($filesharingcomments);
 		unset($filesharingattachments);
-		
+
 		if (JCORE_VERSION >= '0.6') {
 			$icons = new fileSharingIcons();
-			
+
 			$rows = sql::run(
 				" SELECT * FROM `{filesharingicons}`" .
 				" WHERE `FileSharingID` = '".$id."'");
-			
+
 			while($row = sql::fetch($rows))
 				$icons->delete($row['ID']);
-			
+
 			unset($icons);
 		}
-		
+
 		$this->protectAttachments();
-		
+
 		return true;
 	}
-	
+
 	function protectAttachments() {
 		if (!$this->attachmentsPath)
 			return false;
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows` FROM `{filesharings}` " .
 			" WHERE `MembersOnly` = 1" .
 			" LIMIT 1"));
-			
+
 		if ($row['Rows'])
 			return dirs::protect($this->attachmentsPath);
-		
+
 		return dirs::unprotect($this->attachmentsPath);
 	}
-	
+
 	static function getTree($folderid = 0, $firstcall = true,
-		&$tree = array('Tree' => array(), 'PathDeepnes' => 0)) 
+		&$tree = array('Tree' => array(), 'PathDeepnes' => 0))
 	{
 		$rows = sql::run(
 			" SELECT *, `SubFolderOfID` AS `SubItemOfID` " .
@@ -1702,152 +1702,152 @@ class fileSharing extends modules {
 				" WHERE `SubFolderOfID` = '".$folderid."'":
 				" WHERE `SubFolderOfID` = 0") .
 			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`");
-		
+
 		while($row = sql::fetch($rows)) {
 			$row['PathDeepnes'] = $tree['PathDeepnes'];
 			$tree['Tree'][] = $row;
-			
+
 			$tree['PathDeepnes']++;
 			fileSharing::getTree($row['ID'], false, $tree);
 			$tree['PathDeepnes']--;
 		}
-		
+
 		if ($firstcall)
 			return $tree['Tree'];
 	}
-	
+
 	static function getBackTraceTree($id, $firstcall = true,
-		&$tree = array('Tree' => array(), 'PathDeepnes' => 0)) 
+		&$tree = array('Tree' => array(), 'PathDeepnes' => 0))
 	{
 		if (!(int)$id)
 			return array();
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT *, `SubFolderOfID` AS `SubItemOfID` " .
 			" FROM `{filesharings}` " .
 			" WHERE `ID` = '".(int)$id."'"));
-		
+
 		if (!$row)
 			return array();
-		
-		if ($row['SubItemOfID'])	
+
+		if ($row['SubItemOfID'])
 			fileSharing::getBackTraceTree($row['SubItemOfID'], false, $tree);
-		
+
 		$row['PathDeepnes'] = $tree['PathDeepnes'];
 		$tree['Tree'][] = $row;
 		$tree['PathDeepnes']++;
-		
+
 		if ($firstcall)
 			return $tree['Tree'];
 	}
-	
+
 	// ************************************************   Client Part
 	static function getURL($id = 0) {
 		$url = modules::getOwnerURL('fileSharing', $id);
-		
+
 		if (!$url)
 			return url::site() .
 				url::uri(fileSharing::$uriVariables);
-		
-		return $url;	
+
+		return $url;
 	}
-	
+
 	static function checkAccess($row, $full = false) {
 		if ($GLOBALS['USER']->loginok)
 			return true;
-		
+
 		if ($row && !is_array($row))
 			$row = sql::fetch(sql::run(
 				" SELECT `MembersOnly`, `ShowToGuests`" .
 				" FROM `{filesharings}`" .
 				" WHERE `ID` = '".(int)$row."'"));
-		
+
 		if (!$row)
 			return true;
-			
+
 		if ($row['MembersOnly'] && ($full || !$row['ShowToGuests']))
 			return false;
-		
+
 		return $row;
 	}
-	
+
 	function ajaxRequest() {
 		$users = null;
-		
+
 		if (isset($_GET['users']))
 			$users = (int)$_GET['users'];
-		
+
 		if ($users) {
-			if (!$GLOBALS['USER']->loginok || 
-				!$GLOBALS['USER']->data['Admin']) 
+			if (!$GLOBALS['USER']->loginok ||
+				!$GLOBALS['USER']->data['Admin'])
 			{
 				tooltip::display(
 					__("Request can only be accessed by administrators!"),
 					TOOLTIP_ERROR);
 				return true;
 			}
-			
+
 			include_once('lib/userpermissions.class.php');
-			
+
 			$permission = userPermissions::check(
 				$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
-			
+
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
 				return true;
 			}
-			
+
 			$GLOBALS['USER']->displayQuickList('#neweditfolderform #entryOwner');
 			return true;
 		}
-		
+
 		$this->display();
 		return true;
 	}
-	
+
 	function displayLogin() {
 		tooltip::display(
 			_("This area is limited to members only. " .
 				"Please login below."),
 			TOOLTIP_NOTIFICATION);
-	
+
 		$GLOBALS['USER']->displayLogin();
 	}
-	
+
 	function displayIcon(&$row) {
 		if (JCORE_VERSION >= '0.6' && $row['Icons']) {
 			echo
 				"<div class='file-sharing-folder-icon icon'>";
-		
+
 			$icons = new fileSharingIcons();
 			$icons->selectedOwnerID = $row['ID'];
 			$icons->limit = 1;
 			$icons->showPaging = false;
-			
+
 			if ($row['URL'])
 				$icons->customLink = url::generateLink($row['URL']);
 			elseif (isset($row['_Link']))
 				$icons->customLink = $row['_Link'];
-			
+
 			$icons->display();
 			unset($icons);
-			
+
 			echo
 				"</div>";
-		
+
 			return;
 		}
-		
+
 		echo
 			"<a href='" .
 				(JCORE_VERSION >= '0.6' && $row['URL']?
 					url::generateLink($row['URL']):
 					$row['_Link']) .
 				"' " .
-				"title='".htmlspecialchars($row['Title'], ENT_QUOTES)."' " .
+				"title='".htmlchars($row['Title'], ENT_QUOTES)."' " .
 				"class='file-sharing-folder-icon" .
 				($row['_SubFolders']?
 					" subfolders":
@@ -1855,63 +1855,63 @@ class fileSharing extends modules {
 				"'>".
 			"</a>";
 	}
-	
+
 	function displayTitle(&$row) {
-		echo 
+		echo
 			"<a href='" .
 				(JCORE_VERSION >= '0.6' && $row['URL']?
 					url::generateLink($row['URL']):
 					$row['_Link']) .
 				"' " .
-				"title='".htmlspecialchars($row['Title'], ENT_QUOTES)."'>" .
+				"title='".htmlchars($row['Title'], ENT_QUOTES)."'>" .
 				$row['Title'] .
 			"</a>";
 	}
-	
+
 	function displaySelectedTitle(&$row) {
 		echo
 			"<a href='".url::uri(fileSharing::$uriVariables)."'>" .
 				_("Files") .
 			"</a>";
-			
+
 		foreach(fileSharing::getBackTraceTree($row['ID']) as $folder) {
 			$href = url::uri(fileSharing::$uriVariables).
 				"&amp;filesharingid=".$folder['ID'];
-			
-			echo 
+
+			echo
 				"<span class='path-separator'> / </span>" .
 				"<a href='".$href."'>".
 					$folder['Title'] .
 				"</a>";
 		}
 	}
-	
+
 	function displayDetails(&$row) {
 		$user = $GLOBALS['USER']->get($row['UserID']);
-			
+
 		echo
 			"<span class='details-date'>" .
 			calendar::datetime($row['TimeStamp']) .
 			" </span>";
-					
+
 		$GLOBALS['USER']->displayUserName($user, __('by %s'));
 	}
-	
+
 	function displayDescription(&$row) {
 		echo
 			"<p>";
-			
+
 			$codes = new contentCodes();
 			$codes->display(nl2br($row['Description']));
 			unset($codes);
-				
+
 		echo
 			"</p>";
 	}
-	
+
 	function displayAttachments(&$row = null) {
 		$attachments = new fileSharingAttachments();
-		
+
 		if ($row) {
 			$attachments->selectedOwnerID = $row['ID'];
 			$attachments->limit = $row['Limit'];
@@ -1919,28 +1919,28 @@ class fileSharing extends modules {
 			$attachments->latests = true;
 			$attachments->format = $this->format;
 		}
-		
+
 		$attachments->ignorePaging = $this->ignorePaging;
 		$attachments->showPaging = $this->showPaging;
 		$attachments->ajaxPaging = $this->ajaxPaging;
-		
+
 		if ($this->limit)
 			$attachments->limit = $this->limit;
-	
+
 		if (isset($row['MembersOnly']) && $row['MembersOnly'] && !$GLOBALS['USER']->loginok)
-			$attachments->customLink = 
+			$attachments->customLink =
 				"javascript:$.jCore.tooltip.display(\"" .
 				"<div class=\\\"tooltip error\\\"><span>" .
-				htmlspecialchars(_("You need to be logged in to download this file. " .
+				htmlchars(_("You need to be logged in to download this file. " .
 					"Please login or register."), ENT_QUOTES)."</span></div>\", true)";
-		
+
 		$attachments->display();
 		unset($attachments);
 	}
-	
+
 	function displayComments(&$row = null) {
 		$comments = new fileSharingComments();
-		
+
 		if ($row) {
 			$comments->guestComments = $row['EnableGuestComments'];
 			$comments->selectedOwnerID = $row['ID'];
@@ -1949,19 +1949,19 @@ class fileSharing extends modules {
 			$comments->limit = $this->limit;
 			$comments->format = $this->format;
 		}
-		
+
 		$comments->display();
 		unset($comments);
 	}
-	
+
 	function displayRating(&$row) {
 		$rating = new fileSharingRating();
 		$rating->guestRating = $row['EnableGuestRating'];
 		$rating->selectedOwnerID = $row['ID'];
 		$rating->display();
-		unset($rating);	
+		unset($rating);
 	}
-	
+
 	function displayFunctions(&$row) {
 		echo
 			"<a href='" .
@@ -1978,7 +1978,7 @@ class fileSharing extends modules {
 				"(".($row['Attachments']+$row['_SubFolders']).")" .
 				"</span>" .
 			"</a>";
-			
+
 		if ($row['EnableComments'])
 			echo
 				"<a href='".$row['_Link']."#comments' class='comments comment'>" .
@@ -1990,18 +1990,18 @@ class fileSharing extends modules {
 					"</span>" .
 				"</a>";
 	}
-	
+
 	function displayOne(&$row) {
 		$row['_Link'] = url::uri(fileSharing::$uriVariables).
 			"&amp;filesharingid=".$row['ID'];
-		
+
 		$row['_SubFolders'] = sql::count(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{filesharings}`" .
 			" WHERE `Deactivated` = 0" .
 			" AND `SubFolderOfID` = '".(int)$row['ID']."'");
-		
-		echo 
+
+		echo
 			"<div" .
 				(JCORE_VERSION < '0.6'?
 					" id='file-sharing".$row['ID']."'":
@@ -2015,125 +2015,125 @@ class fileSharing extends modules {
 					null) .
 				" file-sharing".$row['ID'] .
 				" rounded-corners'>";
-		
+
 		$this->displayIcon($row);
-		
+
 		echo
 				"<h3 class='file-sharing-title'>";
-		
+
 		$this->displayTitle($row);
-		
+
 		echo
 				"</h3>" .
 				"<div class='file-sharing-details comment'>";
-		
+
 		$this->displayDetails($row);
-		
+
 		echo
 				"</div>";
-		
+
 		if ($row['Description']) {
 			echo
 				"<div class='file-sharing-description'>";
-			
+
 			$this->displayDescription($row);
-			
+
 			echo
 				"</div>";
 		}
-		
+
 		if ($row['EnableRating']) {
 			echo
 				"<div class='file-sharing-rating'>";
-			
+
 			$this->displayRating($row);
-		
+
 			echo
 				"</div>";
 		}
-		
+
 		echo
 				"<div class='file-sharing-links'>";
-		
+
 		$this->displayFunctions($row);
-			
+
 		echo
 				"</div>" .
 				"<div class='clear-both'></div>" .
 			"</div>";
 	}
-	
+
 	function displaySelected(&$row = null) {
 		if (!$this->checkAccess($row)) {
 			$this->displayLogin();
 			return false;
 		}
-		
+
 		echo "<div class='file-sharing file-sharing".$row['ID']."'>" .
 				"<div class='file-sharing-selected'>" .
 					"<h3 class='file-sharing-title'>";
-		
+
 		$this->displaySelectedTitle($row);
-		
+
 		echo
 					"</h3>";
-				
+
 		if ($row['EnableRating']) {
 			echo
 					"<div class='file-sharing-rating'>";
-			
+
 			$this->displayRating($row);
-			
+
 			echo
 					"</div>";
 		}
-		
+
 		echo
 					"<div class='file-sharing-details comment'>";
-		
+
 		$this->displayDetails($row);
-		
+
 		echo
 					"</div>";
-		
+
 		if (JCORE_VERSION >= '0.7' && $row['DisplayIcons'] && $row['Icons'])
 			$this->displayIcon($row);
-		
+
 		if ($row['Description']) {
 			echo
 					"<div class='file-sharing-description'>";
-			
+
 			$this->displayDescription($row);
-			
+
 			echo
 					"</div>";
 		}
-					
+
 		echo
 				"<div class='clear-both'></div>" .
 			"</div>";
-		
+
 		$this->displayFolders();
-		
+
 		if ($row && $row['Attachments'])
 			$this->displayAttachments($row);
-			
-		echo 
+
+		echo
 				"<div class='clear-both'></div>";
-		
+
 		if ($row['EnableComments'])
 			$this->displayComments($row);
-		
-		echo 
+
+		echo
 			"</div>"; //file-sharing
-		
+
 		return true;
 	}
-	
+
 	function displayArguments() {
 		if (!$this->arguments)
 			return false;
-		
+
 		if (preg_match('/(^|\/)latest($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)latest($|\/)/', '\2', $this->arguments);
 			$this->latests = true;
@@ -2141,35 +2141,35 @@ class fileSharing extends modules {
 			$this->showPaging = false;
 			$this->limit = 1;
 		}
-		
+
 		if (preg_match('/(^|\/)format\/(.*?)($|[^<]\/[^>])/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)format\/.*?($|[^<]\/[^>])/', '\2', $this->arguments);
 			$this->format = trim($matches[2]);
 		}
-		
+
 		if (preg_match('/(^|\/)([0-9]+?)\/ajax($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/\/ajax/', '', $this->arguments);
 			$this->ignorePaging = true;
 			$this->ajaxPaging = true;
 		}
-		
+
 		if (preg_match('/(^|\/)([0-9]+?)($|\/)/', $this->arguments, $matches)) {
 			$this->arguments = preg_replace('/(^|\/)[0-9]+?($|\/)/', '\2', $this->arguments);
 			$this->limit = (int)$matches[2];
 		}
-		
+
 		if (preg_match('/(^|\/)comments($|\/)/', $this->arguments)) {
 			$this->arguments = preg_replace('/(^|\/)comments($|\/)/', '\2', $this->arguments);
 			$this->ignorePaging = true;
 			$this->showPaging = false;
-			
+
 			$this->displayComments();
 			return true;
 		}
-		
+
 		if (!$this->arguments && $this->latests)
 			return false;
-		
+
 		$folder = sql::fetch(sql::run(
 			" SELECT * FROM `{filesharings}` " .
 			" WHERE `Deactivated` = 0" .
@@ -2178,122 +2178,122 @@ class fileSharing extends modules {
 				" AND `Path` LIKE '".sql::escape($this->arguments)."'") .
 			" ORDER BY `OrderID`, `TimeStamp` DESC, `ID`" .
 			" LIMIT 1"));
-		
+
 		if (!$folder)
 			return true;
-			
-		$this->selectedID = $folder['ID'];	
+
+		$this->selectedID = $folder['ID'];
 		$this->displaySelected($folder);
 		return true;
 	}
-	
+
 	function displaySearch() {
 		$attachments = new fileSharingAttachments();
-		
+
 		$attachments->limit = $this->limit;
 		$attachments->search = $this->search;
-		
+
 		ob_start();
 		$itemsfound = $attachments->display();
 		$content = ob_get_contents();
 		ob_end_clean();
-		
+
 		unset($attachments);
-		
+
 		if (!isset($this->arguments))
 			url::displaySearch($this->search, $itemsfound);
-		
+
 		echo
 			"<div class='file-sharing'>" .
 			$content .
 			"</div>";
-		
+
 		return $itemsfound;
 	}
-	
+
 	function displayFolders() {
 		$paging = new paging($this->limitFolders);
-		
+
 		if ($this->ajaxPaging) {
 			$paging->ajax = true;
 			$paging->otherArgs = "&amp;request=modules/filesharing";
 		}
-		
+
 		$limitarg = strtolower(get_class($this)).'limit';
 		$paging->track($limitarg);
-		
+
 		$folders = sql::run(
 			$this->SQL() .
 			" LIMIT ".$paging->limit);
-		
+
 		if (!sql::rows($folders))
 			return false;
-		
+
 		$paging->setTotalItems(sql::count());
-		
+
 		if (!$this->ajaxRequest)
 			echo
 				"<div class='file-sharing-folders'>";
-		
+
 		while ($folder = sql::fetch($folders))
 			$this->displayOne($folder);
-		
+
 		echo
 			"<div class='clear-both'></div>";
-		
+
 		$paging->display();
-		
+
 		if (!$this->ajaxRequest)
 			echo
 				"</div>";
-		
+
 		return true;
 	}
-	
+
 	function display() {
 		if ($this->displayArguments())
 			return true;
-		
+
 		if (!$this->limitFolders && $this->owner['Limit'])
 			$this->limitFolders = $this->owner['Limit'];
-			
+
 		if (!$this->latests && (int)$this->selectedID) {
 			$row = sql::fetch(sql::run(
 				" SELECT * FROM `{filesharings}`" .
 				" WHERE `Deactivated` = 0" .
 				" AND `ID` = '".(int)$this->selectedID."'" .
 				" LIMIT 1"));
-			
+
 			if (!$row)
 				return false;
-			
+
 			return $this->displaySelected($row);
 		}
-		
+
 		if (!$this->latests && $this->search)
 			return $this->displaySearch();
-		
-		echo 
+
+		echo
 			"<div class='file-sharing'>";
-		
+
 		if ($this->latests)
 			$this->displayAttachments();
 		else
 			$items = $this->displayFolders();
-		
-		echo 
+
+		echo
 			"</div>";
-		
+
 		if ($this->latests)
 			return true;
-		
+
 		return $items;
 	}
 }
 
 modules::register(
 	'fileSharing',
-	_('File Sharing'), 
+	_('File Sharing'),
 	_('Share files in a directory like structure'));
 
 ?>

@@ -1,26 +1,26 @@
 <?php
 
 /***************************************************************************
- * 
+ *
  *  Name: Shopping Cart Module
  *  URI: http://jcore.net
  *  Description: Allow people to put together their shopping carts and checkout/place order. Released under the GPL, LGPL, and MPL Licenses.
  *  Author: Istvan Petres
  *  Version: 1.0
  *  Tags: shopping cart module, gpl, lgpl, mpl
- * 
+ *
  ****************************************************************************/
 
 class shoppingCartSettings extends settings {
 	var $sqlTable = 'shoppingcartsettings';
 	var $adminPath = 'admin/modules/shoppingcart/shoppingcartsettings';
-	
+
 	function __construct($table = null) {
 		languages::load('shopping');
-		
+
 		parent::__construct($table);
 	}
-	
+
 	function __destruct() {
 		languages::unload('shopping');
 	}
@@ -35,39 +35,39 @@ include_once('lib/modules/shoppingorders.class.php');
 class shoppingCartDiscounts {
 	var $ajaxRequest = null;
 	var $adminPath = 'admin/modules/shoppingcart/shoppingcartdiscounts';
-	
+
 	function __construct() {
 		languages::load('shopping');
 	}
-	
+
 	function __destruct() {
 		languages::unload('shopping');
 	}
-	
+
 	// ************************************************   Admin Part
 	static function countAdminItems() {
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{shoppingcartdiscounts}`" .
 			" LIMIT 1"));
-		
+
 		return $row['Rows'];
 	}
-	
+
 	function setupAdmin() {
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
-				_('New Discount'), 
+				_('New Discount'),
 				'?path='.admin::path().'#adminform');
-		
+
 		favoriteLinks::add(
-			__('Settings'), 
+			__('Settings'),
 			'?path=admin/modules/shoppingcart/shoppingcartsettings');
 		favoriteLinks::add(
-			__('Users'), 
+			__('Users'),
 			'?path=admin/members/users');
 	}
-	
+
 	function setupAdminForm(&$form) {
 		$form->add(
 			_('Discount Percentage'),
@@ -76,22 +76,22 @@ class shoppingCartDiscounts {
 			true);
 		$form->setStyle('width: 50px;');
 		$form->setValueType(FORM_VALUE_TYPE_INT);
-		
+
 		if (JCORE_VERSION >= '0.6') {
 			$form->addAdditionalText('%');
 			$form->setTooltipText(_("e.g. 25"));
 		} else {
 			$form->addAdditionalText("% ("._("e.g. 25").")");
 		}
-		
+
 		$form->add(
 			_('Price Above or Equal'),
 			'Above',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 100px;');
 		$form->setValueType(FORM_VALUE_TYPE_FLOAT);
-		
-		if (defined('SHOPPING_CART_CURRENCY_POSITION') && 
+
+		if (defined('SHOPPING_CART_CURRENCY_POSITION') &&
 			stristr(SHOPPING_CART_CURRENCY_POSITION, 'right'))
 			$form->addAdditionalText(
 				"<span class='shopping-currency'>" .
@@ -102,20 +102,20 @@ class shoppingCartDiscounts {
 				"<span class='shopping-currency'>" .
 					SHOPPING_CART_CURRENCY .
 				"</span>");
-		
+
 		if (JCORE_VERSION >= '0.6')
 			$form->setTooltipText(_("e.g. 10"));
 		else
 			$form->addAdditionalText(" ("._("e.g. 10").")");
-			
+
 		$form->add(
 			_('Price Below'),
 			'Below',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 100px;');
 		$form->setValueType(FORM_VALUE_TYPE_FLOAT);
-		
-		if (defined('SHOPPING_CART_CURRENCY_POSITION') && 
+
+		if (defined('SHOPPING_CART_CURRENCY_POSITION') &&
 			stristr(SHOPPING_CART_CURRENCY_POSITION, 'right'))
 			$form->addAdditionalText(
 				"<span class='shopping-currency'>" .
@@ -126,33 +126,33 @@ class shoppingCartDiscounts {
 				"<span class='shopping-currency'>" .
 					SHOPPING_CART_CURRENCY .
 				"</span>");
-		
+
 		if (JCORE_VERSION >= '0.6')
 			$form->setTooltipText(_("e.g. 70"));
 		else
 			$form->addAdditionalText(" ("._("e.g. 70").")");
-			
+
 		if (JCORE_VERSION >= '0.5') {
 			$form->add(
 				_('For Defined User'),
 				null,
 				FORM_OPEN_FRAME_CONTAINER);
-				
+
 			$form->add(
 				__('Username'),
 				'UserName',
 				FORM_INPUT_TYPE_TEXT);
 			$form->setStyle('width: 150px;');
-			
+
 			$form->addAdditionalText(
 				"<a href='".url::uri('request, users').
 					"&amp;request=".url::path() .
 					"&amp;users=1' " .
 					"class='shopping-cart-discounts-select-user ajax-content-link' " .
-					"title='".htmlspecialchars(_("Define the owner of the discount."), ENT_QUOTES)."'>" .
+					"title='".htmlchars(_("Define the owner of the discount."), ENT_QUOTES)."'>" .
 					_("Select User") .
 				"</a>");
-					
+
 			$form->add(
 				null,
 				null,
@@ -160,105 +160,105 @@ class shoppingCartDiscounts {
 				true);
 		}
 	}
-	
+
 	function verifyAdmin(&$form) {
 		$setpriority = null;
 		$priorities = null;
 		$delete = null;
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_POST['setprioritysubmit']))
 			$setpriority = (string)$_POST['setprioritysubmit'];
-		
+
 		if (isset($_POST['priorities']))
 			$priorities = (array)$_POST['priorities'];
-		
+
 		if (isset($_POST['delete']))
 			$delete = (int)$_POST['delete'];
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		if ($setpriority) {
 			if (!security::checkToken())
 				return false;
-			
+
 			foreach((array)$priorities as $pid => $pvalue) {
 				sql::run(
 					" UPDATE `{shoppingcartdiscounts}`" .
 					" SET `Priority` = '".(int)$pvalue."'" .
 					" WHERE `ID` = '".(int)$pid."'");
 			}
-			
+
 			tooltip::display(
 				_("Priorities have been successfully set."),
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if ($delete) {
 			if (!security::checkToken())
 				return false;
-			
+
 			if (!$this->delete($id))
 				return false;
-				
+
 			tooltip::display(
 				_("Discount has been successfully deleted."),
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if (!$form->verify())
 			return false;
-		
+
 		$values = $form->getPostArray();
 		$values['UserID'] = 0;
-		
+
 		if (JCORE_VERSION >= '0.5' && $form->get('UserName')) {
 			$user = sql::fetch(sql::run(
 				" SELECT * FROM `{users}` " .
 				" WHERE `UserName` = '".sql::escape($form->get('UserName'))."'"));
-			
+
 			if (!$user) {
 				tooltip::display(
-					sprintf(__("User \"%s\" couldn't be found!"), 
+					sprintf(__("User \"%s\" couldn't be found!"),
 						$form->get('UserName'))." " .
 					__("Please make sure you have entered / selected the right " .
 						"username or if it's a new user please first create " .
 						"the user at Member Management -> Users."),
 					TOOLTIP_ERROR);
-				
+
 				$form->setError('UserName', FORM_ERROR_REQUIRED);
 				return false;
 			}
-		
+
 			$values['UserID'] = $user['ID'];
 		}
-		
+
 		if ($edit) {
 			if (!$this->edit($id, $values))
 				return false;
-				
+
 			tooltip::display(
 				_("Discount has been successfully updated.")." " .
 				"<a href='#adminform'>" .
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if (!$newid = $this->add($values))
 			return false;
-			
+
 		tooltip::display(
 			_("Discount has been successfully created.")." " .
 			"<a href='".url::uri('id, edit, delete') .
@@ -266,34 +266,34 @@ class shoppingCartDiscounts {
 				__("Edit") .
 			"</a>",
 			TOOLTIP_SUCCESS);
-		
+
 		$form->reset();
 		return true;
 	}
-	
+
 	function displayAdminListHeader() {
 		if (JCORE_VERSION >= '0.7')
 			echo
 				"<th><span class='nowrap'>".
 					_("Priority")."</span></th>";
-		
+
 		echo
 			"<th><span class='nowrap'>".
 				_("Discount")."</span></th>" .
 			"<th><span class='nowrap'>".
-				htmlspecialchars(_("Price >="))."</span></th>" .
+				htmlchars(_("Price >="))."</span></th>" .
 			"<th><span class='nowrap'>".
-				htmlspecialchars(_("Price <"))."</span></th>";
-		
+				htmlchars(_("Price <"))."</span></th>";
+
 		if (JCORE_VERSION >= '0.5')
 			echo
 				"<th><span class='nowrap'>".
 					_("User")."</span></th>";
 	}
-	
+
 	function displayAdminListHeaderOptions() {
 	}
-	
+
 	function displayAdminListHeaderFunctions() {
 		echo
 			"<th><span class='nowrap'>".
@@ -301,7 +301,7 @@ class shoppingCartDiscounts {
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
 	}
-	
+
 	function displayAdminListItem(&$row) {
 		if (JCORE_VERSION >= '0.7')
 			echo
@@ -310,7 +310,7 @@ class shoppingCartDiscounts {
 						"value='".$row['Priority']."' " .
 						"class='order-id-entry' tabindex='1' />" .
 				"</td>";
-		
+
 		echo
 			"<td class='bold'>" .
 				"<span class='nowrap'>" .
@@ -319,9 +319,9 @@ class shoppingCartDiscounts {
 			"</td>" .
 			"<td>" .
 				"<span class='nowrap'>";
-		
+
 		shoppingCart::displayPrice($row['Above']);
-		
+
 		echo
 				"</span>" .
 			"</td>" .
@@ -331,22 +331,22 @@ class shoppingCartDiscounts {
 					null) .
 				">" .
 				"<span class='nowrap'>";
-		
+
 		if ($row['Below'])
 			shoppingCart::displayPrice($row['Below']);
 		else
 			echo "&#8734;";
-		
+
 		echo
 				"</span>" .
 			"</td>";
-	
+
 		if (JCORE_VERSION >= '0.5') {
 			$username = null;
-			
+
 			if ($row['UserID']) {
 				$user = $GLOBALS['USER']->get($row['UserID']);
-				
+
 				if ($user)
 					$username = $user['UserName'];
 				else
@@ -354,154 +354,154 @@ class shoppingCartDiscounts {
 						_("User deleted!") .
 						"</span>";
 			}
-			
+
 			echo
 				"<td class='auto-width'>" .
 					$username .
 				"</td>";
 		}
 	}
-	
+
 	function displayAdminListItemOptions(&$row) {
 	}
-	
+
 	function displayAdminListItemFunctions(&$row) {
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
-					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
+					"title='".htmlchars(__("Edit"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."&amp;edit=1#adminform'>" .
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
-					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
+					"title='".htmlchars(__("Delete"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
 	}
-	
+
 	function displayAdminListFunctions() {
-		echo 
+		echo
 			"<input type='submit' name='setprioritysubmit' value='" .
-				htmlspecialchars(_("Set Priority"), ENT_QUOTES)."' class='button' /> " .
+				htmlchars(_("Set Priority"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
-				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+				htmlchars(__("Reset"), ENT_QUOTES)."' class='button' />";
 	}
-	
+
 	function displayAdminList(&$rows) {
 		echo
 			"<form action='".
 				url::uri('edit, delete')."' method='post'>" .
 				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
-			
+
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>";
-		
+
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
-					
+
 		echo
 				"</tr>" .
 				"</thead>" .
 				"<tbody>";
-		
-		$i = 0;		
+
+		$i = 0;
 		while($row = sql::fetch($rows)) {
-			echo 
+			echo
 				"<tr".($i%2?" class='pair'":NULL).">";
-			
+
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
-			
+
 			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
-			
+
 			echo
 				"</tr>";
-			
+
 			$i++;
 		}
-		
-		echo 
+
+		echo
 				"</tbody>" .
 			"</table>" .
 			"<br />";
-		
-		if (JCORE_VERSION >= '0.7' && 
-			$this->userPermissionType & USER_PERMISSION_TYPE_WRITE) 
+
+		if (JCORE_VERSION >= '0.7' &&
+			$this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 		{
 			$this->displayAdminListFunctions();
-			
-			echo 
+
+			echo
 				"<div class='clear-both'></div>" .
 				"<br />";
 		}
-					
+
 		echo
 			"</form>";
 	}
-	
+
 	function displayAdminForm(&$form) {
 		$form->display();
 	}
-	
+
 	function displayAdminTitle($ownertitle = null) {
 		admin::displayTitle(
 			_('Shopping Cart Discounts Administration'),
 			$ownertitle);
 	}
-	
+
 	function displayAdminDescription() {
 	}
-	
+
 	function displayAdmin() {
 		$delete = null;
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_GET['delete']))
 			$delete = (int)$_GET['delete'];
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
-		
+
 		echo
 			"<div class='admin-content'>";
-				
+
 		if ($delete && $id && empty($_POST['delete'])) {
 			$selected = sql::fetch(sql::run(
 				" SELECT `DiscountPercent` FROM `{shoppingcartdiscounts}`" .
 				" WHERE `ID` = '".$id."'"));
-			
+
 			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['DiscountPercent'].'%"');
 		}
-		
+
 		$form = new form(
 				($edit?
 					_("Edit Discount"):
 					_("New Discount")),
 				'neweditdiscount');
-					
+
 		if (!$edit)
 			$form->action = url::uri('id, delete, limit');
-					
-		$this->setupAdminForm($form);	
+
+		$this->setupAdminForm($form);
 		$form->addSubmitButtons();
-		
+
 		if ($edit) {
 			$form->add(
 				__('Cancel'),
@@ -510,12 +510,12 @@ class shoppingCartDiscounts {
 			$form->addAttributes("onclick=\"window.location='".
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
-		
+
 		$verifyok = false;
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{shoppingcartdiscounts}`" .
 			" ORDER BY " .
@@ -526,44 +526,44 @@ class shoppingCartDiscounts {
 				" `UserID`, ":
 				null) .
 			" `DiscountPercent`");
-			
+
 		if (sql::rows($rows))
 			$this->displayAdminList($rows);
 		else
 			tooltip::display(
 				_("No discounts found."),
 				TOOLTIP_NOTIFICATION);
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			if ($edit && ($verifyok || !$form->submitted())) {
 				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{shoppingcartdiscounts}`" .
 					" WHERE `ID` = '".$id."'"));
-				
+
 				$form->setValues($selected);
-				
+
 				if (JCORE_VERSION >= '0.5') {
 					$user = $GLOBALS['USER']->get($selected['UserID']);
 					$form->setValue('UserName', $user['UserName']);
 				}
 			}
-			
+
 			echo
 				"<a name='adminform'></a>";
-			
+
 			$this->displayAdminForm($form);
 		}
-		
+
 		unset($form);
-		
+
 		echo
 			"</div>"; //admin-content
 	}
-	
+
 	function add($values) {
 		if (!is_array($values))
 			return false;
-			
+
 		$newid = sql::run(
 			" INSERT INTO `{shoppingcartdiscounts}` SET ".
 			(JCORE_VERSION >= '0.5'?
@@ -582,25 +582,25 @@ class shoppingCartDiscounts {
 				"," .
 			" `DiscountPercent` = '".
 				(int)$values['DiscountPercent']."'");
-			
+
 		if (!$newid) {
 			tooltip::display(
-				sprintf(_("Discount couldn't be added! Error: %s"), 
+				sprintf(_("Discount couldn't be added! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return $newid;
 	}
-	
+
 	function edit($id, $values) {
 		if (!$id)
 			return false;
-		
+
 		if (!is_array($values))
 			return false;
-		
+
 		sql::run(
 			" UPDATE `{shoppingcartdiscounts}` SET ".
 			(JCORE_VERSION >= '0.5'?
@@ -620,33 +620,33 @@ class shoppingCartDiscounts {
 			" `DiscountPercent` = '".
 				(int)$values['DiscountPercent']."'" .
 			" WHERE `ID` = '".(int)$id."'");
-			
+
 		if (sql::affected() == -1) {
 			tooltip::display(
-				sprintf(_("Discount couldn't be updated! Error: %s"), 
+				sprintf(_("Discount couldn't be updated! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	function delete($id) {
 		if (!$id)
 			return false;
-			
+
 		sql::run(
 			" DELETE FROM `{shoppingcartdiscounts}` " .
 			" WHERE `ID` = '".$id."'");
-		
+
 		return true;
 	}
-	
+
 	static function get($amount, $userid = null) {
 		if (!isset($userid) && $GLOBALS['USER']->loginok)
 			$userid = (int)$GLOBALS['USER']->data['ID'];
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT `DiscountPercent` FROM `{shoppingcartdiscounts}`" .
 			" WHERE '".sql::escape($amount)."' >= `Above` " .
@@ -668,17 +668,17 @@ class shoppingCartDiscounts {
 				null) .
 			" `DiscountPercent` DESC" .
 			" LIMIT 1"));
-			
+
 		if (!$row)
 			return 0;
-			
+
 		return number_format($amount*$row['DiscountPercent']/100, 2, '.', '');
 	}
-	
+
 	static function getNext($amount, $userid = null) {
 		if (!isset($userid) && $GLOBALS['USER']->loginok)
 			$userid = (int)$GLOBALS['USER']->data['ID'];
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingcartdiscounts}`" .
 			" WHERE ('".sql::escape($amount)."' <= `Above`) " .
@@ -698,43 +698,43 @@ class shoppingCartDiscounts {
 				null) .
 			" `DiscountPercent`" .
 			" LIMIT 1"));
-			
+
 		return $row;
 	}
-	
+
 	function ajaxRequest() {
-		if (!$GLOBALS['USER']->loginok || 
-			!$GLOBALS['USER']->data['Admin']) 
+		if (!$GLOBALS['USER']->loginok ||
+			!$GLOBALS['USER']->data['Admin'])
 		{
 			tooltip::display(
 				__("Request can only be accessed by administrators!"),
 				TOOLTIP_ERROR);
 			return true;
 		}
-		
+
 		$users = null;
-		
+
 		if (isset($_GET['users']))
 			$users = (int)$_GET['users'];
-		
+
 		if ($users) {
 			include_once('lib/userpermissions.class.php');
-			
+
 			$permission = userPermissions::check(
 				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
-			
+
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
 				return true;
 			}
-			
+
 			$GLOBALS['USER']->displayQuickList('#neweditdiscountform #entryUserName');
 			return true;
 		}
-		
+
 		return false;
 	}
 }
@@ -742,39 +742,39 @@ class shoppingCartDiscounts {
 class shoppingCartFees {
 	var $ajaxRequest = null;
 	var $adminPath = 'admin/modules/shoppingcart/shoppingcartfees';
-	
+
 	function __construct() {
 		languages::load('shopping');
 	}
-	
+
 	function __destruct() {
 		languages::unload('shopping');
 	}
-	
+
 	// ************************************************   Admin Part
 	static function countAdminItems() {
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{shoppingcartfees}`" .
 			" LIMIT 1"));
-		
+
 		return $row['Rows'];
 	}
-	
+
 	function setupAdmin() {
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
-				_('New Fee'), 
+				_('New Fee'),
 				'?path='.admin::path().'#adminform');
-		
+
 		favoriteLinks::add(
-			__('Settings'), 
+			__('Settings'),
 			'?path=admin/modules/shoppingcart/shoppingcartsettings');
 		favoriteLinks::add(
-			_('Order Form'), 
+			_('Order Form'),
 			'?path=admin/content/dynamicforms');
 	}
-	
+
 	function setupAdminForm(&$form) {
 		$form->add(
 			_('Fee Amount'),
@@ -783,7 +783,7 @@ class shoppingCartFees {
 			true);
 		$form->setStyle('width: 100px;');
 		$form->setValueType(FORM_VALUE_TYPE_FLOAT);
-		
+
 		if (defined('SHOPPING_CART_CURRENCY_POSITION') &&
 			stristr(SHOPPING_CART_CURRENCY_POSITION, 'right'))
 			$form->addAdditionalText(
@@ -795,19 +795,19 @@ class shoppingCartFees {
 				"<span class='shopping-currency'>" .
 					SHOPPING_CART_CURRENCY .
 				"</span>");
-		
+
 		if (JCORE_VERSION >= '0.6')
 			$form->setTooltipText(_("e.g. 5"));
 		else
 			$form->addAdditionalText(" ("._("e.g. 5").")");
-		
+
 		$form->add(
 			_('Price Above or Equal'),
 			'Above',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 100px;');
 		$form->setValueType(FORM_VALUE_TYPE_FLOAT);
-		
+
 		if (defined('SHOPPING_CART_CURRENCY_POSITION') &&
 			stristr(SHOPPING_CART_CURRENCY_POSITION, 'right'))
 			$form->addAdditionalText(
@@ -819,19 +819,19 @@ class shoppingCartFees {
 				"<span class='shopping-currency'>" .
 					SHOPPING_CART_CURRENCY .
 				"</span>");
-		
+
 		if (JCORE_VERSION >= '0.6')
 			$form->setTooltipText(_("e.g. 10"));
 		else
 			$form->addAdditionalText(" ("._("e.g. 10").")");
-			
+
 		$form->add(
 			_('Price Below'),
 			'Below',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 100px;');
 		$form->setValueType(FORM_VALUE_TYPE_FLOAT);
-		
+
 		if (defined('SHOPPING_CART_CURRENCY_POSITION') &&
 			stristr(SHOPPING_CART_CURRENCY_POSITION, 'right'))
 			$form->addAdditionalText(
@@ -843,89 +843,89 @@ class shoppingCartFees {
 				"<span class='shopping-currency'>" .
 					SHOPPING_CART_CURRENCY .
 				"</span>");
-		
+
 		if (JCORE_VERSION >= '0.6')
 			$form->setTooltipText(_("e.g. 70"));
 		else
 			$form->addAdditionalText(" ("._("e.g. 70").")");
-		
+
 		if (JCORE_VERSION >= '0.7') {
 			$form->add(
 				_('Using Weight'),
 				null,
 				FORM_OPEN_FRAME_CONTAINER);
-				
+
 			$form->add(
 				_('Weight Above or Equal'),
 				'WeightAbove',
 				FORM_INPUT_TYPE_TEXT);
 			$form->setStyle('width: 50px;');
 			$form->setValueType(FORM_VALUE_TYPE_FLOAT);
-			
+
 			if (defined('SHOPPING_CART_WEIGHT_UNIT') &&
 				SHOPPING_CART_WEIGHT_UNIT)
 				$form->addAdditionalText(
 					"<span class='shopping-weight-unit'>" .
 						SHOPPING_CART_WEIGHT_UNIT .
 					"</span>");
-			
+
 			$form->setTooltipText(_("e.g. 0.5"));
-			
+
 			$form->add(
 				_('Weight Below'),
 				'WeightBelow',
 				FORM_INPUT_TYPE_TEXT);
 			$form->setStyle('width: 50px;');
 			$form->setValueType(FORM_VALUE_TYPE_FLOAT);
-			
+
 			if (defined('SHOPPING_CART_WEIGHT_UNIT') &&
 				SHOPPING_CART_WEIGHT_UNIT)
 				$form->addAdditionalText(
 					"<span class='shopping-weight-unit'>" .
 						SHOPPING_CART_WEIGHT_UNIT .
 					"</span>");
-			
+
 			$form->setTooltipText(_("e.g. 3"));
-			
+
 			$form->add(
 				null,
 				null,
 				FORM_CLOSE_FRAME_CONTAINER,
 				true);
 		}
-		
+
 		if (JCORE_VERSION >= '0.5') {
 			$form->add(
 				_('Using Order Form Field Values'),
 				null,
 				FORM_OPEN_FRAME_CONTAINER);
-				
+
 			$form->add(
 				_('Field name'),
 				'FieldName',
 				FORM_INPUT_TYPE_TEXT);
 			$form->setStyle('width: 150px;');
-			
+
 			$form->addAdditionalText(
 				"<a href='".url::uri('request, orderformfields').
 					"&amp;request=".url::path() .
 					"&amp;orderformfields=1' " .
 					"class='shopping-cart-fees-select-order-form-field ajax-content-link' " .
-					"title='".htmlspecialchars(_("Define the field you would like to compare."), ENT_QUOTES)."'>" .
+					"title='".htmlchars(_("Define the field you would like to compare."), ENT_QUOTES)."'>" .
 					_("Select Field") .
 				"</a>");
-					
+
 			$form->add(
 				_('Is or Contains'),
 				'FieldValue',
 				FORM_INPUT_TYPE_TEXT);
 			$form->setStyle('width: 250px;');
-				
+
 			if (JCORE_VERSION >= '0.6')
 				$form->setTooltipText(_("e.g. field name \"ShippingState\" is \"CA\" or contains \"CA, WA, NY\""));
 			else
 				$form->addAdditionalText(" ("._("e.g. field name \"ShippingState\" is \"CA\" or contains \"CA, WA, NY\"").")");
-			
+
 			$form->add(
 				null,
 				null,
@@ -933,78 +933,78 @@ class shoppingCartFees {
 				true);
 		}
 	}
-	
+
 	function verifyAdmin(&$form) {
 		$setpriority = null;
 		$priorities = null;
 		$delete = null;
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_POST['setprioritysubmit']))
 			$setpriority = (string)$_POST['setprioritysubmit'];
-		
+
 		if (isset($_POST['priorities']))
 			$priorities = (array)$_POST['priorities'];
-		
+
 		if (isset($_POST['delete']))
 			$delete = (int)$_POST['delete'];
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		if ($setpriority) {
 			if (!security::checkToken())
 				return false;
-			
+
 			foreach((array)$priorities as $pid => $pvalue) {
 				sql::run(
 					" UPDATE `{shoppingcartfees}`" .
 					" SET `Priority` = '".(int)$pvalue."'" .
 					" WHERE `ID` = '".(int)$pid."'");
 			}
-			
+
 			tooltip::display(
 				_("Priorities have been successfully set."),
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if ($delete) {
 			if (!security::checkToken())
 				return false;
-			
+
 			if (!$this->delete($id))
 				return false;
-				
+
 			tooltip::display(
 				_("Fee has been successfully deleted."),
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if (!$form->verify())
 			return false;
-		
+
 		$values = $form->getPostArray();
 		$values['FieldID'] = 0;
-		
-		if (JCORE_VERSION >= '0.5' && $form->get('FieldName')) {	
+
+		if (JCORE_VERSION >= '0.5' && $form->get('FieldName')) {
 			$orderform = sql::fetch(sql::run(
 				" SELECT `ID` FROM `{dynamicforms}`" .
 				" WHERE `FormID` = 'shoppingorders'" .
 				" LIMIT 1"));
-			
+
 			$orderformfield = sql::fetch(sql::run(
 				" SELECT `ID` FROM `{dynamicformfields}`" .
 				" WHERE `FormID` = '".$orderform['ID']."'" .
 				" AND `Name` = '".sql::escape($form->get('FieldName'))."'"));
-				
+
 			if (!$orderformfield) {
 				tooltip::display(
 					_("Order form field couldn't be found!")." " .
@@ -1013,31 +1013,31 @@ class shoppingCartFees {
 						"add this fee to a new field please first create " .
 						"the field at Content Management -> Dynamic Forms."),
 					TOOLTIP_ERROR);
-				
+
 				$form->setError('FieldName', FORM_ERROR_REQUIRED);
 				return false;
 			}
-			
+
 			$values['FieldID'] = $orderformfield['ID'];
 		}
-		
+
 		if ($edit) {
 			if (!$this->edit($id, $values))
 				return false;
-				
+
 			tooltip::display(
 				_("Fee has been successfully updated.")." " .
 				"<a href='#adminform'>" .
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if (!$newid = $this->add($values))
 			return false;
-			
+
 		tooltip::display(
 			_("Fee has been successfully created.")." " .
 			"<a href='".url::uri('id, edit, delete') .
@@ -1045,13 +1045,13 @@ class shoppingCartFees {
 				__("Edit") .
 			"</a>",
 			TOOLTIP_SUCCESS);
-		
+
 		$form->reset();
 		return true;
 	}
-	
+
 	function displayAdminOrderFormFields() {
-		echo 
+		echo
 			"<div class='shopping-cart-fees-order-form-fields'>" .
 				"<div class='form-title'>"._('Order Form Fields')."</div>" .
 				"<table cellpadding='0' cellspacing='0' class='form-content list'>" .
@@ -1075,19 +1075,19 @@ class shoppingCartFees {
 					"</tr>" .
 					"</thead>" .
 					"<tbody>";
-					
+
 		$form = sql::fetch(sql::run(
 			" SELECT `ID` FROM `{dynamicforms}`" .
 			" WHERE `FormID` = 'shoppingorders'" .
 			" LIMIT 1"));
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{dynamicformfields}`" .
 			" WHERE `FormID` = '".$form['ID']."'" .
 			" AND `ValueType` > 0" .
 			" AND `Name` != ''" .
 			" ORDER BY `OrderID`, `Title`");
-		
+
 		$i = 1;
 		while ($row = sql::fetch($rows)) {
 			echo
@@ -1115,39 +1115,39 @@ class shoppingCartFees {
 						"</span>" .
 					"</td>" .
 				"</tr>";
-			
+
 			$i++;
 		}
-		
+
 		echo
 					"</tbody>" .
 				"</table>";
-				
+
 		echo
 			"</div>";
 	}
-	
+
 	function displayAdminListHeader() {
 		if (JCORE_VERSION >= '0.7')
 			echo
 				"<th><span class='nowrap'>".
 					_("Priority")."</span></th>";
-		
+
 		echo
 			"<th><span class='nowrap'>".
 				_("Fee")."</span></th>" .
 			"<th><span class='nowrap'>".
-				htmlspecialchars(_("Price >="))."</span></th>" .
+				htmlchars(_("Price >="))."</span></th>" .
 			"<th><span class='nowrap'>".
-				htmlspecialchars(_("Price <"))."</span></th>";
-					
+				htmlchars(_("Price <"))."</span></th>";
+
 		if (JCORE_VERSION >= '0.7')
 			echo
 				"<th><span class='nowrap'>".
-					htmlspecialchars(_("Weight >="))."</span></th>" .
+					htmlchars(_("Weight >="))."</span></th>" .
 				"<th><span class='nowrap'>".
-					htmlspecialchars(_("Weight <"))."</span></th>";
-		
+					htmlchars(_("Weight <"))."</span></th>";
+
 		if (JCORE_VERSION >= '0.5')
 			echo
 				"<th><span class='nowrap'>".
@@ -1155,10 +1155,10 @@ class shoppingCartFees {
 				"<th><span class='nowrap'>".
 					_("Is or Contains")."</span></th>";
 	}
-	
+
 	function displayAdminListHeaderOptions() {
 	}
-	
+
 	function displayAdminListHeaderFunctions() {
 		echo
 			"<th><span class='nowrap'>".
@@ -1166,7 +1166,7 @@ class shoppingCartFees {
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
 	}
-	
+
 	function displayAdminListItem(&$row) {
 		if (JCORE_VERSION >= '0.7')
 			echo
@@ -1175,7 +1175,7 @@ class shoppingCartFees {
 						"value='".$row['Priority']."' " .
 						"class='order-id-entry' tabindex='1' />" .
 				"</td>";
-		
+
 		echo
 			"<td" .
 				(JCORE_VERSION < '0.5'?
@@ -1183,75 +1183,75 @@ class shoppingCartFees {
 					null) .
 				">" .
 				"<span class='nowrap bold'>";
-		
+
 		shoppingCart::displayPrice($row['Fee']);
-		
+
 		echo
 				"</span>" .
 			"</td>" .
 			"<td>" .
 				"<span class='nowrap'>";
-		
+
 		shoppingCart::displayPrice($row['Above']);
-		
+
 		echo
 				"</span>" .
 			"</td>" .
 			"<td>" .
 				"<span class='nowrap'>";
-		
+
 		if ($row['Below'])
 			shoppingCart::displayPrice($row['Below']);
 		else
 			echo "&#8734;";
-		
+
 		echo
 				"</span>" .
 			"</td>";
-	
+
 		if (JCORE_VERSION >= '0.7') {
 			echo
 				"<td>" .
 					"<span class='nowrap'>";
-			
+
 			echo
 				$row['WeightAbove'];
-			
+
 			if (defined('SHOPPING_CART_WEIGHT_UNIT') &&
 				SHOPPING_CART_WEIGHT_UNIT)
 				echo " ".SHOPPING_CART_WEIGHT_UNIT;
-			
+
 			echo
 					"</span>" .
 				"</td>" .
 				"<td>" .
 					"<span class='nowrap'>";
-			
+
 			if ($row['WeightBelow']) {
 				echo
 					$row['WeightBelow'];
-				
+
 				if (defined('SHOPPING_CART_WEIGHT_UNIT') &&
 					SHOPPING_CART_WEIGHT_UNIT)
 					echo " ".SHOPPING_CART_WEIGHT_UNIT;
-			
+
 			} else {
 				echo "&#8734;";
 			}
-			
+
 			echo
 					"</span>" .
 				"</td>";
 		}
-		
+
 		if (JCORE_VERSION >= '0.5') {
 			$fieldname = null;
-		
+
 			if ($row['FieldID']) {
 				$field = sql::fetch(sql::run(
 					" SELECT `Name` FROM `{dynamicformfields}`" .
 					" WHERE `ID` = '".$row['FieldID']."'"));
-				
+
 				if ($field)
 					$fieldname = $field['Name'];
 				else
@@ -1259,7 +1259,7 @@ class shoppingCartFees {
 						_("Field deleted!") .
 						"</span>";
 			}
-			
+
 			echo
 				"<td>" .
 					"<span class='nowrap'>" .
@@ -1271,93 +1271,93 @@ class shoppingCartFees {
 				"</td>";
 		}
 	}
-	
+
 	function displayAdminListItemOptions(&$row) {
 	}
-	
+
 	function displayAdminListItemFunctions(&$row) {
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
-					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
+					"title='".htmlchars(__("Edit"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."&amp;edit=1#adminform'>" .
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
-					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
+					"title='".htmlchars(__("Delete"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
 	}
-	
+
 	function displayAdminListFunctions() {
-		echo 
+		echo
 			"<input type='submit' name='setprioritysubmit' value='" .
-				htmlspecialchars(_("Set Priority"), ENT_QUOTES)."' class='button' /> " .
+				htmlchars(_("Set Priority"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
-				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+				htmlchars(__("Reset"), ENT_QUOTES)."' class='button' />";
 	}
-	
+
 	function displayAdminList(&$rows) {
 		echo
 			"<form action='".
 				url::uri('edit, delete')."' method='post'>" .
 				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
-			
+
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>";
-		
+
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
-					
+
 		echo
 				"</tr>" .
 				"</thead>" .
 				"<tbody>";
-		
-		$i = 0;		
+
+		$i = 0;
 		while($row = sql::fetch($rows)) {
-			echo 
+			echo
 				"<tr".($i%2?" class='pair'":NULL).">";
-			
+
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
-			
+
 			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
-			
+
 			echo
 				"</tr>";
-			
+
 			$i++;
 		}
-		
-		echo 
+
+		echo
 				"</tbody>" .
 			"</table>" .
 			"<br />";
-		
-		if (JCORE_VERSION >= '0.7' && 
-			$this->userPermissionType & USER_PERMISSION_TYPE_WRITE) 
+
+		if (JCORE_VERSION >= '0.7' &&
+			$this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 		{
 			$this->displayAdminListFunctions();
-			
-			echo 
+
+			echo
 				"<div class='clear-both'></div>" .
 				"<br />";
 		}
-					
+
 		echo
 			"</form>";
 	}
-	
+
 	function displayAdminForm(&$form) {
 		$form->display();
 	}
@@ -1367,51 +1367,51 @@ class shoppingCartFees {
 			_('Shopping Cart Fees Administration'),
 			$ownertitle);
 	}
-	
+
 	function displayAdminDescription() {
 	}
-	
+
 	function displayAdmin() {
 		$delete = null;
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_GET['delete']))
 			$delete = (int)$_GET['delete'];
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
-		
+
 		echo
 			"<div class='admin-content'>";
-				
+
 		if ($delete && $id && empty($_POST['delete'])) {
 			$selected = sql::fetch(sql::run(
 				" SELECT `Fee` FROM `{shoppingcartfees}`" .
 				" WHERE `ID` = '".$id."'"));
-			
+
 			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.shoppingCart::constructPrice($selected['Fee']).'"');
 		}
-		
+
 		$form = new form(
 				($edit?
 					_("Edit Fee"):
 					_("New Fee")),
 				'neweditfee');
-					
+
 		if (!$edit)
 			$form->action = url::uri('id, delete, limit');
-					
-		$this->setupAdminForm($form);	
+
+		$this->setupAdminForm($form);
 		$form->addSubmitButtons();
-		
+
 		if ($edit) {
 			$form->add(
 				__('Cancel'),
@@ -1420,12 +1420,12 @@ class shoppingCartFees {
 			$form->addAttributes("onclick=\"window.location='".
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
-		
+
 		$verifyok = false;
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{shoppingcartfees}`" .
 			" ORDER BY " .
@@ -1436,49 +1436,49 @@ class shoppingCartFees {
 				" `FieldID`,":
 				null).
 			"`Fee`");
-			
+
 		if (sql::rows($rows))
 			$this->displayAdminList($rows);
 		else
 			tooltip::display(
 				_("No fees found."),
 				TOOLTIP_NOTIFICATION);
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			if ($edit && ($verifyok || !$form->submitted())) {
 				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{shoppingcartfees}`" .
 					" WHERE `ID` = '".$id."'"));
-				
+
 				$form->setValues($selected);
-				
+
 				if (JCORE_VERSION >= '0.5') {
 					$field = sql::fetch(sql::run(
 						" SELECT `Name` FROM `{dynamicformfields}`" .
 						" WHERE `ID` = '".$selected['FieldID']."'"));
-					
+
 					$form->setValue('FieldName', $field['Name']);
-					$form->setValue('FieldValue', 
+					$form->setValue('FieldValue',
 						sql::regexp2txt($selected['FieldValue']));
 				}
 			}
-			
+
 			echo
 				"<a name='adminform'></a>";
-			
+
 			$this->displayAdminForm($form);
 		}
-		
+
 		unset($form);
-		
+
 		echo
 			"</div>"; //admin-content
 	}
-	
+
 	function add($values) {
 		if (!is_array($values))
 			return false;
-		
+
 		$newid = sql::run(
 			" INSERT INTO `{shoppingcartfees}` SET ".
 			(JCORE_VERSION >= '0.5'?
@@ -1513,25 +1513,25 @@ class shoppingCartFees {
 				null) .
 			" `Fee` = '".
 				sql::escape($values['Fee'])."'");
-			
+
 		if (!$newid) {
 			tooltip::display(
-				sprintf(_("Fee couldn't be added! Error: %s"), 
+				sprintf(_("Fee couldn't be added! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return $newid;
 	}
-	
+
 	function edit($id, $values) {
 		if (!$id)
 			return false;
-		
+
 		if (!is_array($values))
 			return false;
-		
+
 		sql::run(
 			" UPDATE `{shoppingcartfees}` SET ".
 			(JCORE_VERSION >= '0.5'?
@@ -1567,60 +1567,60 @@ class shoppingCartFees {
 			" `Fee` = '".
 				sql::escape($values['Fee'])."'" .
 			" WHERE `ID` = '".(int)$id."'");
-			
+
 		if (sql::affected() == -1) {
 			tooltip::display(
-				sprintf(_("Fee couldn't be updated! Error: %s"), 
+				sprintf(_("Fee couldn't be updated! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	function delete($id) {
 		if (!$id)
 			return false;
-			
+
 		sql::run(
 			" DELETE FROM `{shoppingcartfees}` " .
 			" WHERE `ID` = '".$id."'");
-		
+
 		return true;
 	}
-	
+
 	static function get($amount, $weight = 0, $values = null) {
 		if (!isset($values))
 			$values = $_POST;
-		
+
 		if (JCORE_VERSION >= '0.5') {
 			$feefields = sql::fetch(sql::run(
 				" SELECT GROUP_CONCAT(DISTINCT `FieldID` SEPARATOR ',') AS `FieldIDs`" .
 				" FROM `{shoppingcartfees}`" .
 				" LIMIT 1"));
-				
+
 			$fieldquery = null;
-			
+
 			if ($feefields['FieldIDs']) {
 				$orderformfields = sql::run(
 					" SELECT `ID`, `Name` FROM `{dynamicformfields}`" .
 					" WHERE `ID` IN (".$feefields['FieldIDs'].")" .
 					" ORDER BY `OrderID`");
-				
+
 				while($orderformfield = sql::fetch($orderformfields)) {
 					$value = null;
-					
+
 					if (isset($values[$orderformfield['Name']]))
 						$value = strip_tags((string)$values[$orderformfield['Name']]);
-					
-					$fieldquery .= 
+
+					$fieldquery .=
 						" OR (`FieldID` = '".$orderformfield['ID']."'" .
 						" AND '".sql::escape($value)."' REGEXP `FieldValue`)";
 				}
 			}
 		}
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT `Fee` FROM `{shoppingcartfees}`" .
 			" WHERE '".sql::escape($amount)."' >= `Above` " .
@@ -1647,46 +1647,46 @@ class shoppingCartFees {
 				null) .
 			" `Fee` DESC" .
 			" LIMIT 1"));
-		
+
 		if (!$row)
 			return 0;
-			
+
 		return $row['Fee'];
 	}
-	
+
 	function ajaxRequest() {
-		if (!$GLOBALS['USER']->loginok || 
-			!$GLOBALS['USER']->data['Admin']) 
+		if (!$GLOBALS['USER']->loginok ||
+			!$GLOBALS['USER']->data['Admin'])
 		{
 			tooltip::display(
 				__("Request can only be accessed by administrators!"),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		$orderformfields = null;
-		
+
 		if (isset($_GET['orderformfields']))
 			$orderformfields = (int)$_GET['orderformfields'];
-		
+
 		if ($orderformfields) {
 			include_once('lib/userpermissions.class.php');
-			
+
 			$permission = userPermissions::check(
 				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
-			
+
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
 				return true;
 			}
-			
+
 			$this->displayAdminOrderFormFields();
 			return true;
 		}
-		
+
 		return false;
 	}
 }
@@ -1694,39 +1694,39 @@ class shoppingCartFees {
 class shoppingCartTaxes {
 	var $ajaxRequest = null;
 	var $adminPath = 'admin/modules/shoppingcart/shoppingcarttaxes';
-	
+
 	function __construct() {
 		languages::load('shopping');
 	}
-	
+
 	function __destruct() {
 		languages::unload('shopping');
 	}
-	
+
 	// ************************************************   Admin Part
 	static function countAdminItems() {
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{shoppingcarttaxes}`" .
 			" LIMIT 1"));
-		
+
 		return $row['Rows'];
 	}
-	
+
 	function setupAdmin() {
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
-				_('New Tax'), 
+				_('New Tax'),
 				'?path='.admin::path().'#adminform');
-		
+
 		favoriteLinks::add(
-			__('Settings'), 
+			__('Settings'),
 			'?path=admin/modules/shoppingcart/shoppingcartsettings');
 		favoriteLinks::add(
-			_('Order Form'), 
+			_('Order Form'),
 			'?path=admin/content/dynamicforms');
 	}
-	
+
 	function setupAdminForm(&$form) {
 		$form->add(
 			_('Tax Percentage'),
@@ -1736,102 +1736,102 @@ class shoppingCartTaxes {
 		$form->setStyle('width: 50px;');
 		$form->setValueType(FORM_VALUE_TYPE_FLOAT);
 		$form->addAdditionalText("%");
-		
+
 		$form->add(
 			_('Field name'),
 			'FieldName',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 150px;');
-		
+
 		$form->addAdditionalText(
 			"<a href='".url::uri('request, orderformfields').
 				"&amp;request=".url::path() .
 				"&amp;orderformfields=1' " .
 				"class='shopping-cart-taxes-select-order-form-field ajax-content-link' " .
-				"title='".htmlspecialchars(_("Define the field you would like to compare."), ENT_QUOTES)."'>" .
+				"title='".htmlchars(_("Define the field you would like to compare."), ENT_QUOTES)."'>" .
 				_("Select Field") .
 			"</a>");
-				
+
 		$form->add(
 			_('Is or Contains'),
 			'FieldValue',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 250px;');
-			
+
 		$form->setTooltipText(_("e.g. field name \"ShippingState\" is \"CA\" or contains \"CA, WA, NY\""));
 	}
-	
+
 	function verifyAdmin(&$form) {
 		$setpriority = null;
 		$priorities = null;
 		$delete = null;
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_POST['setprioritysubmit']))
 			$setpriority = (string)$_POST['setprioritysubmit'];
-		
+
 		if (isset($_POST['priorities']))
 			$priorities = (array)$_POST['priorities'];
-		
+
 		if (isset($_POST['delete']))
 			$delete = (int)$_POST['delete'];
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		if ($setpriority) {
 			if (!security::checkToken())
 				return false;
-			
+
 			foreach((array)$priorities as $pid => $pvalue) {
 				sql::run(
 					" UPDATE `{shoppingcarttaxes}`" .
 					" SET `Priority` = '".(int)$pvalue."'" .
 					" WHERE `ID` = '".(int)$pid."'");
 			}
-			
+
 			tooltip::display(
 				_("Priorities have been successfully set."),
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if ($delete) {
 			if (!security::checkToken())
 				return false;
-			
+
 			if (!$this->delete($id))
 				return false;
-				
+
 			tooltip::display(
 				_("Tax has been successfully deleted."),
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if (!$form->verify())
 			return false;
-		
+
 		$values = $form->getPostArray();
 		$values['FieldID'] = 0;
-		
-		if ($form->get('FieldName')) {	
+
+		if ($form->get('FieldName')) {
 			$orderform = sql::fetch(sql::run(
 				" SELECT `ID` FROM `{dynamicforms}`" .
 				" WHERE `FormID` = 'shoppingorders'" .
 				" LIMIT 1"));
-			
+
 			$orderformfield = sql::fetch(sql::run(
 				" SELECT `ID` FROM `{dynamicformfields}`" .
 				" WHERE `FormID` = '".$orderform['ID']."'" .
 				" AND `Name` = '".sql::escape($form->get('FieldName'))."'"));
-				
+
 			if (!$orderformfield) {
 				tooltip::display(
 					_("Order form field couldn't be found!")." " .
@@ -1840,31 +1840,31 @@ class shoppingCartTaxes {
 						"add this tax to a new field please first create " .
 						"the field at Content Management -> Dynamic Forms."),
 					TOOLTIP_ERROR);
-				
+
 				$form->setError('FieldName', FORM_ERROR_REQUIRED);
 				return false;
 			}
-			
+
 			$values['FieldID'] = $orderformfield['ID'];
 		}
-		
+
 		if ($edit) {
 			if (!$this->edit($id, $values))
 				return false;
-				
+
 			tooltip::display(
 				_("Tax has been successfully updated.")." " .
 				"<a href='#adminform'>" .
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if (!$newid = $this->add($values))
 			return false;
-			
+
 		tooltip::display(
 			_("Tax has been successfully created.")." " .
 			"<a href='".url::uri('id, edit, delete') .
@@ -1872,13 +1872,13 @@ class shoppingCartTaxes {
 				__("Edit") .
 			"</a>",
 			TOOLTIP_SUCCESS);
-		
+
 		$form->reset();
 		return true;
 	}
-	
+
 	function displayAdminOrderFormFields() {
-		echo 
+		echo
 			"<div class='shopping-cart-taxes-order-form-fields'>" .
 				"<div class='form-title'>"._('Order Form Fields')."</div>" .
 				"<table cellpadding='0' cellspacing='0' class='form-content list'>" .
@@ -1902,19 +1902,19 @@ class shoppingCartTaxes {
 					"</tr>" .
 					"</thead>" .
 					"<tbody>";
-					
+
 		$form = sql::fetch(sql::run(
 			" SELECT `ID` FROM `{dynamicforms}`" .
 			" WHERE `FormID` = 'shoppingorders'" .
 			" LIMIT 1"));
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{dynamicformfields}`" .
 			" WHERE `FormID` = '".$form['ID']."'" .
 			" AND `ValueType` > 0" .
 			" AND `Name` != ''" .
 			" ORDER BY `OrderID`, `Title`");
-		
+
 		$i = 1;
 		while ($row = sql::fetch($rows)) {
 			echo
@@ -1942,18 +1942,18 @@ class shoppingCartTaxes {
 						"</span>" .
 					"</td>" .
 				"</tr>";
-			
+
 			$i++;
 		}
-		
+
 		echo
 					"</tbody>" .
 				"</table>";
-				
+
 		echo
 			"</div>";
 	}
-	
+
 	function displayAdminListHeader() {
 		echo
 			"<th><span class='nowrap'>".
@@ -1965,10 +1965,10 @@ class shoppingCartTaxes {
 			"<th><span class='nowrap'>".
 				_("Is or Contains")."</span></th>";
 	}
-	
+
 	function displayAdminListHeaderOptions() {
 	}
-	
+
 	function displayAdminListHeaderFunctions() {
 		echo
 			"<th><span class='nowrap'>".
@@ -1976,7 +1976,7 @@ class shoppingCartTaxes {
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
 	}
-	
+
 	function displayAdminListItem(&$row) {
 		echo
 			"<td>" .
@@ -1989,14 +1989,14 @@ class shoppingCartTaxes {
 					$row['Tax']."%" .
 				"</span>" .
 			"</td>";
-	
+
 		$fieldname = null;
-	
+
 		if ($row['FieldID']) {
 			$field = sql::fetch(sql::run(
 				" SELECT `Name` FROM `{dynamicformfields}`" .
 				" WHERE `ID` = '".$row['FieldID']."'"));
-			
+
 			if ($field)
 				$fieldname = $field['Name'];
 			else
@@ -2004,7 +2004,7 @@ class shoppingCartTaxes {
 					_("Field deleted!") .
 					"</span>";
 		}
-		
+
 		echo
 			"<td>" .
 				"<span class='nowrap'>" .
@@ -2015,92 +2015,92 @@ class shoppingCartTaxes {
 				sql::regexp2txt($row['FieldValue']) .
 			"</td>";
 	}
-	
+
 	function displayAdminListItemOptions(&$row) {
 	}
-	
+
 	function displayAdminListItemFunctions(&$row) {
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
-					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
+					"title='".htmlchars(__("Edit"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."&amp;edit=1#adminform'>" .
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
-					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
+					"title='".htmlchars(__("Delete"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
 	}
-	
+
 	function displayAdminListFunctions() {
-		echo 
+		echo
 			"<input type='submit' name='setprioritysubmit' value='" .
-				htmlspecialchars(_("Set Priority"), ENT_QUOTES)."' class='button' /> " .
+				htmlchars(_("Set Priority"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
-				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+				htmlchars(__("Reset"), ENT_QUOTES)."' class='button' />";
 	}
-	
+
 	function displayAdminList($rows) {
 		echo
 			"<form action='".
 				url::uri('edit, delete')."' method='post'>" .
 				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
-			
-		echo 
+
+		echo
 			"<table cellpadding='0' cellspacing='0' class='list'>" .
 			"<thead>" .
 			"<tr>";
-		
+
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
-	
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
-		
+
 		echo
 			"</tr>" .
 			"</thead>" .
 			"<tbody>";
-		
+
 		$i = 0;
 		while($row = sql::fetch($rows)) {
-			echo 
+			echo
 				"<tr".($i%2?" class='pair'":NULL).">";
-			
+
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
-			
+
 			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
-			
+
 			echo
 				"</tr>";
-			
+
 			$i++;
 		}
-		
-		echo 
+
+		echo
 			"</tbody>" .
 			"</table>" .
 			"<br />";
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			$this->displayAdminListFunctions();
-			
-			echo 
+
+			echo
 				"<div class='clear-both'></div>" .
 				"<br />";
 		}
-					
+
 		echo
 			"</form>";
 	}
-	
+
 	function displayAdminForm(&$form) {
 		$form->display();
 	}
@@ -2110,51 +2110,51 @@ class shoppingCartTaxes {
 			_('Shopping Cart Taxes Administration'),
 			$ownertitle);
 	}
-	
+
 	function displayAdminDescription() {
 	}
-	
+
 	function displayAdmin() {
 		$delete = null;
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_GET['delete']))
 			$delete = (int)$_GET['delete'];
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
-		
+
 		echo
 			"<div class='admin-content'>";
-				
+
 		if ($delete && $id && empty($_POST['delete'])) {
 			$selected = sql::fetch(sql::run(
 				" SELECT `Tax` FROM `{shoppingcarttaxes}`" .
 				" WHERE `ID` = '".$id."'"));
-			
+
 			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Tax'].'%"');
 		}
-		
+
 		$form = new form(
 				($edit?
 					_("Edit Tax"):
 					_("New Tax")),
 				'newedittax');
-					
+
 		if (!$edit)
 			$form->action = url::uri('id, delete, limit');
-					
-		$this->setupAdminForm($form);	
+
+		$this->setupAdminForm($form);
 		$form->addSubmitButtons();
-		
+
 		if ($edit) {
 			$form->add(
 				__('Cancel'),
@@ -2163,56 +2163,56 @@ class shoppingCartTaxes {
 			$form->addAttributes("onclick=\"window.location='".
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
-		
+
 		$verifyok = false;
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{shoppingcarttaxes}`" .
 			" ORDER BY `Priority`, `FieldID`, `Tax`");
-			
+
 		if (sql::rows($rows))
 			$this->displayAdminList($rows);
 		else
 			tooltip::display(
 				_("No taxes found."),
 				TOOLTIP_NOTIFICATION);
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			if ($edit && ($verifyok || !$form->submitted())) {
 				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{shoppingcarttaxes}`" .
 					" WHERE `ID` = '".$id."'"));
-				
+
 				$form->setValues($selected);
-				
+
 				$field = sql::fetch(sql::run(
 					" SELECT `Name` FROM `{dynamicformfields}`" .
 					" WHERE `ID` = '".$selected['FieldID']."'"));
-				
+
 				$form->setValue('FieldName', $field['Name']);
-				$form->setValue('FieldValue', 
+				$form->setValue('FieldValue',
 					sql::regexp2txt($selected['FieldValue']));
 			}
-			
+
 			echo
 				"<a name='adminform'></a>";
-			
+
 			$this->displayAdminForm($form);
 		}
-		
+
 		unset($form);
-		
+
 		echo
 			"</div>"; //admin-content
 	}
-	
+
 	function add($values) {
 		if (!is_array($values))
 			return false;
-		
+
 		$newid = sql::run(
 			" INSERT INTO `{shoppingcarttaxes}` SET ".
 			" `FieldID` = '" .
@@ -2221,25 +2221,25 @@ class shoppingCartTaxes {
 				sql::escape(sql::txt2regexp($values['FieldValue']))."'," .
 			" `Tax` = '".
 				sql::escape($values['Tax'])."'");
-			
+
 		if (!$newid) {
 			tooltip::display(
-				sprintf(_("Tax couldn't be added! Error: %s"), 
+				sprintf(_("Tax couldn't be added! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return $newid;
 	}
-	
+
 	function edit($id, $values) {
 		if (!$id)
 			return false;
-		
+
 		if (!is_array($values))
 			return false;
-		
+
 		sql::run(
 			" UPDATE `{shoppingcarttaxes}` SET ".
 			" `FieldID` = '" .
@@ -2249,68 +2249,68 @@ class shoppingCartTaxes {
 			" `Tax` = '".
 				sql::escape($values['Tax'])."'" .
 			" WHERE `ID` = '".(int)$id."'");
-			
+
 		if (sql::affected() == -1) {
 			tooltip::display(
-				sprintf(_("Tax couldn't be updated! Error: %s"), 
+				sprintf(_("Tax couldn't be updated! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	function delete($id) {
 		if (!$id)
 			return false;
-			
+
 		sql::run(
 			" DELETE FROM `{shoppingcarttaxes}` " .
 			" WHERE `ID` = '".$id."'");
-		
+
 		return true;
 	}
-	
+
 	static function get($values = null) {
 		if (!isset($values))
 			$values = $_POST;
-		
+
 		$taxfields = sql::fetch(sql::run(
 			" SELECT GROUP_CONCAT(DISTINCT `FieldID` SEPARATOR ',') AS `FieldIDs`" .
 			" FROM `{shoppingcarttaxes}`" .
 			" LIMIT 1"));
-		
+
 		$fieldquery = null;
-		
+
 		if ($taxfields['FieldIDs']) {
 			$orderformfields = sql::run(
 				" SELECT `ID`, `Name` FROM `{dynamicformfields}`" .
 				" WHERE `ID` IN (".$taxfields['FieldIDs'].")" .
 				" ORDER BY `OrderID`");
-			
+
 			while($orderformfield = sql::fetch($orderformfields)) {
 				$value = null;
 				$valueindex = $orderformfield['Name'];
-				
+
 				if ((!isset($values[$valueindex]) || !trim((string)$values[$valueindex])) &&
 					strpos($valueindex, 'Shipping') !== false)
 				{
 					$valueindex = str_replace('Shipping', '', $valueindex);
 				}
-				
+
 				if (isset($values[$valueindex]) && trim((string)$values[$valueindex]))
 					$value = trim(strip_tags((string)$values[$valueindex]));
-				
+
 				if (!$value)
 					continue;
-				
-				$fieldquery .= 
+
+				$fieldquery .=
 					" OR (`FieldID` = '".$orderformfield['ID']."'" .
 					" AND '".sql::escape($value)."' REGEXP `FieldValue`)";
 			}
 		}
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT `Tax` FROM `{shoppingcarttaxes}`" .
 			" WHERE (`FieldID` = 0 " .
@@ -2323,46 +2323,46 @@ class shoppingCartTaxes {
 			" `FieldID` DESC, " .
 			" `Tax` DESC" .
 			" LIMIT 1"));
-		
+
 		if (!$row)
 			return 0;
-			
+
 		return $row['Tax'];
 	}
-	
+
 	function ajaxRequest() {
-		if (!$GLOBALS['USER']->loginok || 
-			!$GLOBALS['USER']->data['Admin']) 
+		if (!$GLOBALS['USER']->loginok ||
+			!$GLOBALS['USER']->data['Admin'])
 		{
 			tooltip::display(
 				__("Request can only be accessed by administrators!"),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		$orderformfields = null;
-		
+
 		if (isset($_GET['orderformfields']))
 			$orderformfields = (int)$_GET['orderformfields'];
-		
+
 		if ($orderformfields) {
 			include_once('lib/userpermissions.class.php');
-			
+
 			$permission = userPermissions::check(
 				(int)$GLOBALS['USER']->data['ID'],
 				$this->adminPath);
-			
+
 			if (~$permission['PermissionType'] & USER_PERMISSION_TYPE_WRITE) {
 				tooltip::display(
 					__("You do not have permission to access this path!"),
 					TOOLTIP_ERROR);
 				return true;
 			}
-			
+
 			$this->displayAdminOrderFormFields();
 			return true;
 		}
-		
+
 		return false;
 	}
 }
@@ -2370,39 +2370,39 @@ class shoppingCartTaxes {
 class shoppingCartCoupons {
 	var $ajaxRequest = null;
 	var $adminPath = 'admin/modules/shoppingcart/shoppingcartcoupons';
-	
+
 	function __construct() {
 		languages::load('shopping');
 	}
-	
+
 	function __destruct() {
 		languages::unload('shopping');
 	}
-	
+
 	// ************************************************   Admin Part
 	static function countAdminItems() {
 		$row = sql::fetch(sql::run(
 			" SELECT COUNT(*) AS `Rows`" .
 			" FROM `{shoppingcartcoupons}`" .
 			" LIMIT 1"));
-		
+
 		return $row['Rows'];
 	}
-	
+
 	function setupAdmin() {
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			favoriteLinks::add(
-				_('New Coupon'), 
+				_('New Coupon'),
 				'?path='.admin::path().'#adminform');
-		
+
 		favoriteLinks::add(
-			__('Settings'), 
+			__('Settings'),
 			'?path=admin/modules/shoppingcart/shoppingcartsettings');
 		favoriteLinks::add(
-			__('Users'), 
+			__('Users'),
 			'?path=admin/members/users');
 	}
-	
+
 	function setupAdminForm(&$form) {
 		$form->add(
 			_('Coupon'),
@@ -2410,7 +2410,7 @@ class shoppingCartCoupons {
 			FORM_INPUT_TYPE_TEXT,
 			true);
 		$form->setStyle('width: 150px;');
-		
+
 		$form->add(
 			_('Discount'),
 			'DiscountPercent',
@@ -2419,7 +2419,7 @@ class shoppingCartCoupons {
 		$form->setValueType(FORM_VALUE_TYPE_INT);
 		$form->addAdditionalText('%');
 		$form->setTooltipText(_("e.g. 25"));
-		
+
 		$form->add(
 			_('and/or'),
 			'DiscountValue',
@@ -2427,7 +2427,7 @@ class shoppingCartCoupons {
 		$form->setStyle('width: 80px;');
 		$form->setValueType(FORM_VALUE_TYPE_FLOAT);
 		$form->setTooltipText(_("e.g. 170"));
-		
+
 		if (defined('SHOPPING_CART_CURRENCY')) {
 			if (defined('SHOPPING_CART_CURRENCY_POSITION') &&
 				stristr(SHOPPING_CART_CURRENCY_POSITION, 'right'))
@@ -2441,38 +2441,38 @@ class shoppingCartCoupons {
 						SHOPPING_CART_CURRENCY .
 					"</span>");
 		}
-		
+
 		$form->add(
 			__('Additional Options'),
 			null,
 			FORM_OPEN_FRAME_CONTAINER);
-			
+
 		$form->add(
 			_('Quantity'),
 			'Quantity',
 			FORM_INPUT_TYPE_TEXT);
 		$form->setStyle('width: 50px;');
 		$form->setValueType(FORM_VALUE_TYPE_INT);
-		
+
 		if (JCORE_VERSION >= '0.6')
 			$form->setTooltipText(_("e.g. 1000 (leave it empty for unlimited)"));
 		else
 			$form->addAdditionalText(_("e.g. 1000 (leave it empty for unlimited)"));
-		
+
 		$form->add(
 			__('Start Date'),
 			'StartDate',
 			FORM_INPUT_TYPE_DATE);
 		$form->setStyle('width: 100px;');
 		$form->setValueType(FORM_VALUE_TYPE_DATE);
-		
+
 		$form->add(
 			__('End Date'),
 			'EndDate',
 			FORM_INPUT_TYPE_DATE);
 		$form->setStyle('width: 100px;');
 		$form->setValueType(FORM_VALUE_TYPE_DATE);
-		
+
 		$form->add(
 			__('Deactivated'),
 			'Deactivated',
@@ -2480,93 +2480,93 @@ class shoppingCartCoupons {
 			false,
 			'1');
 		$form->setValueType(FORM_VALUE_TYPE_BOOL);
-			
+
 		$form->addAdditionalText(
 			"<span class='comment' style='text-decoration: line-through;'>" .
 			__("(marked with strike through)").
-			"</span>");	
-			
+			"</span>");
+
 		$form->add(
 			null,
 			null,
 			FORM_CLOSE_FRAME_CONTAINER,
 			true);
 	}
-	
+
 	function verifyAdmin(&$form) {
 		$setpriority = null;
 		$priorities = null;
 		$delete = null;
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_POST['setprioritysubmit']))
 			$setpriority = (string)$_POST['setprioritysubmit'];
-		
+
 		if (isset($_POST['priorities']))
 			$priorities = (array)$_POST['priorities'];
-		
+
 		if (isset($_POST['delete']))
 			$delete = (int)$_POST['delete'];
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		if ($setpriority) {
 			if (!security::checkToken())
 				return false;
-			
+
 			foreach((array)$priorities as $pid => $pvalue) {
 				sql::run(
 					" UPDATE `{shoppingcartcoupons}`" .
 					" SET `Priority` = '".(int)$pvalue."'" .
 					" WHERE `ID` = '".(int)$pid."'");
 			}
-			
+
 			tooltip::display(
 				_("Priorities have been successfully set."),
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if ($delete) {
 			if (!security::checkToken())
 				return false;
-			
+
 			if (!$this->delete($id))
 				return false;
-				
+
 			tooltip::display(
 				_("Coupon has been successfully deleted."),
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if (!$form->verify())
 			return false;
-		
+
 		if ($edit) {
 			if (!$this->edit($id, $form->getPostArray()))
 				return false;
-				
+
 			tooltip::display(
 				_("Coupon has been successfully updated.")." " .
 				"<a href='#adminform'>" .
 					__("Edit") .
 				"</a>",
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		if (!$newid = $this->add($form->getPostArray()))
 			return false;
-			
+
 		tooltip::display(
 			_("Coupon has been successfully created.")." " .
 			"<a href='".url::uri('id, edit, delete') .
@@ -2574,11 +2574,11 @@ class shoppingCartCoupons {
 				__("Edit") .
 			"</a>",
 			TOOLTIP_SUCCESS);
-		
+
 		$form->reset();
 		return true;
 	}
-	
+
 	function displayAdminListHeader() {
 		echo
 			"<th><span class='nowrap'>".
@@ -2590,10 +2590,10 @@ class shoppingCartCoupons {
 			"<th><span class='nowrap'>".
 				_("Quantity")."</span></th>";
 	}
-	
+
 	function displayAdminListHeaderOptions() {
 	}
-	
+
 	function displayAdminListHeaderFunctions() {
 		echo
 			"<th><span class='nowrap'>".
@@ -2601,7 +2601,7 @@ class shoppingCartCoupons {
 			"<th><span class='nowrap'>".
 				__("Delete")."</span></th>";
 	}
-	
+
 	function displayAdminListItem(&$row) {
 		echo
 			"<td>" .
@@ -2616,52 +2616,52 @@ class shoppingCartCoupons {
 				">" .
 				$row['Coupon'] .
 				"<div class='comment' style='padding-left: 10px;'>";
-		
+
 		if ($row['StartDate'] && $row['EndDate'])
 			echo
 				sprintf(__("Starting <b>%s</b> until <b>%s</b>"),
 					calendar::date($row['StartDate']),
 					calendar::date($row['EndDate']));
-		
+
 		elseif ($row['StartDate'])
 			echo
 				sprintf(__("Starting <b>%s</b>"),
 					calendar::date($row['StartDate']));
-		
+
 		elseif ($row['EndDate'])
 			echo
 				sprintf(__("Until <b>%s</b>"),
 					calendar::date($row['EndDate']));
-		
+
 		if ($row['StartDate'] && $row['Pending'])
 			echo
 				" <span class='hilight'>".strtoupper(__("Pending"))."!</span>";
-		
+
 		if ($row['EndDate'] && $row['Expired'])
 			echo
 				" <span class='red'>".strtoupper(__("Expired"))."!</span>";
-		
+
 		echo
 				"</div>" .
 			"</td>" .
 			"<td style='text-align: right;'>" .
 				"<span class='nowrap'>";
-		
+
 		if ($row['DiscountPercent'] && $row['DiscountValue']) {
-			echo 
+			echo
 				sprintf(_("%s up to %s"),
 					$row['DiscountPercent']."%<span class='comment'>&nbsp;",
 					"&nbsp;</span>".shoppingCart::constructPrice($row['DiscountValue']));
-		
+
 		} else {
 			if ($row['DiscountPercent'])
-				echo 
+				echo
 					$row['DiscountPercent']."%";
-			
+
 			if ($row['DiscountValue'])
 				shoppingCart::displayPrice($row['DiscountValue']);
 		}
-		
+
 		echo
 				"</span>" .
 			"</td>" .
@@ -2671,147 +2671,147 @@ class shoppingCartCoupons {
 				"</span>" .
 			"</td>";
 	}
-	
+
 	function displayAdminListItemOptions(&$row) {
 	}
-	
+
 	function displayAdminListItemFunctions(&$row) {
 		echo
 			"<td align='center'>" .
 				"<a class='admin-link edit' " .
-					"title='".htmlspecialchars(__("Edit"), ENT_QUOTES)."' " .
+					"title='".htmlchars(__("Edit"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."&amp;edit=1#adminform'>" .
 				"</a>" .
 			"</td>" .
 			"<td align='center'>" .
 				"<a class='admin-link delete confirm-link' " .
-					"title='".htmlspecialchars(__("Delete"), ENT_QUOTES)."' " .
+					"title='".htmlchars(__("Delete"), ENT_QUOTES)."' " .
 					"href='".url::uri('id, edit, delete') .
 					"&amp;id=".$row['ID']."&amp;delete=1'>" .
 				"</a>" .
 			"</td>";
 	}
-	
+
 	function displayAdminListFunctions() {
-		echo 
+		echo
 			"<input type='submit' name='setprioritysubmit' value='" .
-				htmlspecialchars(_("Set Priority"), ENT_QUOTES)."' class='button' /> " .
+				htmlchars(_("Set Priority"), ENT_QUOTES)."' class='button' /> " .
 			"<input type='reset' name='reset' value='" .
-				htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+				htmlchars(__("Reset"), ENT_QUOTES)."' class='button' />";
 	}
-	
+
 	function displayAdminList(&$rows) {
 		echo
 			"<form action='".
 				url::uri('edit, delete')."' method='post'>" .
 				"<input type='hidden' name='_SecurityToken' value='".security::genToken()."' />";
-			
+
 		echo "<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>";
-		
+
 		$this->displayAdminListHeader();
 		$this->displayAdminListHeaderOptions();
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->displayAdminListHeaderFunctions();
-					
+
 		echo
 				"</tr>" .
 				"</thead>" .
 				"<tbody>";
-		
-		$i = 0;		
+
+		$i = 0;
 		while($row = sql::fetch($rows)) {
-			echo 
+			echo
 				"<tr".($i%2?" class='pair'":NULL).">";
-			
+
 			$this->displayAdminListItem($row);
 			$this->displayAdminListItemOptions($row);
-			
+
 			if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 				$this->displayAdminListItemFunctions($row);
-			
+
 			echo
 				"</tr>";
-			
+
 			$i++;
 		}
-		
-		echo 
+
+		echo
 				"</tbody>" .
 			"</table>" .
 			"<br />";
-		
-		if (JCORE_VERSION >= '0.7' && 
-			$this->userPermissionType & USER_PERMISSION_TYPE_WRITE) 
+
+		if (JCORE_VERSION >= '0.7' &&
+			$this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 		{
 			$this->displayAdminListFunctions();
-			
-			echo 
+
+			echo
 				"<div class='clear-both'></div>" .
 				"<br />";
 		}
-					
+
 		echo
 			"</form>";
 	}
-	
+
 	function displayAdminForm(&$form) {
 		$form->display();
 	}
-	
+
 	function displayAdminTitle($ownertitle = null) {
 		admin::displayTitle(
 			_('Shopping Cart Coupons Administration'),
 			$ownertitle);
 	}
-	
+
 	function displayAdminDescription() {
 	}
-	
+
 	function displayAdmin() {
 		$delete = null;
 		$edit = null;
 		$id = null;
-		
+
 		if (isset($_GET['delete']))
 			$delete = (int)$_GET['delete'];
-		
+
 		if (isset($_GET['edit']))
 			$edit = (int)$_GET['edit'];
-		
+
 		if (isset($_GET['id']))
 			$id = (int)$_GET['id'];
-		
+
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
-		
+
 		echo
 			"<div class='admin-content'>";
-				
+
 		if ($delete && $id && empty($_POST['delete'])) {
 			$selected = sql::fetch(sql::run(
 				" SELECT `Coupon` FROM `{shoppingcartcoupons}`" .
 				" WHERE `ID` = '".$id."'"));
-			
+
 			url::displayConfirmation(
 				'<b>'.__('Delete').'?!</b> "'.$selected['Coupon'].'"');
 		}
-		
+
 		$form = new form(
 				($edit?
 					_("Edit Coupon"):
 					_("New Coupon")),
 				'neweditcoupon');
-					
+
 		if (!$edit)
 			$form->action = url::uri('id, delete, limit');
-					
-		$this->setupAdminForm($form);	
+
+		$this->setupAdminForm($form);
 		$form->addSubmitButtons();
-		
+
 		if ($edit) {
 			$form->add(
 				__('Cancel'),
@@ -2820,51 +2820,51 @@ class shoppingCartCoupons {
 			$form->addAttributes("onclick=\"window.location='".
 				str_replace('&amp;', '&', url::uri('id, edit, delete'))."'\"");
 		}
-		
+
 		$verifyok = false;
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$verifyok = $this->verifyAdmin($form);
-		
+
 		$rows = sql::run(
 			" SELECT *," .
 			" IF (`EndDate` IS NOT NULL AND `EndDate` < CURDATE(), 'true', NULL) AS `Expired`," .
 			" IF (`StartDate` IS NOT NULL AND `StartDate` > CURDATE(), 'true', NULL) AS `Pending`" .
 			" FROM `{shoppingcartcoupons}`" .
 			" ORDER BY `Priority`, `Coupon`");
-			
+
 		if (sql::rows($rows))
 			$this->displayAdminList($rows);
 		else
 			tooltip::display(
 				_("No coupons found."),
 				TOOLTIP_NOTIFICATION);
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			if ($edit && ($verifyok || !$form->submitted())) {
 				$selected = sql::fetch(sql::run(
 					" SELECT * FROM `{shoppingcartcoupons}`" .
 					" WHERE `ID` = '".$id."'"));
-				
+
 				$form->setValues($selected);
 			}
-			
+
 			echo
 				"<a name='adminform'></a>";
-			
+
 			$this->displayAdminForm($form);
 		}
-		
+
 		unset($form);
-		
+
 		echo
 			"</div>"; //admin-content
 	}
-	
+
 	function add($values) {
 		if (!is_array($values))
 			return false;
-			
+
 		$newid = sql::run(
 			" INSERT INTO `{shoppingcartcoupons}` SET ".
 			" `Coupon` = '" .
@@ -2893,25 +2893,25 @@ class shoppingCartCoupons {
 				"," .
 			" `DiscountPercent` = '".
 				(int)$values['DiscountPercent']."'");
-			
+
 		if (!$newid) {
 			tooltip::display(
-				sprintf(_("Coupon couldn't be added! Error: %s"), 
+				sprintf(_("Coupon couldn't be added! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return $newid;
 	}
-	
+
 	function edit($id, $values) {
 		if (!$id)
 			return false;
-		
+
 		if (!is_array($values))
 			return false;
-		
+
 		sql::run(
 			" UPDATE `{shoppingcartcoupons}` SET ".
 			" `Coupon` = '" .
@@ -2941,37 +2941,37 @@ class shoppingCartCoupons {
 			" `DiscountPercent` = '".
 				(int)$values['DiscountPercent']."'" .
 			" WHERE `ID` = '".(int)$id."'");
-			
+
 		if (sql::affected() == -1) {
 			tooltip::display(
-				sprintf(_("Coupon couldn't be updated! Error: %s"), 
+				sprintf(_("Coupon couldn't be updated! Error: %s"),
 					sql::error()),
 				TOOLTIP_ERROR);
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	function delete($id) {
 		if (!$id)
 			return false;
-			
+
 		sql::run(
 			" DELETE FROM `{shoppingcartcoupons}` " .
 			" WHERE `ID` = '".$id."'");
-		
+
 		return true;
 	}
-	
+
 	static function clear() {
 		unset($_SESSION['SHOPPING_CART_COUPON']);
 	}
-	
+
 	static function get($coupon = null) {
 		if (!$coupon)
 			$coupon = shoppingCartCoupons::getCode();
-		
+
 		$row = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingcartcoupons}`" .
 			" WHERE `Coupon` = BINARY '".sql::escape($coupon)."'" .
@@ -2981,44 +2981,44 @@ class shoppingCartCoupons {
 			" AND (`EndDate` IS NULL OR `EndDate` >= CURDATE())" .
 			" ORDER BY `Priority` DESC, `Coupon` DESC" .
 			" LIMIT 1"));
-		
+
 		if (!$row)
 			return null;
-		
+
 		return $row;
 	}
-	
+
 	static function getValue($amount, $coupon = null) {
 		if (!$coupon)
 			$coupon = shoppingCartCoupons::getCode();
-		
+
 		$row = shoppingCartCoupons::get($coupon);
-		
+
 		if (!$row)
 			return 0;
-		
+
 		if ($row['DiscountPercent'] && $row['DiscountValue']) {
 			$percentvalue = $amount*$row['DiscountPercent']/100;
-			
+
 			if ($percentvalue > $row['DiscountValue'])
 				return number_format($row['DiscountValue'], 2, '.', '');
-			
+
 			return number_format($percentvalue, 2, '.', '');
 		}
-		
+
 		if ($row['DiscountPercent'])
 			return number_format($amount*$row['DiscountPercent']/100, 2, '.', '');
-		
+
 		return number_format($row['DiscountValue'], 2, '.', '');
 	}
-	
+
 	static function getCode() {
 		if (isset($_POST['shoppingcartcoupon']))
 			$_SESSION['SHOPPING_CART_COUPON'] = strip_tags((string)$_POST['shoppingcartcoupon']);
-		
+
 		if (isset($_SESSION['SHOPPING_CART_COUPON']))
 			return strip_tags((string)$_SESSION['SHOPPING_CART_COUPON']);
-		
+
 		return '';
 	}
 }
@@ -3026,35 +3026,35 @@ class shoppingCartCoupons {
 class shoppingCartCheckoutForm extends dynamicForms {
 	function __construct() {
 		languages::load('shopping');
-		
+
 		parent::__construct(
-			_('Checkout Form'), 
+			_('Checkout Form'),
 			'checkout');
 	}
-	
+
 	function __destruct() {
 		languages::unload('shopping');
 	}
-	
+
 	function process() {
 		$ordermethodclass = 'shoppingOrderMethod'.
 			$this->get('ordermethod');
-		
-		if (!class_exists($ordermethodclass) || 
-			!method_exists($ordermethodclass,'process')) 
+
+		if (!class_exists($ordermethodclass) ||
+			!method_exists($ordermethodclass,'process'))
 		{
 			tooltip::display(
 				_("We are sorry for the inconvenience but it seems this order " .
 					"method doesn't have order processing capabilities. " .
 					"Please choose a different order method or contact webmaster."),
 				TOOLTIP_ERROR);
-			
+
 			return false;
 		}
-		
+
 		// Check Stock and also calculate totals
 		$cartitems = shoppingCart::getItems();
-		
+
 		$subtotal = 0;
 		$discount = 0;
 		$fee = 0;
@@ -3064,20 +3064,20 @@ class shoppingCartCheckoutForm extends dynamicForms {
 		$referer = null;
 		$couponcode = null;
 		$couponvalue = 0;
-		
+
 		if (isset($_SESSION['HTTP_REFERER']) && $_SESSION['HTTP_REFERER'])
 			$referer = strip_tags((string)$_SESSION['HTTP_REFERER']);
-		
+
 		if (JCORE_VERSION >= '0.7')
 			$taxpercentage = shoppingCart::getTax();
-		
+
 		while($row = sql::fetch($cartitems)) {
 			$item = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$row['ShoppingItemID']."'"));
-			
-			if (isset($item['AvailableQuantity']) && 
-				$item['AvailableQuantity'] < $row['Quantity']) 
+
+			if (isset($item['AvailableQuantity']) &&
+				$item['AvailableQuantity'] < $row['Quantity'])
 			{
 				tooltip::display(
 					sprintf(_("We are sorry but it seems the stock for \"%s\" " .
@@ -3088,52 +3088,52 @@ class shoppingCartCheckoutForm extends dynamicForms {
 					TOOLTIP_ERROR);
 				return false;
 			}
-			
+
 			if (JCORE_VERSION >= '0.7') {
 				$weight += $row['Quantity']*$item['Weight'];
-				
+
 				if ($taxpercentage > 0 && $item['Taxable'] &&
 					$row['Quantity']*$row['Price'] > 0)
 					$tax += round(($row['Quantity']*$row['Price'])*$taxpercentage/100, 2);
 			}
-			
+
 			$subtotal += $row['Quantity']*$row['Price'];
 		}
-		
+
 		$discount = shoppingCart::getDiscount($subtotal);
 		$fee = shoppingCart::getFee($subtotal, $weight);
-		
+
 		if (JCORE_VERSION >= '0.9' && $couponcode = shoppingCartCoupons::getCode())
 			$couponvalue = shoppingCartCoupons::getValue($subtotal, $couponcode);
-		
+
 		$userid = (int)$GLOBALS['USER']->data['ID'];
-		
+
 		if (!$GLOBALS['USER']->loginok) {
 			$user = $this->getPostArray();
 			$user['LastVisitTimeStamp'] = date('Y-m-d H:i:s');
-			
+
 			$userid = $GLOBALS['USER']->add($user);
 		}
-			
+
 		if (!$userid)
 			return false;
-		
+
 		$ordermethod = new $ordermethodclass;
 		$ordermethod->checkoutForm = $this;
-		
+
 		$paymentstatus = $ordermethod->process();
 		$paymentresult = $ordermethod->processResult;
-		
+
 		if (!$paymentstatus)
 			return false;
-		
+
 		$ordernumber = shoppingOrders::genOrderID();
-		
+
 		$orderform = new shoppingOrderForm();
 		$orderform->load();
 		$ordervalues = $orderform->getPostArray();
 		unset($orderform);
-		
+
 		$ordervalues['OrderID'] = $ordernumber;
 		$ordervalues['UserID'] = $userid;
 		$ordervalues['PaymentStatus'] = $paymentstatus;
@@ -3142,8 +3142,8 @@ class shoppingCartCheckoutForm extends dynamicForms {
 		$ordervalues['Fee'] = $fee;
 		$ordervalues['Tax'] = $tax;
 		$ordervalues['Subtotal'] = $subtotal;
-		
-		$ordervalues['OrderMethodDetails'] = 
+
+		$ordervalues['OrderMethodDetails'] =
 			" - ".date('Y-m-d H:i:s')." - \n" .
 			$paymentresult .
 			($referer || $couponvalue?
@@ -3157,32 +3157,32 @@ class shoppingCartCheckoutForm extends dynamicForms {
 				"\n"._("Order originated from").":\n" .
 				$referer:
 				null);
-		
+
 		$orders = new shoppingOrders();
 		$orderid = $orders->add($ordervalues);
 		unset($orders);
-		
+
 		if (!$orderid)
 			return false;
-		
+
 		$orderitems = new shoppingOrderItems();
-		
+
 		if (sql::rows($cartitems))
 			sql::seek($cartitems, 0);
-		
+
 		while($row = sql::fetch($cartitems)) {
 			$itemvalues['ShoppingOrderID'] = $orderid;
 			$itemvalues['ShoppingItemID'] = $row['ShoppingItemID'];
 			$itemvalues['ShoppingItemOptions'] = null;
-			
+
 			if (isset($row['ShoppingItemOptions']))
 				$itemvalues['ShoppingItemOptions'] = $row['ShoppingItemOptions'];
-			
+
 			$itemvalues['Price'] = $row['Price'];
 			$itemvalues['Quantity'] = $row['Quantity'];
-			
+
 			$newid = $orderitems->add($itemvalues);
-			
+
 			if ($newid) {
 				// Update items AvailableQuantity value
 				sql::run(
@@ -3192,7 +3192,7 @@ class shoppingCartCheckoutForm extends dynamicForms {
 					" WHERE `ID` = '".$row['ShoppingItemID']."'" .
 					" AND `AvailableQuantity` IS NOT NULL" .
 					" AND `AvailableQuantity` > 0");
-			
+
 			} else {
 				tooltip::display(
 					_("There were some errors while processing your order (some " .
@@ -3201,14 +3201,14 @@ class shoppingCartCheckoutForm extends dynamicForms {
 					TOOLTIP_ERROR);
 			}
 		}
-		
+
 		unset($orderitems);
-		
+
 		shoppingCart::clear();
-		
+
 		if (JCORE_VERSION >= '0.9') {
 			shoppingCartCoupons::clear();
-			
+
 			if ($couponcode && $couponvalue && $coupon = shoppingCartCoupons::get($couponcode))
 				sql::run(
 					" UPDATE `{shoppingcartcoupons}` SET " .
@@ -3217,9 +3217,9 @@ class shoppingCartCheckoutForm extends dynamicForms {
 					" AND `Quantity` IS NOT NULL" .
 					" AND `Quantity` > 0");
 		}
-		
+
 		$postprocess = $ordermethod->postProcess($orderid);
-		
+
 		if ($postprocess)
 			tooltip::display(
 				sprintf(_("<b>Your order %s has been successfully saved.</b><br /> " .
@@ -3240,81 +3240,81 @@ class shoppingCartCheckoutForm extends dynamicForms {
 					_("View Your Orders") .
 				"</a>",
 				TOOLTIP_SUCCESS);
-		
+
 		if (!$postprocess)
 			shoppingOrders::sendNotificationEmails($orderid);
-		
+
 		unset($ordermethod);
-		
+
 		return true;
 	}
-	
+
 	function verify($customdatahandling = true) {
 		if (!parent::verify($customdatahandling))
 			return false;
-		
-		if (!$GLOBALS['USER']->loginok && 
-			(!$GLOBALS['USER']->checkUsername($this->get('UserName')) || 
+
+		if (!$GLOBALS['USER']->loginok &&
+			(!$GLOBALS['USER']->checkUsername($this->get('UserName')) ||
 			($this->get('Email') && !$GLOBALS['USER']->checkEmail($this->get('Email')))))
 			return false;
-		
+
 		if ($this->get('checkoutstep') >= 4) {
 			$ordermethodclass = 'shoppingOrderMethod'.
 				$this->get('ordermethod');
-		
-			if (!class_exists($ordermethodclass) || 
-				!method_exists($ordermethodclass,'verify')) 
+
+			if (!class_exists($ordermethodclass) ||
+				!method_exists($ordermethodclass,'verify'))
 			{
 				tooltip::display(
 					_("Invalid order method selected. Please choose a " .
 						"different order method below."),
 					TOOLTIP_ERROR);
-				
+
 				return false;
 			}
-			
+
 			$ordermethod = new $ordermethodclass;
 			$ordermethod->checkoutForm = $this;
 			$ordermethod->setUp();
-			
+
 			if (!$ordermethod->verify()) {
 				unset($ordermethod);
 				return false;
 			}
-		
+
 			unset($ordermethod);
 		}
-		
+
 		if ($this->get('checkoutstep') < 5) {
 			$this->setValue('checkoutstep', $this->get('checkoutstep')+1);
 			$this->setUp();
 			return false;
 		}
-			
+
 		return true;
 	}
-	
+
 	function setUp() {
 		$backstep = 1;
 		$this->clear();
-		
+
 		$this->add(
 			_('Checkout Step'),
 			'checkoutstep',
 			FORM_INPUT_TYPE_HIDDEN,
 			true,
 			1);
-		
+
 		$this->add(
 			'Submitted',
 			'checkoutformsubmitted',
 			FORM_INPUT_TYPE_HIDDEN,
 			true, 1);
-		
+
 		switch($this->get('checkoutstep')) {
 			case 5:
 				$this->title = _('Review Your Order');
-				
+
 				if (!$GLOBALS['USER']->loginok) {
 					$this->add(
 						"<b class='form-section-title'>".
@@ -3322,27 +3322,27 @@ class shoppingCartCheckoutForm extends dynamicForms {
 						"</b>",
 						'',
 						FORM_STATIC_TEXT);
-					
+
 					$this->add(
 						__('Username'),
 						'UserName',
 						FORM_INPUT_TYPE_REVIEW,
 						true);
 					$this->setValueType(FORM_VALUE_TYPE_LIMITED_STRING);
-					
+
 					if (JCORE_VERSION >= '0.6')
 						$this->add(
 							__('Password'),
 							'Password',
 							FORM_INPUT_TYPE_HIDDEN,
 							true);
-					
+
 					$this->add(
 						__('Email'),
 						'Email',
 						FORM_INPUT_TYPE_REVIEW,
 						true);
-					
+
 					if (JCORE_VERSION >= '0.6')
 						$this->add(
 							__("Please note that you will need to enter a " .
@@ -3359,13 +3359,13 @@ class shoppingCartCheckoutForm extends dynamicForms {
 								"password by using your account page after login."),
 							'',
 							FORM_STATIC_TEXT);
-				
+
 					$this->add(
 						__('Verification code'),
 						'scimagecode',
 						FORM_INPUT_TYPE_HIDDEN,
 						true);
-				
+
 					$this->add(
 						"<div class='separator'></div>",
 						'',
@@ -3375,7 +3375,7 @@ class shoppingCartCheckoutForm extends dynamicForms {
 				$orderform = new shoppingOrderForm();
 				$orderform->id = 'checkout';
 				$orderform->load(false);
-				
+
 				foreach($orderform->elements as $element) {
 					if (form::isInput($element)) {
 						$this->add(
@@ -3384,21 +3384,21 @@ class shoppingCartCheckoutForm extends dynamicForms {
 							FORM_INPUT_TYPE_REVIEW,
 							$element['Required'],
 							$element['Value']);
-							
+
 						$this->setValueType($element['ValueType']);
-					
+
 					} elseif ($element['Type'] == FORM_STATIC_TEXT) {
 						$this->add(
 							_($element['Title']),
 							$element['Name'],
 							FORM_STATIC_TEXT);
-					
+
 					} elseif ($element['Type'] == FORM_OPEN_FRAME_CONTAINER) {
 						$this->add(
 							"<div class='separator'></div>",
 							'',
 							FORM_STATIC_TEXT);
-						
+
 						$this->add(
 							"<b class='form-section-title'>".
 								$element['Title'].
@@ -3407,33 +3407,33 @@ class shoppingCartCheckoutForm extends dynamicForms {
 							FORM_STATIC_TEXT);
 					}
 				}
-				
-				if (!count($orderform->elements)) 
+
+				if (!count($orderform->elements))
 					$backstep += 1;
-				
+
 				if (count($orderform->elements))
 					$this->add(
 						"<div class='separator'></div>",
 						'',
 						FORM_STATIC_TEXT);
-					
+
 				unset($orderform);
-				
+
 				$this->add(
 					"<b class='form-section-title'>".
 						_("Order Method").
 					"</b>",
 					'',
 					FORM_STATIC_TEXT);
-				
+
 				$this->add(
 					_('Order Method'),
 					'ordermethod',
 					FORM_INPUT_TYPE_HIDDEN,
 					true);
-				
+
 				$ordermethod = shoppingOrderMethods::get($this->get('ordermethod'));
-				
+
 				$this->add(
 					"<span class='bold'>".
 						_($ordermethod['Title']).
@@ -3441,14 +3441,14 @@ class shoppingCartCheckoutForm extends dynamicForms {
 					_($ordermethod['Description']),
 					'',
 					FORM_STATIC_TEXT);
-				
+
 				$ordermethodclass = 'shoppingOrderMethod'.
 					$this->get('ordermethod');
-				
+
 				$ordermethod = new $ordermethodclass;
 				$ordermethod->checkoutForm = $this;
 				$ordermethod->setUp();
-				
+
 				foreach($ordermethod->elements as $element) {
 					if (form::isInput($element)) {
 						$this->add(
@@ -3457,21 +3457,21 @@ class shoppingCartCheckoutForm extends dynamicForms {
 							FORM_INPUT_TYPE_REVIEW,
 							$element['Required'],
 							$element['Value']);
-					
+
 						$this->setValueType($element['ValueType']);
-						
+
 					} elseif ($element['Type'] == FORM_STATIC_TEXT) {
 						$this->add(
 							_($element['Title']),
 							$element['Name'],
 							FORM_STATIC_TEXT);
-					
+
 					} elseif ($element['Type'] == 	FORM_OPEN_FRAME_CONTAINER) {
 						$this->add(
 							"<div class='separator'></div>",
 							'',
 							FORM_STATIC_TEXT);
-						
+
 						$this->add(
 							"<b class='form-section-title'>".
 								$element['Title'].
@@ -3480,20 +3480,20 @@ class shoppingCartCheckoutForm extends dynamicForms {
 							FORM_STATIC_TEXT);
 					}
 				}
-				
+
 				if (count(shoppingOrderMethods::get()) == 1)
 					$backstep += 1;
-			
+
 				if (!count($ordermethod->elements))
 					$backstep += 1;
-				
+
 				unset($ordermethod);
 
 				break;
-			
+
 			case 4:
 				$this->title = _('Order Method').': ';
-				
+
 				if (!$GLOBALS['USER']->loginok) {
 					$this->add(
 						__('Username'),
@@ -3501,34 +3501,34 @@ class shoppingCartCheckoutForm extends dynamicForms {
 						FORM_INPUT_TYPE_HIDDEN,
 						true);
 					$this->setValueType(FORM_VALUE_TYPE_LIMITED_STRING);
-					
+
 					if (JCORE_VERSION >= '0.6')
 						$this->add(
 							__('Password'),
 							'Password',
 							FORM_INPUT_TYPE_HIDDEN,
 							true);
-					
+
 					$this->add(
 						_('Email address'),
 						'Email',
 						FORM_INPUT_TYPE_HIDDEN,
 						true);
-					
+
 					$this->add(
 						__('Verification code'),
 						'scimagecode',
 						FORM_INPUT_TYPE_HIDDEN,
 						true);
 				}
-		
+
 				$orderform = new shoppingOrderForm();
 				$orderform->id = 'checkout';
 				$orderform->load(false);
-				
-				if (!count($orderform->elements)) 
+
+				if (!count($orderform->elements))
 					$backstep += 1;
-				
+
 				foreach($orderform->elements as $element) {
 					if (form::isInput($element)) {
 						$this->add(
@@ -3537,62 +3537,62 @@ class shoppingCartCheckoutForm extends dynamicForms {
 							FORM_INPUT_TYPE_HIDDEN,
 							$element['Required'],
 							$element['Value']);
-				
+
 						$this->setValueType($element['ValueType']);
 					}
 				}
-						
+
 				unset($orderform);
-				
+
 				$this->add(
 					_('Order Method'),
 					'ordermethod',
 					FORM_INPUT_TYPE_HIDDEN,
 					true);
-				
+
 				if (!shoppingOrderMethods::get($this->get('ordermethod'))) {
 					tooltip::display(
 						_("Invalid order method selected! Please choose a " .
 							"different order method below."),
 						TOOLTIP_ERROR);
-					
+
 					$this->setValue('checkoutstep', $this->get('checkoutstep')-1);
 					$this->setUp();
-					
+
 					unset($ordermethod);
 					return;
 				}
-				
+
 				$this->title .= shoppingOrderMethods::$available[$this->get('ordermethod')]['Title'];
-				
+
 				$ordermethodclass = 'shoppingOrderMethod'.
 					$this->get('ordermethod');
-				
+
 				$ordermethod = new $ordermethodclass;
 				$ordermethod->checkoutForm = $this;
 				$ordermethod->setUp();
-				
+
 				if (!count($ordermethod->elements)) {
 					$this->setValue('checkoutstep', $this->get('checkoutstep')+1);
 					$this->setUp();
-					
+
 					unset($ordermethod);
 					return;
 				}
-				
+
 				foreach($ordermethod->elements as $element)
 					$this->elements[] = $element;
-				
+
 				unset($ordermethod);
-				
+
 				if (count(shoppingOrderMethods::get()) == 1)
 					$backstep += 1;
-				
+
 				break;
-			
+
 			case 3:
 				$this->title = _('Order Method');
-				
+
 				if (!$GLOBALS['USER']->loginok) {
 					$this->add(
 						__('Username'),
@@ -3600,31 +3600,31 @@ class shoppingCartCheckoutForm extends dynamicForms {
 						FORM_INPUT_TYPE_HIDDEN,
 						true);
 					$this->setValueType(FORM_VALUE_TYPE_LIMITED_STRING);
-					
+
 					if (JCORE_VERSION >= '0.6')
 						$this->add(
 							__('Password'),
 							'Password',
 							FORM_INPUT_TYPE_HIDDEN,
 							true);
-					
+
 					$this->add(
 						_('Email address'),
 						'Email',
 						FORM_INPUT_TYPE_HIDDEN,
 						true);
-					
+
 					$this->add(
 						__('Verification code'),
 						'scimagecode',
 						FORM_INPUT_TYPE_HIDDEN,
 						true);
 				}
-		
+
 				$orderform = new shoppingOrderForm();
 				$orderform->id = 'checkout';
 				$orderform->load(false);
-				
+
 				foreach($orderform->elements as $element) {
 					if (form::isInput($element)) {
 						$this->add(
@@ -3633,40 +3633,40 @@ class shoppingCartCheckoutForm extends dynamicForms {
 							FORM_INPUT_TYPE_HIDDEN,
 							$element['Required'],
 							$element['Value']);
-						
+
 						$this->setValueType($element['ValueType']);
 					}
 				}
-				
-				if (!count($orderform->elements)) 
+
+				if (!count($orderform->elements))
 					$backstep += 1;
-				
+
 				unset($orderform);
-		
+
 				$this->add(
 					_("Please select the order method you would " .
 						"like to proceed with"),
 					'ordermethod',
 					FORM_INPUT_TYPE_RADIO,
 					true);
-					
+
 				$this->addAdditionalPreText("<div class='clear-both'></div>");
-		
+
 				$methods = shoppingOrderMethods::get();
-				
+
 				if (count($methods) == 1) {
 					$this->setValue('ordermethod', key($methods));
 					$this->setValue('checkoutstep', $this->get('checkoutstep')+1);
 					$this->setUp();
-					
+
 					return;
 				}
-				
+
 				foreach($methods as $methodid => $method) {
 					$this->addValue(
 						$methodid,
 						"<span class='shopping-order-method shopping-order-method-".
-							htmlspecialchars($methodid, ENT_QUOTES).
+							htmlchars($methodid, ENT_QUOTES).
 							"'>" .
 							"<b>".
 								_($method['Title']).
@@ -3678,12 +3678,12 @@ class shoppingCartCheckoutForm extends dynamicForms {
 							"<br />" .
 						"</span>");
 				}
-				
+
 				break;
-			
+
 			case 2:
 				$this->title = _('Order Form');
-				
+
 				if (!$GLOBALS['USER']->loginok) {
 					$this->add(
 						__('Username'),
@@ -3691,42 +3691,42 @@ class shoppingCartCheckoutForm extends dynamicForms {
 						FORM_INPUT_TYPE_HIDDEN,
 						true);
 					$this->setValueType(FORM_VALUE_TYPE_LIMITED_STRING);
-					
+
 					if (JCORE_VERSION >= '0.6')
 						$this->add(
 							__('Password'),
 							'Password',
 							FORM_INPUT_TYPE_HIDDEN,
 							true);
-					
+
 					$this->add(
 						_('Email address'),
 						'Email',
 						FORM_INPUT_TYPE_HIDDEN,
 						true);
-					
+
 					$this->add(
 						__('Verification code'),
 						'scimagecode',
 						FORM_INPUT_TYPE_HIDDEN,
 						true);
 				}
-		
+
 				$orderform = new shoppingOrderForm();
 				$orderform->id = 'checkout';
 				$orderform->load(false);
-				
+
 				if (!count($orderform->elements)) {
 					$this->setValue('checkoutstep', $this->get('checkoutstep')+1);
 					$this->setUp();
 					return;
 				}
-				
+
 				foreach($orderform->elements as $element)
 					$this->elements[] = $element;
-				
+
 				unset($orderform);
-				
+
 				// Fill order form with users last order's values
 				if ($GLOBALS['USER']->loginok && !$this->get('checkoutformsubmitted')) {
 					$lastorder = sql::fetch(sql::run(
@@ -3734,14 +3734,14 @@ class shoppingCartCheckoutForm extends dynamicForms {
 						" WHERE `UserID` = '".(int)$GLOBALS['USER']->data['ID']."'" .
 						" ORDER BY `ID` DESC" .
 						" LIMIT 1"));
-						
+
 					if (!$lastorder)
 						$lastorder = $GLOBALS['USER']->data;
-					
+
 					foreach($lastorder as $key => $value) {
 						if ($this->get($key) === null) {
 							$element = $this->elements[$this->getElementID($key)];
-							
+
 							if ($element['ValueType'] == FORM_VALUE_TYPE_ARRAY)
 								$this->setValue($key, explode('|', $value));
 							else
@@ -3749,9 +3749,9 @@ class shoppingCartCheckoutForm extends dynamicForms {
 						}
 					}
 				}
-				
+
 				break;
-			
+
 			case 1:
 			default:
 				if ($GLOBALS['USER']->loginok) {
@@ -3759,9 +3759,9 @@ class shoppingCartCheckoutForm extends dynamicForms {
 					$this->setUp();
 					return;
 				}
-				
+
 				$this->title = _('New User?');
-				
+
 				$this->add(
 					(JCORE_VERSION >= '0.6'?
 						_("Please enter your desired username / password to " .
@@ -3770,7 +3770,7 @@ class shoppingCartCheckoutForm extends dynamicForms {
 							"as a new user.")),
 					'',
 					FORM_STATIC_TEXT);
-		
+
 				$this->add(
 					__('Username'),
 					'UserName',
@@ -3778,11 +3778,11 @@ class shoppingCartCheckoutForm extends dynamicForms {
 					true);
 				$this->setStyle('width: 200px;');
 				$this->setValueType(FORM_VALUE_TYPE_LIMITED_STRING);
-				
+
 				$orderform = new shoppingOrderForm();
 				$orderform->id = 'checkout';
 				$orderform->load(false);
-				
+
 				if (!count($orderform->elements)) {
 					$this->add(
 						_('Email address'),
@@ -3791,9 +3791,9 @@ class shoppingCartCheckoutForm extends dynamicForms {
 						true);
 					$this->setStyle('width: 250px;');
 				}
-				
+
 				unset($orderform);
-				
+
 				if (JCORE_VERSION >= '0.6') {
 					$this->add(
 						__('Password'),
@@ -3801,9 +3801,9 @@ class shoppingCartCheckoutForm extends dynamicForms {
 						FORM_INPUT_TYPE_PASSWORD,
 						true);
 					$this->setStyle('width: 150px;');
-					$this->setTooltipText('Password', 
+					$this->setTooltipText('Password',
 						sprintf(__("minimum %s characters"), MINIMUM_PASSWORD_LENGTH));
-					
+
 					$this->add(
 						__('Confirm password'),
 						'ConfirmPassword',
@@ -3811,29 +3811,29 @@ class shoppingCartCheckoutForm extends dynamicForms {
 						true);
 					$this->setStyle('width: 150px;');
 				}
-				
+
 				$this->add(
 					__('Verification code'),
 					'',
 					FORM_INPUT_TYPE_VERIFICATION_CODE,
 					true);
-		
+
 				break;
 		}
-		
-		if ($this->get('checkoutstep') <= 1) {	
+
+		if ($this->get('checkoutstep') <= 1) {
 			$this->add(
 				_('Continue as a New User'),
 				'checkoutsubmit',
 				FORM_INPUT_TYPE_SUBMIT);
-			
+
 			$this->add(
 				__('Cancel'),
 				'cancel',
 				FORM_INPUT_TYPE_BUTTON);
 			$this->addAttributes("onclick=\"window.location='".
 				url::uri('shoppingcartcheckout')."';\"");
-			
+
 		} else {
 			if ($this->get('checkoutstep') == 5)
 				$this->add(
@@ -3845,37 +3845,37 @@ class shoppingCartCheckoutForm extends dynamicForms {
 					_('Submit / Review'),
 					'checkoutsubmit',
 					FORM_INPUT_TYPE_SUBMIT);
-			
+
 			if (!$GLOBALS['USER']->loginok || $this->get('checkoutstep') > 2) {
 				$this->add(
 					__('Back'),
 					'checkoutback',
 					FORM_INPUT_TYPE_BUTTON);
-			
+
 				$this->addAttributes(
 					"onclick=\"this.form.checkoutstep.value=".
 						(int)($this->get('checkoutstep')-$backstep).
 						"; this.form.submit();\"");
 			}
-			
+
 			$this->add(
 				__('Cancel'),
 				'cancel',
 				FORM_INPUT_TYPE_BUTTON);
-				
+
 			$this->addAttributes(
 				"onclick=\"window.location='".url::uri('shoppingcartcheckout')."'\"");
 		}
 	}
-	
+
 	function display($formdesign = true) {
 		parent::display($formdesign);
-		
+
 		echo
 			"<script type='text/javascript'>" .
 			"$('#checkoutform form').submit(function () {" .
 				"$('#checkoutform #buttoncheckoutsubmit').click(function() {" .
-					"alert('".htmlspecialchars(_("Form is being processed. Please wait."), ENT_QUOTES)."');" .
+					"alert('".htmlchars(_("Form is being processed. Please wait."), ENT_QUOTES)."');" .
 					"return false;" .
 				"});" .
 				"return true;" .
@@ -3892,21 +3892,21 @@ class shoppingCart extends modules {
 	var $checkoutForm;
 	var $similarItemsSearch = null;
 	var $adminPath = 'admin/modules/shoppingcart';
-	
+
 	function __construct() {
 		languages::load('shopping');
-		
+
 		if (isset($_GET['shoppingcartcheckout']))
 			$this->checkout = (bool)$_GET['shoppingcartcheckout'];
-		
+
 		if (isset($_GET['shoppingcartreferrer']))
 			$this->referrer = strip_tags((string)$_GET['shoppingcartreferrer']);
 	}
-	
+
 	function __destruct() {
 		languages::unload('shopping');
 	}
-	
+
 	function installSQL() {
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{shoppingcarts}` (" .
@@ -3921,10 +3921,10 @@ class shoppingCart extends modules {
 			" KEY `SessionID` (`SessionID`)," .
 			" KEY `TimeStamp` (`TimeStamp`)" .
 			" ) ENGINE=MyISAM ;");
-		
+
 		if (sql::error())
 			return false;
-			
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{shoppingcartsettings}` (" .
 			" `ID` varchar(100) NOT NULL default ''," .
@@ -3935,16 +3935,16 @@ class shoppingCart extends modules {
 			" KEY `TypeID` (`TypeID`)," .
 			" KEY `OrderID` (`OrderID`)" .
 			") ENGINE=MyISAM;");
-		
+
 		if (sql::error())
 			return false;
-		
+
 		$exists = sql::fetch(sql::run(
 			" SELECT * FROM `{shoppingcartsettings}`"));
-		
+
 		if (sql::error())
 			return false;
-		
+
 		if (!$exists) {
 			sql::run(
 				" INSERT INTO `{shoppingcartsettings}` (`ID`, `Value`, `TypeID`, `OrderID`) VALUES" .
@@ -3967,11 +3967,11 @@ class shoppingCart extends modules {
 				" ('Shopping_Cart_Limits', '', 0, 4)," .
 				" ('Shopping_Cart_Minimum_Item_Order', '1', 1, 4)," .
 				" ('Shopping_Cart_Minimum_Order_Price', '1', 1, 4);");
-			
+
 			if (sql::error())
 				return false;
 		}
-		
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{shoppingcartdiscounts}` (" .
 			" `ID` smallint(5) unsigned NOT NULL auto_increment," .
@@ -3986,10 +3986,10 @@ class shoppingCart extends modules {
 			" KEY `UserID` (`UserID`)," .
 			" KEY `Priority` (`Priority`)" .
 			") ENGINE=MyISAM ;");
-		
+
 		if (sql::error())
 			return false;
-			
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{shoppingcartfees}` (" .
 			" `ID` smallint(5) unsigned NOT NULL auto_increment," .
@@ -4009,10 +4009,10 @@ class shoppingCart extends modules {
 			" KEY `FieldID` (`FieldID`)," .
 			" KEY `Priority` (`Priority`)" .
 			") ENGINE=MyISAM ;");
-		
+
 		if (sql::error())
 			return false;
-			
+
 		sql::run(
 			" CREATE TABLE IF NOT EXISTS `{shoppingcarttaxes}` (" .
 			" `ID` smallint(5) unsigned NOT NULL auto_increment," .
@@ -4024,10 +4024,10 @@ class shoppingCart extends modules {
 			" KEY `FieldID` (`FieldID`)," .
 			" KEY `Priority` (`Priority`)" .
 			") ENGINE=MyISAM ;");
-		
+
 		if (sql::error())
 			return false;
-		
+
 		if (JCORE_VERSION >= '0.9') {
 			sql::run(
 				" CREATE TABLE IF NOT EXISTS `{shoppingcartcoupons}` (" .
@@ -4048,16 +4048,16 @@ class shoppingCart extends modules {
 				" KEY `Deactivated` (`Deactivated`)," .
 				" KEY `Priority` (`Priority`)" .
 				") ENGINE=MyISAM ;");
-			
+
 			if (sql::error())
 				return false;
 		}
-			
+
 		return true;
 	}
-	
+
 	function installFiles() {
-		$css = 
+		$css =
 			".shopping-cart-item .pictures {\n" .
 			"	float: left;\n" .
 			"	margin: 0 5px 0 0;\n" .
@@ -4222,11 +4222,11 @@ class shoppingCart extends modules {
 			".as-shopping-cart-coupons a {\n" .
 			"	background-image: url(\"http://icons.jcore.net/48/shopping-cart-coupons.png\");\n" .
 			"}\n";
-		
+
 		return
 			files::save(SITE_PATH.'template/modules/css/shoppingcart.css', $css);
 	}
-	
+
 	function uninstallSQL() {
 		sql::run(
 			" DROP TABLE IF EXISTS `{shoppingcarts}`;");
@@ -4238,61 +4238,61 @@ class shoppingCart extends modules {
 			" DROP TABLE IF EXISTS `{shoppingcartfees}`;");
 		sql::run(
 			" DROP TABLE IF EXISTS `{shoppingcarttaxes}`;");
-		
+
 		return true;
 	}
-	
+
 	function uninstallFiles() {
 		return
 			files::delete(SITE_PATH.'template/modules/css/shoppingcart.css');
 	}
-	
+
 	// ************************************************   Admin Part
 	function setupAdmin() {
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE) {
 			favoriteLinks::add(
-				_('New Discount'), 
+				_('New Discount'),
 				'?path=admin/modules/shoppingcart/shoppingcartdiscounts#adminform');
 			favoriteLinks::add(
-				_('New Fee'), 
+				_('New Fee'),
 				'?path=admin/modules/shoppingcart/shoppingcartfees#adminform');
 		}
-		
+
 		favoriteLinks::add(
-			_('Orders'), 
+			_('Orders'),
 			'?path=admin/modules/shoppingorders');
 	}
-	
+
 	function displayAdminTitle($ownertitle = null) {
 		echo
 			_('Shopping Cart Administration');
 	}
-	
+
 	function displayAdminDescription() {
 	}
-	
+
 	function displayAdminSections() {
 		$discounts = 0;
 		$fees = 0;
 		$taxes = 0;
 		$coupons = 0;
-		
+
 		if (ADMIN_ITEMS_COUNTER_ENABLED) {
 			$discounts = shoppingCartDiscounts::countAdminItems();
 			$fees = shoppingCartFees::countAdminItems();
-			
+
 			if (JCORE_VERSION >= '0.7')
 				$taxes = shoppingCartTaxes::countAdminItems();
-			
+
 			if (JCORE_VERSION >= '0.9')
 				$coupons = shoppingCartCoupons::countAdminItems();
 		}
-			
+
 		echo
 			"<div class='admin-section-item as-shopping-cart-settings'>" .
 				"<a href='".url::uri('ALL') .
 					"?path=".admin::path()."/shoppingcartsettings' " .
-					"title='".htmlspecialchars(_("Set checkout methods, currency and cart limits"), ENT_QUOTES).
+					"title='".htmlchars(_("Set checkout methods, currency and cart limits"), ENT_QUOTES).
 					"'>" .
 					"<span>" .
 					_("Cart Settings")."" .
@@ -4300,14 +4300,14 @@ class shoppingCart extends modules {
 				"</a>" .
 			"</div>" .
 			"<div class='admin-section-item as-shopping-cart-discounts'>";
-		
+
 		if ($discounts)
 			counter::display((int)$discounts);
-		
+
 		echo
 				"<a href='".url::uri('ALL') .
 					"?path=".admin::path()."/shoppingcartdiscounts' " .
-					"title='".htmlspecialchars(_("Set global or user discounts"), ENT_QUOTES).
+					"title='".htmlchars(_("Set global or user discounts"), ENT_QUOTES).
 					"'>" .
 					"<span>" .
 					_("Discount Settings")."" .
@@ -4315,32 +4315,32 @@ class shoppingCart extends modules {
 				"</a>" .
 			"</div>" .
 			"<div class='admin-section-item as-shopping-cart-fees'>";
-		
+
 		if ($fees)
 			counter::display((int)$fees);
-		
+
 		echo
 				"<a href='".url::uri('ALL') .
 					"?path=".admin::path()."/shoppingcartfees' " .
-					"title='".htmlspecialchars(_("Set global or local fees"), ENT_QUOTES).
+					"title='".htmlchars(_("Set global or local fees"), ENT_QUOTES).
 					"'>" .
 					"<span>" .
 					_("Fees Settings")."" .
 					"</span>" .
 				"</a>" .
 			"</div>";
-		
+
 		if (JCORE_VERSION >= '0.7') {
 			echo
 				"<div class='admin-section-item as-shopping-cart-taxes'>";
-			
+
 			if ($taxes)
 				counter::display((int)$taxes);
-			
+
 			echo
 					"<a href='".url::uri('ALL') .
 						"?path=".admin::path()."/shoppingcarttaxes' " .
-						"title='".htmlspecialchars(_("Set and manage taxes"), ENT_QUOTES).
+						"title='".htmlchars(_("Set and manage taxes"), ENT_QUOTES).
 						"'>" .
 						"<span>" .
 						_("Tax Settings")."" .
@@ -4348,18 +4348,18 @@ class shoppingCart extends modules {
 					"</a>" .
 				"</div>";
 		}
-		
+
 		if (JCORE_VERSION >= '0.9') {
 			echo
 				"<div class='admin-section-item as-shopping-cart-coupons'>";
-			
+
 			if ($coupons)
 				counter::display((int)$coupons);
-			
+
 			echo
 					"<a href='".url::uri('ALL') .
 						"?path=".admin::path()."/shoppingcartcoupons' " .
-						"title='".htmlspecialchars(_("Set and manage discount coupons"), ENT_QUOTES).
+						"title='".htmlchars(_("Set and manage discount coupons"), ENT_QUOTES).
 						"'>" .
 						"<span>" .
 						_("Coupons Settings")."" .
@@ -4368,131 +4368,131 @@ class shoppingCart extends modules {
 				"</div>";
 		}
 	}
-	
+
 	function displayAdmin() {
 		//$this->displayAdminTitle();
 		$this->displayAdminDescription();
-		
+
 		echo
 			"<div class='admin-content'>";
-		
-		echo 
+
+		echo
 			"<div tabindex='0' class='fc" .
 				form::fcState('fcshcs', true) .
 				"'>" .
 				"<a class='fc-title' name='fcshcs'>";
-		
+
 		$this->displayAdminTitle();
-		
+
 		echo
 				"</a>" .
 				"<div class='fc-content'>";
-		
+
 		$this->displayAdminSections();
-		
+
 		echo
 					"<div class='clear-both'></div>" .
 				"</div>" .
 			"</div>";
-		
+
 		echo
 				"<div class='clear-both'></div>" .
 			"</div>"; //admin-content
 	}
-	
+
 	// ************************************************   Client Part
 	static function getURL() {
 		$url = modules::getOwnerURL('ShoppingCart');
-		
+
 		if (!$url)
 			return url::site() .
 				url::uri(shoppingCart::$uriVariables);
-		
-		return $url;	
+
+		return $url;
 	}
-	
+
 	static function getDiscount($amount, $userid = null) {
 		$discount = shoppingCartDiscounts::get($amount);
-		
+
 		if (JCORE_VERSION >= '0.9')
 			$discount += shoppingCartCoupons::getValue($amount);
-		
+
 		return $discount;
 	}
-	
+
 	static function getFee($amount, $weight = 0) {
 		return shoppingCartFees::get($amount, $weight);
 	}
-	
+
 	static function getTax() {
 		return shoppingCartTaxes::get();
 	}
-	
+
 	static function getSubTotal() {
 		$row = sql::fetch(sql::run(
 			" SELECT SUM(`Price`*`Quantity`) AS `SubTotal`" .
 			" FROM `{shoppingcarts}` " .
 			" WHERE `SessionID` = BINARY '".sql::escape(session_id())."'" .
 			" LIMIT 1"));
-		
-		return (float)$row['SubTotal'];		
+
+		return (float)$row['SubTotal'];
 	}
-	
+
 	static function getGrandTotal() {
 		$subtotal = shoppingCart::getSubTotal();
-		
+
 		$tax = 0;
 		$weight = 0;
-		
+
 		if (JCORE_VERSION >= '0.7') {
 			$taxpercentage = shoppingCart::getTax();
-			
+
 			$rows = sql::run(
 				" SELECT `ShoppingItemID`, `Quantity`, `Price`" .
 				" FROM `{shoppingcarts}` " .
 				" WHERE `SessionID` = BINARY '".sql::escape(session_id())."'");
-			
+
 			while($row = sql::fetch($rows)) {
 				$item = sql::fetch(sql::run(
 					" SELECT `Weight`, `Taxable` FROM `{shoppingitems}`" .
 					" WHERE `ID` = '".$row['ShoppingItemID']."'"));
-				
+
 				if (!$item)
 					continue;
-				
+
 				if ($taxpercentage > 0 && $item['Taxable'] &&
 					$row['Quantity']*$row['Price'] > 0)
 					$tax += round(($row['Quantity']*$row['Price'])*$taxpercentage/100, 2);
-				
+
 				$weight += $row['Quantity']*$item['Weight'];
 			}
 		}
-		
+
 		$discount = shoppingCart::getDiscount($subtotal+$tax);
 		$fee = shoppingCart::getFee($subtotal+$tax, $weight);
-		
+
 		return $subtotal+$tax-$discount+$fee;
 	}
-	
+
 	static function getItems() {
 		return sql::run(
 			" SELECT * FROM `{shoppingcarts}` " .
 			" WHERE `SessionID` = BINARY '".sql::escape(session_id())."'" .
-			" ORDER BY `ID`");		
+			" ORDER BY `ID`");
 	}
-	
+
 	static function clear() {
 		return sql::run(
 			" DELETE FROM `{shoppingcarts}` " .
-			" WHERE `SessionID` = BINARY '".sql::escape(session_id())."'");		
+			" WHERE `SessionID` = BINARY '".sql::escape(session_id())."'");
 	}
-	
+
 	static function cleanUp() {
 		return sql::run(
 			" DELETE FROM `{shoppingcarts}` " .
 			" WHERE `TimeStamp` < DATE_SUB(NOW(), INTERVAL 1 DAY)");
 	}
-	
+
 	function verify() {
 		$remove = null;
 		$cartid = null;
@@ -4502,43 +4502,43 @@ class shoppingCart extends modules {
 		$itemquantities = null;
 		$options = null;
 		$referrer = null;
-		
+
 		if (isset($_GET['shoppingcartremove'])) {
 			$remove = (int)$_GET['shoppingcartremove'];
 			unset($_GET['shoppingcartremove']);
 		}
-		
+
 		if (isset($_GET['shoppingcartid'])) {
 			$cartid = (int)$_GET['shoppingcartid'];
 			unset($_GET['shoppingcartid']);
 		}
-		
+
 		if (isset($_POST['shoppingcartaddsubmit'])) {
 			$add = (string)$_POST['shoppingcartaddsubmit'];
 			unset($_POST['shoppingcartaddsubmit']);
 		}
-		
+
 		if (isset($_POST['shoppingitemid']))
 			$itemid = (int)$_POST['shoppingitemid'];
-		
+
 		if (isset($_POST['shoppingitemquantity'])) {
 			$itemquantity = (int)$_POST['shoppingitemquantity'];
 			unset($_POST['shoppingitemquantity']);
 		}
-			
+
 		if (isset($_POST['shoppingitemquantities'])) {
 			$itemquantities = (array)$_POST['shoppingitemquantities'];
 			unset($_POST['shoppingitemquantities']);
 		}
-			
+
 		if (isset($_POST['shoppingitemoptions'])) {
 			$options = (array)$_POST['shoppingitemoptions'];
 			unset($_POST['shoppingitemoptions']);
 		}
-			
+
 		if (isset($_GET['shoppingcartreferrer']))
 			$referrer = strip_tags((string)$_GET['shoppingcartreferrer']);
-		
+
 		if ($remove) {
 			if (!$cartid) {
 				tooltip::display(
@@ -4546,11 +4546,11 @@ class shoppingCart extends modules {
 					TOOLTIP_ERROR);
 				return false;
 			}
-			
+
 			sql::run(
 				" DELETE FROM `{shoppingcarts}`" .
 				" WHERE `ID` = '".$cartid."'");
-			
+
 			tooltip::display(
 				_("Item has been successfully removed from your cart.") .
 				" <a href='".
@@ -4561,10 +4561,10 @@ class shoppingCart extends modules {
 					_("Continue Shopping").
 				"</a>",
 				TOOLTIP_SUCCESS);
-				
+
 			return true;
 		}
-		
+
 		if ($add) {
 			if (!$itemid) {
 				tooltip::display(
@@ -4572,14 +4572,14 @@ class shoppingCart extends modules {
 					TOOLTIP_ERROR);
 				return false;
 			}
-			
+
 			$item = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$itemid."'" .
 				" AND (`AvailableQuantity` > 0 " .
 					" OR `AvailableQuantity` IS NULL)" .
 				" LIMIT 1"));
-			
+
 			if (!$item) {
 				tooltip::display(
 					_("The item you wanted to add to your cart cannot be found " .
@@ -4588,36 +4588,36 @@ class shoppingCart extends modules {
 					TOOLTIP_ERROR);
 				return false;
 			}
-			
+
 			$cartquantity = sql::fetch(sql::run(
 				" SELECT SUM(`Quantity`) AS `Quantity` FROM `{shoppingcarts}`" .
 				" WHERE `SessionID` = BINARY '".sql::escape(session_id())."'" .
 				" AND `ShoppingItemID` = '".$item['ID']."'"));
-			
+
 			$totalquantity = (int)$itemquantity;
-			
+
 			if ($cartquantity && $cartquantity['Quantity'])
 				$totalquantity += $cartquantity['Quantity'];
-			
+
 			if ($item['AvailableQuantity'] && $totalquantity > $item['AvailableQuantity']) {
 				$itemquantity = $item['AvailableQuantity']-$cartquantity['Quantity'];
-				
+
 				if ($itemquantity <= 0) {
 					tooltip::display(
 						sprintf(
 							_("The selected quantity exceeds quantity available (%s) in stock!"),
 							$item['AvailableQuantity']),
 						TOOLTIP_ERROR);
-					
+
 					return false;
 				}
 			}
-			
+
 			$category = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppings}`" .
 				" WHERE `Deactivated` = 0" .
 				" AND `ID` = '".$item['ShoppingID']."'"));
-			
+
 			if (!$category) {
 				tooltip::display(
 					_("The item you wanted to add to your cart is temporary " .
@@ -4626,7 +4626,7 @@ class shoppingCart extends modules {
 					TOOLTIP_ERROR);
 				return false;
 			}
-			
+
 			if (JCORE_VERSION >= '0.5' && !shopping::checkAccess($category, true)) {
 				tooltip::display(
 					_("The item you wanted to add to your cart can only " .
@@ -4635,42 +4635,42 @@ class shoppingCart extends modules {
 					TOOLTIP_ERROR);
 				return false;
 			}
-			
+
 			if (JCORE_VERSION >= '0.7' && $item['SpecialPrice'] != '') {
-				if ((!$item['SpecialPriceStartDate'] || 
+				if ((!$item['SpecialPriceStartDate'] ||
 						$item['SpecialPriceStartDate'] <= date('Y-m-d')) &&
-					(!$item['SpecialPriceEndDate'] || 
+					(!$item['SpecialPriceEndDate'] ||
 						$item['SpecialPriceEndDate'] >= date('Y-m-d')))
 				{
 					$item['Price'] = $item['SpecialPrice'];
 				}
 			}
-			
+
 			if (!$itemquantity)
 				$itemquantity = 1;
-			
+
 			$itemoptions = null;
-			
+
 			if (JCORE_VERSION >= '0.7' && $options) {
 				foreach($options as $optionid => $priceid) {
 					if (!$optionid)
 						continue;
-					
+
 					$option = sql::fetch(sql::run(
 						" SELECT * FROM `{shoppingitemoptions}`" .
 						" WHERE `ShoppingItemID` = '".$item['ID']."'" .
 						" AND `ID` = '".(int)$optionid."'"));
-					
+
 					if (!$option) {
 						tooltip::display(
 							_("Item option cannot be found!"),
 							TOOLTIP_ERROR);
 						return false;
 					}
-					
+
 					if (!$option['Required'] && !$priceid)
 						continue;
-					
+
 					if ($option['Required'] && !$priceid) {
 						tooltip::display(
 							__("Field(s) marked with an asterisk (*) is/are required.")." " .
@@ -4686,7 +4686,7 @@ class shoppingCart extends modules {
 							TOOLTIP_ERROR);
 						return false;
 					}
-					
+
 					if (!in_array($option['TypeID'], array(
 						FORM_INPUT_TYPE_CHECKBOX, FORM_INPUT_TYPE_RADIO,
 						FORM_INPUT_TYPE_SELECT, FORM_INPUT_TYPE_MULTISELECT)))
@@ -4695,65 +4695,65 @@ class shoppingCart extends modules {
 							" SELECT * FROM `{shoppingitemoptionprices}`" .
 							" WHERE `OptionID` = '".(int)$optionid."'" .
 							" LIMIT 1"));
-						
+
 						if (!$price)
 							continue;
-						
+
 						$item['Price'] +=
 							($price['PriceType'] == 2?
 								 round($price['Price']*$item['Price']/100, 2):
 								$price['Price']);
-						
+
 						$itemoptions[] = $option['Title'].": " .
 							strip_tags((string)$priceid);
-						
+
 						continue;
 					}
-					
+
 					if (is_array($priceid)) {
 						$itemoptionprices = null;
-						
+
 						foreach($priceid as $pricesid) {
 							$price = sql::fetch(sql::run(
 								" SELECT * FROM `{shoppingitemoptionprices}`" .
 								" WHERE `OptionID` = '".(int)$optionid."'" .
 								" AND `ID` = '".(int)$pricesid."'"));
-							
+
 							if (!$price)
 								continue;
-								
-							$item['Price'] += 
+
+							$item['Price'] +=
 								($price['PriceType'] == 2?
 									 round($price['Price']*$item['Price']/100, 2):
 									$price['Price']);
-							
+
 							$itemoptionprices[] = $price['Title'];
 						}
-						
+
 						if ($itemoptionprices)
 							$itemoptions[] = $option['Title'].": " .
 								implode(', ', $itemoptionprices);
-						
+
 						continue;
 					}
-					
+
 					$price = sql::fetch(sql::run(
 						" SELECT * FROM `{shoppingitemoptionprices}`" .
 						" WHERE `OptionID` = '".(int)$optionid."'" .
 						" AND `ID` = '".(int)$priceid."'"));
-					
+
 					if (!$price)
 						continue;
-						
-					$item['Price'] += 
+
+					$item['Price'] +=
 						($price['PriceType'] == 2?
 							 round($price['Price']*$item['Price']/100, 2):
 							$price['Price']);
-					
+
 					$itemoptions[] = $option['Title'].": ".$price['Title'];
 				}
 			}
-			
+
 			sql::run(
 				" INSERT INTO `{shoppingcarts}` SET" .
 				" `SessionID` = '".sql::escape(session_id())."'," .
@@ -4765,7 +4765,7 @@ class shoppingCart extends modules {
 				" `TimeStamp` = NOW()," .
 				" `Price` = '".$item['Price']."'," .
 				" `Quantity` = '".$itemquantity."'");
-				
+
 			tooltip::display(
 				_("Item has been successfully added to your cart.") .
 				" <a href='".
@@ -4780,165 +4780,165 @@ class shoppingCart extends modules {
 					_("Refresh Cart").
 				"</a>",
 				TOOLTIP_SUCCESS);
-				
+
 			if (SHOPPING_CART_AUTOMATIC_CONTINUE_SHOPPING && $referrer)
 				echo "<script type='text/javascript'>" .
 						"window.location='".
 							urldecode($referrer)."';" .
 					"</script>";
-			
+
 			shoppingCart::cleanUp();
 			return true;
 		}
-		
+
 		if ($itemquantities) {
 			foreach($itemquantities as $cartid => $quantity) {
 				$cartitem = sql::fetch(sql::run(
 					" SELECT `Quantity`, `ShoppingItemID` FROM `{shoppingcarts}`" .
 					" WHERE `ID` = '".(int)$cartid."'"));
-				
+
 				if (!$cartitem || $cartitem['Quantity'] == $quantity)
 					continue;
-				
+
 				$item = sql::fetch(sql::run(
 					" SELECT `ID`, `AvailableQuantity` FROM `{shoppingitems}`" .
 					" WHERE `ID` = '".$cartitem['ShoppingItemID']."'"));
-				
+
 				if (!$item)
 					continue;
-				
+
 				$cartquantity = sql::fetch(sql::run(
 					" SELECT SUM(`Quantity`) AS `Quantity` FROM `{shoppingcarts}`" .
 					" WHERE `SessionID` = BINARY '".sql::escape(session_id())."'" .
 					" AND `ShoppingItemID` = '".$item['ID']."'" .
 					" AND `ID` != '".(int)$cartid."'"));
-				
+
 				$totalquantity = (int)$quantity;
-				
+
 				if ($cartquantity && $cartquantity['Quantity'])
 					$totalquantity += $cartquantity['Quantity'];
-				
+
 				if ($item['AvailableQuantity'] && $totalquantity > $item['AvailableQuantity']) {
 					tooltip::display(
 						sprintf(
 							_("The selected quantity exceeds quantity available (%s) in stock!"),
 							$item['AvailableQuantity']),
 						TOOLTIP_ERROR);
-					
+
 					return false;
 				}
-				
+
 				sql::run(
 					" UPDATE `{shoppingcarts}` SET" .
 					" `Quantity` = '".(int)$quantity."'," .
 					" `TimeStamp` = `TimeStamp`" .
 					" WHERE `ID` = '".(int)$cartid."'");
 			}
-			
+
 			tooltip::display(
 				_("Cart has been successfully updated."),
 				TOOLTIP_SUCCESS);
-			
+
 			return true;
 		}
-		
+
 		return false;
 	}
-	
+
 	static function constructPrice($price) {
 		if (method_exists('shopping', 'constructPrice'))
 			return shopping::constructPrice($price);
-		
+
 		if (!defined('SHOPPING_CART_CURRENCY') || !SHOPPING_CART_CURRENCY)
 			return number_format($price, 2);
-		
+
 		return
 				"<span class='shopping-currency'>" .
 					SHOPPING_CART_CURRENCY .
 				"</span>" .
 				number_format($price, 2);
 	}
-	
+
 	static function displayPrice($price) {
 		echo shoppingCart::constructPrice($price);
 	}
-	
+
 	function displayCheckout() {
 		$this->checkoutForm = new shoppingCartCheckoutForm();
 		$this->checkoutForm->setUp();
-		
-		if (!$GLOBALS['USER']->loginok && 
-			$this->checkoutForm->get('checkoutstep') < 1) 
+
+		if (!$GLOBALS['USER']->loginok &&
+			$this->checkoutForm->get('checkoutstep') < 1)
 		{
 			$loginform = new form(
-				_('Already Registered?'), 
+				_('Already Registered?'),
 				'memberlogin');
-	
+
 			$loginform->add(
 				_("Please enter your login information " .
 					"below to checkout with your account."),
 				'',
 				FORM_STATIC_TEXT);
-			
+
 			$GLOBALS['USER']->setupLoginForm($loginform);
-			
+
 			$loginform->add(
 				__('Login'),
 				'login',
 				FORM_INPUT_TYPE_SUBMIT);
-			
+
 			$loginform->addAdditionalPreText(
 				"<div class='align-right'>" .
 					"[ <a href='".url::uri('requestpassword')."&amp;requestpassword=1'>" .
 						__("Forgot your password?")."</a> ]" .
 				"</div>");
-			
+
 			$loginform->add(
 				__('Cancel'),
 				'cancel',
 				FORM_INPUT_TYPE_BUTTON);
 			$loginform->addAttributes("onclick=\"window.location='".
 				url::uri('shoppingcartcheckout')."';\"");
-				
-			$loginform->display();	
+
+			$loginform->display();
 			unset($loginform);
-			
+
 			if (defined('REGISTRATIONS_SUSPENDED') && REGISTRATIONS_SUSPENDED)
 				return false;
 		}
-		
+
 		if (!$this->checkoutForm->verify()) {
 			$this->checkoutForm->display();
 			return;
 		}
-		
+
 		if (!$this->checkoutForm->process()) {
 			$this->checkoutForm->display();
 			return;
 		}
 	}
-	
+
 	function displaySummary() {
 		if (!$this->shoppingURL)
 			$this->shoppingURL = shopping::getURL();
-		
+
 		echo
 			"<div class='shopping-cart shopping-cart-summary'>";
-		
+
 		tooltip::caching(true);
 		$this->verify();
 		tooltip::caching(false);
-		
+
 		$rows = $this->getItems();
 		$cartitems = sql::rows($rows);
-			
+
 		if (!$cartitems) {
 			tooltip::display(
 				_("There are no items in your cart."),
 				TOOLTIP_NOTIFICATION);
-			
+
 		} else {
-			echo 
+			echo
 				"<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>" .
@@ -4961,25 +4961,25 @@ class shoppingCart extends modules {
 				"</thead>" .
 				"<tbody>";
 		}
-				
+
 		$subtotal = 0;
 		$discount = 0;
 		$fee = 0;
 		$tax = 0;
 		$weight = 0;
 		$taxpercentage = 0;
-		
+
 		if (JCORE_VERSION >= '0.7')
 			$taxpercentage = shoppingCart::getTax();
-		
-		$i = 0;		
+
+		$i = 0;
 		while ($row = sql::fetch($rows)) {
 			$item = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$row['ShoppingItemID']."'" .
 				" LIMIT 1"));
-			
-			echo 
+
+			echo
 				"<tr".($i%2?" class='pair'":NULL).">" .
 					"<td class='shopping-cart-item auto-width'>" .
 						"<a href='".$this->shoppingURL.
@@ -4997,34 +4997,34 @@ class shoppingCart extends modules {
 					"</td>" .
 					"<td class='shopping-cart-total' align='right'>" .
 						"<span class='nowrap'>";
-			
+
 			shoppingCart::displayPrice($row['Quantity']*$row['Price']);
-			
+
 			echo
 						"</span>" .
 					"</td>" .
 				"</tr>";
-			
+
 			if (JCORE_VERSION >= '0.7') {
 				$weight += $row['Quantity']*$item['Weight'];
-				
+
 				if ($taxpercentage > 0 && $item['Taxable'] &&
 					$row['Quantity']*$row['Price'] > 0)
 					$tax += round(($row['Quantity']*$row['Price'])*$taxpercentage/100, 2);
 			}
-			
+
 			$subtotal += $row['Quantity']*$row['Price'];
 			$i++;
 		}
-		
+
 		if ($cartitems) {
 			$discount = $this->getDiscount($subtotal+$tax);
 			$fee = $this->getFee($subtotal+$tax, $weight);
-			
-			echo 
+
+			echo
 				"</tbody>" .
 			"</table>";
-		
+
 			echo
 			"<div class='shopping-cart-totals'>" .
 				"<div class='shopping-cart-subtotal'>" .
@@ -5032,73 +5032,73 @@ class shoppingCart extends modules {
 						_("Subtotal").":" .
 					"</span>" .
 					"<span class='bold nowrap'>";
-			
+
 			shoppingCart::displayPrice($subtotal);
-			
+
 			echo
 					"</span>" .
 				"</div>";
-		
+
 			if ($tax) {
-				echo				
+				echo
 				"<div class='shopping-cart-tax'>" .
 					"<span class='shopping-cart-total-title'>".
 						_("Tax").":" .
 					"</span>" .
 					"<span class='bold nowrap'>";
-				
+
 				shoppingCart::displayPrice($tax);
-				
+
 				echo
 					"</span>" .
 				"</div>";
 			}
-		
+
 			if ($discount) {
-				echo				
+				echo
 				"<div class='shopping-cart-discount'>" .
 					"<span class='shopping-cart-total-title'>".
 						_("Discount").":" .
 					"</span>" .
 					"<span class='bold nowrap'>";
-				
+
 				shoppingCart::displayPrice($discount);
-				
+
 				echo
 					"</span>" .
 				"</div>";
 			}
-		
+
 			if ($fee) {
 				echo
 				"<div class='shopping-cart-fee'>" .
 					"<span class='shopping-cart-total-title'>".
-						htmlspecialchars(_("Shipping & Handling")).":" .
+						htmlchars(_("Shipping & Handling")).":" .
 					"</span>" .
 					"<span class='bold nowrap'>";
-				
+
 				shoppingCart::displayPrice($fee);
-				
+
 				echo
 					"</span>" .
 				"</div>";
 			}
-		
+
 			echo
 				"<div class='shopping-cart-grand-total bold'>" .
 					"<span class='shopping-cart-total-title'>".
 						_("Grand Total").":" .
 					"</span>" .
 					"<span class='bold nowrap'>";
-			
+
 			shoppingCart::displayPrice($subtotal+$tax-$discount+$fee);
-			
+
 			echo
 					"</span>" .
 				"</div>" .
 			"</div>";
 		}
-		
+
 		echo
 			"<div class='shopping-cart-buttons'>" .
 				"<div class='shopping-cart-view-cart-button button'>" .
@@ -5108,28 +5108,28 @@ class shoppingCart extends modules {
 				"</div>" .
 				"<div class='clear-both'></div>" .
 			"</div>";
-			
-		echo 
+
+		echo
 			"<div class='clear-both'></div>" .
 			"</form>" .
 			"</div>";
 	}
-	
+
 	function displayInfo() {
 		echo
 			"<div class='shopping-cart-info'>";
-		
+
 		tooltip::caching(true);
 		$this->verify();
 		tooltip::caching(false);
-		
+
 		$grandtotal = 0;
 		$rows = $this->getItems();
 		$cartitems = sql::rows($rows);
-		
+
 		if ($cartitems)
 			$grandtotal = $this->getGrandTotal();
-		
+
 		echo
 			"<a href='".shoppingCart::getURL()."'>" .
 				"<span class='shopping-cart-info-text-my-cart'>" .
@@ -5141,33 +5141,33 @@ class shoppingCart extends modules {
 					"<span class='shopping-cart-info-text-items'>") .
 				" </span>" .
 				"<span class='shopping-cart-info-grand-total'>";
-		
+
 		shoppingCart::displayPrice($grandtotal);
-		
+
 		echo
 				"</span>" .
 			"</a>" .
 		"</div>";
 	}
-	
+
 	function displayArguments() {
 		if (!$this->arguments)
 			return false;
-		
+
 		switch(strtolower($this->arguments)) {
 			case 'summary':
 				$this->displaySummary();
 				return true;
-		
+
 			case 'info':
 				$this->displayInfo();
 				return true;
-		
+
 			default:
 				return true;
 		}
 	}
-	
+
 	function displayListHeader() {
 		echo
 			"<th class='shopping-cart-ref-number'>" .
@@ -5198,10 +5198,10 @@ class shoppingCart extends modules {
 				"</span>" .
 			"</th>";
 	}
-	
+
 	function displayListHeaderOptions() {
 	}
-	
+
 	function displayListHeaderFunctions() {
 		echo
 			"<th class='shopping-cart-remove'>" .
@@ -5210,30 +5210,30 @@ class shoppingCart extends modules {
 				"</span>" .
 			"</th>";
 	}
-	
+
 	function displayListItem(&$row, $item = null) {
 		if (!$this->shoppingURL)
 			$this->shoppingURL = shopping::getURL();
-		
+
 		if (!$item)
 			$item = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$row['ShoppingItemID']."'" .
 				" LIMIT 1"));
-		
+
 		$itemlink = $this->shoppingURL.
 			"&amp;shoppingid=".$item['ShoppingID'].
 			"&amp;shoppingitemid=".$item['ID'];
-		
+
 		if ($item['Keywords'])
-			$this->similarItemsSearch .= 
+			$this->similarItemsSearch .=
 				($this->similarItemsSearch?', ':null).
 				$item['Keywords'];
 		else
-			$this->similarItemsSearch .= 
+			$this->similarItemsSearch .=
 				($this->similarItemsSearch?', ':null).
 				str_replace(' ', ',', $item['Title']);
-			
+
 		echo
 			"<td class='shopping-cart-ref-number'>" .
 				"<span class='nowrap'>" .
@@ -5241,8 +5241,8 @@ class shoppingCart extends modules {
 				"</span>" .
 			"</td>" .
 			"<td class='shopping-cart-item auto-width'>";
-	
-		if (JCORE_VERSION >= '0.5') {		
+
+		if (JCORE_VERSION >= '0.5') {
 			$pictures = new shoppingItemPictures();
 			$pictures->selectedOwnerID = $item['ID'];
 			$pictures->limit = 1;
@@ -5250,7 +5250,7 @@ class shoppingCart extends modules {
 			$pictures->display();
 			unset($pictures);
 		}
-		
+
 		echo
 				"<a href='".$itemlink."'>" .
 					"<b>" .
@@ -5266,21 +5266,21 @@ class shoppingCart extends modules {
 					"</div>") .
 			"</td>" .
 			"<td style='text-align: right;' class='shopping-cart-quantity'>";
-			
+
 		if ($item['ShowQuantityPicker'] && isset($row['SessionID']) &&
-			$row['SessionID']) 
+			$row['SessionID'])
 		{
 			echo
 				"<select name='shoppingitemquantities[".$row['ID']."]'>";
-		
+
 			if (!$item['MaxQuantityAtOnce'])
 				$item['MaxQuantityAtOnce'] = 30;
-			
-			if ($item['AvailableQuantity'] && 
+
+			if ($item['AvailableQuantity'] &&
 				$item['AvailableQuantity'] < $item['MaxQuantityAtOnce'])
 				$item['MaxQuantityAtOnce'] = $item['AvailableQuantity'];
-			
-			for($i = 1; $i <= $item['MaxQuantityAtOnce']; $i++) {	
+
+			for($i = 1; $i <= $item['MaxQuantityAtOnce']; $i++) {
 				echo
 						"<option ".
 							($i == $row['Quantity']?
@@ -5288,232 +5288,232 @@ class shoppingCart extends modules {
 								null) .
 							">".$i."</option>";
 			}
-					
+
 			echo
 				"</select>";
-		
+
 		} else {
 			echo
 				"<span class='nowrap'>" .
 				$row['Quantity'] .
 				"</span>";
 		}
-		
+
 		echo
 				"</td>" .
 				"<td style='text-align: right;' class='shopping-cart-price'>" .
 					"<span class='nowrap'>";
-		
+
 		shoppingCart::displayPrice($row['Price']);
-		
+
 		echo
 					"</span>" .
 				"</td>" .
 				"<td style='text-align: right;' class='shopping-cart-total'>" .
 					"<span class='nowrap'>";
-		
+
 		shoppingCart::displayPrice($row['Quantity']*$row['Price']);
-		
+
 		echo
 					"</span>" .
 				"</td>";
 	}
-	
+
 	function displayListItemOptions(&$row) {
 	}
-	
+
 	function displayListItemFunctions(&$row) {
 		echo
 			"<td class='shopping-cart-remove' align='center'>" .
 				"<a class='confirm-link' " .
-					"title='".htmlspecialchars(_("Remove Item"), ENT_QUOTES)."' " .
+					"title='".htmlchars(_("Remove Item"), ENT_QUOTES)."' " .
 					"href='".url::uri(shoppingCart::$uriVariables) .
 					"&amp;shoppingcartid=".$row['ID']."&amp;shoppingcartremove=1'>" .
 				"</a>" .
 			"</td>";
 	}
-	
+
 	function displayListSubTotalTitle(&$totals) {
 		echo
 			_("Subtotal").":";
 	}
-	
+
 	function displayListSubTotalValue(&$totals) {
 		shoppingCart::displayPrice($totals['SubTotal']);
 	}
-	
+
 	function displayListSubTotal(&$totals) {
 		echo
 			"<span class='shopping-cart-total-title'>";
-		
+
 		$this->displayListSubTotalTitle($totals);
-		
+
 		echo
 			"</span>" .
 			"<span class='bold'>";
-		
+
 		$this->displayListSubTotalValue($totals);
-		
+
 		echo
 			"</span>";
 	}
-	
+
 	function displayListTaxTotalTitle(&$totals) {
 		echo
 			_("Tax").":";
 	}
-	
+
 	function displayListTaxTotalValue(&$totals) {
 		shoppingCart::displayPrice($totals['Tax']);
 	}
-	
+
 	function displayListTaxTotal(&$totals) {
 		echo
 			"<span class='shopping-cart-total-title'>";
-		
+
 		$this->displayListTaxTotalTitle($totals);
-		
+
 		echo
 			"</span>" .
 			"<span class='bold'>";
-		
+
 		$this->displayListTaxTotalValue($totals);
-		
+
 		echo
 			"</span>";
 	}
-	
+
 	function displayListDiscountTotalTitle(&$totals) {
 		echo
 			_("Discount").":";
 	}
-	
+
 	function displayListDiscountTotalValue(&$totals) {
 		shoppingCart::displayPrice($totals['Discount']);
 	}
-	
+
 	function displayListDiscountTotal(&$totals) {
 		echo
 			"<span class='shopping-cart-total-title'>";
-		
+
 		$this->displayListDiscountTotalTitle($totals);
-		
+
 		echo
 			"</span>" .
 			"<span class='bold'>";
-		
+
 		$this->displayListDiscountTotalValue($totals);
-		
+
 		echo
 			"</span>";
 	}
-	
+
 	function displayListFeeTotalTitle(&$totals) {
 		echo
-			htmlspecialchars(_("Shipping & Handling")).":";
+			htmlchars(_("Shipping & Handling")).":";
 	}
-	
+
 	function displayListFeeTotalValue(&$totals) {
 		shoppingCart::displayPrice($totals['Fee']);
 	}
-	
+
 	function displayListFeeTotal(&$totals) {
 		echo
 			"<span class='shopping-cart-total-title'>";
-		
+
 		$this->displayListFeeTotalTitle($totals);
-		
+
 		echo
 			"</span>" .
 			"<span class='bold'>";
-		
+
 		$this->displayListFeeTotalValue($totals);
-		
+
 		echo
 			"</span>";
 	}
-	
+
 	function displayListGrandTotalTitle(&$totals) {
 		echo
 			_("Grand Total").":";
 	}
-	
+
 	function displayListGrandTotalValue(&$totals) {
 		shoppingCart::displayPrice($totals['GrandTotal']);
 	}
-	
+
 	function displayListGrandTotal(&$totals) {
 		echo
 			"<span class='shopping-cart-total-title'>";
-		
+
 		$this->displayListGrandTotalTitle($totals);
-		
+
 		echo
 			"</span>" .
 			"<span class='bold'>";
-		
+
 		$this->displayListGrandTotalValue($totals);
-		
+
 		echo
 			"</span>";
 	}
-	
+
 	function displayListTotals(&$totals) {
 		echo
 			"<div class='shopping-cart-totals'>" .
 				"<div class='shopping-cart-subtotal'>";
-		
+
 		$this->displayListSubTotal($totals);
-		
+
 		echo
 				"</div>";
-		
+
 		if ($totals['Tax'] > 0) {
-			echo				
+			echo
 				"<div class='shopping-cart-tax'>";
-			
+
 			$this->displayListTaxTotal($totals);
-			
+
 			echo
 				"</div>";
 		}
-		
+
 		if ($totals['Discount'] > 0) {
-			echo				
+			echo
 				"<div class='shopping-cart-discount'>";
-			
+
 			$this->displayListDiscountTotal($totals);
-			
+
 			echo
 				"</div>";
 		}
-		
+
 		if ($totals['Fee'] > 0) {
 			echo
 				"<div class='shopping-cart-fee'>";
-			
+
 			$this->displayListFeeTotal($totals);
-			
+
 			echo
 				"</div>";
 		}
-		
+
 		echo
 				"<div class='shopping-cart-grand-total bold'>";
-		
+
 		$this->displayListGrandTotal($totals);
-		
+
 		echo
 				"</div>" .
 			"</div>";
 	}
-	
+
 	function displayListTips(&$totals) {
 		$nextdiscount = shoppingCartDiscounts::getNext($totals['SubTotal']);
-		
+
 		if (!$nextdiscount)
 			return;
-		
+
 		echo
 			"<p class='shopping-cart-discount'>" .
 				sprintf(_("<b>TIP:</b> Orders over %s get %s discount!"),
@@ -5521,14 +5521,14 @@ class shoppingCart extends modules {
 					$nextdiscount['DiscountPercent'].'%') .
 			"</p>";
 	}
-	
+
 	function displayRedeemCoupon(&$totals) {
 		$couponcode = shoppingCartCoupons::getCode();
-		
+
 		$couponvalue = shoppingCartCoupons::getValue(
 			$totals['SubTotal']+$totals['Tax'],
 			$couponcode);
-		
+
 		echo
 			"<div class='shopping-cart-coupon'>" .
 				"<h3 class='shopping-cart-coupon-title'>" .
@@ -5548,23 +5548,23 @@ class shoppingCart extends modules {
 						"<br />" .
 						"</span>" .
 					"<input type='text' name='shoppingcartcoupon' value='" .
-						htmlspecialchars(shoppingCartCoupons::getCode(), ENT_QUOTES) .
+						htmlchars(shoppingCartCoupons::getCode(), ENT_QUOTES) .
 						"' class='text-entry' />" .
 					"</p>" .
 				"</div>" .
 			"</div>";
 	}
-	
+
 	function displayListFooter(&$totals) {
 		$this->displayListTips($totals);
-		
-		echo 
+
+		echo
 			"<p class='shopping-cart-hint comment'>" .
 				_("* For more details on each item click on the item's title. " .
 					"To change the quantity of an item pick a new quantity and " .
 					"press the Update Cart button.") .
 			"</p>";
-		
+
 		if (JCORE_VERSION >= '0.9') {
 			$coupons = sql::run(
 				" SELECT `ID` FROM `{shoppingcartcoupons}`" .
@@ -5573,23 +5573,23 @@ class shoppingCart extends modules {
 				" AND (`StartDate` IS NULL OR `StartDate` <= CURDATE())" .
 				" AND (`EndDate` IS NULL OR `EndDate` >= CURDATE())" .
 				" LIMIT 1");
-			
+
 			if (sql::rows($coupons))
 				$this->displayRedeemCoupon($totals);
 		}
 	}
-	
+
 	function displayListFunctions() {
 		echo
 			"<input type='button' name='checkout' " .
-				"value='".htmlspecialchars(_("Checkout"), ENT_QUOTES)."' " .
+				"value='".htmlchars(_("Checkout"), ENT_QUOTES)."' " .
 				"class='button shopping-cart-checkout-button' " .
 				"onclick=\"window.location='" .
 					url::uri(shoppingCart::$uriVariables) .
 					"&amp;shoppingcartcheckout=1" .
 					"';\" />" .
 			"<input type='button' name='continueshopping' " .
-				"value='".htmlspecialchars(_("Continue Shopping"), ENT_QUOTES)."' " .
+				"value='".htmlchars(_("Continue Shopping"), ENT_QUOTES)."' " .
 				"class='button shopping-cart-shopping-button' " .
 				"onclick=\"window.location='" .
 					($this->referrer?
@@ -5597,27 +5597,27 @@ class shoppingCart extends modules {
 						$this->shoppingURL) .
 					"';\" />" .
 			"<input type='submit' name='updatecart' " .
-				"value='".htmlspecialchars(_("Update Cart"), ENT_QUOTES)."' " .
+				"value='".htmlchars(_("Update Cart"), ENT_QUOTES)."' " .
 				"class='button submit shopping-cart-update-cart-button' />";
 	}
-	
+
 	function displayList(&$rows) {
 		if (sql::rows($rows)) {
-			echo 
+			echo
 				"<table cellpadding='0' cellspacing='0' class='list'>" .
 				"<thead>" .
 				"<tr>";
-			
+
 			$this->displayListHeader();
 			$this->displayListHeaderOptions();
 			$this->displayListHeaderFunctions();
-			
+
 			echo
 				"</tr>" .
 				"</thead>" .
 				"<tbody>";
 		}
-		
+
 		$totals = array(
 			'SubTotal' => 0,
 			'Discount' => 0,
@@ -5625,126 +5625,126 @@ class shoppingCart extends modules {
 			'Tax' => 0,
 			'Weight' => 0,
 			'GrandTotal' => 0);
-		
+
 		$i = 0;
 		$taxpercentage = 0;
-		
+
 		if (JCORE_VERSION >= '0.7')
 			$taxpercentage = shoppingCart::getTax();
-		
+
 		while ($row = sql::fetch($rows)) {
 			$item = sql::fetch(sql::run(
 				" SELECT * FROM `{shoppingitems}`" .
 				" WHERE `ID` = '".$row['ShoppingItemID']."'" .
 				" LIMIT 1"));
-			
-			echo 
+
+			echo
 				"<tr".($i%2?" class='pair'":NULL).">";
-			
+
 			$this->displayListItem($row, $item);
 			$this->displayListItemOptions($row);
 			$this->displayListItemFunctions($row);
-			
+
 			echo
 				"</tr>";
-			
+
 			if (JCORE_VERSION >= '0.7') {
 				$totals['Weight'] += $row['Quantity']*$item['Weight'];
-				
+
 				if ($taxpercentage > 0 && $item['Taxable'] &&
 					$row['Quantity']*$row['Price'] > 0)
 					$totals['Tax'] += round(($row['Quantity']*$row['Price'])*$taxpercentage/100, 2);
 			}
-			
+
 			$totals['SubTotal'] += $row['Quantity']*$row['Price'];
 			$i++;
 		}
-		
+
 		if (sql::rows($rows)) {
 			$totals['Discount'] = $this->getDiscount($totals['SubTotal']+$totals['Tax']);
 			$totals['Fee'] = $this->getFee($totals['SubTotal']+$totals['Tax'], $totals['Weight']);
-			
+
 			$totals['GrandTotal'] = $totals['SubTotal']+$totals['Tax']-
 				$totals['Discount']+$totals['Fee'];
-			
-			echo 
+
+			echo
 				"</tbody>" .
 			"</table>";
 		}
-		
+
 		$this->displayListTotals($totals);
 		$this->displayListFooter($totals);
 	}
-	
+
 	function displaySimilarItemsTitle() {
 		if ($this->similarItemsSearch)
 			echo _("Similar Items");
 		else
 			echo _("Latest Items");
 	}
-	
+
 	function displaySimilarItemsItems() {
 		$this->load('Shopping');
 		$shoppingitems = new shoppingItems();
 		$shoppingitems->similar = true;
 		$shoppingitems->limit = SHOPPING_CART_SIMILAR_ITEMS_LIMIT;
 		$shoppingitems->search = $this->similarItemsSearch;
-		
+
 		if ($this->similarItemsSearch)
 			$shoppingitems->randomize = true;
 		else
 			$shoppingitems->latests = true;
-		
+
 		$shoppingitems->showPaging = false;
 		$shoppingitems->display();
 		unset($shoppingitems);
 	}
-	
+
 	function displaySimilarItems() {
 		echo
 			"<div class='shopping-cart-similar-items'>" .
 				"<div class='separator'></div>" .
 				"<h3>";
-		
+
 		$this->displaySimilarItemsTitle();
-		
+
 		echo
 				"</h3>";
-		
+
 		$this->displaySimilarItemsItems();
-		
+
 		echo
 				"<div class='clear-both'></div>" .
 			"</div>";
 	}
-	
+
 	function display() {
 		if ($this->displayArguments())
 			return;
-		
+
 		if (!$this->shoppingURL)
 			$this->shoppingURL = shopping::getURL();
-		
+
 		echo
 			"<div class='shopping-cart'>" .
 			"<form action='".url::uri(shoppingCart::$uriVariables)."' " .
 				"method='post'>";
-		
+
 		tooltip::display();
-		
+
 		$this->verify();
 		$rows = $this->getItems();
-			
+
 		if (!sql::rows($rows)) {
 			tooltip::display(
 				_("There are no items in your cart."),
 				($this->checkout?
 					TOOLTIP_ERROR:
 					TOOLTIP_NOTIFICATION));
-			
+
 			$this->checkout = null;
-			
-		} else if (defined('SHOPPING_CART_MINIMUM_ITEM_ORDER') && 
+
+		} else if (defined('SHOPPING_CART_MINIMUM_ITEM_ORDER') &&
 			sql::rows($rows) < SHOPPING_CART_MINIMUM_ITEM_ORDER)
 		{
 			tooltip::display(
@@ -5754,9 +5754,9 @@ class shoppingCart extends modules {
 				($this->checkout?
 					TOOLTIP_ERROR:
 					TOOLTIP_NOTIFICATION));
-			
+
 			$this->checkout = null;
-			
+
 		} else if (defined('SHOPPING_CART_MINIMUM_ORDER_PRICE') &&
 			$this->getGrandTotal() < SHOPPING_CART_MINIMUM_ORDER_PRICE)
 		{
@@ -5767,47 +5767,47 @@ class shoppingCart extends modules {
 				($this->checkout?
 					TOOLTIP_ERROR:
 					TOOLTIP_NOTIFICATION));
-			
+
 			$this->checkout = null;
 		}
-		
+
 		$this->displayList($rows);
-			
+
 		if (!$this->checkout) {
 			echo
 				"<div class='shopping-cart-buttons'>";
-			
+
 			$this->displayListFunctions();
-			
+
 			echo
 					"<div class='clear-both'></div>" .
 				"</div>";
 		}
-			
-		echo 
+
+		echo
 			"<div class='clear-both'></div>" .
 			"</form>" .
 			"</div>";
-			
+
 		if ($this->checkout) {
-			echo 
+			echo
 				"<div class='shopping-cart-checkout'>";
-			
+
 			$this->displayCheckout();
-			
-			echo 
+
+			echo
 				"</div>";
-			
+
 			return;
 		}
-			
+
 		if (SHOPPING_CART_DISPLAY_SIMILAR_ITEMS)
 			$this->displaySimilarItems();
 	}
 }
 
 modules::register(
-	'shoppingCart', 
+	'shoppingCart',
 	_('Shopping Cart'),
 	_('Set Fees, Discounts, Taxes, checkout Limits and let people place orders'));
 

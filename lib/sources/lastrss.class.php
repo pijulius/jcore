@@ -2,11 +2,11 @@
 /*
  ======================================================================
  lastRSS 0.9.1
- 
+
  Simple yet powerfull PHP class to parse RSS files.
- 
+
  by Vojtech Semecky, webmaster @ oslab . net
- 
+
  Latest version, features, manual and examples:
      http://lastrss.oslab.net/
 
@@ -82,7 +82,7 @@ class _lastRSS {
         // return result
         return $result;
     }
-    
+
     // -------------------------------------------------------------------
     // Modification of preg_match(); return trimed field with index 1
     // from 'classic' preg_match() array output
@@ -125,10 +125,10 @@ class _lastRSS {
         // Replace entities by values
         return strtr ($string, $trans_tbl);
     }
-    
+
     // My function to convert myspace's html page to an rss one
     function myspace2rss($htmldata) {
-    	$rss = 
+    	$rss =
 			'<?xml version="1.0" encoding="UTF-8" ?>' .
 			'<rss version="2.0">' .
 			  '<channel>' .
@@ -137,12 +137,12 @@ class _lastRSS {
 			    '<link>http://vids.myspace.com</link>' .
 			    '<description>MySpace videos by search.</description>' .
 			    '<webMaster>webmaster@vids.myspace.com</webMaster>';
-			    
-		preg_match("#<table id=\"search_results\">(.*?)</table>#si", 
+
+		preg_match("#<table id=\"search_results\">(.*?)</table>#si",
 			$htmldata, $pregfound);
-		preg_match_all("#<tr>(.*?)</tr>#si", 
+		preg_match_all("#<tr>(.*?)</tr>#si",
 			$pregfound[0], $items);
-		
+
 		foreach($items[0] as $item) {
 			preg_match_all("#" .
 				"&videoid=(.*?)\"" .
@@ -156,9 +156,9 @@ class _lastRSS {
 				"<br />Tags: (.*?)<br />" .
 				".*?" .
 				"<br />By: (.*?)<br />" .
-				"#si", 
+				"#si",
 				$item, $itemdetails);
-			
+
 			if ($itemdetails[1][0] && $itemdetails[2][0]) {
 				$rss .= '
 				<item>
@@ -177,11 +177,11 @@ class _lastRSS {
 				';
 			}
 		}
-		
+
 		$rss .=
 			  '</channel>' .
 			'</rss>';
-			
+
 		return $rss;
     }
 
@@ -195,13 +195,13 @@ class _lastRSS {
         	// Set time limit so we can get videos from all sources
         	if (!ini_get('safe_mode'))
 	        	@set_time_limit(30);
-        	
+
             $rss_content = '';
             while (!feof($f)) {
                 $rss_content .= fgets($f, 4096);
             }
             fclose($f);
-            
+
             // Convert myspace to rss
             if (strpos($rss_url, 'vids.myspace.com') !== false)
             	$rss_content = $this->myspace2rss($rss_content);
@@ -257,7 +257,7 @@ class _lastRSS {
                     foreach($this->itemtags as $itemtag) {
                         $temp = $this->my_preg_match("'<$itemtag.*?>(.*?)</$itemtag>'si", $rss_item);
                         if ($temp != '') $result['items'][$i][$itemtag] = $temp; // Set only if not empty
-                        
+
                         preg_match("'<$itemtag url=\"(.*?)\"'si", $rss_item, $temp);
                         if ($temp[1]) $result['items'][$i][$itemtag]['url'] = $temp[1];
                     }

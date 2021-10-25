@@ -32,7 +32,7 @@ if (!defined('MOBILE_BROWSER')) {
 		'hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|' .
 		'opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|' .
 		'symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|' .
-		'xda|xiino/i', (string)$_SERVER['HTTP_USER_AGENT']) || 
+		'xda|xiino/i', (string)$_SERVER['HTTP_USER_AGENT']) ||
 		preg_match('/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|' .
 		'ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|' .
 		'ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|' .
@@ -105,61 +105,61 @@ if (!defined('SF_BROWSER')) {
 
 include_once('lib/api.class.php');
 include_once('lib/sql.class.php');
- 
+
 class _settings {
 	var $adminPath = 'admin/site/settings';
 	var $sqlTable = 'settings';
 	var $textsDomain = 'messages';
-	
+
 	function __construct($table = null) {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::settings', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'settings::settings', $this, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		if ($table)
 			$this->sqlTable = $table;
-		
+
 		$this->textsDomain = languages::$selectedTextsDomain;
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'settings::settings', $this);
 	}
-	
+
 	// ************************************************   Admin Part
 	function verifyAdmin() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::verifyAdmin', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'settings::verifyAdmin', $this, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		$update = null;
 		$settings = null;
-		
+
 		if (isset($_POST['submit']))
 			$update = (string)$_POST['submit'];
-			
+
 		if (isset($_POST['settings']))
 			$settings = (array)$_POST['settings'];
-		
+
 		if ($update) {
 			foreach($settings as $sid => $svalue) {
 				$sid = strip_tags((string)$sid);
 				$typeid = $this->getType($sid);
-				
+
 				if ($typeid == SETTINGS_TYPE_HIDDEN)
 					continue;
-				
+
 				if ($typeid == SETTINGS_TYPE_TEXTAREA)
 					$svalue = $svalue;
 				elseif ($typeid == SETTINGS_TYPE_CHECKBOX)
@@ -168,10 +168,10 @@ class _settings {
 					$svalue = (int)$svalue;
 				else
 					$svalue = form::parseString($svalue);
-				
-				if (($sid == 'jQuery_Load_Plugins' && 
-					 $svalue != JQUERY_LOAD_PLUGINS) || 
-					($sid == 'jQuery_Load_Admin_Plugins' && 
+
+				if (($sid == 'jQuery_Load_Plugins' &&
+					 $svalue != JQUERY_LOAD_PLUGINS) ||
+					($sid == 'jQuery_Load_Admin_Plugins' &&
 					 $svalue != JQUERY_LOAD_ADMIN_PLUGINS))
 				{
 					if (!jQuery::update())
@@ -182,123 +182,123 @@ class _settings {
 								"by me or contact webmaster."),
 								"template/template.js"),
 							TOOLTIP_NOTIFICATION);
-				} 
-				
+				}
+
 				$this->edit($sid, $svalue);
 			}
-			
+
 			tooltip::display(
 				__("Settings have been successfully updated.")." " .
 				"<a href='".url::uri('ALL').'?'.url::arg('path')."'>" .
 					__("Refresh") .
 				"</a>",
 				TOOLTIP_SUCCESS);
-			
+
 			api::callHooks(API_HOOK_AFTER,
 				'settings::verifyAdmin', $this, $update);
-			
+
 			return true;
 		}
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'settings::verifyAdmin', $this);
-		
+
 		return false;
 	}
-	
+
 	function displayAdminItemTitle($settingstitle, $sectiontitle = null) {
 		if (!$settingstitle)
 			return;
-		
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::displayAdminItemTitle', $this, $settingstitle, $sectiontitle);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'settings::displayAdminItemTitle', $this, $settingstitle, $sectiontitle, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		$exptitles = explode('_', $sectiontitle);
-		
+
 		foreach($exptitles as $exptitle) {
 			if (preg_match('/^'.$sectiontitle.'/i', $settingstitle)) {
 				$settingstitle = preg_replace('/^'.$sectiontitle.'/i', '', $settingstitle);
 				break;
 			}
-			
+
 			$sectiontitle = preg_replace('/_[^_]*?$/i', '', $sectiontitle);
 		}
-		
+
 		echo __(trim(str_replace('_', ' ', $settingstitle)), $this->textsDomain);
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'settings::displayAdminItemTitle', $this, $settingstitle, $sectiontitle);
 	}
-	
+
 	function displayAdminTitle($ownertitle = null) {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::displayAdminTitle', $this, $ownertitle);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'settings::displayAdminTitle', $this, $ownertitle, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		admin::displayTitle(
 			__('Settings Administration'),
 			$ownertitle);
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'settings::displayAdminTitle', $this, $ownertitle);
 	}
-	
+
 	function displayAdminDescription() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::displayAdminDescription', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'settings::displayAdminDescription', $this, $handled);
-			
+
 			return $handled;
 		}
 		api::callHooks(API_HOOK_AFTER,
 			'settings::displayAdminDescription', $this);
 	}
-	
+
 	function displayAdmin() {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::displayAdmin', $this);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'settings::displayAdmin', $this, $handled);
-			
+
 			return $handled;
 		}
 
 		$this->displayAdminTitle();
 		$this->displayAdminDescription();
-		
+
 		echo
 			"<div class='admin-content'>";
-		
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			$this->verifyAdmin();
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{".$this->sqlTable."}`" .
 			" WHERE `TypeID` = 0" .
 			" ORDER BY `OrderID`, `ID`");
-		
+
 		if (JCORE_VERSION >= '0.6')
 			echo
 				"<div class='form rounded-corners'>";
-		
+
 		echo
 			"<form action='".url::uri()."' method='post'>" .
 				"<div class='form-title rounded-corners-top'>" .
@@ -309,19 +309,19 @@ class _settings {
 						"form-content":
 						"form") .
 					" rounded-corners-bottom'>";
-		
+
 		$firstrow = null;
-		
+
 		while($row = sql::fetch($rows)) {
 			if ($row['OrderID'] == 1) {
 				echo
 					"<b>";
-				
+
 				$this->displayAdminItemTitle($row['ID']);
-				
+
 				echo
 					"</b>";
-				
+
 			}else {
 				echo
 					"<div tabindex='0' class='fc" .
@@ -329,42 +329,42 @@ class _settings {
 						"'>" .
 						"<a class='fc-title' ".
 							"name='fcstgs".$row['OrderID']."'>";
-				
+
 				$this->displayAdminItemTitle($row['ID'], $firstrow['ID']);
-				
+
 				echo
 						"</a>" .
 						"<div class='fc-content'>";
 			}
-			
+
 			echo
 				"<table width='100%'>";
-			
+
 			$settings = sql::run(
 				" SELECT * FROM `{".$this->sqlTable."}`" .
 				" WHERE `OrderID` = '".$row['OrderID']."'" .
 				" AND `TypeID` > 0" .
 				" AND `TypeID` != '".SETTINGS_TYPE_HIDDEN."'");
-			
-			while ($setting = sql::fetch($settings)) {	
+
+			while ($setting = sql::fetch($settings)) {
 				$inputlength = strlen($setting['Value']);
 				if ($inputlength > 50) $inputlength = 50;
-				
+
 				echo
 					"<tr>" .
 						"<td style='width: 1px; text-align: right; vertical-align: middle; padding: 0px 10px 5px 0px;'>" .
 						"<label for='settings".$setting['ID']."' style='white-space: nowrap;' " .
 							"title='".__(str_replace('_',' ', $setting['ID']))."'>";
-				
+
 				$this->displayAdminItemTitle($setting['ID'], $row['ID']);
-				
+
 				echo
 						":</label>" .
 						"</td>" .
 						"<td class='auto-width' style='padding: 0px 10px 5px 0px;'>";
-						
+
 					if ($setting['TypeID'] == SETTINGS_TYPE_TEXTAREA) {
-						echo 
+						echo
 							"<textarea " .
 								"name='settings[".$setting['ID']."]' style='width: " .
 								(JCORE_VERSION >= '0.7'?
@@ -375,11 +375,11 @@ class _settings {
 									"readonly='readonly' ":
 									null) .
 								" id='settings".$setting['ID']."'>".
-								htmlspecialchars($setting['Value'], ENT_QUOTES) .
+								htmlchars($setting['Value'], ENT_QUOTES) .
 							"</textarea>";
-				
+
 					} elseif ($setting['TypeID'] == SETTINGS_TYPE_CHECKBOX) {
-						echo 
+						echo
 							"<input type='hidden' name='settings[".$setting['ID']."]' " .
 								"value='".(int)$setting['Value']."' " .
 								"id='hsettings".$setting['ID']."' />" .
@@ -395,19 +395,19 @@ class _settings {
 								"disabled='disabled' ":
 								null) .
 							"id='settings".$setting['ID']."' />";
-				
+
 					} elseif ($setting['TypeID'] == SETTINGS_TYPE_NUMBER) {
-						echo 
+						echo
 							"<input type='text' name='settings[".$setting['ID']."]' " .
-								"value='".htmlspecialchars($setting['Value'], ENT_QUOTES)."' " .
+								"value='".htmlchars($setting['Value'], ENT_QUOTES)."' " .
 								"style='width: 50px;' " .
 								(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 									"readonly='readonly' ":
 									null) .
 								"id='settings".$setting['ID']."' />";
-				
+
 					} else {
-						echo 
+						echo
 							"<input type='" .
 								($setting['TypeID'] == SETTINGS_TYPE_PASSWORD?
 									"password":
@@ -422,23 +422,23 @@ class _settings {
 								($setting['TypeID'] == SETTINGS_TYPE_TIMESTAMP?
 									"class='calendar-input timestamp' ":
 									null) .
-								"value='".htmlspecialchars($setting['Value'], ENT_QUOTES)."' " .
+								"value='".htmlchars($setting['Value'], ENT_QUOTES)."' " .
 								"size='".$inputlength."' " .
 								(~$this->userPermissionType & USER_PERMISSION_TYPE_WRITE?
 									"readonly='readonly' ":
 									null) .
 								"id='settings".$setting['ID']."' />";
 					}
-					
+
 					echo
 						"</td>" .
 					"</tr>";
 			}
-			
+
 			echo
 				"</table>";
-				
-				
+
+
 			if ($row['OrderID'] != 1)
 				echo
 						"</div>" . //fc-content
@@ -446,65 +446,65 @@ class _settings {
 			else
 				$firstrow = $row;
 		}
-	
+
 		if ($this->userPermissionType & USER_PERMISSION_TYPE_WRITE)
 			echo
 				"<input type='submit' name='submit' value='" .
-					htmlspecialchars(__("Submit"), ENT_QUOTES)."' class='button submit' /> " .
+					htmlchars(__("Submit"), ENT_QUOTES)."' class='button submit' /> " .
 				"<input type='reset' name='reset' value='" .
-					htmlspecialchars(__("Reset"), ENT_QUOTES)."' class='button' />";
-				
+					htmlchars(__("Reset"), ENT_QUOTES)."' class='button' />";
+
 		echo
 			"</div>" .
 			"</form>";
-			
+
 		if (JCORE_VERSION >= '0.6')
 			echo
 				"</div>";
-		
+
 		echo
 			"</div>";	//admin-content
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'settings::displayAdmin', $this);
 	}
-	
+
 	function add($id, $value, $type = SETTINGS_TYPE_TEXT) {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::add', $this, $id, $value, $type);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'settings::add', $this, $id, $value, $type, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		sql::run(
 			" INSERT INTO `{".$this->sqlTable."}`" .
 			" SET `ID` = '".sql::escape($id)."', " .
 			" `Value` = '".sql::escape($value)."'," .
 			" `TypeID` = '".(int)$type."'");
-		
+
 		$result = (sql::affected() != -1);
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'settings::add', $this, $id, $value, $type, $result);
-		
+
 		return $result;
 	}
-	
+
 	function edit($id, $value, $type = null) {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::edit', $this, $id, $value, $type);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'settings::edit', $this, $id, $value, $type, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		sql::run(
 			" UPDATE `{".$this->sqlTable."}`" .
 			" SET `Value` = '".sql::escape($value)."'" .
@@ -512,105 +512,99 @@ class _settings {
 				", `TypeID` = '".(int)$type."'":
 				null) .
 			" WHERE `ID` = '".sql::escape($id)."'");
-		
+
 		$result = (sql::affected() != -1);
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'settings::edit', $this, $id, $value, $type, $result);
-		
+
 		return $result;
 	}
-	
+
 	function delete($id) {
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::delete', $this, $id);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'settings::delete', $this, $id, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		sql::run(
 			" DELETE FROM `{".$this->sqlTable."}`" .
 			" WHERE `ID` = '".sql::escape($id)."'");
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'settings::delete', $this, $id);
 	}
-	
+
 	// ************************************************   Client Part
 	static function set($table, $id, $value = null) {
-		$env = (isset($this)?$this:$_ENV);
-		
 		if (!isset($value)) {
 			$value = $id;
 			$id = $table;
 			$table = null;
 		}
-		
+
 		if (!$table)
-			$table = (isset($this)?$this->sqlTable:'settings');
-		
+			$table = 'settings';
+
 		sql::run(
 			" UPDATE `{".$table."}`" .
 			" SET `Value` = '".sql::escape($value)."'" .
 			" WHERE `ID` = '".sql::escape($id)."'");
-		
+
 		return (sql::affected() != -1);
 	}
-	
+
 	static function get($table, $id = null) {
-		$env = (isset($this)?$this:$_ENV);
-		
 		if (!isset($id)) {
 			$id = $table;
 			$table = null;
 		}
-		
+
 		if (!$table)
-			$table = (isset($this)?$this->sqlTable:'settings');
-		
+			$table = 'settings';
+
 		$row = sql::fetch(sql::run(
 			" SELECT `Value` " .
 			" FROM `{".$table."}`" .
 			" WHERE `ID` = '".sql::escape($id)."'"));
-		
+
 		if ($row)
 			return $row['Value'];
-		
+
 		return null;
 	}
-	
+
 	static function getType($table, $id = null) {
-		$env = (isset($this)?$this:$_ENV);
-		
 		if (!isset($id)) {
 			$id = $table;
 			$table = null;
 		}
-		
+
 		if (!$table)
-			$table = (isset($this)?$this->sqlTable:'settings');
-		
+			$table = 'settings';
+
 		$row = sql::fetch(sql::run(
 			" SELECT `TypeID` " .
 			" FROM `{".$table."}`" .
 			" WHERE `ID` = '".sql::escape($id)."'"));
-		
+
 		if ($row)
 			return $row['TypeID'];
-		
+
 		return null;
 	}
-	
+
 	static function iniGet($var, $parse = false) {
 		if (!$var)
 			return null;
-		
+
 		$value = ini_get($var);
-		
+
 		if ($parse && !is_numeric($value)) {
     		if (strpos($value, 'M') !== false)
         		$value = intval($value)*1024*1024;
@@ -619,80 +613,78 @@ class _settings {
     		elseif (strpos($value, 'G') !== false)
         		$value = intval($value)*1024*1024*1024;
 		}
-		
+
 		return $value;
 	}
-	
+
 	static function defineSettings($table = null) {
-		$env = (isset($this)?$this:$_ENV);
-		
 		if (!$table)
-			$table = (isset($this)?$this->sqlTable:'settings');
-		
+			$table = 'settings';
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
-			'settings::defineSettings', $env, $table);
-		
+			'settings::defineSettings', $_ENV, $table);
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
-				'settings::defineSettings', $env, $table, $handled);
-			
+				'settings::defineSettings', $_ENV, $table, $handled);
+
 			return $handled;
 		}
-		
+
 		$rows = sql::run(
 			" SELECT * FROM `{".$table."}`" .
 			" WHERE `TypeID` > 0");
-			
+
 		while ($row = sql::fetch($rows))
 			if (!defined(strtoupper($row['ID'])))
-				define(strtoupper($row['ID']), 
+				define(strtoupper($row['ID']),
 					(trim($row['Value'])?
 						$row['Value']:
 						''));
-		
+
 		// Definitions needed for compatiblity between jcore versions
 		if (JCORE_VERSION <= '0.1' && !defined('AJAX_PAGING'))
 			define('AJAX_PAGING', false);
-		
+
 		if (defined('MANUAL_GETTEXT') && MANUAL_GETTEXT && $table == 'settings')
 			include_once('lib/gettext/gettext.inc');
-		
+
 		api::callHooks(API_HOOK_AFTER,
-			'settings::defineSettings', $env, $table);
+			'settings::defineSettings', $_ENV, $table);
 	}
-	
+
 	static function displayMaintenanceNotification() {
 		if (isset($GLOBALS['ADMIN']) && (bool)$GLOBALS['ADMIN'])
 			return false;
-		
+
 		$handled = api::callHooks(API_HOOK_BEFORE,
 			'settings::displayMaintenanceNotification', $_ENV);
-		
+
 		if (isset($handled)) {
 			api::callHooks(API_HOOK_AFTER,
 				'settings::displayMaintenanceNotification', $_ENV, $handled);
-			
+
 			return $handled;
 		}
-		
+
 		if (((defined('MAINTENANCE_SUSPEND_WEBSITE') && MAINTENANCE_SUSPEND_WEBSITE) ||
 			(defined('MAINTENANCE_WEBSITE_SUSPENDED') && MAINTENANCE_WEBSITE_SUSPENDED)))
 		{
 			tooltip::display(
-				strip_tags(preg_replace('/<title>.*?<\/title>/i', '', 
-					MAINTENANCE_SUSPEND_TEXT), 
+				strip_tags(preg_replace('/<title>.*?<\/title>/i', '',
+					MAINTENANCE_SUSPEND_TEXT),
 					'<a><b><i><p><h1><h2><h3><strong>'),
 				TOOLTIP_NOTIFICATION);
 		}
-		
-		if (defined('MAINTENANCE_NOTIFICATION_TEXT') && 
+
+		if (defined('MAINTENANCE_NOTIFICATION_TEXT') &&
 			MAINTENANCE_NOTIFICATION_TEXT)
 		{
 			tooltip::display(
 				MAINTENANCE_NOTIFICATION_TEXT,
 				TOOLTIP_NOTIFICATION);
 		}
-		
+
 		api::callHooks(API_HOOK_AFTER,
 			'settings::displayMaintenanceNotification', $_ENV);
 	}
